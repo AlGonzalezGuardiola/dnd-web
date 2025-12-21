@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DnD Móvil - Mapa</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="mobile.css">
+</head>
+
+<body class="mobile-body" style="overflow: hidden;">
+    <div class="hud">
+        <a href="m_index.html" class="btn-back">
+            <span class="arrow">←</span> Salir
+        </a>
+        <div id="m_breadcrumbs" class="breadcrumbs">Mundo</div>
+    </div>
+
+    <div class="zoom-controls">
+        <button id="m_zoomIn" class="hud-btn">+</button>
+        <button id="m_zoomOut" class="hud-btn">-</button>
+    </div>
+
+    <div id="m_mapContainer" class="map-container" style="display: block;">
+        <div id="m_mapCanvas" class="map-canvas">
+            <img id="m_mapImg" class="map-image" alt="Mapa">
+            <div id="m_pinsLayer" class="pins-layer"></div>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="m_script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            initMobileMap();
+        });
+    </script>
+</body>
+
+</html>

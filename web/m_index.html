@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DnD Móvil - Inicio</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="mobile.css">
+</head>
+
+<body class="mobile-body">
+    <section class="landing-page">
+        <h1 class="landing-title">Crónicas de D&D</h1>
+        <div class="landing-cards">
+            <a href="m_map.html" class="card-link">
+                <div class="card">
+                    <div class="card-title">🗺️ Ver Mapa</div>
+                    <p>Explora el mundo sin herramientas de edición.</p>
+                </div>
+            </a>
+            <a href="m_characters.html" class="card-link">
+                <div class="card">
+                    <div class="card-title">👥 Personajes</div>
+                    <p>Consulta las fichas de tus héroes.</p>
+                </div>
+            </a>
+        </div>
+    </section>
+
+    <!-- Script para detectar PC y volver si es necesario -->
+    <script>
+        if (window.innerWidth > 768) {
+            window.location.href = 'index.html';
+        }
+    </script>
+</body>
+
+</html>

@@ -1063,5 +1063,11 @@ function setView(viewName) {
 // ============================================
 // Start Application
 // ============================================
+
+// Auto-redirect mobile users to the dedicated mobile version
+if (window.innerWidth <= 768 && !window.location.href.includes('m_')) {
+    window.location.href = 'm_index.html';
+}
+
 init();
 

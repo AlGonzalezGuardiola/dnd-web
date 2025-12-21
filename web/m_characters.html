@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DnD Móvil - Personajes</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="mobile.css">
+</head>
+
+<body class="mobile-body">
+    <div class="hud">
+        <a href="m_index.html" class="btn-back">
+            <span class="arrow">←</span> Inicio
+        </a>
+    </div>
+
+    <section class="character-section">
+        <h1 class="landing-title">Héroes</h1>
+        <div id="m_characterList" class="character-grid-mobile">
+            <!-- Cargado por JS -->
+        </div>
+    </section>
+
+    <script src="characters.js"></script>
+    <script src="m_script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            renderMobileCharacterList();
+        });
+    </script>
+</body>
+
+</html>
