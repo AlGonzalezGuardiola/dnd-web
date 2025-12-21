@@ -5,10 +5,11 @@ window.initialGameData = {
             "imagen": "assets/imagenes/World.jpg",
             "pines": [
                 {
-                    "x": 0.5748690779920648,
-                    "y": 0.09523809523809523,
+                    "x": 0.5794584264305873,
+                    "y": 0.07954388573056176,
                     "nombre": "Chlorisia",
-                    "destino": "chlorisia"
+                    "destino": "chlorisia",
+                    "tamano": 2
                 }
             ]
         },
@@ -55,6 +56,13 @@ window.initialGameData = {
                     "y": 0.4795127353266888,
                     "nombre": "Jamie",
                     "destino": "JAMIE"
+                },
+                {
+                    "x": 0.8783458769633508,
+                    "y": 0.8662790697674418,
+                    "nombre": "Mike",
+                    "destino": "Mike",
+                    "tamano": 1
                 }
             ]
         },
@@ -86,6 +94,13 @@ window.initialGameData = {
                     "y": 0.39867109634551495,
                     "nombre": "Ratas",
                     "destino": "RATAS"
+                },
+                {
+                    "x": 0.5896187827225131,
+                    "y": 0.6068660022148394,
+                    "nombre": "Elfos",
+                    "destino": "Elfos",
+                    "tamano": 1
                 }
             ]
         },
@@ -158,6 +173,106 @@ window.initialGameData = {
         },
         "Casa Subasta": {
             "imagen": "assets/imagenes/casa_subassta.jpg",
+            "pines": [
+                {
+                    "x": 0.4711714659685864,
+                    "y": 0.5791805094130675,
+                    "nombre": "Interior",
+                    "destino": "Subasta_interior",
+                    "tamano": 1
+                },
+                {
+                    "x": 0.6240837696335079,
+                    "y": 0.5758582502768549,
+                    "nombre": "Pelea",
+                    "destino": "Patron Hipnotico",
+                    "tamano": 1
+                }
+            ]
+        },
+        "Subasta_interior": {
+            "imagen": "assets/imagenes/subasta_interior.jpg",
+            "pines": [
+                {
+                    "x": 0.4382198952879581,
+                    "y": 0.4263565891472868,
+                    "nombre": "Violet y Asthor",
+                    "destino": "Violet y Asthor",
+                    "tamano": 1
+                }
+            ]
+        },
+        "Patron Hipnotico": {
+            "imagen": "assets/imagenes/patron_hipnotico.jpg",
+            "pines": [
+                {
+                    "x": 0.5036649214659686,
+                    "y": 0.31118493909191586,
+                    "nombre": "Desmayo",
+                    "destino": "desmayo",
+                    "tamano": 1
+                }
+            ]
+        },
+        "desmayo": {
+            "imagen": "assets/imagenes/desmayo.jpg",
+            "pines": [
+                {
+                    "x": 0.18900523560209423,
+                    "y": 0.6035437430786268,
+                    "nombre": "Refuerzos",
+                    "destino": "Refuerzos",
+                    "tamano": 1
+                },
+                {
+                    "x": 0.6460651178010471,
+                    "y": 0.4739929401993355,
+                    "nombre": "Yin Mata a Juan Cortes",
+                    "destino": "YinvsCortes",
+                    "tamano": 1
+                },
+                {
+                    "x": 0.34921465968586385,
+                    "y": 0.5703211517165006,
+                    "nombre": "Asthor conoce a Titania",
+                    "destino": "TitaniaAsthor",
+                    "tamano": 1
+                },
+                {
+                    "x": 0.48534031413612566,
+                    "y": 0.5592469545957918,
+                    "nombre": "Pacto Vel'Rhazal",
+                    "destino": "PactoVel",
+                    "tamano": 1
+                }
+            ]
+        },
+        "Mike": {
+            "imagen": "assets/imagenes/mike.jpg",
+            "pines": []
+        },
+        "Elfos": {
+            "imagen": "assets/imagenes/pelea_elfos.jpg",
+            "pines": []
+        },
+        "Refuerzos": {
+            "imagen": "assets/imagenes/refuerzos_subasta.jpg",
+            "pines": []
+        },
+        "Violet y Asthor": {
+            "imagen": "assets/imagenes/Violet.jpg",
+            "pines": []
+        },
+        "YinvsCortes": {
+            "imagen": "assets/imagenes/YinvsCortes.jpg",
+            "pines": []
+        },
+        "TitaniaAsthor": {
+            "imagen": "assets/imagenes/Titania_Asthor.jpg",
+            "pines": []
+        },
+        "PactoVel": {
+            "imagen": "assets/imagenes/PactoVel.jpg",
             "pines": []
         }
     }
