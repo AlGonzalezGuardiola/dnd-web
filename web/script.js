@@ -76,7 +76,13 @@ function showWelcomeScreen() {
 function setupEventListeners() {
     // Navigation
     const btnHome = document.getElementById('btnHome');
-    if (btnHome) btnHome.addEventListener('click', () => setView('landing'));
+    if (btnHome) btnHome.addEventListener('click', () => {
+        state.history = []; // Limpiar historial al volver a inicio
+        setView('landing');
+    });
+
+    const btnBack = document.getElementById('btnBack');
+    if (btnBack) btnBack.addEventListener('click', navigateBack);
 
     // Landing Page
     document.getElementById('cardWorld').addEventListener('click', () => {
@@ -334,8 +340,20 @@ function navigateBack() {
 
 function updateBreadcrumbs() {
     const breadcrumbs = document.getElementById('breadcrumbs');
+    const btnBack = document.getElementById('btnBack');
+
+    // Breadcrumbs text
     const path = [...state.history, state.currentMap];
     breadcrumbs.textContent = path.join(' → ');
+
+    // Visibility of Back button
+    if (btnBack) {
+        if (state.history.length > 0) {
+            btnBack.style.display = 'flex';
+        } else {
+            btnBack.style.display = 'none';
+        }
+    }
 }
 
 // ============================================

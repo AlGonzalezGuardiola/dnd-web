@@ -18,7 +18,10 @@
 <body>
     <!-- HUD Overlay -->
     <div id="hud" class="hud" style="display: none;">
-        <button id="btnHome" class="hud-btn btn-home" title="Volver al Inicio">🏠</button>
+        <div style="display: flex; gap: 10px;">
+            <button id="btnHome" class="hud-btn btn-home" title="Volver al Inicio">🏠</button>
+            <button id="btnBack" class="hud-btn btn-back-nav" title="Volver Atrás" style="display: none;">↩</button>
+        </div>
         <div id="breadcrumbs" class="breadcrumbs">Mundo</div>
 
         <div class="zoom-controls" style="display:flex; gap:5px;">

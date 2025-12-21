@@ -301,6 +301,21 @@ body::before {
     letter-spacing: 1px;
 }
 
+.btn-back-nav {
+    width: auto;
+    padding: 0 15px;
+    gap: 8px;
+    font-size: 20px;
+}
+
+.btn-back-nav::after {
+    content: 'VOLVER';
+    font-family: var(--font-heading);
+    font-size: 14px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
 .btn-zoom {
     width: 45px;
     height: 45px;

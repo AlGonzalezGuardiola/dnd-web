@@ -26,6 +26,20 @@ window.initialGameData = {
                     "y": 0.2222452850172818,
                     "nombre": "Taberna",
                     "destino": "TABERNA JAMIE"
+                },
+                {
+                    "x": 0.5763743455497382,
+                    "y": 0.3169988925802879,
+                    "nombre": "Carruaje",
+                    "destino": "Carruaje",
+                    "tamano": 0.7
+                },
+                {
+                    "x": 0.587434554973822,
+                    "y": 0.37209302325581395,
+                    "nombre": "Subasta",
+                    "destino": "Casa Subasta",
+                    "tamano": 1
                 }
             ]
         },
@@ -136,6 +150,14 @@ window.initialGameData = {
         },
         "JAMIE": {
             "imagen": "assets/imagenes/Jamie.jpg",
+            "pines": []
+        },
+        "Carruaje": {
+            "imagen": "assets/imagenes/carruaje.jpg",
+            "pines": []
+        },
+        "Casa Subasta": {
+            "imagen": "assets/imagenes/casa_subassta.jpg",
             "pines": []
         }
     }
