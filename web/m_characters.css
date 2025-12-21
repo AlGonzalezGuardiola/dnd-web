@@ -37,9 +37,12 @@ html {
 }
 
 .character-section {
+    position: relative !important;
     padding: 80px 15px 100px 15px !important;
     width: 100% !important;
     display: block !important;
+    min-height: 101vh !important;
+    /* Forzar scroll para asegurar visibilidad */
 }
 
 .landing-title {

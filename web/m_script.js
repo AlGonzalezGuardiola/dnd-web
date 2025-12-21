@@ -16,18 +16,26 @@ const mState = {
 function renderMobileCharacterList() {
     console.log('--- Iniciando renderMobileCharacterList ---');
     const container = document.getElementById('m_characterList');
-    if (!container) return;
+    if (!container) {
+        console.error('ERROR: No se encontró el contenedor m_characterList');
+        return;
+    }
 
     // Robust check for data
-    if (!window.characterData) {
-        console.log('Esperando datos de personajes...');
-        setTimeout(renderMobileCharacterList, 100);
+    if (!window.characterData || Object.keys(window.characterData).length === 0) {
+        console.log('Esperando datos de personajes... (window.characterData missing or empty)');
+        setTimeout(renderMobileCharacterList, 200);
         return;
     }
 
     container.innerHTML = '';
     const chars = Object.values(window.characterData);
     console.log('Mobile character list count:', chars.length);
+
+    if (chars.length === 0) {
+        container.innerHTML = '<div style="text-align:center; padding:50px; color:#666;">No se encontraron personajes disponibles.</div>';
+        return;
+    }
 
     chars.forEach(char => {
         console.log('Rendering character:', char.nombre, 'ID:', char.id);
@@ -36,7 +44,7 @@ function renderMobileCharacterList() {
         charCard.className = 'character-card-link';
         charCard.innerHTML = `
             <div class="card-img-wrapper" style="width:70px; height:70px; min-width:70px; border-radius:12px; overflow:hidden; border:1px solid var(--accent-gold);">
-                <img src="${char.imagen}" style="width:100%; height:100%; object-fit:cover;">
+                <img src="${char.imagen}" style="width:100%; height:100%; object-fit:cover;" onerror="this.src='assets/imagenes/placeholder.jpg'">
             </div>
             <div class="card-info" style="display:flex; flex-direction:column; gap:2px; flex:1;">
                 <div class="card-title" style="color:var(--accent-gold); font-family:'Cinzel', serif; font-weight:bold; font-size:16px;">${char.nombre}</div>
@@ -47,18 +55,25 @@ function renderMobileCharacterList() {
         `;
         container.appendChild(charCard);
     });
+    console.log('--- Render list completado ---');
 }
 
 // --- Character Sheet ---
 function renderMobileSheet(id) {
     console.log('--- Iniciando renderMobileSheet para:', id, '---');
-    if (!window.characterData) {
+    if (!window.characterData || Object.keys(window.characterData).length === 0) {
         console.log('Esperando characterData...');
-        setTimeout(() => renderMobileSheet(id), 100);
+        setTimeout(() => renderMobileSheet(id), 200);
         return;
     }
 
-    const data = window.characterData[id];
+    // Búsqueda insensible a mayúsculas
+    let data = window.characterData[id];
+    if (!data) {
+        // Intentar búsqueda por ID ignorando capitalización
+        const key = Object.keys(window.characterData).find(k => k.toLowerCase() === id.toLowerCase());
+        if (key) data = window.characterData[key];
+    }
     if (!data) {
         console.error('ERROR: No se encontró data para ID:', id);
         // Mostrar algo de error en el HTML si es posible
