@@ -105,6 +105,7 @@ function renderMobileSheet(id) {
     }
     skillsHTML += '</div>';
 
+    clearMobileSheet();
     renderMobileTabsContent(data, skillsHTML);
     setupMobileTabListeners();
 }
@@ -140,6 +141,13 @@ function renderMobileTabsContent(data, skillsHTML) {
         spellsHTML = '<div style="text-align:center; padding:40px; color:#666; font-style:italic;">No hay conjuros registrados</div>';
     }
     document.getElementById('m_tabSpells').innerHTML = spellsHTML;
+}
+
+function clearMobileSheet() {
+    const features = document.getElementById('m_tabFeatures');
+    const spells = document.getElementById('m_tabSpells');
+    if (features) features.innerHTML = '';
+    if (spells) spells.innerHTML = '';
 }
 
 function setupMobileTabListeners() {
@@ -235,11 +243,11 @@ function setupMobileMapInteraction() {
     };
 
     document.getElementById('m_zoomIn').onclick = () => {
-        mState.zoom *= 1.2;
+        mState.zoom = Math.min(mState.zoom * 1.5, 5);
         updateTransform();
     };
     document.getElementById('m_zoomOut').onclick = () => {
-        mState.zoom /= 1.2;
+        mState.zoom = Math.max(mState.zoom / 1.5, 0.5);
         updateTransform();
     };
 }
