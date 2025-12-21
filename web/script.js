@@ -1013,8 +1013,16 @@ function setView(viewName) {
     document.getElementById('mapContainer').style.display = 'none';
     document.getElementById('characterSection').style.display = 'none';
     document.getElementById('welcomeScreen').style.display = 'none';
+
+    // Also hide the character sheet if it was open
+    const sheetContainer = document.getElementById('characterSheetContainer');
+    if (sheetContainer) sheetContainer.style.display = 'none';
+
     const editorToolbar = document.getElementById('editorToolbar');
     const hud = document.getElementById('hud');
+
+    // Reset scroll position when changing views
+    window.scrollTo(0, 0);
 
     // Show correct container
     switch (viewName) {
