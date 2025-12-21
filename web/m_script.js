@@ -77,13 +77,22 @@ function renderMobileSheet(id) {
         }
     }
 
-    renderMobileTabsContent(data);
+    // Skills (Habilidades - Proficiency list)
+    let skillsHTML = '<div class="skills-tags" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;">';
+    if (data.habilidades) {
+        data.habilidades.forEach(skill => {
+            skillsHTML += `<span class="skill-tag" style="background:rgba(212,175,55,0.1); border:1px solid var(--accent-gold); color:var(--accent-gold); padding:4px 10px; border-radius:20px; font-size:12px;">${skill}</span>`;
+        });
+    }
+    skillsHTML += '</div>';
+
+    renderMobileTabsContent(data, skillsHTML);
     setupMobileTabListeners();
 }
 
-function renderMobileTabsContent(data) {
-    // Features
-    let featuresHTML = '';
+function renderMobileTabsContent(data, skillsHTML) {
+    // Features (including Skills at top)
+    let featuresHTML = skillsHTML || '';
     data.rasgos.forEach(feat => {
         featuresHTML += `
             <div class="feature-item">
