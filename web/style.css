@@ -1445,4 +1445,11 @@ body::before {
     #editImageScale {
         width: 100%;
     }
+
+    /* Larger Pins for Mobile Tapping */
+    .pin {
+        padding: 8px 15px;
+        font-size: 14px;
+        min-width: 60px;
+    }
 }
