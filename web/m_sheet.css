@@ -79,9 +79,13 @@ html {
     display: flex !important;
     flex-direction: column !important;
     width: 100% !important;
-    border-right: none !important;
-    padding-right: 0 !important;
+    border: none !important;
+    padding: 0 !important;
     align-items: center !important;
+    overflow: visible !important;
+    /* Quitar scroll interno */
+    height: auto !important;
+    position: static !important;
 }
 
 .sheet-portrait-container {
