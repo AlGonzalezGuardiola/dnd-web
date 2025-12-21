@@ -8,6 +8,13 @@
         padding: 0;
         font-family: 'Inter', sans-serif;
         color: white;
+        overflow-y: auto !important;
+        height: auto !important;
+    }
+
+    html {
+        overflow-y: auto !important;
+        height: auto !important;
     }
 
     .hud {
@@ -46,23 +53,25 @@
     }
 
     .character-grid-mobile {
-        display: grid !important;
-        grid-template-columns: 1fr 1fr !important;
-        gap: 15px !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 20px !important;
         width: 100% !important;
     }
 
     .character-card-link {
         background: linear-gradient(135deg, rgba(30, 37, 54, 0.9), rgba(15, 20, 30, 0.9)) !important;
-        border: 1px solid rgba(212, 175, 55, 0.4) !important;
+        border: 1px solid rgba(212, 175, 55, 0.3) !important;
         border-radius: 12px !important;
-        padding: 20px 10px !important;
+        padding: 25px !important;
         display: flex !important;
-        flex-direction: column !important;
+        flex-direction: row !important;
+        /* Estilo horizontal previo */
         align-items: center !important;
+        gap: 20px !important;
         text-decoration: none !important;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4) !important;
-        transition: transform 0.2s ease !important;
+        transition: transform 0.2s ease, border-color 0.2s !important;
     }
 
     .character-card-link:active {

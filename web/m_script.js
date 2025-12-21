@@ -24,19 +24,23 @@ function renderMobileCharacterList() {
 
     container.innerHTML = '';
     const chars = Object.values(window.characterData);
-    console.log('Renderizando personajes:', chars.length);
+    console.log('Mobile character list count:', chars.length);
 
     chars.forEach(char => {
+        console.log('Rendering character:', char.nombre, 'ID:', char.id);
         const charCard = document.createElement('a');
         charCard.href = `m_sheet.html?id=${char.id}`;
         charCard.className = 'character-card-link';
         charCard.innerHTML = `
-            <div class="card-img-wrapper" style="width:80px; height:80px; border-radius:50%; overflow:hidden; border:2px solid var(--accent-gold); margin-bottom:12px;">
+            <div class="card-img-wrapper" style="width:70px; height:70px; min-width:70px; border-radius:12px; overflow:hidden; border:1px solid var(--accent-gold);">
                 <img src="${char.imagen}" style="width:100%; height:100%; object-fit:cover;">
             </div>
-            <div class="card-title" style="color:var(--accent-gold); font-family:'Cinzel', serif; font-weight:bold; text-align:center; font-size:14px;">${char.nombre}</div>
-            <div style="color:#aaa; font-size:11px; text-align:center; margin-top:4px;">${char.raza}</div>
-            <div style="color:#888; font-size:10px; text-align:center;">${char.clase} - Nivel ${char.nivel}</div>
+            <div class="card-info" style="display:flex; flex-direction:column; gap:2px; flex:1;">
+                <div class="card-title" style="color:var(--accent-gold); font-family:'Cinzel', serif; font-weight:bold; font-size:16px;">${char.nombre}</div>
+                <div style="color:#aaa; font-size:12px;">${char.raza} • ${char.clase}</div>
+                <div style="color:#888; font-size:11px; text-transform:uppercase; letter-spacing:1px;">Nivel ${char.nivel}</div>
+            </div>
+            <div style="color:var(--accent-gold); opacity:0.5; font-size:20px;">→</div>
         `;
         container.appendChild(charCard);
     });
