@@ -125,62 +125,73 @@ function setupMobileTabListeners() {
 function initMobileMap() {
     if (!window.initialGameData) return;
 
-    // Iniciar con valores por defecto de PC para que las coordenadas encajen
-    mState.zoom = 1;
-    mState.pan = { x: 0, y: 0 };
-
+    // Obtener mapa actual de la URL o usar el inicial
     const params = new URLSearchParams(window.location.search);
     let mapId = params.get('map') || window.initialGameData.mapa_inicial;
 
     const mapData = window.initialGameData.mapas[mapId];
-    if (!mapData) {
-        console.error('Mapa no encontrado:', mapId);
-        return;
-    }
+    if (!mapData) return;
 
     const mapImg = document.getElementById('m_mapImg');
-    mapImg.src = mapData.imagen;
-    document.getElementById('m_breadcrumbs').textContent = mapData.nombre || 'Mundo';
-
     const canvas = document.getElementById('m_mapCanvas');
-    canvas.style.transform = `translate(0px, 0px) scale(1)`;
+    const updateBreadcrumbs = () => {
+        document.getElementById('m_breadcrumbs').textContent = mapData.nombre || 'Mundo';
+    };
 
-    renderMobilePins(mapData.pines);
+    updateBreadcrumbs();
+
+    // Resetear cargando el mapa
+    mapImg.onload = () => {
+        const w = mapImg.naturalWidth;
+        const h = mapImg.naturalHeight;
+
+        // FIJAR EL CANVAS AL TAMAÑO REAL DE LA IMAGEN
+        // Así los porcentajes (px * 100%) caerán siempre en el mismo píxel
+        canvas.style.width = w + 'px';
+        canvas.style.height = h + 'px';
+
+        // Ajustar zoom inicial para que se vea el ancho del mapa
+        mState.zoom = window.innerWidth / w;
+        mState.pan = { x: 0, y: 0 };
+
+        updateTransform();
+        renderMobilePins(mapData.pines);
+    };
+
+    mapImg.src = mapData.imagen;
+    // Si la imagen ya estaba en cache
+    if (mapImg.complete) {
+        mapImg.onload();
+    }
+
     setupMobileMapInteraction();
 }
 
 function renderMobilePins(pines) {
     const layer = document.getElementById('m_pinsLayer');
+    if (!layer) return;
     layer.innerHTML = '';
     if (!pines) return;
 
     pines.forEach(pin => {
         const pinLink = document.createElement('a');
-        pinLink.className = 'pin mobile-pin'; // Usamos estilos base de PC + ajustes de movil
+        pinLink.className = 'mobile-pin';
 
-        // CORRECCIÓN: Multiplicar por 100 para convertir 0.5 a 50%
+        // COORDINADAS: Usar el porcentaje exacto sobre el canvas (que es el tamaño de la imagen)
         pinLink.style.left = (pin.x * 100) + '%';
         pinLink.style.top = (pin.y * 100) + '%';
 
         pinLink.textContent = pin.nombre;
-
-        // Redirección real entre mapas
         if (pin.destino) {
             pinLink.href = `m_map.html?map=${pin.destino}`;
         }
-
         layer.appendChild(pinLink);
     });
 }
 
-
 function setupMobileMapInteraction() {
     const container = document.getElementById('m_mapContainer');
     const canvas = document.getElementById('m_mapCanvas');
-
-    const updateTransform = () => {
-        canvas.style.transform = `translate(${mState.pan.x}px, ${mState.pan.y}px) scale(${mState.zoom})`;
-    };
 
     container.addEventListener('touchstart', (e) => {
         if (e.touches.length === 1) {
@@ -207,14 +218,23 @@ function setupMobileMapInteraction() {
     });
 
     document.getElementById('m_zoomIn').onclick = () => {
-        mState.zoom += 0.15;
+        mState.zoom *= 1.25;
         updateTransform();
     };
     document.getElementById('m_zoomOut').onclick = () => {
-        mState.zoom = Math.max(0.2, mState.zoom - 0.15);
+        mState.zoom /= 1.25;
         updateTransform();
     };
 }
+
+// Global update for map
+function updateTransform() {
+    const canvas = document.getElementById('m_mapCanvas');
+    if (canvas) {
+        canvas.style.transform = `translate(${mState.pan.x}px, ${mState.pan.y}px) scale(${mState.zoom})`;
+    }
+}
+
 
 function showNotification(msg, time) {
     const n = document.createElement('div');
