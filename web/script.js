@@ -10,7 +10,8 @@ const state = {
     isEditing: false,     // Edit mode flag
     isDragging: false,    // Map dragging flag
     dragStart: { x: 0, y: 0 },
-    tempPin: null         // Temporary pin data during creation
+    tempPin: null,        // Temporary pin data during creation
+    editingPinIndex: null // Index of pin being edited (null = creating new)
 };
 
 // ============================================
@@ -99,6 +100,7 @@ function setupModalListeners() {
     document.getElementById('cancelPinBtn').addEventListener('click', () => {
         document.getElementById('pinModal').style.display = 'none';
         state.tempPin = null;
+        state.editingPinIndex = null;
     });
 
     // Map modal
@@ -173,6 +175,12 @@ function createPinElement(pin, index) {
             deletePin(index);
         });
         pinEl.appendChild(deleteBtn);
+
+        // Add double-click to edit
+        pinEl.addEventListener('dblclick', (e) => {
+            e.stopPropagation();
+            editPin(index);
+        });
 
         makePinDraggable(pinEl, index);
     } else {
@@ -307,17 +315,23 @@ function toggleEditMode() {
     const toggleBtn = document.getElementById('toggleEdit');
     const addMapBtn = document.getElementById('addMapBtn');
     const exportBtn = document.getElementById('exportBtn');
+    const mapContainer = document.getElementById('mapContainer');
 
     if (state.isEditing) {
         toggleBtn.classList.add('active');
         toggleBtn.innerHTML = '<span class="icon">✓</span> Modo Vista';
         addMapBtn.style.display = 'flex';
         exportBtn.style.display = 'flex';
+        mapContainer.classList.add('edit-mode');
+
+        // Show notification with instructions
+        showNotification('Clic derecho para crear pin • Doble clic en un pin para editarlo', 4000);
     } else {
         toggleBtn.classList.remove('active');
         toggleBtn.innerHTML = '<span class="icon">✎</span> Modo Edición';
         addMapBtn.style.display = 'none';
         exportBtn.style.display = 'none';
+        mapContainer.classList.remove('edit-mode');
     }
 
     renderPins();
@@ -337,19 +351,41 @@ function handleRightClick(e) {
 
 function showAddPinModal() {
     const modal = document.getElementById('pinModal');
+    const modalTitle = document.getElementById('pinModalTitle');
     const select = document.getElementById('pinDestination');
 
-    // Populate map selection
-    select.innerHTML = '<option value="">-- Seleccionar mapa --</option>';
-    for (const mapId in state.data.mapas) {
-        const option = document.createElement('option');
-        option.value = mapId;
-        option.textContent = mapId;
-        select.appendChild(option);
+    // Set title based on mode
+    if (state.editingPinIndex !== null) {
+        modalTitle.textContent = 'Editar Pin';
+        const pin = state.data.mapas[state.currentMap].pines[state.editingPinIndex];
+        document.getElementById('pinName').value = pin.nombre;
+
+        // Populate and select current destination
+        select.innerHTML = '<option value="">-- Seleccionar mapa --</option>';
+        for (const mapId in state.data.mapas) {
+            const option = document.createElement('option');
+            option.value = mapId;
+            option.textContent = mapId;
+            if (mapId === pin.destino) {
+                option.selected = true;
+            }
+            select.appendChild(option);
+        }
+    } else {
+        modalTitle.textContent = 'Nuevo Pin';
+        document.getElementById('pinName').value = '';
+
+        // Populate map selection
+        select.innerHTML = '<option value="">-- Seleccionar mapa --</option>';
+        for (const mapId in state.data.mapas) {
+            const option = document.createElement('option');
+            option.value = mapId;
+            option.textContent = mapId;
+            select.appendChild(option);
+        }
     }
 
     modal.style.display = 'flex';
-    document.getElementById('pinName').value = '';
     document.getElementById('pinName').focus();
 }
 
@@ -362,20 +398,31 @@ function savePin() {
         return;
     }
 
-    const pin = {
-        x: state.tempPin.x,
-        y: state.tempPin.y,
-        nombre: nombre,
-        destino: destino
-    };
+    if (state.editingPinIndex !== null) {
+        // Editing existing pin
+        state.data.mapas[state.currentMap].pines[state.editingPinIndex].nombre = nombre;
+        state.data.mapas[state.currentMap].pines[state.editingPinIndex].destino = destino;
+        state.editingPinIndex = null;
+        showNotification('Pin actualizado correctamente', 2000);
+    } else {
+        // Creating new pin
+        const pin = {
+            x: state.tempPin.x,
+            y: state.tempPin.y,
+            nombre: nombre,
+            destino: destino
+        };
 
-    if (!state.data.mapas[state.currentMap].pines) {
-        state.data.mapas[state.currentMap].pines = [];
+        if (!state.data.mapas[state.currentMap].pines) {
+            state.data.mapas[state.currentMap].pines = [];
+        }
+
+        state.data.mapas[state.currentMap].pines.push(pin);
+        state.tempPin = null;
+        showNotification('Pin creado correctamente', 2000);
     }
 
-    state.data.mapas[state.currentMap].pines.push(pin);
     document.getElementById('pinModal').style.display = 'none';
-    state.tempPin = null;
     renderPins();
 }
 
@@ -389,9 +436,9 @@ function showAddMapModal() {
 
 function saveNewMap() {
     const mapId = document.getElementById('mapId').value.trim();
-    const imagePath = document.getElementById('mapImagePath').value.trim();
+    const imageName = document.getElementById('mapImagePath').value.trim();
 
-    if (!mapId || !imagePath) {
+    if (!mapId || !imageName) {
         alert('Por favor completa todos los campos');
         return;
     }
@@ -401,13 +448,16 @@ function saveNewMap() {
         return;
     }
 
+    // Automatically prepend the assets/imagenes/ path
+    const imagePath = `assets/imagenes/${imageName}`;
+
     state.data.mapas[mapId] = {
         imagen: imagePath,
         pines: []
     };
 
     document.getElementById('mapModal').style.display = 'none';
-    alert(`Mapa "${mapId}" creado. Ahora puedes usarlo como destino en los pines.`);
+    showNotification(`Mapa "${mapId}" creado correctamente`, 2000);
 }
 
 // ============================================
@@ -439,6 +489,27 @@ function exportData() {
 }
 
 // ============================================
+// Pin Editing
+// ============================================
+function editPin(pinIndex) {
+    state.editingPinIndex = pinIndex;
+    showAddPinModal();
+}
+
+// ============================================
+// Notification System
+// ============================================
+function showNotification(message, duration = 3000) {
+    const notification = document.getElementById('notification');
+    notification.textContent = message;
+    notification.classList.add('show');
+
+    setTimeout(() => {
+        notification.classList.remove('show');
+    }, duration);
+}
+
+// ============================================
 // Task Tracking Helper
 // ============================================
 function updateTaskMd(action) {
@@ -449,3 +520,4 @@ function updateTaskMd(action) {
 // Start Application
 // ============================================
 init();
+

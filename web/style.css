@@ -511,6 +511,48 @@ body::before {
 }
 
 /* ============================================
+   Notification Banner
+   ============================================ */
+.notification {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    z-index: 3000;
+    background: var(--bg-glass);
+    border: 2px solid var(--accent-gold);
+    border-radius: 12px;
+    padding: 16px 24px;
+    backdrop-filter: blur(var(--blur-glass));
+    box-shadow: var(--shadow-elevated), var(--shadow-glow);
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 14px;
+    max-width: 90%;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: all var(--transition-smooth);
+}
+
+.notification.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+/* ============================================
+   Edit Mode Cursor
+   ============================================ */
+.map-container.edit-mode {
+    cursor: crosshair !important;
+}
+
+.map-container.edit-mode .pin.editing:hover {
+    transform: translate(-50%, -50%) scale(1.05);
+    cursor: move;
+}
+
+/* ============================================
    Responsive Design
    ============================================ */
 @media (max-width: 768px) {
