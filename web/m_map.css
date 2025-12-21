@@ -5,6 +5,9 @@ body {
     background: #000;
     margin: 0;
     padding: 0;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
 }
 
 .hud {
@@ -113,33 +116,30 @@ body {
     text-decoration: none !important;
 }
 
-/* Solo el punto, el texto es secundario */
+/* El punto ahora brilla pero es pequeño */
 .mobile-pin::before {
     content: '';
-    width: 12px;
-    height: 12px;
+    width: 8px;
+    height: 8px;
     background: var(--accent-gold);
-    border: 2px solid white;
+    border: 1.5px solid white;
     border-radius: 50%;
-    box-shadow: 0 0 10px rgba(212, 175, 55, 0.8);
+    box-shadow: 0 0 8px rgba(212, 175, 55, 0.6);
     display: block;
-    transition: all 0.2s;
 }
 
-/* Texto muy sutil para no tapar */
+/* Etiquetas que NO crecen con el zoom */
 .pin-label {
-    background: rgba(0, 0, 0, 0.4) !important;
-    color: rgba(255, 255, 255, 0.7) !important;
+    background: rgba(10, 14, 23, 0.7) !important;
+    color: white !important;
     padding: 1px 4px !important;
     border-radius: 3px !important;
     font-size: 8px !important;
     white-space: nowrap !important;
     margin-top: 2px;
     pointer-events: none;
-    border: 1px solid rgba(212, 175, 55, 0.2);
-}
-
-.mobile-pin:active::before {
-    transform: scale(1.5);
-    background: white;
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    /* Estas variables mantienen el texto pequeño aunque haya zoom */
+    transform-origin: top center;
+    transition: transform 0.1s linear;
 }

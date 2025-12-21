@@ -10,9 +10,13 @@ const mState = {
     pan: { x: 0, y: 0 },
     isDragging: false,
     lastTouch: { x: 0, y: 0 },
-    history: [], // Historial para navegación móvil
+    history: JSON.parse(sessionStorage.getItem('m_map_history') || '[]'),
     currentMapId: null
 };
+
+function saveMHistory() {
+    sessionStorage.setItem('m_map_history', JSON.stringify(mState.history));
+}
 
 // --- Character List ---
 function renderMobileCharacterList() {
@@ -225,34 +229,44 @@ function setupMobileTabListeners() {
 
 // --- Map Logic ---
 function initMobileMap() {
+    console.log('--- Init Mobile Map ---');
     if (!window.initialGameData) {
         setTimeout(initMobileMap, 100);
         return;
     }
 
     const params = new URLSearchParams(window.location.search);
-    let mapId = params.get('map') || window.initialGameData.mapa_inicial;
+    const mapId = params.get('map') || window.initialGameData.mapa_inicial;
 
-    // Si cambiamos de mapa (no es una recarga), guardamos en historial
-    if (mState.currentMapId && mState.currentMapId !== mapId) {
-        mState.history.push(mState.currentMapId);
+    // Actualizar historial
+    const lastStored = mState.history[mState.history.length - 1];
+    if (lastStored !== mapId) {
+        // Si el actual es el que estaba detrás, es que hemos vuelto atrás
+        const prev = mState.history[mState.history.length - 2];
+        if (prev === mapId) {
+            mState.history.pop();
+        } else {
+            // Si no estaba en el historial, lo añadimos (evitando duplicar el inicial)
+            if (lastStored) mState.history.push(mapId);
+            else mState.history = [mapId];
+        }
+        saveMHistory();
     }
-    mState.currentMapId = mapId;
 
     const mapData = window.initialGameData.mapas[mapId];
     if (!mapData) return;
 
-    const mapImg = document.getElementById('m_mapImg');
-    const canvas = document.getElementById('m_mapCanvas');
-
-    // Breadcrumbs y Botón Atrás
     document.getElementById('m_breadcrumbs').textContent = mapData.nombre || 'Mundo';
+
+    // Botón Atrás: Mostrar siempre si no estamos en el mapa inicial
     const btnBack = document.getElementById('m_btnBack');
     if (btnBack) {
-        btnBack.style.display = mState.history.length > 0 ? 'inline-block' : 'none';
-        btnBack.onclick = navigateMobileBack;
+        const isInitial = mapId === window.initialGameData.mapa_inicial;
+        btnBack.style.display = isInitial ? 'none' : 'inline-block';
+        btnBack.onclick = () => window.history.back();
     }
 
+    const mapImg = document.getElementById('m_mapImg');
     mapImg.src = mapData.imagen;
     mState.zoom = 1;
     mState.pan = { x: 0, y: 0 };
@@ -260,14 +274,6 @@ function initMobileMap() {
 
     renderMobilePins(mapData.pines);
     setupMobileMapInteraction();
-}
-
-function navigateMobileBack() {
-    if (mState.history.length === 0) return;
-    const lastMap = mState.history.pop();
-    // Navegar sin añadir al historial (initMobileMap se encarga del resto)
-    mState.currentMapId = null; // Reset para que no se autoguarde
-    window.location.href = `m_map.html?map=${lastMap}`;
 }
 
 function renderMobilePins(pines) {
@@ -336,5 +342,12 @@ function updateTransform() {
     const canvas = document.getElementById('m_mapCanvas');
     if (canvas) {
         canvas.style.transform = `translate(${mState.pan.x}px, ${mState.pan.y}px) scale(${mState.zoom})`;
+
+        // Contra-escalado de etiquetas para que no se vean gigantes al hacer zoom
+        const pins = document.querySelectorAll('.pin-label');
+        pins.forEach(p => {
+            // Ajustamos el escalado inverso para compensar el zoom del padre
+            p.style.transform = `scale(${1 / mState.zoom})`;
+        });
     }
 }
