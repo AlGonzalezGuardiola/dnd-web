@@ -9,7 +9,9 @@ const mState = {
     zoom: 1,
     pan: { x: 0, y: 0 },
     isDragging: false,
-    lastTouch: { x: 0, y: 0 }
+    lastTouch: { x: 0, y: 0 },
+    history: [], // Historial para navegación móvil
+    currentMapId: null
 };
 
 // --- Character List ---
@@ -231,13 +233,25 @@ function initMobileMap() {
     const params = new URLSearchParams(window.location.search);
     let mapId = params.get('map') || window.initialGameData.mapa_inicial;
 
+    // Si cambiamos de mapa (no es una recarga), guardamos en historial
+    if (mState.currentMapId && mState.currentMapId !== mapId) {
+        mState.history.push(mState.currentMapId);
+    }
+    mState.currentMapId = mapId;
+
     const mapData = window.initialGameData.mapas[mapId];
     if (!mapData) return;
 
     const mapImg = document.getElementById('m_mapImg');
     const canvas = document.getElementById('m_mapCanvas');
 
+    // Breadcrumbs y Botón Atrás
     document.getElementById('m_breadcrumbs').textContent = mapData.nombre || 'Mundo';
+    const btnBack = document.getElementById('m_btnBack');
+    if (btnBack) {
+        btnBack.style.display = mState.history.length > 0 ? 'inline-block' : 'none';
+        btnBack.onclick = navigateMobileBack;
+    }
 
     mapImg.src = mapData.imagen;
     mState.zoom = 1;
@@ -246,6 +260,14 @@ function initMobileMap() {
 
     renderMobilePins(mapData.pines);
     setupMobileMapInteraction();
+}
+
+function navigateMobileBack() {
+    if (mState.history.length === 0) return;
+    const lastMap = mState.history.pop();
+    // Navegar sin añadir al historial (initMobileMap se encarga del resto)
+    mState.currentMapId = null; // Reset para que no se autoguarde
+    window.location.href = `m_map.html?map=${lastMap}`;
 }
 
 function renderMobilePins(pines) {

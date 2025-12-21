@@ -17,7 +17,7 @@ body {
     border-bottom: 2px solid var(--accent-gold) !important;
     display: flex !important;
     align-items: center !important;
-    padding: 0 20px !important;
+    padding: 0 15px !important;
     z-index: 10000 !important;
 }
 
@@ -25,13 +25,20 @@ body {
     color: var(--accent-gold) !important;
     text-decoration: none !important;
     font-weight: bold;
+    font-size: 14px !important;
+    display: flex;
+    align-items: center;
+    gap: 5px;
 }
 
 #m_breadcrumbs {
-    color: white;
-    margin-left: 20px;
+    color: #888;
+    margin-left: 10px;
     font-family: 'Cinzel', serif;
-    font-size: 14px;
+    font-size: 11px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .zoom-controls {
@@ -72,7 +79,6 @@ body {
     position: relative !important;
     width: 100vw !important;
     height: 56.25vw !important;
-    /* ASPECT RATIO 16:9 EXACTO COMO PC */
     background: #111 !important;
     transform-origin: center center !important;
     display: block !important;
@@ -83,7 +89,6 @@ body {
     width: 100% !important;
     height: 100% !important;
     object-fit: contain !important;
-    /* IGUAL QUE EN PC */
     display: block !important;
     pointer-events: none !important;
 }
@@ -108,36 +113,33 @@ body {
     text-decoration: none !important;
 }
 
+/* Solo el punto, el texto es secundario */
 .mobile-pin::before {
     content: '';
-    width: 8px;
-    height: 8px;
+    width: 12px;
+    height: 12px;
     background: var(--accent-gold);
-    border: 1px solid white;
+    border: 2px solid white;
     border-radius: 50%;
-    box-shadow: 0 0 10px var(--accent-gold);
+    box-shadow: 0 0 10px rgba(212, 175, 55, 0.8);
     display: block;
-    margin-bottom: 2px;
+    transition: all 0.2s;
 }
 
+/* Texto muy sutil para no tapar */
 .pin-label {
-    background: rgba(10, 14, 23, 0.65) !important;
-    backdrop-filter: blur(4px) !important;
-    border: 1px solid rgba(212, 175, 55, 0.4) !important;
-    color: white !important;
-    padding: 2px 6px !important;
-    border-radius: 4px !important;
-    font-size: 9px !important;
-    font-weight: 600 !important;
-    text-transform: uppercase !important;
-    letter-spacing: 0.5px !important;
+    background: rgba(0, 0, 0, 0.4) !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+    padding: 1px 4px !important;
+    border-radius: 3px !important;
+    font-size: 8px !important;
     white-space: nowrap !important;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6) !important;
-    transition: all 0.2s ease;
+    margin-top: 2px;
+    pointer-events: none;
+    border: 1px solid rgba(212, 175, 55, 0.2);
 }
 
-.mobile-pin:active .pin-label {
-    background: var(--accent-gold) !important;
-    color: black !important;
-    transform: scale(1.1);
+.mobile-pin:active::before {
+    transform: scale(1.5);
+    background: white;
 }
