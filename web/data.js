@@ -41,6 +41,20 @@ window.initialGameData = {
                     "nombre": "Subasta",
                     "destino": "Casa Subasta",
                     "tamano": 1
+                },
+                {
+                    "x": 0.4992138534847579,
+                    "y": 0.4357173978835758,
+                    "nombre": "Girondinne",
+                    "destino": "girondin_dia",
+                    "tamano": 1
+                },
+                {
+                    "x": 0.5011792372668886,
+                    "y": 0.4860302591196354,
+                    "nombre": "Girondinne de noche",
+                    "destino": "girondin_noche",
+                    "tamano": 1
                 }
             ]
         },
@@ -273,6 +287,164 @@ window.initialGameData = {
         },
         "PactoVel": {
             "imagen": "assets/imagenes/PactoVel.jpg",
+            "pines": []
+        },
+        "girondin_dia": {
+            "imagen": "assets/imagenes/girondin_dia.jpeg",
+            "pines": [
+                {
+                    "x": 0.5098434307715229,
+                    "y": 0.692647690176422,
+                    "nombre": "Calle 1",
+                    "destino": "girondin1",
+                    "tamano": 1
+                },
+                {
+                    "x": 0.5103511623710271,
+                    "y": 0.7465075731065179,
+                    "nombre": "Calle 2",
+                    "destino": "girondin2",
+                    "tamano": 1
+                },
+                {
+                    "x": 0.6780660268904963,
+                    "y": 0.8396391197641727,
+                    "nombre": "Casa Jayce",
+                    "destino": "casajayce.jpeg",
+                    "tamano": 1
+                },
+                {
+                    "x": 0.6466194865129661,
+                    "y": 0.6495379703368436,
+                    "nombre": "Biblioteca de Magia",
+                    "destino": "Zero_Hablar_Maga.jpeg",
+                    "tamano": 1
+                }
+            ]
+        },
+        "girondin_noche": {
+            "imagen": "assets/imagenes/girondin_noche.jpeg",
+            "pines": [
+                {
+                    "x": 0.5214311533325139,
+                    "y": 0.6945576144731122,
+                    "nombre": "Calle 1",
+                    "destino": "girondin3",
+                    "tamano": 1
+                },
+                {
+                    "x": 0.5208333424968705,
+                    "y": 0.7508731143560955,
+                    "nombre": "Calle 2",
+                    "destino": "girondin4",
+                    "tamano": 1
+                },
+                {
+                    "x": 0.6832579737368094,
+                    "y": 0.8041873046299943,
+                    "nombre": "Casa Jayce",
+                    "destino": "casajaycenoche.jpeg",
+                    "tamano": 1
+                }
+            ]
+        },
+        "girondin1": {
+            "imagen": "assets/imagenes/girondin1.jpeg",
+            "pines": []
+        },
+        "girondin2": {
+            "imagen": "assets/imagenes/girondin2.jpeg",
+            "pines": []
+        },
+        "girondin3": {
+            "imagen": "assets/imagenes/girondin3.jpeg",
+            "pines": [
+                {
+                    "x": 0.42911424890171507,
+                    "y": 0.6722933524349448,
+                    "nombre": "Pelea borrachos",
+                    "destino": "asesinatoborrachos.jpeg",
+                    "tamano": 1
+                }
+            ]
+        },
+        "girondin4": {
+            "imagen": "assets/imagenes/girondin4.jpeg",
+            "pines": [
+                {
+                    "x": 0.49986896475115816,
+                    "y": 0.3317811349678948,
+                    "nombre": "Yin y Tamariz",
+                    "destino": "Yin_Tamariz_Pelea",
+                    "tamano": 1
+                }
+            ]
+        },
+        "Yin_Tamariz_Pelea": {
+            "imagen": "assets/imagenes/Yin_Tamariz_Pelea.jpeg",
+            "pines": []
+        },
+        "casajaycenoche.jpeg": {
+            "imagen": "assets/imagenes/casajaycenoche.jpeg",
+            "pines": [
+                {
+                    "x": 0.40552116141295425,
+                    "y": 0.8250873155989141,
+                    "nombre": "Reunión Pyke",
+                    "destino": "todosypykefuera.jpeg",
+                    "tamano": 1
+                },
+                {
+                    "x": 0.45073374541126715,
+                    "y": 0.48020953745353195,
+                    "nombre": "Habitación Jayce",
+                    "destino": "jaycemurcielagos.jpeg",
+                    "tamano": 1
+                }
+            ]
+        },
+        "casajayce.jpeg": {
+            "imagen": "assets/imagenes/casajayce.jpeg",
+            "pines": []
+        },
+        "asesinatoborrachos.jpeg": {
+            "imagen": "assets/imagenes/asesinatoborrachos.jpeg",
+            "pines": []
+        },
+        "todosypykefuera.jpeg": {
+            "imagen": "assets/imagenes/todosypykefuera.jpeg",
+            "pines": []
+        },
+        "jaycemurcielagos.jpeg": {
+            "imagen": "assets/imagenes/jaycemurcielagos.jpeg",
+            "pines": [
+                {
+                    "x": 0.698162323603243,
+                    "y": 0.7099461651413059,
+                    "nombre": "Pelea",
+                    "destino": "todosvsjayce.jpeg",
+                    "tamano": 1
+                }
+            ]
+        },
+        "todosvsjayce.jpeg": {
+            "imagen": "assets/imagenes/todosvsjayce.jpeg",
+            "pines": [
+                {
+                    "x": 0.49397273843037126,
+                    "y": 0.5355063932815144,
+                    "nombre": "Muerte",
+                    "destino": "yinvsjayce.jpeg",
+                    "tamano": 1
+                }
+            ]
+        },
+        "yinvsjayce.jpeg": {
+            "imagen": "assets/imagenes/yinvsjayce.jpeg",
+            "pines": []
+        },
+        "Zero_Hablar_Maga.jpeg": {
+            "imagen": "assets/imagenes/Zero_Hablar_Maga.jpeg",
             "pines": []
         }
     }
