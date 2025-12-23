@@ -387,13 +387,13 @@ function clearMobileSheet() {
 }
 
 function setupMobileTabListeners() {
-    document.querySelectorAll('.tab-combate').forEach(btn => {
+    document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.onclick = (e) => {
             const targetTab = btn.dataset.mTab;
             const targetId = `m_tab${targetTab.charAt(0).toUpperCase() + targetTab.slice(1)}`;
 
             // Toggle Buttons
-            document.querySelectorAll('.tab-combate').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
 
             // Toggle Content
