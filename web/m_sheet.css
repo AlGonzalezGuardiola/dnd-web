@@ -153,66 +153,53 @@ html {
     align-items: center;
 }
 
-/* --- NOVO SLIDER FIX --- */
-.tabs-slider-wrapper {
-    width: calc(100% + 30px) !important;
-    /* Compensa el padding del padre para ser full width */
-    margin: 0 -15px 20px -15px !important;
-    overflow-x: scroll !important;
-    overflow-y: hidden !important;
-    -webkit-overflow-scrolling: touch !important;
-    position: relative !important;
-    background: #0f141f !important;
-    border-top: 1px solid rgba(212, 175, 55, 0.2) !important;
-    border-bottom: 1px solid rgba(212, 175, 55, 0.2) !important;
-}
+/* --- TABS SLIDER (MOBILE ONLY) --- */
+@media screen and (max-width: 768px) {
+    .tabs-combate-wrapper {
+        display: flex !important;
+        width: 100% !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        white-space: nowrap !important;
+        background: #0f141f !important;
+        border: 1px solid rgba(212, 175, 55, 0.3) !important;
+        border-radius: 8px !important;
+        margin-bottom: 25px !important;
+        padding: 5px !important;
+        gap: 8px !important;
+        -webkit-overflow-scrolling: touch !important;
+        scrollbar-width: none;
+        /* Ocultar en Firefox */
+        scroll-snap-type: x mandatory;
+    }
 
-/* Ocultar scrollbar pero mantener funcionalidad */
-.tabs-slider-wrapper::-webkit-scrollbar {
-    display: none !important;
-}
+    .tabs-combate-wrapper::-webkit-scrollbar {
+        display: none;
+        /* Ocultar en Chrome/Safari */
+    }
 
-.sheet-tabs-nav {
-    display: flex !important;
-    width: max-content !important;
-    /* IMPORTANTE: Se estira tanto como necesiten los hijos */
-    min-width: 100% !important;
-    padding: 0 15px !important;
-    /* Espacio para que el primero y el ultimo no peguen */
-    list-style: none !important;
-    margin: 0 !important;
-}
+    .tab-combate {
+        flex: 0 0 auto !important;
+        /* Evita que los botones se encojan */
+        padding: 12px 25px !important;
+        font-family: 'Cinzel', serif !important;
+        font-size: 14px !important;
+        background: rgba(255, 255, 255, 0.03) !important;
+        color: #888 !important;
+        border: 1px solid transparent !important;
+        border-radius: 6px !important;
+        text-transform: uppercase !important;
+        transition: all 0.3s ease !important;
+        scroll-snap-align: start;
+        cursor: pointer;
+    }
 
-.tab-btn {
-    flex: 0 0 120px !important;
-    /* Cada boton mide 120px fijos */
-    padding: 18px 0 !important;
-    font-size: 14px !important;
-    font-family: 'Cinzel', serif !important;
-    background: transparent !important;
-    color: #888 !important;
-    border: none !important;
-    border-bottom: 2px solid transparent !important;
-    transition: all 0.3s ease;
-    text-transform: uppercase !important;
-    letter-spacing: 1px !important;
-    text-align: center !important;
-}
-
-.tab-btn.active {
-    color: var(--accent-gold) !important;
-    background: rgba(212, 175, 55, 0.1) !important;
-    border-bottom-color: var(--accent-gold) !important;
-}
-
-.tab-btn:last-child {
-    border-right: none !important;
-}
-
-.tab-btn.active {
-    background: rgba(212, 175, 55, 0.25) !important;
-    color: var(--accent-gold) !important;
-    border-bottom: 3px solid var(--accent-gold) !important;
+    .tab-combate.active {
+        background: rgba(212, 175, 55, 0.15) !important;
+        color: var(--accent-gold) !important;
+        border-color: rgba(212, 175, 55, 0.4) !important;
+        box-shadow: 0 0 10px rgba(212, 175, 55, 0.1);
+    }
 }
 
 .sheet-main {
