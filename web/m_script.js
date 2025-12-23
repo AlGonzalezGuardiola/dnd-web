@@ -265,24 +265,32 @@ function updateMobileTabs(data) {
     const tabSpells = document.getElementById('m_tabSpells');
 
     // 1. Tab Combat
-    let combatHTML = '<div class="feature-grid">';
-    data.rasgos.forEach((trait, index) => {
-        if (trait.nombre.includes("🗡️") || trait.nombre.includes("⚔️") || trait.nombre.includes("Aura") || trait.nombre.includes("Combate")) {
-            combatHTML += renderMobileTraitItem(trait, index);
+    if (tabCombat) {
+        let combatHTML = '<div class="feature-grid">';
+        if (data.rasgos && Array.isArray(data.rasgos)) {
+            data.rasgos.forEach((trait, index) => {
+                if (trait.nombre.includes("🗡️") || trait.nombre.includes("⚔️") || trait.nombre.includes("Aura") || trait.nombre.includes("Combate")) {
+                    combatHTML += renderMobileTraitItem(trait, index);
+                }
+            });
         }
-    });
-    combatHTML += '</div>';
-    if (tabCombat) tabCombat.innerHTML = combatHTML;
+        combatHTML += '</div>';
+        tabCombat.innerHTML = combatHTML;
+    }
 
     // 2. Tab Features (Social/Narrative)
-    let narrativeHTML = '<div class="feature-grid">';
-    data.rasgos.forEach((trait, index) => {
-        if (!trait.nombre.includes("🗡️") && !trait.nombre.includes("⚔️") && !trait.nombre.includes("Combate")) {
-            narrativeHTML += renderMobileTraitItem(trait, index);
+    if (tabFeatures) {
+        let narrativeHTML = '<div class="feature-grid">';
+        if (data.rasgos && Array.isArray(data.rasgos)) {
+            data.rasgos.forEach((trait, index) => {
+                if (!trait.nombre.includes("🗡️") && !trait.nombre.includes("⚔️") && !trait.nombre.includes("Combate")) {
+                    narrativeHTML += renderMobileTraitItem(trait, index);
+                }
+            });
         }
-    });
-    narrativeHTML += '</div>';
-    if (tabFeatures) tabFeatures.innerHTML = narrativeHTML;
+        narrativeHTML += '</div>';
+        tabFeatures.innerHTML = narrativeHTML;
+    }
 
     // 3. Tab Inventory
     renderMobileCategorizedInventory(data);

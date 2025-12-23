@@ -153,53 +153,55 @@ html {
     align-items: center;
 }
 
-/* --- TABS SLIDER (MOBILE ONLY) --- */
-@media screen and (max-width: 768px) {
-    .tabs-combate-wrapper {
-        display: flex !important;
-        width: 100% !important;
-        overflow-x: auto !important;
-        overflow-y: hidden !important;
-        white-space: nowrap !important;
-        background: #0f141f !important;
-        border: 1px solid rgba(212, 175, 55, 0.3) !important;
-        border-radius: 8px !important;
-        margin-bottom: 25px !important;
-        padding: 5px !important;
-        gap: 8px !important;
-        -webkit-overflow-scrolling: touch !important;
-        scrollbar-width: none;
-        /* Ocultar en Firefox */
-        scroll-snap-type: x mandatory;
-    }
+/* --- TABS SLIDER (REDISEÑO ROBUSTO) --- */
+.tabs-combate-wrapper {
+    display: flex !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    white-space: nowrap !important;
+    background: #0a0e17 !important;
+    border-top: 2px solid rgba(212, 175, 55, 0.3) !important;
+    border-bottom: 2px solid rgba(212, 175, 55, 0.3) !important;
+    margin: 10px 0 25px 0 !important;
+    padding: 10px 5px !important;
+    gap: 12px !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none;
+    position: relative !important;
+    z-index: 100 !important;
+    /* Asegurar que no lo tape nada */
+}
 
-    .tabs-combate-wrapper::-webkit-scrollbar {
-        display: none;
-        /* Ocultar en Chrome/Safari */
-    }
+.tabs-combate-wrapper::-webkit-scrollbar {
+    display: none;
+}
 
-    .tab-combate {
-        flex: 0 0 auto !important;
-        /* Evita que los botones se encojan */
-        padding: 12px 25px !important;
-        font-family: 'Cinzel', serif !important;
-        font-size: 14px !important;
-        background: rgba(255, 255, 255, 0.03) !important;
-        color: #888 !important;
-        border: 1px solid transparent !important;
-        border-radius: 6px !important;
-        text-transform: uppercase !important;
-        transition: all 0.3s ease !important;
-        scroll-snap-align: start;
-        cursor: pointer;
-    }
+.tab-combate {
+    flex: 0 0 auto !important;
+    min-width: 120px !important;
+    padding: 18px 10px !important;
+    /* Botones más grandes */
+    font-family: 'Cinzel', serif !important;
+    font-size: 16px !important;
+    /* Texto más grande */
+    font-weight: bold !important;
+    background: rgba(30, 37, 54, 0.9) !important;
+    color: #888 !important;
+    border: 1px solid rgba(212, 175, 55, 0.2) !important;
+    border-radius: 8px !important;
+    text-transform: uppercase !important;
+    transition: all 0.3s ease !important;
+    text-align: center !important;
+    cursor: pointer !important;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3) !important;
+}
 
-    .tab-combate.active {
-        background: rgba(212, 175, 55, 0.15) !important;
-        color: var(--accent-gold) !important;
-        border-color: rgba(212, 175, 55, 0.4) !important;
-        box-shadow: 0 0 10px rgba(212, 175, 55, 0.1);
-    }
+.tab-combate.active {
+    background: rgba(212, 175, 55, 0.2) !important;
+    color: var(--accent-gold) !important;
+    border: 1px solid var(--accent-gold) !important;
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.3) !important;
 }
 
 .sheet-main {
