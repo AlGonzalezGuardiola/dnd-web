@@ -155,17 +155,20 @@ html {
 
 .sheet-tabs-nav {
     display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    white-space: nowrap !important;
     width: 100% !important;
-    background: rgba(15, 20, 30, 0.9) !important;
-    border: 1px solid var(--accent-gold) !important;
-    border-radius: 12px !important;
+    background: #0f141f !important;
+    border: 1px solid rgba(212, 175, 55, 0.4) !important;
+    border-radius: 8px !important;
     overflow-x: auto !important;
     overflow-y: hidden !important;
     scrollbar-width: none;
-    /* Firefox */
     -ms-overflow-style: none;
-    /* IE 10+ */
     -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    margin-bottom: 20px !important;
 }
 
 .sheet-tabs-nav::-webkit-scrollbar {
@@ -175,15 +178,20 @@ html {
 
 .tab-btn {
     flex: 0 0 auto !important;
-    min-width: 100px !important;
-    padding: 15px 10px !important;
-    font-size: 13px !important;
+    min-width: 110px !important;
+    padding: 15px 12px !important;
+    font-size: 14px !important;
     font-family: 'Cinzel', serif !important;
-    background: rgba(255, 255, 255, 0.05) !important;
-    color: #888 !important;
+    background: transparent !important;
+    color: #999 !important;
     border: none !important;
+    border-right: 1px solid rgba(212, 175, 55, 0.1) !important;
     transition: all 0.3s ease;
     text-align: center;
+}
+
+.tab-btn:last-child {
+    border-right: none !important;
 }
 
 .tab-btn.active {
