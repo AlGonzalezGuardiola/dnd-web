@@ -154,35 +154,30 @@ html {
 }
 
 .sheet-tabs-nav {
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
+    display: block !important;
     width: 100% !important;
     background: #0f141f !important;
     border: 1px solid rgba(212, 175, 55, 0.4) !important;
     border-radius: 8px !important;
+    overflow-x: scroll !important;
+    overflow-y: hidden !important;
+    white-space: nowrap !important;
     -webkit-overflow-scrolling: touch !important;
-    scroll-snap-type: x mandatory !important;
     touch-action: pan-x !important;
     margin-bottom: 20px !important;
-    scrollbar-width: none !important;
+    position: relative !important;
+    z-index: 50 !important;
+    pointer-events: auto !important;
 }
 
 .sheet-tabs-nav::-webkit-scrollbar {
     display: none !important;
 }
 
-.sheet-tabs-nav::-webkit-scrollbar {
-    display: none;
-    /* Chrome/Safari */
-}
-
 .tab-btn {
-    flex: 0 0 35% !important;
-    /* Muestra casi 3 pestañas, forzando el scroll */
-    min-width: 120px !important;
-    padding: 15px 5px !important;
+    display: inline-block !important;
+    width: 120px !important;
+    padding: 15px 0 !important;
     font-size: 13px !important;
     font-family: 'Cinzel', serif !important;
     background: transparent !important;
@@ -191,7 +186,7 @@ html {
     border-right: 1px solid rgba(212, 175, 55, 0.1) !important;
     transition: all 0.3s ease;
     text-align: center;
-    scroll-snap-align: center !important;
+    vertical-align: top !important;
 }
 
 .tab-btn:last-child {
