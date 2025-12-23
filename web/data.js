@@ -55,6 +55,13 @@ window.initialGameData = {
                     "nombre": "Girondinne de noche",
                     "destino": "girondin_noche",
                     "tamano": 1
+                },
+                {
+                    "x": 0.4802148920100807,
+                    "y": 0.33176294687801006,
+                    "nombre": "Encuentro Rhinoinfernal",
+                    "destino": "vel_rino.jpeg",
+                    "tamano": 1
                 }
             ]
         },
@@ -319,6 +326,13 @@ window.initialGameData = {
                     "nombre": "Biblioteca de Magia",
                     "destino": "Zero_Hablar_Maga.jpeg",
                     "tamano": 1
+                },
+                {
+                    "x": 0.3740828032410371,
+                    "y": 0.74068683201166,
+                    "nombre": "Asthor y Violet rezan",
+                    "destino": "Asthor_violet_rezar.jpeg",
+                    "tamano": 1
                 }
             ]
         },
@@ -354,7 +368,15 @@ window.initialGameData = {
         },
         "girondin2": {
             "imagen": "assets/imagenes/girondin2.jpeg",
-            "pines": []
+            "pines": [
+                {
+                    "x": 0.5457284928051372,
+                    "y": 0.8134276647480679,
+                    "nombre": "Asthor y Violet se conocen a fondo",
+                    "destino": "asthor_beso_violet.jpeg",
+                    "tamano": 1
+                }
+            ]
         },
         "girondin3": {
             "imagen": "assets/imagenes/girondin3.jpeg",
@@ -436,6 +458,13 @@ window.initialGameData = {
                     "nombre": "Muerte",
                     "destino": "yinvsjayce.jpeg",
                     "tamano": 1
+                },
+                {
+                    "x": 0.22471173644776835,
+                    "y": 0.13969731998648202,
+                    "nombre": "Demonios por la ciudad",
+                    "destino": "ciudad_demonios.jpeg",
+                    "tamano": 1
                 }
             ]
         },
@@ -445,6 +474,81 @@ window.initialGameData = {
         },
         "Zero_Hablar_Maga.jpeg": {
             "imagen": "assets/imagenes/Zero_Hablar_Maga.jpeg",
+            "pines": []
+        },
+        "ciudad_demonios.jpeg": {
+            "imagen": "assets/imagenes/ciudad_demonios.jpeg",
+            "pines": [
+                {
+                    "x": 0.3406708540899112,
+                    "y": 0.7406686439217751,
+                    "nombre": "Zero salva a Carlitos",
+                    "destino": "zero_salva_carlitos.jpeg",
+                    "tamano": 1
+                },
+                {
+                    "x": 0.6007599484624011,
+                    "y": 0.7130384040976687,
+                    "nombre": "Yin compra niños",
+                    "destino": "yin_compra_ninos.jpeg",
+                    "tamano": 1
+                }
+            ]
+        },
+        "zero_salva_carlitos.jpeg": {
+            "imagen": "assets/imagenes/zero_salva_carlitos.jpeg",
+            "pines": [
+                {
+                    "x": 0.6269653987770096,
+                    "y": 0.4991268828683681,
+                    "nombre": "Salvado",
+                    "destino": "zero_abrazo_carlitos.jpeg",
+                    "tamano": 1
+                }
+            ]
+        },
+        "zero_abrazo_carlitos.jpeg": {
+            "imagen": "assets/imagenes/zero_abrazo_carlitos.jpeg",
+            "pines": [
+                {
+                    "x": 0.45662997173205405,
+                    "y": 0.6446449245209536,
+                    "nombre": "Carlitos",
+                    "destino": "carlitos.jpeg",
+                    "tamano": 1
+                }
+            ]
+        },
+        "carlitos.jpeg": {
+            "imagen": "assets/imagenes/carlitos.jpeg",
+            "pines": []
+        },
+        "yin_compra_ninos.jpeg": {
+            "imagen": "assets/imagenes/yin_compra_ninos.jpeg",
+            "pines": []
+        },
+        "Asthor_violet_rezar.jpeg": {
+            "imagen": "assets/imagenes/Asthor_violet_rezar.jpeg",
+            "pines": []
+        },
+        "asthor_beso_violet.jpeg": {
+            "imagen": "assets/imagenes/asthor_beso_violet.jpeg",
+            "pines": []
+        },
+        "vel_rino.jpeg": {
+            "imagen": "assets/imagenes/vel_rino.jpeg",
+            "pines": [
+                {
+                    "x": 0.4970519018344855,
+                    "y": 0.3993924656177656,
+                    "nombre": "Por lo visto es un cagon",
+                    "destino": "vel_rino_muerto.jpeg",
+                    "tamano": 1
+                }
+            ]
+        },
+        "vel_rino_muerto.jpeg": {
+            "imagen": "assets/imagenes/vel_rino_muerto.jpeg",
             "pines": []
         }
     }
