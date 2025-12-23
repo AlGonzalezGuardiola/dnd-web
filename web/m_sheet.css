@@ -154,30 +154,37 @@ html {
 }
 
 .sheet-tabs-nav {
-    display: block !important;
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
     width: 100% !important;
     background: #0f141f !important;
     border: 1px solid rgba(212, 175, 55, 0.4) !important;
     border-radius: 8px !important;
-    overflow-x: scroll !important;
-    overflow-y: hidden !important;
-    white-space: nowrap !important;
     -webkit-overflow-scrolling: touch !important;
-    touch-action: pan-x !important;
+    gap: 0 !important;
     margin-bottom: 20px !important;
-    position: relative !important;
-    z-index: 50 !important;
-    pointer-events: auto !important;
+    padding: 0 !important;
+    user-select: none !important;
 }
 
+/* Dejamos el scrollbar visible para verificar */
 .sheet-tabs-nav::-webkit-scrollbar {
-    display: none !important;
+    height: 3px !important;
+    background: transparent !important;
+    display: block !important;
+}
+
+.sheet-tabs-nav::-webkit-scrollbar-thumb {
+    background: var(--accent-gold) !important;
+    border-radius: 10px !important;
 }
 
 .tab-btn {
-    display: inline-block !important;
-    width: 120px !important;
-    padding: 15px 0 !important;
+    flex: 0 0 130px !important;
+    /* Ancho fijo para forzar scroll */
+    padding: 15px 5px !important;
     font-size: 13px !important;
     font-family: 'Cinzel', serif !important;
     background: transparent !important;
@@ -186,7 +193,6 @@ html {
     border-right: 1px solid rgba(212, 175, 55, 0.1) !important;
     transition: all 0.3s ease;
     text-align: center;
-    vertical-align: top !important;
 }
 
 .tab-btn:last-child {
