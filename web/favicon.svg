@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <!-- D20 die shape -->
+  <!-- Background circle -->
+  <circle cx="32" cy="32" r="30" fill="#0a0e17" stroke="#d4af37" stroke-width="2"/>
+
+  <!-- D20 outline: icosahedron top-down projection -->
+  <!-- Outer pentagon lines (d20 top view) -->
+  <!-- Top triangle -->
+  <polygon points="32,5 54,20 44,44 20,44 10,20" fill="none" stroke="#d4af37" stroke-width="1.8" stroke-linejoin="round"/>
+
+  <!-- Inner star lines from center to each vertex -->
+  <line x1="32" y1="5"  x2="32" y2="44" stroke="#d4af37" stroke-width="1" opacity="0.5"/>
+  <line x1="54" y1="20" x2="20" y2="44" stroke="#d4af37" stroke-width="1" opacity="0.5"/>
+  <line x1="44" y1="44" x2="10" y2="20" stroke="#d4af37" stroke-width="1" opacity="0.5"/>
+  <line x1="20" y1="44" x2="54" y2="20" stroke="#d4af37" stroke-width="1" opacity="0.5"/>
+  <line x1="10" y1="20" x2="44" y2="44" stroke="#d4af37" stroke-width="1" opacity="0.5"/>
+
+  <!-- Bottom line closing the shape -->
+  <line x1="20" y1="44" x2="44" y2="44" stroke="#d4af37" stroke-width="1.8"/>
+
+  <!-- "20" text in center -->
+  <text x="32" y="36" font-family="serif" font-size="16" font-weight="bold"
+        text-anchor="middle" fill="#d4af37" letter-spacing="1">20</text>
+</svg>
