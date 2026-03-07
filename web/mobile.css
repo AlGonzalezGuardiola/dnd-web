@@ -123,6 +123,17 @@
         gap: 20px;
     }
 
+    /* Override 900px query: keep sidebar as column (portrait top, stats below) */
+    .sheet-sidebar {
+        flex-direction: column !important;
+        overflow-x: visible;
+        width: 100%;
+        padding-right: 0;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 16px;
+    }
+
     /* Portrait: circle on mobile */
     .sheet-portrait-container {
         width: 140px;
@@ -139,11 +150,12 @@
         object-position: top center;
     }
 
-    /* Stats: 3 columns */
+    /* Stats: 3 columns — padding-right avoids close button overlap */
     .stat-grid {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 8px;
+        padding-right: 52px;
     }
 
     .stat-box {
@@ -184,6 +196,14 @@
         gap: 6px;
         min-width: 0;
         flex: none;
+        overflow: hidden;
+    }
+
+    /* Inner text container of each pill */
+    .combat-pill > div {
+        min-width: 0;
+        flex: 1;
+        overflow: hidden;
     }
 
     .pill-icon {
@@ -193,6 +213,9 @@
 
     .pill-value {
         font-size: 16px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     .pill-label {
@@ -250,13 +273,15 @@
         grid-template-columns: 1fr 1fr;
     }
 
-    /* Close button */
+    /* Close button: fixed so it stays visible while sheet scrolls */
     .btn-close-sheet {
+        position: fixed;
         top: 70px;
         right: 14px;
         width: 40px;
         height: 40px;
         font-size: 22px;
+        z-index: 5010;
     }
 
     /* Sheet header */

@@ -63,6 +63,9 @@ window.characterData = {
                 "desc": "Lees todo. Hablas/entiendes cualquier idioma 1/día."
             }
         ],
+        "ranuras": [
+            { "nombre": "Pacto (Nv2)", "total": 2 }
+        ],
         "conjuros": [
             {
                 "nombre": "Estallido Arcano (Melee)",
@@ -178,6 +181,10 @@ window.characterData = {
                 "nombre": "👻 Capa Espectral y Brazalete",
                 "desc": "Caída de Plumas, Volar.<br><strong>Brazalete (Bonus):</strong> 1 turno Intangible, Inmune daño no mágico, atraviesa paredes."
             }
+        ],
+        "ranuras": [
+            { "nombre": "Nv1", "total": 4 },
+            { "nombre": "Nv2", "total": 3 }
         ],
         "conjuros": [
             {
@@ -325,6 +332,10 @@ window.characterData = {
                 "nombre": "🌟 Runas Divinas",
                 "desc": "Passivo: +2 SAB, Comp. SAB Save. 1/día Cura 2d6 (+1d8 divino a ataques).<br><strong>Hechizo rúnico (Bonus):</strong> Cura 1d4 a 4 criaturas."
             }
+        ],
+        "ranuras": [
+            { "nombre": "Nv1", "total": 3 },
+            { "nombre": "Nv2", "total": 2 }
         ],
         "conjuros": [
             {

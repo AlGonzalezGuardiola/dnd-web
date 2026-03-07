@@ -1800,6 +1800,179 @@ button, .card, .pin, .tab-btn, .hud-btn, .die-btn,
 }
 
 /* ============================================
+   Inspiración
+   ============================================ */
+.inspiration-btn {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(212, 175, 55, 0.35);
+    font-size: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+    touch-action: manipulation;
+    display: flex; align-items: center; justify-content: center;
+}
+.inspiration-btn.active {
+    background: rgba(212, 175, 55, 0.15);
+    border-color: var(--accent-gold);
+    color: var(--accent-gold);
+    box-shadow: 0 0 12px rgba(212, 175, 55, 0.4);
+    animation: pulse-insp 2s ease-in-out infinite;
+}
+@keyframes pulse-insp { 0%,100% { box-shadow: 0 0 12px rgba(212,175,55,0.4); } 50% { box-shadow: 0 0 20px rgba(212,175,55,0.7); } }
+
+/* ============================================
+   Salvaciones de Muerte
+   ============================================ */
+.death-saves-section {
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 12px;
+    background: rgba(60, 0, 0, 0.3);
+    border: 1px solid rgba(180, 0, 0, 0.4);
+    border-radius: 8px;
+}
+.ds-title { font-size: 11px; letter-spacing: 1px; color: #ff6666; text-transform: uppercase; font-weight: 600; }
+.ds-row { display: flex; align-items: center; gap: 10px; }
+.ds-label { font-size: 11px; width: 50px; color: var(--text-secondary); }
+.ds-label.success { color: #66ff88; }
+.ds-label.failure { color: #ff6666; }
+.ds-pips { display: flex; gap: 6px; }
+.ds-pip {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 2px solid rgba(255,255,255,0.2);
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    touch-action: manipulation;
+}
+.ds-pip.success.filled { background: #44cc66; border-color: #44cc66; box-shadow: 0 0 8px rgba(68,204,102,0.5); }
+.ds-pip.failure.filled { background: #cc2222; border-color: #cc2222; box-shadow: 0 0 8px rgba(204,34,34,0.5); }
+
+/* ============================================
+   Condiciones de Estado
+   ============================================ */
+.conditions-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 10px 0 6px;
+    width: 100%;
+}
+.condition-btn {
+    padding: 5px 10px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.04);
+    color: var(--text-secondary);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    touch-action: manipulation;
+}
+.condition-btn.active {
+    border-color: #ff8844;
+    background: rgba(255, 120, 50, 0.2);
+    color: #ff9966;
+    box-shadow: 0 0 8px rgba(255, 100, 50, 0.3);
+}
+
+/* ============================================
+   Ranuras de Conjuro
+   ============================================ */
+.slot-tracker {
+    background: linear-gradient(135deg, rgba(20,25,40,0.95), rgba(12,16,28,1));
+    border: 1px solid rgba(212,175,55,0.25);
+    border-left: 3px solid var(--accent-gold);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 16px;
+}
+.slot-tracker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.slot-tracker-title { font-size: 12px; letter-spacing: 1px; color: var(--accent-gold); text-transform: uppercase; }
+.slot-reset-btn {
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(212,175,55,0.3);
+    background: rgba(212,175,55,0.08);
+    color: var(--accent-gold);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    touch-action: manipulation;
+}
+.slot-reset-btn:hover { background: rgba(212,175,55,0.18); }
+.slot-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.slot-name { font-size: 12px; color: var(--text-secondary); width: 90px; flex-shrink: 0; }
+.slot-track { display: flex; gap: 6px; flex: 1; }
+.slot-pip {
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 2px solid rgba(212,175,55,0.5);
+    background: rgba(212,175,55,0.25);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    touch-action: manipulation;
+}
+.slot-pip.used { background: transparent; border-color: rgba(255,255,255,0.12); }
+.slot-pip:hover { transform: scale(1.2); }
+.slot-count { font-size: 11px; color: var(--text-secondary); min-width: 28px; text-align: right; }
+
+/* ============================================
+   Notas de Sesión
+   ============================================ */
+.notes-container { padding: 4px 0; }
+.notes-textarea {
+    width: 100%;
+    min-height: 220px;
+    background: rgba(10,14,23,0.8);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.6;
+    padding: 14px;
+    resize: vertical;
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+.notes-textarea:focus { outline: none; border-color: rgba(212,175,55,0.5); box-shadow: 0 0 0 2px rgba(212,175,55,0.1); }
+.notes-hint { font-size: 11px; color: var(--text-secondary); margin-top: 8px; text-align: right; }
+
+/* ============================================
+   Historial de dados
+   ============================================ */
+.dice-history {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 6px 0 2px;
+    min-height: 0;
+}
+.history-chip {
+    padding: 2px 7px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text-secondary);
+    font-size: 10px;
+    font-family: var(--font-heading);
+}
+.history-chip.crit   { color: #ffdd44; border-color: #ffdd44; background: rgba(255,220,68,0.1); }
+.history-chip.fumble { color: #ff4444; border-color: #ff4444; background: rgba(255,68,68,0.1); }
+
+/* ============================================
    Dice Roller Widget
    ============================================ */
 .dice-roller-widget {

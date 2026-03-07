@@ -34,6 +34,7 @@ async function init() {
         }
 
         state.currentMap = state.data.mapa_inicial;
+        loadStateFromStorage();
         renderCharacterSelectionMenu();
         setupEventListeners();
         setupDiceRoller();
@@ -660,12 +661,61 @@ function updateTaskMd(action) {
 // ============================================
 // HP Tracker State
 // ============================================
-const hpState = {}; // { charId: { current: N, max: N } }
+const hpState = {};
+const spellSlotState = {};
+const inspirationState = {};
+const conditionsState = {};
+const deathSaveState = {};
+const notesState = {};
+const diceHistory = [];
+
+const CONDITIONS = [
+    { id: 'envenenado',    label: '🤢', title: 'Envenenado' },
+    { id: 'paralizado',   label: '⛓️', title: 'Paralizado' },
+    { id: 'asustado',     label: '😱', title: 'Asustado' },
+    { id: 'cegado',       label: '🚫', title: 'Cegado' },
+    { id: 'aturdido',     label: '💫', title: 'Aturdido' },
+    { id: 'concentracion',label: '🧠', title: 'Concentración' },
+];
+
+function saveStateToStorage() {
+    try {
+        localStorage.setItem('dnd_hp',         JSON.stringify(hpState));
+        localStorage.setItem('dnd_slots',      JSON.stringify(spellSlotState));
+        localStorage.setItem('dnd_inspiration',JSON.stringify(inspirationState));
+        localStorage.setItem('dnd_conditions', JSON.stringify(conditionsState));
+        localStorage.setItem('dnd_deathsaves', JSON.stringify(deathSaveState));
+        localStorage.setItem('dnd_notes',      JSON.stringify(notesState));
+    } catch(e) {}
+}
+
+function loadStateFromStorage() {
+    try {
+        const hp   = localStorage.getItem('dnd_hp');         if (hp)   Object.assign(hpState,          JSON.parse(hp));
+        const sl   = localStorage.getItem('dnd_slots');      if (sl)   Object.assign(spellSlotState,   JSON.parse(sl));
+        const ins  = localStorage.getItem('dnd_inspiration');if (ins)  Object.assign(inspirationState, JSON.parse(ins));
+        const cond = localStorage.getItem('dnd_conditions'); if (cond) Object.assign(conditionsState,  JSON.parse(cond));
+        const ds   = localStorage.getItem('dnd_deathsaves'); if (ds)   Object.assign(deathSaveState,   JSON.parse(ds));
+        const nt   = localStorage.getItem('dnd_notes');      if (nt)   Object.assign(notesState,       JSON.parse(nt));
+    } catch(e) {}
+}
 
 function initHpForChar(charId) {
     if (!hpState[charId]) {
         const maxHp = parseInt(window.characterData[charId]?.resumen?.HP) || 0;
         hpState[charId] = { current: maxHp, max: maxHp };
+    }
+}
+
+function initDeathSavesForChar(charId) {
+    if (!deathSaveState[charId]) deathSaveState[charId] = { successes: 0, failures: 0 };
+}
+
+function initSpellSlotsForChar(charId) {
+    if (!spellSlotState[charId]) {
+        const data = window.characterData[charId];
+        spellSlotState[charId] = {};
+        if (data?.ranuras) data.ranuras.forEach(s => { spellSlotState[charId][s.nombre] = s.total; });
     }
 }
 
@@ -681,35 +731,48 @@ function setHp(value) {
     if (!currentCharacterId) return;
     initHpForChar(currentCharacterId);
     const hp = hpState[currentCharacterId];
+    const wasAlive = hp.current > 0;
     hp.current = Math.max(0, Math.min(hp.max, value));
 
     const pct = hp.max > 0 ? (hp.current / hp.max) * 100 : 0;
     const currentEl = document.getElementById('hpCurrent');
-    const sliderEl = document.getElementById('hpSlider');
+    const sliderEl  = document.getElementById('hpSlider');
     const sectionEl = document.querySelector('.hp-bar-section');
+    const deathEl   = document.getElementById('deathSavesSection');
 
     if (currentEl) currentEl.textContent = hp.current;
-    if (sliderEl) {
-        sliderEl.value = hp.current;
-        sliderEl.style.background = getSliderGradient(pct);
-    }
+    if (sliderEl)  { sliderEl.value = hp.current; sliderEl.style.background = getSliderGradient(pct); }
     if (sectionEl) {
         sectionEl.classList.toggle('unconscious', hp.current === 0);
         sectionEl.classList.toggle('critical', pct <= 25 && hp.current > 0);
     }
+    if (deathEl) deathEl.style.display = hp.current === 0 ? 'flex' : 'none';
+    // Reset death saves when HP restored from 0
+    if (!wasAlive && hp.current > 0 && deathSaveState[currentCharacterId]) {
+        deathSaveState[currentCharacterId] = { successes: 0, failures: 0 };
+    }
 
+    saveStateToStorage();
     if (hp.current === 0) showNotification('💀 ¡Sin puntos de golpe!', 3000);
     else if (hp.current <= Math.floor(hp.max * 0.25)) showNotification('⚠️ HP crítico', 2000);
 }
 
 function renderHpSection(charId) {
     initHpForChar(charId);
+    initDeathSavesForChar(charId);
     const hp = hpState[charId];
+    const ds = deathSaveState[charId];
     const pct = hp.max > 0 ? (hp.current / hp.max) * 100 : 0;
     const isCritical = pct <= 25 && hp.current > 0;
+    const isUnconscious = hp.current === 0;
+    const hasInspiration = inspirationState[charId] || false;
+
+    const makeDsPips = (type, count) =>
+        [0,1,2].map(i => `<button class="ds-pip ${type}${i < count ? ' filled' : ''}"
+            onclick="toggleDeathSave('${charId}','${type}',${i})" title="${type === 'success' ? 'Éxito' : 'Fallo'}"></button>`).join('');
 
     return `
-        <div class="hp-bar-section${hp.current === 0 ? ' unconscious' : ''}${isCritical ? ' critical' : ''}">
+        <div class="hp-bar-section${isUnconscious ? ' unconscious' : ''}${isCritical ? ' critical' : ''}">
             <div class="hp-bar-header">
                 <div class="hp-info">
                     <div class="pill-label">❤️ Puntos de Golpe</div>
@@ -717,14 +780,105 @@ function renderHpSection(charId) {
                         <span id="hpCurrent">${hp.current}</span><span class="hp-max"> / ${hp.max}</span>
                     </div>
                 </div>
+                <button class="inspiration-btn${hasInspiration ? ' active' : ''}"
+                        onclick="toggleInspiration('${charId}')" title="Inspiración">⭐</button>
             </div>
             <input type="range" class="hp-slider" id="hpSlider"
                    min="0" max="${hp.max}" value="${hp.current}"
                    oninput="setHp(parseInt(this.value))"
                    style="background: ${getSliderGradient(pct)}"
                    aria-label="Puntos de golpe">
+            <div class="death-saves-section" id="deathSavesSection" style="display:${isUnconscious ? 'flex' : 'none'}">
+                <div class="ds-title">💀 Salvaciones de Muerte</div>
+                <div class="ds-row"><span class="ds-label success">Éxitos</span>
+                    <div class="ds-pips">${makeDsPips('success', ds.successes)}</div></div>
+                <div class="ds-row"><span class="ds-label failure">Fallos</span>
+                    <div class="ds-pips">${makeDsPips('failure', ds.failures)}</div></div>
+            </div>
         </div>
     `;
+}
+
+function toggleInspiration(charId) {
+    inspirationState[charId] = !inspirationState[charId];
+    const btn = document.querySelector('.inspiration-btn');
+    if (btn) btn.classList.toggle('active', inspirationState[charId]);
+    saveStateToStorage();
+    showNotification(inspirationState[charId] ? '⭐ ¡Inspiración!' : '⭐ Inspiración usada', 2000);
+}
+
+function toggleDeathSave(charId, type, index) {
+    initDeathSavesForChar(charId);
+    const ds = deathSaveState[charId];
+    const key = type + 's';
+    ds[key] = (index < ds[key]) ? index : Math.min(3, index + 1);
+    // Update pips
+    document.querySelectorAll(`#deathSavesSection .ds-pip.${type}`).forEach((pip, i) => {
+        pip.classList.toggle('filled', i < ds[key]);
+    });
+    saveStateToStorage();
+    if (ds.successes >= 3) showNotification('✅ ¡Estabilizado!', 3000);
+    if (ds.failures  >= 3) showNotification('💀 ¡Has muerto!', 5000);
+}
+
+function renderConditionsBar(charId) {
+    if (!conditionsState[charId]) conditionsState[charId] = [];
+    const active = conditionsState[charId];
+    return `<div class="conditions-bar" id="conditionsBar">
+        ${CONDITIONS.map(c => `<button class="condition-btn${active.includes(c.id) ? ' active' : ''}"
+            onclick="toggleCondition('${charId}','${c.id}')" title="${c.title}">${c.label} ${c.title}</button>`).join('')}
+    </div>`;
+}
+
+function toggleCondition(charId, condId) {
+    if (!conditionsState[charId]) conditionsState[charId] = [];
+    const idx = conditionsState[charId].indexOf(condId);
+    if (idx >= 0) conditionsState[charId].splice(idx, 1);
+    else conditionsState[charId].push(condId);
+    document.querySelectorAll(`#conditionsBar .condition-btn`).forEach(btn => {
+        const id = btn.getAttribute('onclick').match(/'([^']+)'\)$/)?.[1];
+        if (id) btn.classList.toggle('active', conditionsState[charId].includes(id));
+    });
+    saveStateToStorage();
+}
+
+function toggleSpellSlot(charId, slotName, index) {
+    initSpellSlotsForChar(charId);
+    const data = window.characterData[charId];
+    const slotDef = data.ranuras?.find(s => s.nombre === slotName);
+    if (!slotDef) return;
+    const cur = spellSlotState[charId][slotName];
+    spellSlotState[charId][slotName] = Math.max(0, Math.min(slotDef.total, index < cur ? index : index + 1));
+    const remaining = spellSlotState[charId][slotName];
+    document.querySelectorAll(`.slot-track[data-slot="${slotName}"] .slot-pip`).forEach((pip, i) => {
+        pip.classList.toggle('used', i >= remaining);
+    });
+    const countEl = document.querySelector(`.slot-count[data-slot="${slotName}"]`);
+    if (countEl) countEl.textContent = `${remaining}/${slotDef.total}`;
+    saveStateToStorage();
+}
+
+function resetSpellSlots(charId) {
+    const data = window.characterData[charId];
+    if (!data?.ranuras) return;
+    data.ranuras.forEach(s => { spellSlotState[charId][s.nombre] = s.total; });
+    renderSpellsWithFilters(data);
+    saveStateToStorage();
+    showNotification('🌙 Descanso largo: slots restaurados', 2500);
+}
+
+function saveNote(charId, text) {
+    notesState[charId] = text;
+    saveStateToStorage();
+}
+
+function updateDiceHistory() {
+    const el = document.getElementById('diceHistory');
+    if (!el || diceHistory.length === 0) return;
+    el.innerHTML = diceHistory.map(r => {
+        const cls = r.sides === 20 && r.result === 20 ? ' crit' : r.sides === 20 && r.result === 1 ? ' fumble' : '';
+        return `<span class="history-chip${cls}">d${r.sides}:${r.result}</span>`;
+    }).join('');
 }
 
 // ============================================
@@ -758,6 +912,9 @@ function setupDiceRoller() {
 
 function rollDie(sides) {
     const result = Math.floor(Math.random() * sides) + 1;
+    diceHistory.unshift({ sides, result });
+    if (diceHistory.length > 5) diceHistory.pop();
+    updateDiceHistory();
     const resultEl = document.getElementById('diceResultValue');
     const labelEl = document.getElementById('diceDieLabel');
     if (!resultEl) return;
@@ -985,7 +1142,33 @@ function renderSpellsWithFilters(data) {
         `<button class="spell-filter-btn${i === 0 ? ' active' : ''}" data-level="${lv}">${lv}</button>`
     ).join('');
 
+    // Slot tracker
+    let slotHTML = '';
+    const charId = currentCharacterId;
+    if (charId && data.ranuras && data.ranuras.length > 0) {
+        initSpellSlotsForChar(charId);
+        slotHTML = `<div class="slot-tracker">
+            <div class="slot-tracker-header">
+                <span class="slot-tracker-title">✨ Ranuras de Conjuro</span>
+                <button class="slot-reset-btn" onclick="resetSpellSlots('${charId}')" title="Descanso largo">🌙 Descanso</button>
+            </div>
+            ${data.ranuras.map(slot => {
+                const remaining = spellSlotState[charId]?.[slot.nombre] ?? slot.total;
+                const pips = Array.from({ length: slot.total }, (_, i) =>
+                    `<button class="slot-pip${i >= remaining ? ' used' : ''}"
+                        onclick="toggleSpellSlot('${charId}','${slot.nombre}',${i})"></button>`
+                ).join('');
+                return `<div class="slot-row">
+                    <span class="slot-name">${slot.nombre}</span>
+                    <div class="slot-track" data-slot="${slot.nombre}">${pips}</div>
+                    <span class="slot-count" data-slot="${slot.nombre}">${remaining}/${slot.total}</span>
+                </div>`;
+            }).join('')}
+        </div>`;
+    }
+
     let html = `
+        ${slotHTML}
         <div class="spell-level-filters" id="spellFilters">${filterBtns}</div>
         <div class="spell-filters" style="margin-bottom:14px; display:flex; gap:10px;">
             <input type="text" id="spellSearch" placeholder="Buscar conjuro..." class="sheet-input" style="flex:1">
@@ -1178,19 +1361,14 @@ function renderCharacterSheet(charId) {
     // Quick Actions
     renderQuickActions(data);
 
-    // Character-specific special buttons
+    // Conditions bar + character-specific buttons
     const resourcesSection = document.getElementById('sheetResources');
+    resourcesSection.style.display = 'flex';
+    let resourcesHTML = renderConditionsBar(charId);
     if (charId === 'Vel') {
-        resourcesSection.style.display = 'flex';
-        resourcesSection.innerHTML = `
-            <button class="btn-demonic" title="Transformación demoníaca (próximamente)" disabled>
-                😈 Forma Demoníaca
-            </button>
-        `;
-    } else {
-        resourcesSection.style.display = 'none';
-        resourcesSection.innerHTML = '';
+        resourcesHTML += `<button class="btn-demonic" title="Transformación demoníaca (próximamente)" disabled>😈 Forma Demoníaca</button>`;
     }
+    resourcesSection.innerHTML = resourcesHTML;
 
     // Tab Navigation Management
     updateTabs(data);
@@ -1289,6 +1467,20 @@ function renderCharacterSheet(charId) {
         document.getElementById('tabInventory').innerHTML = inventoryHTML;
     } else {
         renderCategorizedInventory(data, ''); // includes search + categories
+    }
+
+    // Notes tab
+    const tabNotes = document.getElementById('tabNotes');
+    if (tabNotes) {
+        const savedNote = notesState[charId] || '';
+        tabNotes.innerHTML = `
+            <div class="notes-container">
+                <h3 class="section-label">📝 Notas de Sesión</h3>
+                <textarea class="notes-textarea" id="sessionNotesArea"
+                    placeholder="Apuntes de la sesión, objetivos, cosas importantes..."
+                    oninput="saveNote('${charId}', this.value)">${savedNote}</textarea>
+                <div class="notes-hint">Guardado automáticamente</div>
+            </div>`;
     }
 
     // Reset Tabs
