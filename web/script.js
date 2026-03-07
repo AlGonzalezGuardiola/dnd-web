@@ -669,27 +669,33 @@ function initHpForChar(charId) {
     }
 }
 
-function adjustHp(delta) {
+function getSliderGradient(pct) {
+    let color;
+    if (pct <= 25) color = '#ff4444';
+    else if (pct <= 50) color = '#ffaa00';
+    else color = '#44cc66';
+    return `linear-gradient(to right, ${color} ${pct}%, rgba(255,255,255,0.08) ${pct}%)`;
+}
+
+function setHp(value) {
     if (!currentCharacterId) return;
     initHpForChar(currentCharacterId);
     const hp = hpState[currentCharacterId];
-    hp.current = Math.max(0, Math.min(hp.max, hp.current + delta));
+    hp.current = Math.max(0, Math.min(hp.max, value));
 
-    // Update UI without full re-render
+    const pct = hp.max > 0 ? (hp.current / hp.max) * 100 : 0;
     const currentEl = document.getElementById('hpCurrent');
-    const fillEl = document.getElementById('hpBarFill');
+    const sliderEl = document.getElementById('hpSlider');
     const sectionEl = document.querySelector('.hp-bar-section');
 
     if (currentEl) currentEl.textContent = hp.current;
-    if (fillEl && sectionEl) {
-        const pct = hp.max > 0 ? (hp.current / hp.max) * 100 : 0;
-        fillEl.style.width = `${pct}%`;
-        fillEl.className = 'hp-bar-fill';
-        if (pct <= 25) fillEl.classList.add('low');
-        else if (pct <= 50) fillEl.classList.add('medium');
-        else fillEl.classList.add('high');
-
+    if (sliderEl) {
+        sliderEl.value = hp.current;
+        sliderEl.style.background = getSliderGradient(pct);
+    }
+    if (sectionEl) {
         sectionEl.classList.toggle('unconscious', hp.current === 0);
+        sectionEl.classList.toggle('critical', pct <= 25 && hp.current > 0);
     }
 
     if (hp.current === 0) showNotification('💀 ¡Sin puntos de golpe!', 3000);
@@ -700,13 +706,10 @@ function renderHpSection(charId) {
     initHpForChar(charId);
     const hp = hpState[charId];
     const pct = hp.max > 0 ? (hp.current / hp.max) * 100 : 0;
-    let barClass = 'hp-bar-fill';
-    if (pct <= 25) barClass += ' low';
-    else if (pct <= 50) barClass += ' medium';
-    else barClass += ' high';
+    const isCritical = pct <= 25 && hp.current > 0;
 
     return `
-        <div class="hp-bar-section${hp.current === 0 ? ' unconscious' : ''}">
+        <div class="hp-bar-section${hp.current === 0 ? ' unconscious' : ''}${isCritical ? ' critical' : ''}">
             <div class="hp-bar-header">
                 <div class="hp-info">
                     <div class="pill-label">❤️ Puntos de Golpe</div>
@@ -714,14 +717,12 @@ function renderHpSection(charId) {
                         <span id="hpCurrent">${hp.current}</span><span class="hp-max"> / ${hp.max}</span>
                     </div>
                 </div>
-                <div class="hp-controls">
-                    <button class="hp-btn minus" onclick="adjustHp(-1)" title="Recibir 1 daño" aria-label="Restar HP">−</button>
-                    <button class="hp-btn plus" onclick="adjustHp(1)" title="Curar 1 HP" aria-label="Añadir HP">+</button>
-                </div>
             </div>
-            <div class="hp-bar-track">
-                <div class="${barClass}" id="hpBarFill" style="width:${pct}%"></div>
-            </div>
+            <input type="range" class="hp-slider" id="hpSlider"
+                   min="0" max="${hp.max}" value="${hp.current}"
+                   oninput="setHp(parseInt(this.value))"
+                   style="background: ${getSliderGradient(pct)}"
+                   aria-label="Puntos de golpe">
         </div>
     `;
 }
