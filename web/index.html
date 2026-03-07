@@ -18,15 +18,15 @@
 <body>
     <!-- HUD Overlay -->
     <div id="hud" class="hud" style="display: none;">
-        <div style="display: flex; gap: 10px;">
-            <button id="btnHome" class="hud-btn btn-home" title="Volver al Inicio">🏠</button>
-            <button id="btnBack" class="hud-btn btn-back-nav" title="Volver Atrás" style="display: none;">↩</button>
+        <div style="display: flex; gap: 8px;">
+            <button id="btnHome" class="hud-btn btn-home" title="Volver al Inicio" aria-label="Inicio">🏠</button>
+            <button id="btnBack" class="hud-btn btn-back-nav" title="Volver Atrás" aria-label="Volver" style="display: none;">↩</button>
         </div>
-        <div id="breadcrumbs" class="breadcrumbs">Mundo</div>
+        <div id="breadcrumbs" class="breadcrumbs" aria-live="polite">Mundo</div>
 
         <div class="zoom-controls" style="display:flex; gap:5px;">
-            <button id="btnZoomIn" class="hud-btn" title="Acercar">+</button>
-            <button id="btnZoomOut" class="hud-btn" title="Alejar">-</button>
+            <button id="btnZoomIn" class="hud-btn" title="Acercar" aria-label="Acercar">+</button>
+            <button id="btnZoomOut" class="hud-btn" title="Alejar" aria-label="Alejar">−</button>
         </div>
     </div>
 
@@ -98,10 +98,10 @@
                 </div>
 
                 <div class="sheet-tabs-nav">
-                    <button class="tab-btn active" data-tab="combat">Combate</button>
-                    <button class="tab-btn" data-tab="features">Narrativa y Social</button>
-                    <button class="tab-btn" data-tab="inventory">Equipo e Inventario</button>
-                    <button class="tab-btn" data-tab="spells">Libro de Conjuros</button>
+                    <button class="tab-btn active" data-tab="combat">⚔️ Combate</button>
+                    <button class="tab-btn" data-tab="features">📖 Narrativa</button>
+                    <button class="tab-btn" data-tab="inventory">🎒 Inventario</button>
+                    <button class="tab-btn" data-tab="spells">✨ Conjuros</button>
                 </div>
 
                 <div class="sheet-body">
@@ -203,6 +203,26 @@
                 <button id="cancelMapBtn" class="btn-secondary">Cancelar</button>
             </div>
         </div>
+    </div>
+
+    <!-- Dice Roller Widget -->
+    <div id="diceRollerWidget" class="dice-roller-widget" style="display: none;">
+        <div id="dicePanel" class="dice-panel">
+            <div class="dice-panel-title">Tirada de Dado</div>
+            <div class="dice-result-area">
+                <div class="dice-die-label" id="diceDieLabel">—</div>
+                <div class="dice-result-value" id="diceResultValue">🎲</div>
+            </div>
+            <div class="dice-grid">
+                <button class="die-btn" data-sides="4">d4</button>
+                <button class="die-btn" data-sides="6">d6</button>
+                <button class="die-btn" data-sides="8">d8</button>
+                <button class="die-btn" data-sides="10">d10</button>
+                <button class="die-btn" data-sides="12">d12</button>
+                <button class="die-btn d20" data-sides="20">d20</button>
+            </div>
+        </div>
+        <button id="diceToggleBtn" class="dice-toggle-btn" title="Lanzador de dados" aria-label="Abrir lanzador de dados">🎲</button>
     </div>
 
     <script src="characters.js"></script>

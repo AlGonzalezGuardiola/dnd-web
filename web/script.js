@@ -36,6 +36,7 @@ async function init() {
         state.currentMap = state.data.mapa_inicial;
         renderCharacterSelectionMenu();
         setupEventListeners();
+        setupDiceRoller();
         setView('landing');
         updateTaskMd('Initialize');
     } catch (error) {
@@ -657,6 +658,130 @@ function updateTaskMd(action) {
 }
 
 // ============================================
+// HP Tracker State
+// ============================================
+const hpState = {}; // { charId: { current: N, max: N } }
+
+function initHpForChar(charId) {
+    if (!hpState[charId]) {
+        const maxHp = parseInt(window.characterData[charId]?.resumen?.HP) || 0;
+        hpState[charId] = { current: maxHp, max: maxHp };
+    }
+}
+
+function adjustHp(delta) {
+    if (!currentCharacterId) return;
+    initHpForChar(currentCharacterId);
+    const hp = hpState[currentCharacterId];
+    hp.current = Math.max(0, Math.min(hp.max, hp.current + delta));
+
+    // Update UI without full re-render
+    const currentEl = document.getElementById('hpCurrent');
+    const fillEl = document.getElementById('hpBarFill');
+    const sectionEl = document.querySelector('.hp-bar-section');
+
+    if (currentEl) currentEl.textContent = hp.current;
+    if (fillEl && sectionEl) {
+        const pct = hp.max > 0 ? (hp.current / hp.max) * 100 : 0;
+        fillEl.style.width = `${pct}%`;
+        fillEl.className = 'hp-bar-fill';
+        if (pct <= 25) fillEl.classList.add('low');
+        else if (pct <= 50) fillEl.classList.add('medium');
+        else fillEl.classList.add('high');
+
+        sectionEl.classList.toggle('unconscious', hp.current === 0);
+    }
+
+    if (hp.current === 0) showNotification('💀 ¡Sin puntos de golpe!', 3000);
+    else if (hp.current <= Math.floor(hp.max * 0.25)) showNotification('⚠️ HP crítico', 2000);
+}
+
+function renderHpSection(charId) {
+    initHpForChar(charId);
+    const hp = hpState[charId];
+    const pct = hp.max > 0 ? (hp.current / hp.max) * 100 : 0;
+    let barClass = 'hp-bar-fill';
+    if (pct <= 25) barClass += ' low';
+    else if (pct <= 50) barClass += ' medium';
+    else barClass += ' high';
+
+    return `
+        <div class="hp-bar-section${hp.current === 0 ? ' unconscious' : ''}">
+            <div class="hp-bar-header">
+                <div class="hp-info">
+                    <div class="pill-label">❤️ Puntos de Golpe</div>
+                    <div class="hp-display">
+                        <span id="hpCurrent">${hp.current}</span><span class="hp-max"> / ${hp.max}</span>
+                    </div>
+                </div>
+                <div class="hp-controls">
+                    <button class="hp-btn minus" onclick="adjustHp(-1)" title="Recibir 1 daño" aria-label="Restar HP">−</button>
+                    <button class="hp-btn plus" onclick="adjustHp(1)" title="Curar 1 HP" aria-label="Añadir HP">+</button>
+                </div>
+            </div>
+            <div class="hp-bar-track">
+                <div class="${barClass}" id="hpBarFill" style="width:${pct}%"></div>
+            </div>
+        </div>
+    `;
+}
+
+// ============================================
+// Dice Roller
+// ============================================
+function setupDiceRoller() {
+    const toggleBtn = document.getElementById('diceToggleBtn');
+    const panel = document.getElementById('dicePanel');
+    if (!toggleBtn || !panel) return;
+
+    toggleBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isOpen = panel.classList.toggle('open');
+        toggleBtn.classList.toggle('open', isOpen);
+    });
+
+    document.querySelectorAll('.die-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            rollDie(parseInt(btn.dataset.sides));
+        });
+    });
+
+    // Close when clicking outside
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.dice-roller-widget')) {
+            panel.classList.remove('open');
+            toggleBtn.classList.remove('open');
+        }
+    });
+}
+
+function rollDie(sides) {
+    const result = Math.floor(Math.random() * sides) + 1;
+    const resultEl = document.getElementById('diceResultValue');
+    const labelEl = document.getElementById('diceDieLabel');
+    if (!resultEl) return;
+
+    // Reset animation
+    resultEl.classList.remove('rolling', 'crit', 'fumble');
+    void resultEl.offsetWidth;
+    resultEl.classList.add('rolling');
+
+    const isCrit = sides === 20 && result === 20;
+    const isFumble = sides === 20 && result === 1;
+
+    resultEl.textContent = result;
+    if (labelEl) labelEl.textContent = `d${sides}`;
+
+    if (isCrit) {
+        resultEl.classList.add('crit');
+        showNotification('⭐ ¡CRÍTICO! ¡Resultado perfecto!', 3000);
+    } else if (isFumble) {
+        resultEl.classList.add('fumble');
+        showNotification('💀 ¡Pifia! El destino es cruel...', 3000);
+    }
+}
+
+// ============================================
 // Character Sheet Logic (Redesign)
 // ============================================
 const skillMapping = {
@@ -846,20 +971,37 @@ function renderSpellsWithFilters(data) {
         return;
     }
 
+    // Collect unique spell levels
+    const levels = ['Todos'];
+    data.conjuros.forEach(s => {
+        const lv = s.nivel === 'Truco' ? 'Truco' :
+            (s.nivel === 'Esp' || s.nivel === 'Especial') ? 'Esp' :
+            `Nv${s.nivel}`;
+        if (!levels.includes(lv)) levels.push(lv);
+    });
+
+    const filterBtns = levels.map((lv, i) =>
+        `<button class="spell-filter-btn${i === 0 ? ' active' : ''}" data-level="${lv}">${lv}</button>`
+    ).join('');
+
     let html = `
-        <div class="spell-filters" style="margin-bottom:20px; display:flex; gap:10px;">
+        <div class="spell-level-filters" id="spellFilters">${filterBtns}</div>
+        <div class="spell-filters" style="margin-bottom:14px; display:flex; gap:10px;">
             <input type="text" id="spellSearch" placeholder="Buscar conjuro..." class="sheet-input" style="flex:1">
         </div>
         <div class="feature-grid" id="spellsGrid">
     `;
 
     data.conjuros.forEach((spell, index) => {
+        const levelKey = spell.nivel === 'Truco' ? 'Truco' :
+            (spell.nivel === 'Esp' || spell.nivel === 'Especial') ? 'Esp' :
+            `Nv${spell.nivel}`;
         const type = spell.desc.toLowerCase().includes("daño") ? "DAÑO" :
             spell.desc.toLowerCase().includes("cur") ? "CURACIÓN" :
-                spell.desc.toLowerCase().includes("control") ? "CONTROL" : "UTILIDAD";
+            spell.desc.toLowerCase().includes("control") ? "CONTROL" : "UTILIDAD";
 
         html += `
-            <div class="spell-item" data-name="${spell.nombre.toLowerCase()}">
+            <div class="spell-item" data-name="${spell.nombre.toLowerCase()}" data-level="${levelKey}">
                 <div class="feature-header" style="display:flex; justify-content:space-between; cursor:pointer;">
                     <h3 style="margin:0">${spell.nombre}</h3>
                     ${isCharacterEditing ? `<button class="btn-delete-item" onclick="deleteSpell(${index})">×</button>` : ''}
@@ -876,14 +1018,32 @@ function renderSpellsWithFilters(data) {
     }
     container.innerHTML = html;
 
-    // Search logic
+    // Level filter logic
+    let activeLevel = 'Todos';
+    let activeSearch = '';
+
+    function applySpellFilters() {
+        document.querySelectorAll('#spellsGrid .spell-item').forEach(item => {
+            const levelMatch = activeLevel === 'Todos' || item.dataset.level === activeLevel;
+            const searchMatch = !activeSearch || item.dataset.name.includes(activeSearch);
+            item.style.display = (levelMatch && searchMatch) ? '' : 'none';
+        });
+    }
+
+    document.querySelectorAll('#spellFilters .spell-filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('#spellFilters .spell-filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            activeLevel = btn.dataset.level;
+            applySpellFilters();
+        });
+    });
+
     const search = document.getElementById('spellSearch');
     if (search) {
         search.addEventListener('input', (e) => {
-            const val = e.target.value.toLowerCase();
-            document.querySelectorAll('#spellsGrid .spell-item').forEach(item => {
-                item.style.display = item.dataset.name.includes(val) ? 'block' : 'none';
-            });
+            activeSearch = e.target.value.toLowerCase();
+            applySpellFilters();
         });
     }
 }
@@ -981,20 +1141,13 @@ function renderCharacterSheet(charId) {
         document.getElementById('sheetLevel').textContent = data.nivel;
     }
 
-    // Combat Vitals (Enhanced)
+    // HP Bar (replaces HP pill)
     const combatVitals = document.getElementById('sheetCombatVitals');
-    combatVitals.innerHTML = `
-        <div class="combat-pill" style="border-left-color: #ff4444">
-            <span class="pill-icon">❤️</span>
-            <div>
-                <div class="pill-label">Puntos de Golpe</div>
-                <div class="pill-value">${data.resumen.HP}</div>
-            </div>
-        </div>
+    combatVitals.innerHTML = renderHpSection(charId) + `
         <div class="combat-pill" style="border-left-color: #4488ff">
             <span class="pill-icon">🛡️</span>
             <div>
-                <div class="pill-label">Clase de Armadura</div>
+                <div class="pill-label">CA</div>
                 <div class="pill-value">${data.resumen.CA}</div>
             </div>
         </div>
@@ -1010,6 +1163,13 @@ function renderCharacterSheet(charId) {
             <div>
                 <div class="pill-label">Velocidad</div>
                 <div class="pill-value">${data.resumen.Velocidad}</div>
+            </div>
+        </div>
+        <div class="combat-pill" style="border-left-color: #aa88ff">
+            <span class="pill-icon">⚔️</span>
+            <div>
+                <div class="pill-label">Competencia</div>
+                <div class="pill-value">${data.resumen.Competencia || '+2'}</div>
             </div>
         </div>
     `;
@@ -1069,13 +1229,11 @@ function renderCharacterSheet(charId) {
     featuresHTML += '</div>';
     document.getElementById('tabFeatures').innerHTML = featuresHTML;
 
-    // Spells Tab
-    let spellsHTML = '<div class="feature-grid">';
-    if (data.conjuros && data.conjuros.length > 0) {
-        data.conjuros.forEach((spell, index) => {
-            const nivelText = spell.nivel === "Truco" ? "Truco" : `Nivel ${spell.nivel}`;
-
-            if (isCharacterEditing) {
+    // Spells Tab - use rich filter view when not editing
+    if (isCharacterEditing) {
+        let spellsHTML = '<div class="feature-grid">';
+        if (data.conjuros && data.conjuros.length > 0) {
+            data.conjuros.forEach((spell, index) => {
                 spellsHTML += `
                     <div class="spell-item">
                         <div style="display:flex; justify-content:space-between; margin-bottom:5px">
@@ -1086,31 +1244,19 @@ function renderCharacterSheet(charId) {
                         <textarea class="sheet-textarea" onchange="updateSpell(${index}, 'desc', this.value)">${spell.desc}</textarea>
                     </div>
                 `;
-            } else {
-                spellsHTML += `
-                    <div class="spell-item">
-                        <h3>${spell.nombre}</h3>
-                        <div class="item-meta">${nivelText}</div>
-                        <div class="item-desc">${spell.desc}</div>
-                    </div>
-                `;
-            }
-        });
-    } else if (!isCharacterEditing) {
-        spellsHTML += '<div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 40px;">Este personaje no posee capacidad de lanzamiento de conjuros conocida.</div>';
+            });
+        }
+        spellsHTML += `<button class="btn-add-item" onclick="addSpell()">+ Añadir Conjuro</button></div>`;
+        document.getElementById('tabSpells').innerHTML = spellsHTML;
+    } else {
+        renderSpellsWithFilters(data); // includes level filters + search
     }
 
+    // Inventory Tab - use categorized view when not editing
     if (isCharacterEditing) {
-        spellsHTML += `<button class="btn-add-item" onclick="addSpell()">+ Añadir Conjuro</button>`;
-    }
-    spellsHTML += '</div>';
-    document.getElementById('tabSpells').innerHTML = spellsHTML;
-
-    // Inventory Tab
-    let inventoryHTML = '<div class="feature-grid">';
-    if (data.inventario && data.inventario.length > 0) {
-        data.inventario.forEach((item, index) => {
-            if (isCharacterEditing) {
+        let inventoryHTML = '<div class="feature-grid">';
+        if (data.inventario && data.inventario.length > 0) {
+            data.inventario.forEach((item, index) => {
                 inventoryHTML += `
                     <div class="feature-item">
                         <div style="display:flex; justify-content:space-between; margin-bottom:5px">
@@ -1120,24 +1266,15 @@ function renderCharacterSheet(charId) {
                         <textarea class="sheet-textarea" onchange="updateInventoryItem(${index}, 'desc', this.value)">${item.desc}</textarea>
                     </div>
                 `;
-            } else {
-                inventoryHTML += `
-                    <div class="feature-item">
-                        <h3>${item.nombre}</h3>
-                        <div class="item-desc">${item.desc}</div>
-                    </div>
-                `;
-            }
-        });
-    } else if (!isCharacterEditing) {
-        inventoryHTML += '<div style="grid-column: 1/-1; text-align: center; color: var(--text-secondary); padding: 40px;">El inventario está vacío.</div>';
+            });
+        } else {
+            inventoryHTML += '<div style="grid-column:1/-1;text-align:center;color:var(--text-secondary);padding:40px">El inventario está vacío.</div>';
+        }
+        inventoryHTML += `<button class="btn-add-item" onclick="addInventoryItem()">+ Añadir Objeto</button></div>`;
+        document.getElementById('tabInventory').innerHTML = inventoryHTML;
+    } else {
+        renderCategorizedInventory(data, ''); // includes search + categories
     }
-
-    if (isCharacterEditing) {
-        inventoryHTML += `<button class="btn-add-item" onclick="addInventoryItem()">+ Añadir Objeto</button>`;
-    }
-    inventoryHTML += '</div>';
-    document.getElementById('tabInventory').innerHTML = inventoryHTML;
 
     // Reset Tabs
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -1145,8 +1282,10 @@ function renderCharacterSheet(charId) {
     document.querySelector('.tab-btn[data-tab="features"]').classList.add('active');
     document.getElementById('tabFeatures').classList.add('active');
 
-    // Show Container
+    // Show Container + dice roller
     document.getElementById('characterSheetContainer').style.display = 'flex';
+    const diceWidget = document.getElementById('diceRollerWidget');
+    if (diceWidget) diceWidget.style.display = 'flex';
 }
 
 // === Edit Actions ===
@@ -1288,7 +1427,12 @@ function setupCharacterSheetListeners() {
     // Close Button
     document.getElementById('closeSheetBtn').addEventListener('click', () => {
         document.getElementById('characterSheetContainer').style.display = 'none';
-        isCharacterEditing = false; // Reset edit on close
+        isCharacterEditing = false;
+        // Only hide dice roller if we're not in map/characters view
+        if (state.currentView === 'landing') {
+            const diceWidget = document.getElementById('diceRollerWidget');
+            if (diceWidget) diceWidget.style.display = 'none';
+        }
     });
 
     // Tab Navigation
@@ -1356,6 +1500,12 @@ function renderCharacterSelectionMenu() {
 function setView(viewName) {
     state.currentView = viewName;
 
+    // Manage body scroll class
+    document.body.classList.remove('view-map');
+    if (viewName === 'map') {
+        document.body.classList.add('view-map');
+    }
+
     // Hide all main containers
     document.getElementById('landingPage').style.display = 'none';
     document.getElementById('mapContainer').style.display = 'none';
@@ -1368,6 +1518,7 @@ function setView(viewName) {
 
     const editorToolbar = document.getElementById('editorToolbar');
     const hud = document.getElementById('hud');
+    const diceWidget = document.getElementById('diceRollerWidget');
 
     // Reset scroll position when changing views
     window.scrollTo(0, 0);
@@ -1378,16 +1529,19 @@ function setView(viewName) {
             document.getElementById('landingPage').style.display = 'flex';
             if (editorToolbar) editorToolbar.style.display = 'none';
             if (hud) hud.style.display = 'none';
+            if (diceWidget) diceWidget.style.display = 'none';
             break;
         case 'map':
             document.getElementById('mapContainer').style.display = 'block';
             if (editorToolbar) editorToolbar.style.display = 'flex';
             if (hud) hud.style.display = 'flex';
+            if (diceWidget) diceWidget.style.display = 'flex';
             break;
         case 'characters':
             document.getElementById('characterSection').style.display = 'flex';
             if (editorToolbar) editorToolbar.style.display = 'none';
             if (hud) hud.style.display = 'flex';
+            if (diceWidget) diceWidget.style.display = 'flex';
             break;
     }
 }
@@ -1395,11 +1549,5 @@ function setView(viewName) {
 // ============================================
 // Start Application
 // ============================================
-
-// Auto-redirect mobile users to the dedicated mobile version
-if (window.innerWidth <= 768 && !window.location.href.includes('m_')) {
-    window.location.href = 'm_index.html';
-}
-
 init();
 
