@@ -99,7 +99,7 @@ function setupEventListeners() {
     });
 
     // Character Selection
-    ['Vel', 'Zero', 'Asthor', 'Yin'].forEach(id => {
+    ['Vel', 'Zero', 'Asthor'].forEach(id => {
         const card = document.getElementById(`charCard${id}`);
         if (card) {
             card.addEventListener('click', () => {
@@ -995,7 +995,7 @@ function setupCharacterSheetListeners() {
     });
 
     // Character Card Click Handlers
-    ['Vel', 'Zero', 'Asthor', 'Yin'].forEach(id => {
+    ['Vel', 'Zero', 'Asthor'].forEach(id => {
         const card = document.getElementById(`charCard${id}`);
         if (card) {
             const newCard = card.cloneNode(true);

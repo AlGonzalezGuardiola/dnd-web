@@ -225,13 +225,6 @@ window.initialGameData = {
                     "tamano": 1
                 },
                 {
-                    "x": 0.6460651178010471,
-                    "y": 0.4739929401993355,
-                    "nombre": "Yin Mata a Juan Cortes",
-                    "destino": "YinvsCortes",
-                    "tamano": 1
-                },
-                {
                     "x": 0.34921465968586385,
                     "y": 0.5703211517165006,
                     "nombre": "Asthor conoce a Titania",
@@ -261,10 +254,6 @@ window.initialGameData = {
         },
         "Violet y Asthor": {
             "imagen": "assets/imagenes/Violet.jpg",
-            "pines": []
-        },
-        "YinvsCortes": {
-            "imagen": "assets/imagenes/YinvsCortes.jpg",
             "pines": []
         },
         "TitaniaAsthor": {
