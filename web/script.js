@@ -79,11 +79,13 @@ function setupEventListeners() {
     // Navigation
     const btnHome = document.getElementById('btnHome');
     if (btnHome) btnHome.addEventListener('click', () => {
-        state.history = []; // Limpiar historial al volver a inicio
+        state.history = [];
         combatModeActive = false;
-        // Hide character sheet if open
+        combatState.isActive = false;
         const sheet = document.getElementById('characterSheetContainer');
         if (sheet) sheet.style.display = 'none';
+        const manager = document.getElementById('combatManagerSection');
+        if (manager) manager.style.display = 'none';
         isCharacterEditing = false;
         setView('landing');
     });
@@ -106,13 +108,7 @@ function setupEventListeners() {
         setView('characters');
     });
 
-    document.getElementById('cardCombatMode').addEventListener('click', showCombatMode);
-
-    document.getElementById('cardCombatPlayer').addEventListener('click', showCombatPlayerSelect);
-
-    document.getElementById('cardCombatEnemy').addEventListener('click', () => {
-        showNotification('👹 No hay monstruos creados todavía', 2500);
-    });
+    document.getElementById('cardCombatMode').addEventListener('click', showCombatSetup);
 
     // Character Selection
     ['Vel', 'Zero', 'Asthor'].forEach(id => {
@@ -350,19 +346,15 @@ function navigateToMap(mapId) {
 function navigateBack() {
     // Combat mode back navigation
     if (combatModeActive) {
-        const sheetOpen = document.getElementById('characterSheetContainer').style.display !== 'none';
-        if (sheetOpen) {
-            // Sheet open → go back to player select
-            document.getElementById('characterSheetContainer').style.display = 'none';
-            isCharacterEditing = false;
-            const diceWidget = document.getElementById('diceRollerWidget');
-            if (diceWidget) diceWidget.style.display = 'none';
-            setView('combatPlayerSelect');
-            renderCombatPlayerList();
-        } else {
-            // Player select → go back to combat mode landing
+        const view = state.currentView;
+        if (view === 'combatManager') {
+            // In active combat: back does nothing (use "Fin" button)
+            return;
+        } else if (view === 'combatInit') {
+            showCombatSetup();
+        } else if (view === 'combatSetup') {
             combatModeActive = false;
-            setView('combatMode');
+            setView('landing');
         }
         return;
     }
@@ -703,6 +695,17 @@ const notesState = {};
 const diceHistory = [];
 const demonicFormState = {}; // { charId: { active: bool, turnsLeft: int } }
 const turnPlannerState = {}; // { charId: { accion: null, adicional: null, reaccion: null } }
+const combatState = {
+    selectedIds: [],       // charIds selected for this combat
+    participants: [],      // sorted by initiative after beginCombat()
+    currentIndex: 0,
+    round: 1,
+    isActive: false,
+    log: [],               // array of log entry objects
+    nextLogId: 0,
+};
+// participant object: { id, name, initiative, hp:{current,max}, ac, conditions:[], note:'', charData }
+// log entry: { id, round, participantId, participantName, actions:[{nombre,dice}], note:'', isCurrent:bool }
 
 // Combat mode navigation flag
 let combatModeActive = false;
@@ -1967,16 +1970,9 @@ function setupCharacterSheetListeners() {
         document.getElementById('characterSheetContainer').style.display = 'none';
         isCharacterEditing = false;
         const diceWidget = document.getElementById('diceRollerWidget');
-        if (combatModeActive) {
-            // Return to combat player select
+        // Combat mode no longer opens character sheets, so just go to characters view
+        if (state.currentView === 'landing') {
             if (diceWidget) diceWidget.style.display = 'none';
-            setView('combatPlayerSelect');
-            renderCombatPlayerList();
-        } else {
-            // Only hide dice roller if we're not in map/characters view
-            if (state.currentView === 'landing') {
-                if (diceWidget) diceWidget.style.display = 'none';
-            }
         }
     });
 
@@ -2043,38 +2039,468 @@ function renderCharacterSelectionMenu() {
 // ============================================
 // Combat Mode Navigation
 // ============================================
-function showCombatMode() {
-    combatModeActive = false;
-    setView('combatMode');
-}
-
-function showCombatPlayerSelect() {
+function showCombatSetup() {
     combatModeActive = true;
-    setView('combatPlayerSelect');
-    renderCombatPlayerList();
+    setView('combatSetup');
+    renderCombatSetup();
 }
 
-function renderCombatPlayerList() {
-    const container = document.getElementById('combatPlayerListContainer');
-    if (!container || !window.characterData) return;
-    container.innerHTML = Object.values(window.characterData).map(char => {
-        const imgUrl = char.imagen || 'assets/imagenes/placeholder.jpg';
-        return `<div class="card character-card" onclick="showCombatCharacter('${char.id}')">
-            <div class="card-img-wrapper" style="width:72px;height:72px;border-radius:50%;overflow:hidden;border:2px solid var(--accent-gold);margin-bottom:8px;box-shadow:0 0 10px rgba(0,0,0,0.5);flex-shrink:0;">
-                <img src="${imgUrl}" style="width:100%;height:100%;object-fit:cover;object-position:top center;" onerror="this.src='https://placehold.co/100x100/1e2536/d4af37?text=?'">
+function showCombatMode() {
+    // Keep alias for landing card listener
+    showCombatSetup();
+}
+
+function goToCombatInitiative() {
+    if (combatState.selectedIds.length < 2) {
+        showNotification('Selecciona al menos 2 participantes', 2500);
+        return;
+    }
+    // Build participant list from selectedIds
+    combatState.participants = combatState.selectedIds.map(id => {
+        const char = window.characterData[id];
+        const maxHp = parseInt(char.resumen?.HP) || 10;
+        return {
+            id,
+            name: char.nombre,
+            initiative: null,
+            hp: { current: maxHp, max: maxHp },
+            ac: char.resumen?.CA || '10',
+            conditions: [],
+            note: '',
+            charData: char,
+        };
+    });
+    setView('combatInit');
+    renderCombatInitiative();
+}
+
+function beginCombat() {
+    const missing = combatState.participants.filter(p => p.initiative === null);
+    if (missing.length > 0) {
+        showNotification(`Faltan iniciativas: ${missing.map(p => p.name.split(' ')[0]).join(', ')}`, 3000);
+        return;
+    }
+    // Sort descending by initiative
+    combatState.participants.sort((a, b) => b.initiative - a.initiative);
+    combatState.currentIndex = 0;
+    combatState.round = 1;
+    combatState.isActive = true;
+    combatState.log = [];
+    combatState.nextLogId = 0;
+    createCurrentTurnEntry();
+    setView('combatManager');
+    renderCombatManager();
+}
+
+function confirmEndCombat() {
+    if (confirm('¿Terminar el combate?')) {
+        combatState.isActive = false;
+        combatState.selectedIds = [];
+        combatState.participants = [];
+        combatState.log = [];
+        combatState.nextLogId = 0;
+        showCombatSetup();
+    }
+}
+
+// ---- Setup Screen ----
+function renderCombatSetup() {
+    const grid = document.getElementById('combatParticipantGrid');
+    if (!grid || !window.characterData) return;
+    grid.innerHTML = Object.values(window.characterData).map(char => {
+        const isSelected = combatState.selectedIds.includes(char.id);
+        const imgUrl = char.imagen || '';
+        return `<div class="combat-select-card${isSelected ? ' selected' : ''}"
+                     onclick="toggleCombatParticipant('${char.id}')">
+            <div class="combat-select-portrait">
+                <img src="${imgUrl}" onerror="this.style.display='none'">
             </div>
-            <div class="card-title">${char.nombre}</div>
-            <div class="char-card-meta">${char.raza} · ${char.clase} · Nv ${char.nivel}</div>
+            <div class="combat-select-info">
+                <div class="combat-select-name">${char.nombre}</div>
+                <div class="combat-select-meta">${char.clase || ''} · Nv ${char.nivel || '?'}</div>
+                <div class="combat-select-vitals">❤️ ${char.resumen?.HP || '?'} · 🛡️ ${char.resumen?.CA || '?'}</div>
+            </div>
+            <div class="combat-select-check">${isSelected ? '✓' : ''}</div>
+        </div>`;
+    }).join('');
+    const count = combatState.selectedIds.length;
+    const countEl = document.getElementById('combatSetupCount');
+    if (countEl) countEl.textContent = `${count} seleccionado${count !== 1 ? 's' : ''}`;
+}
+
+function toggleCombatParticipant(charId) {
+    const idx = combatState.selectedIds.indexOf(charId);
+    if (idx >= 0) combatState.selectedIds.splice(idx, 1);
+    else combatState.selectedIds.push(charId);
+    renderCombatSetup();
+}
+
+// ---- Initiative Screen ----
+function renderCombatInitiative() {
+    const list = document.getElementById('combatInitList');
+    if (!list) return;
+    list.innerHTML = combatState.participants.map(p => `
+        <div class="combat-init-row">
+            <div class="combat-init-portrait">
+                <img src="${p.charData?.imagen || ''}" onerror="this.style.display='none'">
+            </div>
+            <div class="combat-init-info">
+                <div class="combat-init-name">${p.name}</div>
+                <div class="combat-init-stats">❤️ ${p.hp.max} · 🛡️ ${p.ac}</div>
+            </div>
+            <div class="combat-init-input-wrap">
+                <label>Iniciativa</label>
+                <input type="number" class="combat-init-input"
+                       placeholder="—" min="-5" max="30"
+                       value="${p.initiative !== null ? p.initiative : ''}"
+                       oninput="setParticipantInitiative('${p.id}', this.value)">
+            </div>
+        </div>
+    `).join('');
+}
+
+function setParticipantInitiative(id, value) {
+    const p = combatState.participants.find(x => x.id === id);
+    if (p) p.initiative = value === '' ? null : parseInt(value);
+}
+
+// ---- Combat Manager ----
+function renderCombatManager() {
+    const roundEl = document.getElementById('combatRoundBadge');
+    if (roundEl) roundEl.textContent = `Ronda ${combatState.round}`;
+    renderTurnQueue();
+    renderActivePanel();
+    renderCombatLog();
+}
+
+function renderTurnQueue() {
+    const queue = document.getElementById('combatTurnQueue');
+    if (!queue) return;
+    queue.innerHTML = combatState.participants.map((p, i) => {
+        const isCurrent = i === combatState.currentIndex;
+        const isDead = p.hp.current <= 0;
+        const hpPct = p.hp.max > 0 ? Math.max(0, (p.hp.current / p.hp.max) * 100) : 0;
+        const hpColor = hpPct <= 0 ? '#555' : hpPct <= 25 ? '#ff4444' : hpPct <= 50 ? '#ffaa00' : '#4caf50';
+        const cls = ['turn-queue-item', isCurrent ? 'active' : '', isDead ? 'dead' : ''].filter(Boolean).join(' ');
+        return `<div class="${cls}">
+            <div class="tqi-init">${p.initiative}</div>
+            <div class="tqi-name">${p.name.split(' ')[0]}</div>
+            <div class="tqi-hp-bar"><div class="tqi-hp-fill" style="width:${hpPct}%;background:${hpColor}"></div></div>
+            <div class="tqi-hp-text">${p.hp.current}/${p.hp.max}</div>
+        </div>`;
+    }).join('');
+    setTimeout(() => {
+        const active = queue.querySelector('.turn-queue-item.active');
+        if (active) active.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    }, 50);
+}
+
+function renderActivePanel() {
+    const p = combatState.participants[combatState.currentIndex];
+    const panel = document.getElementById('combatActivePanel');
+    if (!p || !panel) return;
+
+    const currentEntry = getCurrentLogEntry();
+    const hpPct = p.hp.max > 0 ? Math.max(0, (p.hp.current / p.hp.max) * 100) : 0;
+    const hpClass = hpPct <= 0 ? 'hp-dead' : hpPct <= 25 ? 'hp-critical' : hpPct <= 50 ? 'hp-low' : '';
+
+    // Conditions
+    const condHTML = CONDITIONS.map(c => {
+        const isActive = p.conditions.includes(c.id);
+        return `<button class="combat-cond-btn${isActive ? ' active' : ''}"
+                        onclick="toggleParticipantCondition('${p.id}','${c.id}')"
+                        title="${c.title}">${c.label} ${c.title}</button>`;
+    }).join('');
+
+    // Action chips for characters with data
+    let actionChipsHTML = '';
+    if (p.charData) {
+        const allItems = [...(p.charData.combateExtra || []), ...(p.charData.conjuros || [])];
+        const sections = [
+            { key: 'accion', icon: '🎯', label: 'Acciones' },
+            { key: 'adicional', icon: '⚡', label: 'Adicionales' },
+            { key: 'reaccion', icon: '↩️', label: 'Reacciones' },
+        ];
+        const grouped = sections.map(sec => {
+            const items = allItems.filter(a => inferActionType(a) === sec.key);
+            if (!items.length) return '';
+            const chips = items.map(a => {
+                const dice = a.atk
+                    ? `${a.atk}${a.dado && a.dado !== '—' ? ' / ' + a.dado : ''}`
+                    : (a.dado && a.dado !== '—' ? a.dado : (extractDiceFromDesc(a.desc) || ''));
+                const isUsed = currentEntry?.actions.some(x => x.nombre === a.nombre) || false;
+                const safeName = a.nombre.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                const safeDice = dice.replace(/'/g, "\\'");
+                return `<button class="combat-chip${isUsed ? ' used' : ''}"
+                                onclick="toggleCombatAction('${p.id}','${safeName}','${safeDice}')">
+                    ${a.nombre}${dice ? `<small>${dice}</small>` : ''}
+                </button>`;
+            }).join('');
+            return `<div class="combat-chip-group">
+                <div class="combat-chip-label">${sec.icon} ${sec.label}</div>
+                <div class="combat-chips">${chips}</div>
+            </div>`;
+        }).join('');
+        actionChipsHTML = `<div class="combat-actions-section">
+            <div class="combat-actions-title">⚡ Acciones del turno</div>
+            ${grouped}
+            <div class="combat-custom-row">
+                <input type="text" id="customActionInput" class="combat-custom-input"
+                       placeholder="Acción personalizada..."
+                       onkeydown="if(event.key==='Enter') addCustomCombatAction('${p.id}')">
+                <button onclick="addCustomCombatAction('${p.id}')">+ Añadir</button>
+            </div>
+        </div>`;
+    } else {
+        actionChipsHTML = `<div class="combat-actions-section">
+            <div class="combat-actions-title">⚡ Acciones del turno</div>
+            <div class="combat-custom-row">
+                <input type="text" id="customActionInput" class="combat-custom-input"
+                       placeholder="Añadir acción..."
+                       onkeydown="if(event.key==='Enter') addCustomCombatAction('${p.id}')">
+                <button onclick="addCustomCombatAction('${p.id}')">+ Añadir</button>
+            </div>
+        </div>`;
+    }
+
+    // Recorded actions
+    const recordedItems = currentEntry?.actions || [];
+    const recordedHTML = recordedItems.length
+        ? recordedItems.map(a => {
+            const safeName = a.nombre.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            return `<div class="combat-recorded-item">
+                <span>✓ ${a.nombre}${a.dice ? ` — ${a.dice}` : ''}</span>
+                <button onclick="removeCombatAction('${p.id}','${safeName}')">×</button>
+            </div>`;
+        }).join('')
+        : `<div class="combat-recorded-empty">Sin acciones registradas</div>`;
+
+    panel.innerHTML = `
+        <div class="combat-active-header">
+            <div class="combat-active-portrait">
+                ${p.charData?.imagen ? `<img src="${p.charData.imagen}" onerror="this.style.display='none'">` : '<div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,0.05);border:2px solid var(--border-color);"></div>'}
+            </div>
+            <div class="combat-active-meta">
+                <div class="combat-active-name">${p.name}</div>
+                ${p.charData ? `<div class="combat-active-class">${p.charData.clase} · Nv ${p.charData.nivel}</div>` : ''}
+            </div>
+        </div>
+        <div class="combat-active-vitals">
+            <div class="combat-vital-block ${hpClass}">
+                <div class="combat-vital-label">❤️ Puntos de Golpe</div>
+                <div class="combat-vital-value">${p.hp.current} / ${p.hp.max}</div>
+                <div class="combat-hp-btns">
+                    <button onclick="adjustParticipantHp('${p.id}',-5)">−5</button>
+                    <button onclick="adjustParticipantHp('${p.id}',-1)">−1</button>
+                    <input type="number" class="combat-hp-input" value="${p.hp.current}"
+                           onchange="setParticipantHp('${p.id}',parseInt(this.value)||0)">
+                    <button onclick="adjustParticipantHp('${p.id}',1)">+1</button>
+                    <button onclick="adjustParticipantHp('${p.id}',5)">+5</button>
+                </div>
+            </div>
+            <div class="combat-vital-block">
+                <div class="combat-vital-label">🛡️ Clase de Armadura</div>
+                <div class="combat-vital-value">${p.ac}</div>
+            </div>
+        </div>
+        <div class="combat-conds-bar">${condHTML}</div>
+        ${actionChipsHTML}
+        <div class="combat-recorded-section">
+            <div class="combat-recorded-title">Registrado este turno:</div>
+            <div id="combatRecordedList">${recordedHTML}</div>
+        </div>
+        <div class="combat-notes-section">
+            <textarea class="combat-notes-input" placeholder="Notas del turno..."
+                      oninput="setCombatTurnNote('${p.id}',this.value)">${currentEntry?.note || ''}</textarea>
+        </div>
+    `;
+}
+
+// ---- Log Functions ----
+function createCurrentTurnEntry() {
+    const p = combatState.participants[combatState.currentIndex];
+    if (!p) return;
+    combatState.log.push({
+        id: combatState.nextLogId++,
+        round: combatState.round,
+        participantId: p.id,
+        participantName: p.name,
+        actions: [],
+        note: '',
+        isCurrent: true,
+    });
+}
+
+function getCurrentLogEntry() {
+    return combatState.log.find(e => e.isCurrent);
+}
+
+function getLogEntry(logId) {
+    return combatState.log.find(e => e.id === logId);
+}
+
+function toggleCombatAction(participantId, nombre, dice) {
+    const entry = getCurrentLogEntry();
+    if (!entry) return;
+    const idx = entry.actions.findIndex(a => a.nombre === nombre);
+    if (idx >= 0) entry.actions.splice(idx, 1);
+    else entry.actions.push({ nombre, dice: dice || '' });
+    renderActivePanel();
+    renderCombatLog();
+}
+
+function removeCombatAction(participantId, nombre) {
+    const entry = getCurrentLogEntry();
+    if (!entry) return;
+    entry.actions = entry.actions.filter(a => a.nombre !== nombre);
+    renderActivePanel();
+    renderCombatLog();
+}
+
+function addCustomCombatAction(participantId) {
+    const input = document.getElementById('customActionInput');
+    const text = input?.value?.trim();
+    if (!text) return;
+    const entry = getCurrentLogEntry();
+    if (!entry) return;
+    entry.actions.push({ nombre: text, dice: '' });
+    if (input) input.value = '';
+    renderActivePanel();
+    renderCombatLog();
+}
+
+function setCombatTurnNote(participantId, value) {
+    const entry = getCurrentLogEntry();
+    if (entry) entry.note = value;
+}
+
+function toggleLogAction(logId, nombre, dice) {
+    const entry = getLogEntry(logId);
+    if (!entry) return;
+    const idx = entry.actions.findIndex(a => a.nombre === nombre);
+    if (idx >= 0) entry.actions.splice(idx, 1);
+    else entry.actions.push({ nombre, dice: dice || '' });
+    renderCombatLog();
+    if (entry.isCurrent) renderActivePanel();
+}
+
+function removeLogAction(logId, nombre) {
+    const entry = getLogEntry(logId);
+    if (!entry) return;
+    entry.actions = entry.actions.filter(a => a.nombre !== nombre);
+    renderCombatLog();
+    if (entry.isCurrent) renderActivePanel();
+}
+
+function addLogCustomAction(logId) {
+    const input = document.getElementById(`logCustomInput_${logId}`);
+    const text = input?.value?.trim();
+    if (!text) return;
+    const entry = getLogEntry(logId);
+    if (!entry) return;
+    entry.actions.push({ nombre: text, dice: '' });
+    if (input) input.value = '';
+    renderCombatLog();
+    if (entry.isCurrent) renderActivePanel();
+}
+
+function toggleLogEdit(logId) {
+    const area = document.getElementById(`logEdit_${logId}`);
+    if (area) area.style.display = area.style.display === 'none' ? 'block' : 'none';
+}
+
+function renderLogEditArea(entry, p) {
+    let chips = '';
+    if (p?.charData) {
+        const allItems = [...(p.charData.combateExtra || []), ...(p.charData.conjuros || [])];
+        chips = allItems.map(a => {
+            const dice = a.atk || (a.dado && a.dado !== '—' ? a.dado : '') || '';
+            const isUsed = entry.actions.some(x => x.nombre === a.nombre);
+            const safeName = a.nombre.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            const safeDice = dice.replace(/'/g, "\\'");
+            return `<button class="combat-chip${isUsed ? ' used' : ''}"
+                            onclick="toggleLogAction(${entry.id},'${safeName}','${safeDice}')">
+                ${a.nombre}
+            </button>`;
+        }).join('');
+    }
+    const actionsHtml = entry.actions.map(a => {
+        const safeName = a.nombre.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        return `<div class="combat-recorded-item">
+            ✓ ${a.nombre}${a.dice ? ` — ${a.dice}` : ''}
+            <button onclick="removeLogAction(${entry.id},'${safeName}')">×</button>
+        </div>`;
+    }).join('');
+    return `<div class="log-edit-chips">${chips}</div>
+        <div class="log-edit-recorded">${actionsHtml}</div>
+        <div class="log-custom-row">
+            <input type="text" id="logCustomInput_${entry.id}" class="combat-custom-input"
+                   placeholder="Acción personalizada..."
+                   onkeydown="if(event.key==='Enter') addLogCustomAction(${entry.id})">
+            <button onclick="addLogCustomAction(${entry.id})">+</button>
+        </div>`;
+}
+
+function renderCombatLog() {
+    const logEl = document.getElementById('combatLog');
+    if (!logEl) return;
+    const entries = [...combatState.log].reverse();
+    logEl.innerHTML = entries.map(entry => {
+        const p = combatState.participants.find(x => x.id === entry.participantId);
+        const actionsStr = entry.actions.map(a => `${a.nombre}${a.dice ? ` (${a.dice})` : ''}`).join(' · ') || '—';
+        return `<div class="combat-log-entry${entry.isCurrent ? ' log-current' : ''}">
+            <div class="log-entry-header">
+                <span class="log-round-badge">R${entry.round}</span>
+                <span class="log-participant-name">${entry.participantName.split(' ')[0]}</span>
+                ${entry.isCurrent ? '<span class="log-current-badge">← ahora</span>' : ''}
+                <button class="log-edit-toggle" onclick="toggleLogEdit(${entry.id})" title="Editar">✏️</button>
+            </div>
+            <div class="log-actions-display">${actionsStr}</div>
+            ${entry.note ? `<div class="log-note">📝 ${entry.note}</div>` : ''}
+            <div class="log-edit-area" id="logEdit_${entry.id}" style="display:none;">
+                ${renderLogEditArea(entry, p)}
+            </div>
         </div>`;
     }).join('');
 }
 
-function showCombatCharacter(charId) {
-    combatModeActive = true;
-    isCharacterEditing = false;
-    // Hide the player-select section before rendering sheet
-    document.getElementById('combatPlayerSelectSection').style.display = 'none';
-    renderCharacterSheet(charId);
+// ---- HP + Conditions + Turn Advance ----
+function adjustParticipantHp(id, delta) {
+    const p = combatState.participants.find(x => x.id === id);
+    if (!p) return;
+    p.hp.current = Math.max(0, Math.min(p.hp.max, p.hp.current + delta));
+    renderTurnQueue();
+    renderActivePanel();
+}
+
+function setParticipantHp(id, value) {
+    const p = combatState.participants.find(x => x.id === id);
+    if (!p) return;
+    const v = isNaN(value) ? p.hp.current : value;
+    p.hp.current = Math.max(0, Math.min(p.hp.max, v));
+    renderTurnQueue();
+    renderActivePanel();
+}
+
+function toggleParticipantCondition(id, condId) {
+    const p = combatState.participants.find(x => x.id === id);
+    if (!p) return;
+    const idx = p.conditions.indexOf(condId);
+    if (idx >= 0) p.conditions.splice(idx, 1);
+    else p.conditions.push(condId);
+    renderActivePanel();
+}
+
+function nextCombatTurn() {
+    const current = getCurrentLogEntry();
+    if (current) current.isCurrent = false;
+    combatState.currentIndex++;
+    if (combatState.currentIndex >= combatState.participants.length) {
+        combatState.currentIndex = 0;
+        combatState.round++;
+    }
+    createCurrentTurnEntry();
+    renderCombatManager();
 }
 
 // ============================================
@@ -2093,8 +2519,9 @@ function setView(viewName) {
     document.getElementById('landingPage').style.display = 'none';
     document.getElementById('mapContainer').style.display = 'none';
     document.getElementById('characterSection').style.display = 'none';
-    document.getElementById('combatModeSection').style.display = 'none';
-    document.getElementById('combatPlayerSelectSection').style.display = 'none';
+    document.getElementById('combatSetupSection').style.display = 'none';
+    document.getElementById('combatInitSection').style.display = 'none';
+    document.getElementById('combatManagerSection').style.display = 'none';
     document.getElementById('welcomeScreen').style.display = 'none';
 
     // Also hide the character sheet if it was open
@@ -2128,21 +2555,27 @@ function setView(viewName) {
             if (hud) hud.style.display = 'flex';
             if (diceWidget) diceWidget.style.display = 'flex';
             break;
-        case 'combatMode':
-            document.getElementById('combatModeSection').style.display = 'flex';
+        case 'combatSetup':
+            document.getElementById('combatSetupSection').style.display = 'flex';
             if (editorToolbar) editorToolbar.style.display = 'none';
             if (hud) hud.style.display = 'flex';
             if (diceWidget) diceWidget.style.display = 'none';
-            document.getElementById('breadcrumbs').textContent = '⚔️ Combate';
+            document.getElementById('breadcrumbs').textContent = '⚔️ Combate › Configuración';
             document.getElementById('btnBack').style.display = 'flex';
             break;
-        case 'combatPlayerSelect':
-            document.getElementById('combatPlayerSelectSection').style.display = 'flex';
+        case 'combatInit':
+            document.getElementById('combatInitSection').style.display = 'flex';
             if (editorToolbar) editorToolbar.style.display = 'none';
             if (hud) hud.style.display = 'flex';
             if (diceWidget) diceWidget.style.display = 'none';
-            document.getElementById('breadcrumbs').textContent = '⚔️ Combate › Jugador';
+            document.getElementById('breadcrumbs').textContent = '⚔️ Combate › Iniciativa';
             document.getElementById('btnBack').style.display = 'flex';
+            break;
+        case 'combatManager':
+            document.getElementById('combatManagerSection').style.display = 'flex';
+            if (editorToolbar) editorToolbar.style.display = 'none';
+            if (hud) hud.style.display = 'none';
+            if (diceWidget) diceWidget.style.display = 'flex';
             break;
     }
 }
