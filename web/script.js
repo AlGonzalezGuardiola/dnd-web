@@ -40,6 +40,7 @@ async function init() {
         setupDiceRoller();
         setView('landing');
         updateTaskMd('Initialize');
+        initRole();
         loadSavedCombatIfAny();
     } catch (error) {
         console.error('Error loading data:', error);
@@ -697,6 +698,93 @@ const notesState = {};
 const diceHistory = [];
 const demonicFormState = {}; // { charId: { active: bool, turnsLeft: int } }
 const turnPlannerState = {}; // { charId: { accion: null, adicional: null, reaccion: null } }
+// ============================================
+// Role System
+// ============================================
+const ROLE_KEY = 'dnd_game_role';
+let gameRole = { type: 'master', characterId: null };
+
+function isMaster() { return gameRole.type === 'master'; }
+
+function initRole() {
+    const saved = localStorage.getItem(ROLE_KEY);
+    if (saved) {
+        try { gameRole = JSON.parse(saved); } catch(e) {}
+        updateRoleIndicator();
+        return; // skip overlay, role already set
+    }
+    showRoleSelectionOverlay();
+}
+
+function showRoleSelectionOverlay() {
+    document.getElementById('roleSelectOverlay')?.remove();
+    const overlay = document.createElement('div');
+    overlay.id = 'roleSelectOverlay';
+    overlay.className = 'role-select-overlay';
+    overlay.innerHTML = `
+        <div class="role-select-modal">
+            <div class="role-select-title">⚔️ Crónicas de D&D</div>
+            <div class="role-select-subtitle">Elige tu rol para esta sesión</div>
+            <div class="role-cards">
+                <button class="role-card master-card" onclick="selectRole('master', null)">
+                    🎲 Master
+                    <small>Control total del combate</small>
+                </button>
+                <button class="role-card player-card" onclick="showPlayerPicker()">
+                    🗡️ Jugador
+                    <small>Gestiona tu propio turno</small>
+                </button>
+            </div>
+            <div id="playerPickerSection" style="display:none">
+                <div class="role-picker-label">¿Qué personaje eres?</div>
+                <div id="playerPickerCards" class="player-picker-cards"></div>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+}
+
+function showPlayerPicker() {
+    const section = document.getElementById('playerPickerSection');
+    const cardsEl = document.getElementById('playerPickerCards');
+    if (!section || !cardsEl) return;
+    section.style.display = 'block';
+    const jugadores = Object.entries(window.characterData || {})
+        .filter(([, ch]) => ch.tipo === 'jugador');
+    cardsEl.innerHTML = jugadores.map(([id, ch]) =>
+        `<button class="player-picker-card" onclick="selectRole('jugador','${id}')">
+            ${ch.nombre || id}
+        </button>`
+    ).join('') || '<span style="color:var(--text-muted)">No hay jugadores disponibles</span>';
+}
+
+function selectRole(type, characterId) {
+    gameRole = { type, characterId };
+    localStorage.setItem(ROLE_KEY, JSON.stringify(gameRole));
+    document.getElementById('roleSelectOverlay')?.remove();
+    updateRoleIndicator();
+}
+
+function updateRoleIndicator() {
+    // Update body class for CSS-based hiding
+    if (isMaster()) {
+        document.body.classList.remove('role-jugador');
+    } else {
+        document.body.classList.add('role-jugador');
+    }
+    // Update role badge in HUD
+    const indicator = document.getElementById('roleIndicator');
+    if (!indicator) return;
+    if (isMaster()) {
+        indicator.className = 'role-indicator master';
+        indicator.textContent = '🎲 Master';
+    } else {
+        const ch = window.characterData?.[gameRole.characterId];
+        const name = ch ? (ch.nombre || gameRole.characterId) : gameRole.characterId;
+        indicator.className = 'role-indicator jugador';
+        indicator.textContent = `🗡️ ${name}`;
+    }
+}
+
 const combatState = {
     selectedIds: [],       // charIds selected for this combat
     participants: [],      // sorted by initiative after beginCombat()
@@ -705,6 +793,7 @@ const combatState = {
     isActive: false,
     log: [],               // array of log entry objects
     nextLogId: 0,
+    extraAttackTurn: false, // true when in extra attack mini-turn
 };
 // participant object: { id, name, initiative, hp:{current,max}, ac, conditions:[], note:'', charData }
 // log entry: { id, round, participantId, participantName, actions:[{nombre,dice}], note:'', isCurrent:bool }
@@ -2309,12 +2398,15 @@ function renderTurnQueue() {
                   return c ? `<span title="${c.title}">${c.label}</span>` : '';
               }).join('')}</div>`
             : '';
+        const isCurrentParticipant = isCurrent;
+        const showHp = !(!isMaster() && (p.tipo === 'enemigo'));
         return `<div class="${cls}">
             <div class="tqi-init">${p.initiative}</div>
             <div class="tqi-name">${p.name.split(' ')[0]}</div>
             <div class="tqi-hp-bar"><div class="tqi-hp-fill" style="width:${hpPct}%;background:${hpColor}"></div></div>
-            <div class="tqi-hp-text">${p.hp.current}/${p.hp.max}</div>
+            <div class="tqi-hp-text">${showHp ? `${p.hp.current}/${p.hp.max}` : '? / ?'}</div>
             ${condIcons}
+            ${isCurrentParticipant && combatState.extraAttackTurn ? '<div class="tqi-extra-badge">+ATQ</div>' : ''}
         </div>`;
     }).join('');
     setTimeout(() => {
@@ -2441,6 +2533,22 @@ function renderActivePanel() {
     const panel = document.getElementById('combatActivePanel');
     if (!p || !panel) return;
 
+    const isExtraAttack = combatState.extraAttackTurn;
+
+    // Role-gated: show waiting panel if jugador and not their turn
+    if (!isMaster()) {
+        if (p.tipo === 'enemigo') {
+            panel.className = 'combat-active-panel';
+            panel.innerHTML = `<div class="waiting-panel">💀 Turno del enemigo<small>El Master gestiona este turno</small></div>`;
+            return;
+        }
+        if (gameRole.characterId && p.id !== gameRole.characterId) {
+            panel.className = 'combat-active-panel';
+            panel.innerHTML = `<div class="waiting-panel">⏳ Turno de ${p.name.split(' ')[0]}...<small>El Master gestiona este turno</small></div>`;
+            return;
+        }
+    }
+
     const currentEntry = getCurrentLogEntry();
     const hpPct = p.hp.max > 0 ? Math.max(0, (p.hp.current / p.hp.max) * 100) : 0;
     const hpClass = hpPct <= 0 ? 'hp-dead' : hpPct <= 25 ? 'hp-critical' : hpPct <= 50 ? 'hp-low' : '';
@@ -2468,53 +2576,65 @@ function renderActivePanel() {
     ];
     if (p.charData) {
         const allItems = [...(p.charData.combateExtra || []), ...(p.charData.conjuros || [])];
-        const slotSections = SLOTS.map(slot => {
-            if (slot.extraOnly && !p.charData?.extraAttack) return '';
-            const isSlotUsed = (currentEntry?.slots?.[slot.key]) ||
-                (slot.extraOnly
-                    ? false
-                    : currentEntry?.actions.some(a => inferActionType(a) === slot.tipo && !allItems.find(x => x.nombre === a.nombre)?.extraAttack) || false);
-            // For regular accion slot, show actions of tipo accion (excluding extraOnly ones)
-            // For extraAtaque slot, we still show accion type (it's a second use)
-            const items = slot.extraOnly
-                ? allItems.filter(a => inferActionType(a) === 'accion')
-                : allItems.filter(a => inferActionType(a) === slot.tipo);
-            const chips = items.map(a => {
-                const atk = a.atk || '';
-                const dado = a.dado && a.dado !== '—' ? a.dado : (extractDiceFromDesc(a.desc) || '');
-                const diceDisplay = atk ? `${atk}${dado ? ' / ' + dado : ''}` : dado;
-                const isUsed = currentEntry?.actions.some(x => x.nombre === a.nombre) || false;
-                const safeName = a.nombre.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-                const safeDice = diceDisplay.replace(/'/g, "\\'");
-                const safeAtk = atk.replace(/'/g, "\\'");
-                const safeDado = dado.replace(/'/g, "\\'");
-                const safeDesc = (a.desc || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' ');
-                const demonicBonus = (p.demonicForm && p.id === 'Vel' && atk)
-                    ? '<small class="demonic-bonus">+1d8 Necr.</small>' : '';
-                return `<div class="combat-chip-wrapper">
-                    <button class="combat-chip${isUsed ? ' used' : ''}"
-                            onclick="toggleCombatAction('${p.id}','${safeName}','${safeDice}')">
-                        ${a.nombre}${diceDisplay ? `<small>${diceDisplay}</small>` : ''}${demonicBonus}
-                    </button>
-                    ${(atk || dado) ? `<button class="chip-roll-btn" onclick="rollActionDice('${p.id}','${safeName}','${safeAtk}','${safeDado}')" title="Tirar dados">🎲</button>` : ''}
-                    ${a.desc ? `<button class="chip-info-btn" onclick="showActionDetail('${safeName}','${safeAtk}','${safeDado}','${safeDesc}')" title="Ver descripción">ℹ️</button>` : ''}
-                </div>`;
-            }).join('');
-            const slotUsedClass = isSlotUsed ? ' used' : '';
-            const btnClass = isSlotUsed ? 'used' : 'libre';
-            const btnLabel = isSlotUsed ? '✅ Usada' : '☐ Libre';
-            return `<div class="combat-slot-section${slotUsedClass}">
-                <div class="combat-slot-header">
-                    <span>${slot.icon} ${slot.label}</span>
-                    <button class="slot-toggle-btn ${btnClass}" onclick="toggleSlotManual('${p.id}','${slot.key}')">${btnLabel}</button>
-                </div>
-                ${items.length ? `<div class="combat-chips">${chips}</div>` : `<div style="font-size:12px;color:var(--text-muted);padding:4px 0">Sin acciones disponibles</div>`}
-            </div>`;
-        }).filter(Boolean).join('');
 
-        // Invocaciones section for Zero
+        // Helper to render chips for an item list
+        const renderChips = (items) => items.map(a => {
+            const atk = a.atk || '';
+            const dado = a.dado && a.dado !== '—' ? a.dado : (extractDiceFromDesc(a.desc) || '');
+            const diceDisplay = atk ? `${atk}${dado ? ' / ' + dado : ''}` : dado;
+            const isUsed = currentEntry?.actions.some(x => x.nombre === a.nombre) || false;
+            const safeName = a.nombre.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            const safeDice = diceDisplay.replace(/'/g, "\\'");
+            const safeAtk = atk.replace(/'/g, "\\'");
+            const safeDado = dado.replace(/'/g, "\\'");
+            const safeDesc = (a.desc || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' ');
+            const demonicBonus = (p.demonicForm && p.id === 'Vel' && atk)
+                ? '<small class="demonic-bonus">+1d8 Necr.</small>' : '';
+            return `<div class="combat-chip-wrapper">
+                <button class="combat-chip${isUsed ? ' used' : ''}"
+                        onclick="toggleCombatAction('${p.id}','${safeName}','${safeDice}')">
+                    ${a.nombre}${diceDisplay ? `<small>${diceDisplay}</small>` : ''}${demonicBonus}
+                </button>
+                ${(atk || dado) ? `<button class="chip-roll-btn" onclick="rollActionDice('${p.id}','${safeName}','${safeAtk}','${safeDado}')" title="Tirar dados">🎲</button>` : ''}
+                ${a.desc ? `<button class="chip-info-btn" onclick="showActionDetail('${safeName}','${safeAtk}','${safeDado}','${safeDesc}')" title="Ver descripción">ℹ️</button>` : ''}
+            </div>`;
+        }).join('');
+
+        let slotSections;
+        if (isExtraAttack) {
+            // Extra attack mini-turn: only show weapon attacks
+            const weaponItems = allItems.filter(a => inferActionType(a) === 'accion' && a.atk && a.atk !== '—');
+            slotSections = `<div class="combat-slot-section">
+                <div class="combat-slot-header"><span>⚔️ Ataque (Ataque Extra)</span></div>
+                ${weaponItems.length ? `<div class="combat-chips">${renderChips(weaponItems)}</div>` : `<div style="font-size:12px;color:var(--text-muted);padding:4px 0">Sin ataques disponibles</div>`}
+            </div>`;
+        } else {
+            slotSections = SLOTS.map(slot => {
+                if (slot.extraOnly && !p.charData?.extraAttack) return '';
+                const isSlotUsed = (currentEntry?.slots?.[slot.key]) ||
+                    (slot.extraOnly
+                        ? false
+                        : currentEntry?.actions.some(a => inferActionType(a) === slot.tipo && !allItems.find(x => x.nombre === a.nombre)?.extraAttack) || false);
+                const items = slot.extraOnly
+                    ? allItems.filter(a => inferActionType(a) === 'accion' && a.atk && a.atk !== '—')
+                    : allItems.filter(a => inferActionType(a) === slot.tipo);
+                const chips = renderChips(items);
+                const slotUsedClass = isSlotUsed ? ' used' : '';
+                const btnClass = isSlotUsed ? 'used' : 'libre';
+                const btnLabel = isSlotUsed ? '✅ Usada' : '☐ Libre';
+                return `<div class="combat-slot-section${slotUsedClass}">
+                    <div class="combat-slot-header">
+                        <span>${slot.icon} ${slot.label}</span>
+                        <button class="slot-toggle-btn ${btnClass}" onclick="toggleSlotManual('${p.id}','${slot.key}')">${btnLabel}</button>
+                    </div>
+                    ${items.length ? `<div class="combat-chips">${chips}</div>` : `<div style="font-size:12px;color:var(--text-muted);padding:4px 0">Sin acciones disponibles</div>`}
+                </div>`;
+            }).filter(Boolean).join('');
+        }
+
+        // Invocaciones section for Zero (not shown in extra attack mode)
         let invocacionesHTML = '';
-        if (p.id === 'Zero' && p.charData?.invocaciones) {
+        if (!isExtraAttack && p.id === 'Zero' && p.charData?.invocaciones) {
             const invCards = p.charData.invocaciones.map(inv => `
                 <div class="invocation-card">
                     <div>
@@ -2535,12 +2655,12 @@ function renderActivePanel() {
         actionChipsHTML = `<div class="combat-actions-section">
             <div class="combat-actions-title">⚡ Acciones del turno</div>
             ${slotSections}
-            <div class="combat-custom-row">
+            ${isExtraAttack ? '' : `<div class="combat-custom-row">
                 <input type="text" id="customActionInput" class="combat-custom-input"
                        placeholder="Acción personalizada..."
                        onkeydown="if(event.key==='Enter') addCustomCombatAction('${p.id}')">
                 <button onclick="addCustomCombatAction('${p.id}')">+ Añadir</button>
-            </div>
+            </div>`}
         </div>${invocacionesHTML}`;
     } else {
         actionChipsHTML = `<div class="combat-actions-section">
@@ -2583,16 +2703,22 @@ function renderActivePanel() {
     // HP slider fill percentage
     const sliderFillPct = p.hp.max > 0 ? Math.max(0, (p.hp.current / p.hp.max) * 100) : 0;
 
-    const panelClass = `combat-active-panel${p.demonicForm ? ' demonic-active' : ''}`;
+    const panelClass = `combat-active-panel${p.demonicForm ? ' demonic-active' : ''}${isExtraAttack ? ' extra-attack-active' : ''}`;
     panel.className = panelClass;
 
+    const extraAttackHeaderHTML = isExtraAttack
+        ? `<div class="extra-attack-header">🗡️ ATAQUE EXTRA — ${p.name.split(' ')[0]}</div>`
+        : '';
+    const displayName = isExtraAttack ? `${p.name} — Ataque Extra` : p.name;
+
     panel.innerHTML = `
+        ${extraAttackHeaderHTML}
         <div class="combat-active-header">
             <div class="combat-active-portrait">
                 ${p.charData?.imagen ? `<img src="${p.charData.imagen}" onerror="this.style.display='none'">` : '<div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,0.05);border:2px solid var(--border-color);"></div>'}
             </div>
             <div class="combat-active-meta">
-                <div class="combat-active-name">${p.name}</div>
+                <div class="combat-active-name">${displayName}</div>
                 ${p.charData ? `<div class="combat-active-class">${p.charData.clase} · Nv ${p.charData.nivel}</div>` : ''}
             </div>
         </div>
@@ -2614,18 +2740,19 @@ function renderActivePanel() {
                 ${p.speed ? `<div style="font-size:12px;color:var(--text-muted);margin-top:4px">💨 ${p.speed}</div>` : ''}
             </div>
         </div>
-        ${concentrationBanner}
-        ${demonicToggleHTML}
-        <div class="combat-conds-bar">${condHTML}</div>
+        ${isExtraAttack ? '' : concentrationBanner}
+        ${isExtraAttack ? '' : demonicToggleHTML}
+        ${isExtraAttack ? '' : `<div class="combat-conds-bar">${condHTML}</div>`}
         ${actionChipsHTML}
+        ${isExtraAttack ? `<button class="skip-extra-btn" onclick="skipExtraAttack()">⏭ Saltar Ataque Extra</button>` : ''}
         <div class="combat-recorded-section">
             <div class="combat-recorded-title">Registrado este turno:</div>
             <div id="combatRecordedList">${recordedHTML}</div>
         </div>
-        <div class="combat-notes-section">
+        ${isExtraAttack ? '' : `<div class="combat-notes-section">
             <textarea class="combat-notes-input" placeholder="Notas del turno..."
                       oninput="setCombatTurnNote('${p.id}',this.value)">${currentEntry?.note || ''}</textarea>
-        </div>
+        </div>`}
     `;
 }
 
@@ -2642,6 +2769,20 @@ function createCurrentTurnEntry() {
         slots: { accion: false, extraAtaque: false, adicional: false, reaccion: false },
         note: '',
         isCurrent: true,
+        isExtraAttack: combatState.extraAttackTurn || false,
+        snapshot: {
+            currentIndex: combatState.currentIndex,
+            round: combatState.round,
+            extraAttackTurn: combatState.extraAttackTurn || false,
+            participants: combatState.participants.map(part => ({
+                id: part.id,
+                hp: { ...part.hp },
+                conditions: [...part.conditions],
+                demonicForm: part.demonicForm,
+                ac: part.ac,
+                speed: part.speed,
+            })),
+        },
     });
 }
 
@@ -2777,6 +2918,11 @@ function renderLogEditArea(entry, p) {
         </div>`;
 }
 
+function renderRollText(text) {
+    if (!text) return '';
+    return text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+}
+
 function renderCombatLog() {
     const logEl = document.getElementById('combatLog');
     if (!logEl) return;
@@ -2785,8 +2931,8 @@ function renderCombatLog() {
         const p = combatState.participants.find(x => x.id === entry.participantId);
         const actionsHTML = entry.actions.length
             ? entry.actions.map(a => `<div class="log-action-item">
-                <div>✓ ${a.nombre}${a.dice && !a.rollText ? ` (${a.dice})` : ''}</div>
-                ${a.rollText ? `<div class="combat-roll-result">${a.rollText}</div>` : ''}
+                <div>✓ ${a.nombre}${a.dice && !a.rollText ? ` (${a.dice})` : ''}${entry.isExtraAttack ? ' <span class="log-extra-badge">+ATQ</span>' : ''}</div>
+                ${a.rollText ? `<div class="combat-roll-result">${renderRollText(a.rollText)}</div>` : ''}
                 ${a.narratorText ? `<div class="combat-narrator-text">${a.narratorText}</div>` : ''}
             </div>`).join('')
             : '<span style="color:var(--text-muted)">—</span>';
@@ -2844,7 +2990,10 @@ function toggleParticipantCondition(id, condId) {
 }
 
 function nextCombatTurn() {
+    if (!isMaster()) return;
     const current = getCurrentLogEntry();
+    // Extra attack mini-turn: no warning needed, can always pass
+    if (combatState.extraAttackTurn) { _doNextTurn(); return; }
     if (!current?.actions.length && !current?.note?.trim()) {
         showNextTurnWarning();
         return;
@@ -2879,6 +3028,38 @@ function dismissNextTurnWarning() {
 function _doNextTurn() {
     const current = getCurrentLogEntry();
     if (current) current.isCurrent = false;
+
+    if (combatState.extraAttackTurn) {
+        // Finishing the extra attack mini-turn → advance to next participant
+        combatState.extraAttackTurn = false;
+        combatState.currentIndex++;
+        if (combatState.currentIndex >= combatState.participants.length) {
+            combatState.currentIndex = 0;
+            combatState.round++;
+        }
+    } else {
+        // Check if current participant has extraAttack
+        const currP = combatState.participants[combatState.currentIndex];
+        if (currP?.charData?.extraAttack) {
+            combatState.extraAttackTurn = true;
+            // Stay on same currentIndex (same participant, extra attack mini-turn)
+        } else {
+            combatState.currentIndex++;
+            if (combatState.currentIndex >= combatState.participants.length) {
+                combatState.currentIndex = 0;
+                combatState.round++;
+            }
+        }
+    }
+    createCurrentTurnEntry();
+    saveCombatState();
+    renderCombatManager();
+}
+
+function skipExtraAttack() {
+    combatState.extraAttackTurn = false;
+    const current = getCurrentLogEntry();
+    if (current) current.isCurrent = false;
     combatState.currentIndex++;
     if (combatState.currentIndex >= combatState.participants.length) {
         combatState.currentIndex = 0;
@@ -2887,6 +3068,43 @@ function _doNextTurn() {
     createCurrentTurnEntry();
     saveCombatState();
     renderCombatManager();
+}
+
+function previousCombatTurn() {
+    if (!isMaster()) return;
+    const log = combatState.log;
+    const currentIdx = log.findIndex(e => e.isCurrent);
+    if (currentIdx <= 0) { showNotification('⬅️ Ya estás en el primer turno', 2000); return; }
+
+    // Remove current entry
+    log.splice(currentIdx, 1);
+
+    // Mark previous as current
+    const prevEntry = log[log.length - 1];
+    if (!prevEntry) return;
+    prevEntry.isCurrent = true;
+
+    // Restore snapshot
+    const snap = prevEntry.snapshot;
+    if (snap) {
+        combatState.currentIndex = snap.currentIndex;
+        combatState.round = snap.round;
+        combatState.extraAttackTurn = snap.extraAttackTurn || false;
+        // Restore participant HP, conditions, demonicForm, ac, speed
+        snap.participants.forEach(snapP => {
+            const p = combatState.participants.find(x => x.id === snapP.id);
+            if (p) {
+                p.hp = { ...snapP.hp };
+                p.conditions = [...snapP.conditions];
+                p.demonicForm = snapP.demonicForm;
+                p.ac = snapP.ac;
+                p.speed = snapP.speed;
+            }
+        });
+    }
+    saveCombatState();
+    renderCombatManager();
+    showNotification('⬅️ Turno anterior restaurado', 2000);
 }
 
 // ---- Demonic Form in Combat ----
@@ -3043,6 +3261,12 @@ function submitQuickEnemy(context) {
     }
 }
 
+// ---- Mobile Log Toggle ----
+function toggleMobileLog() {
+    const logPanel = document.querySelector('.combat-log-panel');
+    if (logPanel) logPanel.classList.toggle('mobile-visible');
+}
+
 // ---- Auto-save Combat State ----
 const COMBAT_SAVE_KEY = 'dnd_combat_session';
 
@@ -3102,7 +3326,7 @@ function discardSavedCombat() {
     document.getElementById('combatResumeOverlay')?.remove();
     Object.assign(combatState, {
         isActive: false, participants: [], selectedIds: [],
-        log: [], round: 1, currentIndex: 0, nextLogId: 0,
+        log: [], round: 1, currentIndex: 0, nextLogId: 0, extraAttackTurn: false,
     });
     clearSavedCombat();
 }

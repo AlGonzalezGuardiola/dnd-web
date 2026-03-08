@@ -380,3 +380,69 @@
         display: none;
     }
 }
+
+/* ============================================
+   COMBAT RESPONSIVE — v2
+   ============================================ */
+@media (max-width: 768px) {
+    /* Hide combat log panel on mobile by default */
+    .combat-log-panel { display: none; }
+    .combat-log-panel.mobile-visible { display: flex; }
+
+    /* Full-width active panel when log hidden */
+    .combat-active-panel { border-right: none; border-bottom: none; }
+
+    /* Mobile log toggle button (master only, shown on mobile) */
+    .combat-log-mobile-btn { display: flex !important; }
+
+    /* Action chips wrap on mobile */
+    .combat-chips { flex-wrap: wrap; }
+    .combat-chip-wrapper {
+        flex-basis: 100%;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+    .combat-chip {
+        flex: 1;
+        min-width: 0;
+        font-size: 12px;
+    }
+    .chip-roll-btn, .chip-info-btn { flex-shrink: 0; }
+
+    /* Slot sections more compact */
+    .combat-slot-section { padding: 8px 10px; margin: 4px 0; }
+    .combat-slot-header { font-size: 12px; }
+    .slot-toggle-btn { font-size: 10px; padding: 2px 8px; }
+
+    /* Turn queue chips: narrower on mobile */
+    .turn-queue-item { min-width: 64px; padding: 5px 6px; }
+    .tqi-name { font-size: 10px; }
+    .tqi-init { font-size: 11px; }
+
+    /* Bottom bar stacks on very small screens */
+    .combat-bottom-bar { gap: 8px; padding: 8px 10px; }
+    .combat-bottom-bar button { font-size: 12px; padding: 8px 12px; }
+
+    /* HP slider thumb bigger for touch */
+    .combat-hp-slider::-webkit-slider-thumb { width: 28px; height: 28px; }
+
+    /* Concentration banner compact */
+    .concentration-banner { font-size: 11px; padding: 6px 10px; }
+
+    /* Invocation cards stack */
+    .invocation-card { flex-direction: column; align-items: flex-start; gap: 6px; }
+    .invocation-btns { width: 100%; }
+    .invocation-btns button { flex: 1; }
+
+    /* Role indicator */
+    .role-indicator { font-size: 10px; padding: 2px 8px; }
+}
+
+@media (max-width: 480px) {
+    /* Extra small: force chips to full row */
+    .combat-chip-wrapper { width: 100%; }
+    .combat-chip { width: 100%; }
+
+    /* Reduce slot header */
+    .combat-slot-section { padding: 6px 8px; }
+}

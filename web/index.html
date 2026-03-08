@@ -13,8 +13,8 @@
         href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link rel="stylesheet" href="style.css?v=20260308f">
-    <link rel="stylesheet" href="mobile.css?v=20260308f" media="screen and (max-width: 768px)">
+    <link rel="stylesheet" href="style.css?v=20260308g">
+    <link rel="stylesheet" href="mobile.css?v=20260308g" media="screen and (max-width: 768px)">
 </head>
 
 <body>
@@ -26,9 +26,12 @@
         </div>
         <div id="breadcrumbs" class="breadcrumbs" aria-live="polite">Mundo</div>
 
-        <div class="zoom-controls" style="display:flex; gap:5px;">
-            <button id="btnZoomIn" class="hud-btn" title="Acercar" aria-label="Acercar">+</button>
-            <button id="btnZoomOut" class="hud-btn" title="Alejar" aria-label="Alejar">−</button>
+        <div style="display:flex; gap:8px; align-items:center;">
+            <button id="roleIndicator" class="role-indicator master" onclick="showRoleSelectionOverlay()" title="Cambiar rol">🎲 Master</button>
+            <div class="zoom-controls" style="display:flex; gap:5px;">
+                <button id="btnZoomIn" class="hud-btn" title="Acercar" aria-label="Acercar">+</button>
+                <button id="btnZoomOut" class="hud-btn" title="Alejar" aria-label="Alejar">−</button>
+            </div>
         </div>
     </div>
 
@@ -111,8 +114,10 @@
 
         <!-- Bottom controls -->
         <div class="combat-bottom-bar">
-            <button class="btn-combat-secondary" onclick="showQuickEnemyModal('combat')" style="font-size:12px">💀 +Enemigo</button>
+            <button class="btn-combat-secondary master-only" onclick="showQuickEnemyModal('combat')" style="font-size:12px">💀 +Enemigo</button>
+            <button class="btn-combat-secondary master-only" onclick="previousCombatTurn()" title="Volver al turno anterior">← Anterior</button>
             <button class="btn-combat-primary btn-next-turn" onclick="nextCombatTurn()">Siguiente Turno →</button>
+            <button class="btn-combat-secondary combat-log-mobile-btn" onclick="toggleMobileLog()" style="display:none" title="Ver registro">📋 Log</button>
         </div>
     </div>
 
@@ -289,9 +294,9 @@
         <button id="diceToggleBtn" class="dice-toggle-btn" title="Lanzador de dados" aria-label="Abrir lanzador de dados">🎲</button>
     </div>
 
-    <script src="characters.js?v=20260308f"></script>
-    <script src="data.js?v=20260308f"></script>
-    <script src="script.js?v=20260308f"></script>
+    <script src="characters.js?v=20260308g"></script>
+    <script src="data.js?v=20260308g"></script>
+    <script src="script.js?v=20260308g"></script>
 </body>
 
 </html>
