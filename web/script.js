@@ -1692,10 +1692,11 @@ function renderCharacterSelectionMenu() {
 
         // Custom styling for image card
         card.innerHTML = `
-            <div class="card-img-wrapper" style="width: 80px; height: 80px; border-radius: 50%; overflow: hidden; border: 2px solid var(--accent-gold); margin-bottom: 10px; box-shadow: 0 0 10px rgba(0,0,0,0.5);">
-                <img src="${imgUrl}" style="width: 100%; height: 100%; object-fit: cover;" onerror="this.src='https://placehold.co/100x100/1e2536/d4af37?text=?'">
+            <div class="card-img-wrapper" style="width: 72px; height: 72px; border-radius: 50%; overflow: hidden; border: 2px solid var(--accent-gold); margin-bottom: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.5); flex-shrink: 0;">
+                <img src="${imgUrl}" style="width: 100%; height: 100%; object-fit: cover; object-position: top center;" onerror="this.src='https://placehold.co/100x100/1e2536/d4af37?text=?'">
             </div>
             <div class="card-title">${char.nombre}</div>
+            <div class="char-card-meta">${char.raza} · ${char.clase}</div>
         `;
         container.appendChild(card);
     });
