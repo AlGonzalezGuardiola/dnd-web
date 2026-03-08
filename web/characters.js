@@ -511,5 +511,319 @@ window.characterData = {
                 "desc": "Bonus. Toque, STR Save o Inmovilizado en piedra + 1d10 fuerza."
             }
         ]
+    },
+
+    "Ersenn": {
+        "id": "Ersenn",
+        "tipo": "aliado",
+        "nombre": "Ersenn",
+        "raza": "Celestial Exiliado",
+        "clase": "Guardián del Umbral",
+        "nivel": 11,
+        "imagen": "",
+        "stats": {
+            "Fuerza": 14,
+            "Destreza": 14,
+            "Constitución": 16,
+            "Inteligencia": 14,
+            "Sabiduría": 20,
+            "Carisma": 12
+        },
+        "resumen": {
+            "HP": "165",
+            "CA": "18",
+            "Iniciativa": "+2",
+            "Velocidad": "30ft",
+            "Competencia": "+4"
+        },
+        "habilidades": ["Percepción", "Perspicacia", "Historia"],
+        "rasgos": [
+            {
+                "nombre": "🔹 Naturaleza Exiliada",
+                "desc": "No puede ser objetivo de resurrección, revivir o restauración divina. Cualquier intento falla automáticamente."
+            },
+            {
+                "nombre": "🔹 Portador del Error",
+                "desc": "Cada vez que una criatura muere a 30 ft de él, siente su muerte, incluso aunque no vea el cuerpo."
+            },
+            {
+                "nombre": "🛡️ Resistencias",
+                "desc": "Radiante, necrótico; daño contundente/cortante/perforante no mágico."
+            },
+            {
+                "nombre": "🚫 Inmunidades",
+                "desc": "Encantado, Asustado."
+            },
+            {
+                "nombre": "👁️ Sentidos",
+                "desc": "Visión verdadera 60 ft."
+            },
+            {
+                "nombre": "🩸 Fragmentos de Alma (máx. 10)",
+                "desc": "Absorbe 1 Fragmento por impacto con el Relicario (2 vs demonios/no-muertos). Capacidad máxima: 10. Puede gastarlos como acción adicional o reacción."
+            },
+            {
+                "nombre": "💫 Cañón Espiritual (10 Fragmentos)",
+                "desc": "1 uso especial. Línea 100ft, amplitud 30ft. TS Sabiduría (CD 18). 6d8 radiante + 2d12 fuerza."
+            }
+        ],
+        "ranuras": [],
+        "conjuros": [
+            {
+                "nombre": "Detectar el Mal y el Bien",
+                "nivel": "Truco",
+                "desc": "A voluntad. Sin componentes. Detecta celestiales, demonios, no-muertos y lugares sagrados/profanos a 30 ft."
+            },
+            {
+                "nombre": "Luz",
+                "nivel": "Truco",
+                "desc": "A voluntad. Sin componentes. Objeto toca brilla con luz brillante en 20 ft y tenue 20 ft más."
+            },
+            {
+                "nombre": "Bendición",
+                "nivel": "Esp",
+                "desc": "3/día. Hasta 3 criaturas suman 1d4 a sus ataques y TS durante 1 minuto (concentración)."
+            },
+            {
+                "nombre": "Arma Espiritual",
+                "nivel": "Esp",
+                "desc": "3/día. Crea un arma espiritual flotante (bonus action para atacar: 1d8+5 fuerza). Dura 1 minuto."
+            },
+            {
+                "nombre": "Destierro",
+                "nivel": "Esp",
+                "desc": "1/día. Solo demonios/no-muertos. CHA Save CD 18. Desterrado al plano de origen si falla. Concentración."
+            }
+        ],
+        "combateExtra": [
+            {
+                "nombre": "Relicario del Umbral Caído",
+                "tipo": "accion",
+                "atk": "1d20+9",
+                "dado": "2d12+5",
+                "desc": "Distancia 120/360 ft, ancho 10 ft. 2d12 radiante + SAB (+5). Absorbe 1 Fragmento de Alma por impacto (2 vs demonios/no-muertos)."
+            },
+            {
+                "nombre": "Canalizar Culpa (Curación)",
+                "tipo": "adicional",
+                "dado": "2d10+5",
+                "desc": "Coste: 2 Fragmentos. Se cura 2d10+SAB. Si <50% PV, gana resistencia a todo daño hasta su próximo turno."
+            },
+            {
+                "nombre": "Disparo del Juicio Roto",
+                "tipo": "adicional",
+                "dado": "4d10+2d10",
+                "desc": "Coste: 3 Fragmentos. Convierte 1 ataque: 4d10 radiante + 2d10 necrótico. El objetivo tiene desventaja en su siguiente TS."
+            },
+            {
+                "nombre": "Liberación de Almas",
+                "tipo": "accion",
+                "dado": "4d8",
+                "desc": "Coste: 4 Fragmentos. Explosión 20 ft, TS SAB CD 18. 4d8 radiante. Demonios/no-muertos aturdidos hasta fin de su sig. turno si fallan."
+            },
+            {
+                "nombre": "Recuerdo Persistente",
+                "tipo": "reaccion",
+                "dado": "—",
+                "desc": "Coste: 2 Fragmentos. Enemigo impactado: TS SAB o Lentitud espiritual (vel. 0, sin reacciones, 1 turno)."
+            }
+        ]
+    },
+
+    "Tamariz": {
+        "id": "Tamariz",
+        "tipo": "aliado",
+        "nombre": "Tamariz",
+        "raza": "Humano",
+        "clase": "Pícaro (Cartomago)",
+        "nivel": 5,
+        "imagen": "",
+        "stats": {
+            "Fuerza": 8,
+            "Destreza": 18,
+            "Constitución": 12,
+            "Inteligencia": 16,
+            "Sabiduría": 12,
+            "Carisma": 14
+        },
+        "resumen": {
+            "HP": "38",
+            "CA": "17",
+            "Iniciativa": "+4",
+            "Velocidad": "30ft",
+            "Competencia": "+3"
+        },
+        "habilidades": ["Persuasión", "Engaño", "Juego de Manos", "Sigilo"],
+        "rasgos": [
+            {
+                "nombre": "🗡️ Ataque Furtivo (Sneak Attack) 3d6",
+                "desc": "Añade +3d6 de daño cuando ataca con ventaja o un aliado está adyacente al objetivo. Aplicable con las cartas."
+            },
+            {
+                "nombre": "👣 Acción Astuta (Cunning Action)",
+                "desc": "Acción adicional para: Esconderse, Retirada (Disengage) o Correr (Dash)."
+            },
+            {
+                "nombre": "🎭 Pericia (Expertise)",
+                "desc": "Dobla la competencia en Persuasión y Engaño."
+            },
+            {
+                "nombre": "🎩 Sombrero de Prestidigitador",
+                "desc": "Ventaja en Persuasión. Permite hacer trucos de cartas no mágicos."
+            },
+            {
+                "nombre": "💍 Anillo de Invisibilidad (3 usos/descanso largo)",
+                "desc": "Invisibilidad como acción. Dura hasta 1 hora o hasta que ataque/lance conjuro."
+            }
+        ],
+        "ranuras": [],
+        "conjuros": [
+            {
+                "nombre": "Invisibilidad (Anillo)",
+                "nivel": "Esp",
+                "desc": "3/día. Acción. Invisible hasta 1 hora o hasta atacar/lanzar conjuro."
+            }
+        ],
+        "combateExtra": [
+            {
+                "nombre": "Carta Básica",
+                "tipo": "accion",
+                "atk": "1d20+8",
+                "dado": "1d8+4",
+                "desc": "Ataque con carta mágica. +8 al ataque. 1d8+4 daño mágico. Elige el tipo de carta al atacar."
+            },
+            {
+                "nombre": "🟡 Carta Amarilla (Control)",
+                "tipo": "accion",
+                "atk": "1d20+8",
+                "dado": "1d8+4",
+                "desc": "1d8+4 daño. El enemigo queda Inmovilizado hasta que Tamariz vuelva a atacar o reciba daño de otra fuente."
+            },
+            {
+                "nombre": "🟤 Carta Marrón (Empuje)",
+                "tipo": "accion",
+                "atk": "1d20+8",
+                "dado": "1d8+4",
+                "desc": "1d8+4 daño. El enemigo es empujado 20 ft en línea recta (TS FUE CD 13 para resistir)."
+            },
+            {
+                "nombre": "🔴 Carta Roja (Explosión)",
+                "tipo": "accion",
+                "dado": "1d8",
+                "desc": "Radio 15 ft a punto visible a 60 ft. TS DES CD 13. Fallan: 1d8 daño mágico. Éxito: mitad."
+            },
+            {
+                "nombre": "🔵 Carta Azul (Combo)",
+                "tipo": "accion",
+                "atk": "1d20+8",
+                "dado": "1d8+4",
+                "desc": "1d8+4 daño. Permite un ataque inmediato adicional con otra Carta Azul (máx. 1 cadena)."
+            },
+            {
+                "nombre": "✨ Estilo Tridente (4/día)",
+                "tipo": "accion",
+                "dado": "3×1d8+4",
+                "desc": "Lanza 3 cartas en línea recta (60 ft). Cada carta aplica su efecto si impacta. Puede combinar tipos. Adicionalmente tira 1d4: 1-2 → carta amarilla/marrón (daño x2); 3-4 → carta roja/azul (daño x3)."
+            },
+            {
+                "nombre": "Acción Astuta",
+                "tipo": "adicional",
+                "dado": "—",
+                "desc": "Bonus: Esconderse, Retirada o Correr."
+            }
+        ]
+    },
+
+    "Jayce": {
+        "id": "Jayce",
+        "tipo": "enemigo",
+        "nombre": "Jayce, el Emisario Carmesí",
+        "raza": "No-muerto (Vampiro)",
+        "clase": "Vampiro Ancestral",
+        "nivel": 10,
+        "imagen": "",
+        "stats": {
+            "Fuerza": 16,
+            "Destreza": 14,
+            "Constitución": 22,
+            "Inteligencia": 14,
+            "Sabiduría": 12,
+            "Carisma": 18
+        },
+        "resumen": {
+            "HP": "220",
+            "CA": "16",
+            "Iniciativa": "+2",
+            "Velocidad": "30ft / Vuelo 30ft",
+            "Competencia": "+3"
+        },
+        "habilidades": ["Sigilo", "Persuasión", "Engaño", "Percepción"],
+        "rasgos": [
+            {
+                "nombre": "🔄 Regeneración",
+                "desc": "Recupera 5 PV al inicio de su turno si no recibió daño de fuego o radiante el turno anterior."
+            },
+            {
+                "nombre": "🌫️ Forma de Niebla",
+                "desc": "Si llega a 0 PV sin recibir daño de fuego/radiante, se disuelve en niebla con 1 PV. Incorpóreo, mueve 30 ft/turno, no puede atacar. Si escapa, podría regresar."
+            },
+            {
+                "nombre": "🛡️ Resistencias",
+                "desc": "Necrótico, psíquico, daño de armas no mágicas, encantado."
+            },
+            {
+                "nombre": "🚫 Inmunidades",
+                "desc": "Veneno. No puede ser dormido."
+            },
+            {
+                "nombre": "⚠️ Debilidades",
+                "desc": "Fuego, divino y plata infligen daño doble / anulan regeneración."
+            },
+            {
+                "nombre": "👁️ Sentidos",
+                "desc": "Visión en la oscuridad 120 ft, visión verdadera, percepción pasiva 11."
+            }
+        ],
+        "ranuras": [],
+        "conjuros": [],
+        "combateExtra": [
+            {
+                "nombre": "Colmillos de Sangre",
+                "tipo": "accion",
+                "atk": "1d20+6",
+                "dado": "1d6+3+1d4",
+                "desc": "CaC, alcance 5 ft. 1d6+3 perforante + 1d4 necrótico. Recupera PV iguales al daño necrótico infligido."
+            },
+            {
+                "nombre": "Charco de Sangre",
+                "tipo": "adicional",
+                "dado": "3d6",
+                "desc": "Se disuelve en sangre 1 turno (5 ft radio). Resistencia a todo excepto fuego/radiante. Sin ataques de oportunidad. Al volver a forma material: TS CON a criaturas cercanas, fallan → 3d6 daño y se cura la mitad."
+            },
+            {
+                "nombre": "Transfusión Dolorosa",
+                "tipo": "accion",
+                "dado": "1d10–3d10",
+                "desc": "Sacrifica hasta 15 PV. Por cada 5 PV sacrificados inflige 1d10 necrótico en cono 30 ft. TS DES CD 12, mitad en éxito."
+            },
+            {
+                "nombre": "Garra del Cautiverio (3/día)",
+                "tipo": "accion",
+                "dado": "2d6",
+                "desc": "Línea 60 ft, 15 ft ancho. 2d6 necrótico. TS FUE CD 14 o queda atado+aturdido 1 turno y arrastrado 30 ft hacia Jayce."
+            },
+            {
+                "nombre": "Ojo del Vampiro (5/día)",
+                "tipo": "accion",
+                "dado": "1d10",
+                "desc": "Radio 15 ft a punto a 60 ft. TS CON: fallan → 1d10 psíquico. Jayce se cura el daño infligido."
+            },
+            {
+                "nombre": "Apoteosis Carmesí (1/día)",
+                "tipo": "accion",
+                "dado": "3d10+1d8",
+                "desc": "Estado vampírico 3 turnos. Al activar: cura 3d10. Cada turno: criaturas hostiles en 15 ft sufren 1d8+nº criaturas necrótico. Recupera mitad del daño total. Levita, inmune a parálisis/miedo/encantamiento."
+            }
+        ]
     }
 };
