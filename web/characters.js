@@ -124,15 +124,15 @@ window.characterData = {
         "imagen": "assets/imagenes/Zero_profile_pic.jpg",
         "imagenScale": 1,
         "stats": {
-            "Fuerza": 12,
+            "Fuerza": 8,
             "Destreza": 14,
             "Constitución": 16,
             "Inteligencia": 18,
-            "Sabiduría": 10,
-            "Carisma": 8
+            "Sabiduría": 12,
+            "Carisma": 10
         },
         "resumen": {
-            "HP": "43",
+            "HP": "37",
             "CA": "19",
             "Iniciativa": "+2",
             "Velocidad": "30ft",
@@ -174,8 +174,8 @@ window.characterData = {
                 "desc": "HP 33 | CA 15.<br><strong>Atq:</strong> +6 (2d6 perf + 1d6 necrótico). Recupera HP.<br><strong>Interrupción Vital (Reacción):</strong> Counterspell + daño.<br><strong>En Sello:</strong> +15HP, Campo Antimagia menor."
             },
             {
-                "nombre": "🌑 Bastón del Vacío",
-                "desc": "+1 Ataque. <strong>Reacción:</strong> Represión Infernal (2d10 fuego/necrótico) al recibir daño. Recupera slots (N1/3 turnos)."
+                "nombre": "🌑 Bastón de la Mano Prohibida",
+                "desc": "+2 tiradas de ataque y CD. Daño adicional: 1d12 necrótico.<br><strong>Magias de Sombras (1/día):</strong> Lanza un hechizo de sombras sin gastar ranura.<br><strong>Crítico Necrótico (18-19):</strong> El daño necrótico del bastón es crítico con 18-19.<br><strong>Represión Infernal (Reacción):</strong> 2d10 fuego/necrótico al recibir daño. Recupera slots (N1/3 turnos)."
             },
             {
                 "nombre": "👻 Capa Espectral y Brazalete",
@@ -223,14 +223,24 @@ window.characterData = {
                 "desc": "Paraliza humanoide (SAB CD 13)."
             },
             {
-                "nombre": "Susurros del Olvido",
-                "nivel": "Esp",
-                "desc": "3d6 psíquico + Huir (SAB)."
+                "nombre": "Orbe Devastador",
+                "nivel": 2,
+                "desc": "Proyectil de energía oscura. 2d8 necrótico + INT. Impacto reduce velocidad 10ft hasta siguiente turno."
+            },
+            {
+                "nombre": "Cambio de Vida",
+                "nivel": 2,
+                "desc": "Transfiere HP entre dos criaturas a 30ft. Una pierde hasta 4d6 HP, la otra los recupera."
             },
             {
                 "nombre": "Invisibilidad",
                 "nivel": 2,
                 "desc": "1 hora o hasta atacar."
+            },
+            {
+                "nombre": "Susurros del Olvido",
+                "nivel": "Esp",
+                "desc": "3d6 psíquico + Huir (SAB)."
             },
             {
                 "nombre": "🩸 Dagas de Sangre (Bonus)",
@@ -260,16 +270,16 @@ window.characterData = {
         "imagenScale": 1,
         "stats": {
             "Fuerza": 18,
-            "Destreza": 10,
+            "Destreza": 8,
             "Constitución": 16,
-            "Inteligencia": 8,
+            "Inteligencia": 10,
             "Sabiduría": 12,
             "Carisma": 14
         },
         "resumen": {
             "HP": "49",
-            "CA": "20",
-            "Iniciativa": "+0",
+            "CA": "23",
+            "Iniciativa": "-1",
             "Velocidad": "25ft",
             "Competencia": "+3"
         },
@@ -285,8 +295,8 @@ window.characterData = {
                 "desc": "Daño: 1d10 + Fuerza + 1d6 fuego.<br><strong>Lanzamiento (30ft):</strong> Ataque normal. <strong>TP (Bonus):</strong> Te teletransportas al martillo. Enemigos a 10ft hacen DEX Save o caen al suelo + 1d4 fuerza.<br><strong>Retorno:</strong> Vuelve a tu mano (mentalmente si <=30ft)."
             },
             {
-                "nombre": "🛡️ Escudo de Atrapamiento",
-                "desc": "Reacción cuando fallan un ataque contra ti: STR Save. Si falla, queda atrapado contra el escudo hasta su siguiente turno."
+                "nombre": "🛡️ Escudo de la Doncella Abismal",
+                "desc": "<strong>Velo de la Doncella (1/día, Reacción):</strong> Inmunidad total a un ataque o hechizo dirigido a ti. Puedes activarlo tras ver el resultado.<br><strong>Lamento del Abismo (1/día):</strong> Cono 30ft. 2d8 necrótico + 2d8 psíquico (CON Save mitad)."
             },
             {
                 "nombre": "👻 Armadura Guardián Planar y Modo Guardián",
@@ -314,7 +324,7 @@ window.characterData = {
             },
             {
                 "nombre": "✋ Imposición de Manos",
-                "desc": "Reserva: 25 PG. 5 puntos curan veneno/enfermedad."
+                "desc": "Reserva: 20 PG. 5 puntos curan veneno/enfermedad."
             },
             {
                 "nombre": "⚛️ Núcleo de Antimateria (Objeto)",
@@ -334,8 +344,7 @@ window.characterData = {
             }
         ],
         "ranuras": [
-            { "nombre": "Nv1", "total": 3 },
-            { "nombre": "Nv2", "total": 2 }
+            { "nombre": "Nv1", "total": 3 }
         ],
         "conjuros": [
             {
@@ -392,6 +401,11 @@ window.characterData = {
                 "nombre": "Thunderous Smite",
                 "nivel": 1,
                 "desc": "2d6 trueno + Empuje/Prone (Bonus)."
+            },
+            {
+                "nombre": "Moonbeam",
+                "nivel": 2,
+                "desc": "Columna de luz 5ft radio, 40ft alto. 2d10 radiante/turno (CON Save mitad). Concentración 1 min."
             },
             {
                 "nombre": "Detectar Magia / Bien y Mal",
