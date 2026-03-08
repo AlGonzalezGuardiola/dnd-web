@@ -1,6 +1,7 @@
 window.characterData = {
     "Vel": {
         "id": "Vel",
+        "tipo": "jugador",
         "nombre": "Vel'Rhazal Vardros",
         "raza": "Humano Demonio",
         "clase": "Brujo (Hexblade)",
@@ -148,6 +149,7 @@ window.characterData = {
     },
     "Zero": {
         "id": "Zero",
+        "tipo": "jugador",
         "nombre": "Zero",
         "raza": "Warforged",
         "clase": "Mago Invocador del Vacío",
@@ -315,6 +317,7 @@ window.characterData = {
     },
     "Asthor": {
         "id": "Asthor",
+        "tipo": "jugador",
         "nombre": "Asthor, Martillo Argento",
         "raza": "Enano",
         "clase": "Paladín",
