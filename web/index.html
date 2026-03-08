@@ -13,8 +13,8 @@
         href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link rel="stylesheet" href="style.css?v=20260308c">
-    <link rel="stylesheet" href="mobile.css?v=20260308c" media="screen and (max-width: 768px)">
+    <link rel="stylesheet" href="style.css?v=20260308d">
+    <link rel="stylesheet" href="mobile.css?v=20260308d" media="screen and (max-width: 768px)">
 </head>
 
 <body>
@@ -59,28 +59,62 @@
         </div>
     </section>
 
-    <!-- Combat Mode Landing (Jugador / Enemigo) -->
-    <section id="combatModeSection" class="character-section" style="display: none;">
-        <h1 class="landing-title">⚔️ Modo Combate</h1>
-        <div class="landing-cards">
-            <div class="card" id="cardCombatPlayer">
-                <div class="card-title">👤 Jugador</div>
-                <p>Selecciona un personaje jugador para el combate.</p>
-            </div>
-            <div class="card card-disabled" id="cardCombatEnemy">
-                <div class="card-title">👹 Enemigo</div>
-                <p>No hay monstruos creados todavía.</p>
-            </div>
+    <!-- Combat Setup (Screen 1): Select participants -->
+    <section id="combatSetupSection" class="character-section" style="display: none;">
+        <h1 class="landing-title">⚔️ Modo Combate — Participantes</h1>
+        <p class="combat-hint">Selecciona quién participa en el combate</p>
+        <div id="combatParticipantGrid" class="combat-participant-grid">
+            <!-- Dynamic: all characters in window.characterData as selectable cards -->
+        </div>
+        <div class="combat-setup-footer">
+            <span id="combatSetupCount" class="combat-setup-count">0 seleccionados</span>
+            <button class="btn-combat-primary" onclick="goToCombatInitiative()">Siguiente → Iniciativa</button>
         </div>
     </section>
 
-    <!-- Combat Player Select -->
-    <section id="combatPlayerSelectSection" class="character-section" style="display: none;">
-        <h1 class="landing-title">Selecciona un Personaje</h1>
-        <div class="landing-cards" id="combatPlayerListContainer">
-            <!-- Dynamic Content -->
+    <!-- Combat Initiative (Screen 2): Enter initiative -->
+    <section id="combatInitSection" class="combat-init-section" style="display: none;">
+        <h1 class="landing-title">⚔️ Orden de Iniciativa</h1>
+        <p class="combat-hint">Introduce el resultado de la tirada de iniciativa de cada participante</p>
+        <div id="combatInitList" class="combat-init-list">
+            <!-- Dynamic: one row per participant -->
+        </div>
+        <div class="combat-init-footer">
+            <button class="btn-combat-secondary" onclick="showCombatSetup()">← Volver</button>
+            <button class="btn-combat-primary" onclick="beginCombat()">⚔️ ¡Iniciar Combate!</button>
         </div>
     </section>
+
+    <!-- Combat Manager (Screen 3): Active combat -->
+    <div id="combatManagerSection" class="combat-manager-section" style="display: none;">
+        <!-- Top bar: Round badge + Turn Queue + End button -->
+        <div class="combat-top-bar">
+            <div class="combat-round-badge" id="combatRoundBadge">Ronda 1</div>
+            <div class="combat-turn-queue" id="combatTurnQueue">
+                <!-- Dynamic: one card per participant ordered by initiative -->
+            </div>
+            <button class="btn-end-combat" onclick="confirmEndCombat()">✕ Fin</button>
+        </div>
+
+        <!-- Main body: Active panel + Combat Log -->
+        <div class="combat-body">
+            <div class="combat-active-panel" id="combatActivePanel">
+                <!-- Dynamic: rendered by renderActivePanel() -->
+            </div>
+            <div class="combat-log-panel">
+                <div class="combat-log-title">📜 Registro del Combate</div>
+                <div id="combatLog" class="combat-log">
+                    <!-- Dynamic: turn log entries, newest at top -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom controls -->
+        <div class="combat-bottom-bar">
+            <div></div>
+            <button class="btn-combat-primary btn-next-turn" onclick="nextCombatTurn()">Siguiente Turno →</button>
+        </div>
+    </div>
 
     <!-- Detailed Character Sheet (BG3 Style) -->
     <div id="characterSheetContainer" class="character-sheet-container" style="display: none;">
@@ -255,9 +289,9 @@
         <button id="diceToggleBtn" class="dice-toggle-btn" title="Lanzador de dados" aria-label="Abrir lanzador de dados">🎲</button>
     </div>
 
-    <script src="characters.js?v=20260308c"></script>
-    <script src="data.js?v=20260308c"></script>
-    <script src="script.js?v=20260308c"></script>
+    <script src="characters.js?v=20260308d"></script>
+    <script src="data.js?v=20260308d"></script>
+    <script src="script.js?v=20260308d"></script>
 </body>
 
 </html>
