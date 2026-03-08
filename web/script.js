@@ -80,6 +80,11 @@ function setupEventListeners() {
     const btnHome = document.getElementById('btnHome');
     if (btnHome) btnHome.addEventListener('click', () => {
         state.history = []; // Limpiar historial al volver a inicio
+        combatModeActive = false;
+        // Hide character sheet if open
+        const sheet = document.getElementById('characterSheetContainer');
+        if (sheet) sheet.style.display = 'none';
+        isCharacterEditing = false;
         setView('landing');
     });
 
@@ -97,7 +102,16 @@ function setupEventListeners() {
     });
 
     document.getElementById('cardCharacters').addEventListener('click', () => {
+        combatModeActive = false;
         setView('characters');
+    });
+
+    document.getElementById('cardCombatMode').addEventListener('click', showCombatMode);
+
+    document.getElementById('cardCombatPlayer').addEventListener('click', showCombatPlayerSelect);
+
+    document.getElementById('cardCombatEnemy').addEventListener('click', () => {
+        showNotification('👹 No hay monstruos creados todavía', 2500);
     });
 
     // Character Selection
@@ -334,8 +348,27 @@ function navigateToMap(mapId) {
 }
 
 function navigateBack() {
-    if (state.history.length === 0) return;
+    // Combat mode back navigation
+    if (combatModeActive) {
+        const sheetOpen = document.getElementById('characterSheetContainer').style.display !== 'none';
+        if (sheetOpen) {
+            // Sheet open → go back to player select
+            document.getElementById('characterSheetContainer').style.display = 'none';
+            isCharacterEditing = false;
+            const diceWidget = document.getElementById('diceRollerWidget');
+            if (diceWidget) diceWidget.style.display = 'none';
+            setView('combatPlayerSelect');
+            renderCombatPlayerList();
+        } else {
+            // Player select → go back to combat mode landing
+            combatModeActive = false;
+            setView('combatMode');
+        }
+        return;
+    }
 
+    // Map navigation back
+    if (state.history.length === 0) return;
     state.currentMap = state.history.pop();
     renderMap();
 }
@@ -670,6 +703,11 @@ const notesState = {};
 const diceHistory = [];
 const demonicFormState = {}; // { charId: { active: bool, turnsLeft: int } }
 const turnPlannerState = {}; // { charId: { accion: null, adicional: null, reaccion: null } }
+
+// Combat mode navigation flag
+let combatModeActive = false;
+let currentCharacterId = null;
+let isCharacterEditing = false;
 
 const CONDITIONS = [
     { id: 'envenenado',    label: '🤢', title: 'Envenenado' },
@@ -1771,6 +1809,21 @@ function renderCharacterSheet(charId) {
     document.getElementById('characterSheetContainer').style.display = 'flex';
     const diceWidget = document.getElementById('diceRollerWidget');
     if (diceWidget) diceWidget.style.display = 'flex';
+
+    // Update HUD breadcrumbs based on navigation context
+    const hud = document.getElementById('hud');
+    if (hud) hud.style.display = 'flex';
+    const btnBack = document.getElementById('btnBack');
+    if (btnBack) btnBack.style.display = 'flex';
+    const breadcrumbs = document.getElementById('breadcrumbs');
+    if (breadcrumbs) {
+        const shortName = data.nombre.split(' ')[0];
+        if (combatModeActive) {
+            breadcrumbs.textContent = `⚔️ Combate › Jugador › ${shortName}`;
+        } else {
+            breadcrumbs.textContent = shortName;
+        }
+    }
 }
 
 // === Edit Actions ===
@@ -1913,10 +1966,17 @@ function setupCharacterSheetListeners() {
     document.getElementById('closeSheetBtn').addEventListener('click', () => {
         document.getElementById('characterSheetContainer').style.display = 'none';
         isCharacterEditing = false;
-        // Only hide dice roller if we're not in map/characters view
-        if (state.currentView === 'landing') {
-            const diceWidget = document.getElementById('diceRollerWidget');
+        const diceWidget = document.getElementById('diceRollerWidget');
+        if (combatModeActive) {
+            // Return to combat player select
             if (diceWidget) diceWidget.style.display = 'none';
+            setView('combatPlayerSelect');
+            renderCombatPlayerList();
+        } else {
+            // Only hide dice roller if we're not in map/characters view
+            if (state.currentView === 'landing') {
+                if (diceWidget) diceWidget.style.display = 'none';
+            }
         }
     });
 
@@ -1981,6 +2041,43 @@ function renderCharacterSelectionMenu() {
 }
 
 // ============================================
+// Combat Mode Navigation
+// ============================================
+function showCombatMode() {
+    combatModeActive = false;
+    setView('combatMode');
+}
+
+function showCombatPlayerSelect() {
+    combatModeActive = true;
+    setView('combatPlayerSelect');
+    renderCombatPlayerList();
+}
+
+function renderCombatPlayerList() {
+    const container = document.getElementById('combatPlayerListContainer');
+    if (!container || !window.characterData) return;
+    container.innerHTML = Object.values(window.characterData).map(char => {
+        const imgUrl = char.imagen || 'assets/imagenes/placeholder.jpg';
+        return `<div class="card character-card" onclick="showCombatCharacter('${char.id}')">
+            <div class="card-img-wrapper" style="width:72px;height:72px;border-radius:50%;overflow:hidden;border:2px solid var(--accent-gold);margin-bottom:8px;box-shadow:0 0 10px rgba(0,0,0,0.5);flex-shrink:0;">
+                <img src="${imgUrl}" style="width:100%;height:100%;object-fit:cover;object-position:top center;" onerror="this.src='https://placehold.co/100x100/1e2536/d4af37?text=?'">
+            </div>
+            <div class="card-title">${char.nombre}</div>
+            <div class="char-card-meta">${char.raza} · ${char.clase} · Nv ${char.nivel}</div>
+        </div>`;
+    }).join('');
+}
+
+function showCombatCharacter(charId) {
+    combatModeActive = true;
+    isCharacterEditing = false;
+    // Hide the player-select section before rendering sheet
+    document.getElementById('combatPlayerSelectSection').style.display = 'none';
+    renderCharacterSheet(charId);
+}
+
+// ============================================
 // View Management
 // ============================================
 function setView(viewName) {
@@ -1996,6 +2093,8 @@ function setView(viewName) {
     document.getElementById('landingPage').style.display = 'none';
     document.getElementById('mapContainer').style.display = 'none';
     document.getElementById('characterSection').style.display = 'none';
+    document.getElementById('combatModeSection').style.display = 'none';
+    document.getElementById('combatPlayerSelectSection').style.display = 'none';
     document.getElementById('welcomeScreen').style.display = 'none';
 
     // Also hide the character sheet if it was open
@@ -2028,6 +2127,22 @@ function setView(viewName) {
             if (editorToolbar) editorToolbar.style.display = 'none';
             if (hud) hud.style.display = 'flex';
             if (diceWidget) diceWidget.style.display = 'flex';
+            break;
+        case 'combatMode':
+            document.getElementById('combatModeSection').style.display = 'flex';
+            if (editorToolbar) editorToolbar.style.display = 'none';
+            if (hud) hud.style.display = 'flex';
+            if (diceWidget) diceWidget.style.display = 'none';
+            document.getElementById('breadcrumbs').textContent = '⚔️ Combate';
+            document.getElementById('btnBack').style.display = 'flex';
+            break;
+        case 'combatPlayerSelect':
+            document.getElementById('combatPlayerSelectSection').style.display = 'flex';
+            if (editorToolbar) editorToolbar.style.display = 'none';
+            if (hud) hud.style.display = 'flex';
+            if (diceWidget) diceWidget.style.display = 'none';
+            document.getElementById('breadcrumbs').textContent = '⚔️ Combate › Jugador';
+            document.getElementById('btnBack').style.display = 'flex';
             break;
     }
 }

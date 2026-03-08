@@ -2565,3 +2565,34 @@ body.view-map .hud {
         margin-top: 0;
     }
 }
+
+/* ============================================
+   COMBAT MODE — Landing Cards
+   ============================================ */
+
+/* Disabled card (e.g. Enemigo — no monsters yet) */
+.card-disabled {
+    opacity: 0.45;
+    filter: grayscale(0.6);
+    cursor: not-allowed;
+}
+
+.card-disabled:hover {
+    transform: none !important;
+    border-color: var(--border-color) !important;
+    box-shadow: var(--shadow-elevated) !important;
+}
+
+/* Landing page: 3 cards — allow them to wrap gracefully on mobile */
+#landingPage .landing-cards {
+    max-width: 1000px;
+}
+
+/* Mobile: shrink landing cards a bit so 3 fit comfortably */
+@media (max-width: 768px) {
+    #landingPage .landing-cards .card {
+        width: clamp(120px, 28vw, 200px);
+        min-height: 160px;
+        padding: 20px 12px;
+    }
+}

@@ -13,8 +13,8 @@
         href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link rel="stylesheet" href="style.css?v=20260308b">
-    <link rel="stylesheet" href="mobile.css?v=20260308b" media="screen and (max-width: 768px)">
+    <link rel="stylesheet" href="style.css?v=20260308c">
+    <link rel="stylesheet" href="mobile.css?v=20260308c" media="screen and (max-width: 768px)">
 </head>
 
 <body>
@@ -44,6 +44,10 @@
                 <div class="card-title">👥 Personajes</div>
                 <p>Gestiona las hojas de personaje y estadísticas.</p>
             </div>
+            <div class="card" id="cardCombatMode">
+                <div class="card-title">⚔️ Modo Combate</div>
+                <p>Inicia un combate en partida. Selecciona jugador o enemigo.</p>
+            </div>
         </div>
     </section>
 
@@ -51,6 +55,29 @@
     <section id="characterSection" class="character-section" style="display: none;">
         <h1 class="landing-title">Selecciona tu Personaje</h1>
         <div class="landing-cards" id="characterListContainer">
+            <!-- Dynamic Content -->
+        </div>
+    </section>
+
+    <!-- Combat Mode Landing (Jugador / Enemigo) -->
+    <section id="combatModeSection" class="character-section" style="display: none;">
+        <h1 class="landing-title">⚔️ Modo Combate</h1>
+        <div class="landing-cards">
+            <div class="card" id="cardCombatPlayer">
+                <div class="card-title">👤 Jugador</div>
+                <p>Selecciona un personaje jugador para el combate.</p>
+            </div>
+            <div class="card card-disabled" id="cardCombatEnemy">
+                <div class="card-title">👹 Enemigo</div>
+                <p>No hay monstruos creados todavía.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Combat Player Select -->
+    <section id="combatPlayerSelectSection" class="character-section" style="display: none;">
+        <h1 class="landing-title">Selecciona un Personaje</h1>
+        <div class="landing-cards" id="combatPlayerListContainer">
             <!-- Dynamic Content -->
         </div>
     </section>
@@ -228,9 +255,9 @@
         <button id="diceToggleBtn" class="dice-toggle-btn" title="Lanzador de dados" aria-label="Abrir lanzador de dados">🎲</button>
     </div>
 
-    <script src="characters.js?v=20260308b"></script>
-    <script src="data.js?v=20260308b"></script>
-    <script src="script.js?v=20260308b"></script>
+    <script src="characters.js?v=20260308c"></script>
+    <script src="data.js?v=20260308c"></script>
+    <script src="script.js?v=20260308c"></script>
 </body>
 
 </html>
