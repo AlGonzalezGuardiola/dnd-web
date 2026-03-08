@@ -2264,6 +2264,246 @@ body.view-map .hud {
 }
 
 /* ============================================
+   Combat Tab – Turn Planner
+   ============================================ */
+.turn-planner {
+    background: rgba(212, 175, 55, 0.06);
+    border: 1px solid rgba(212, 175, 55, 0.25);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.turn-planner-title {
+    font-family: var(--font-heading);
+    font-size: 13px;
+    letter-spacing: 1px;
+    color: var(--accent-gold);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+
+.planner-slots {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.planner-slot {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    min-height: 38px;
+}
+
+.planner-slot.empty {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px dashed rgba(255, 255, 255, 0.15);
+}
+
+.planner-slot.filled {
+    background: rgba(212, 175, 55, 0.12);
+    border: 1px solid rgba(212, 175, 55, 0.4);
+}
+
+.planner-slot-icon {
+    font-size: 15px;
+    width: 20px;
+    flex-shrink: 0;
+}
+
+.planner-slot-label {
+    color: var(--text-secondary);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    width: 64px;
+    flex-shrink: 0;
+}
+
+.planner-slot-value {
+    flex: 1;
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 13px;
+}
+
+.planner-slot-empty {
+    flex: 1;
+    color: rgba(148, 163, 184, 0.5);
+    font-style: italic;
+    font-size: 12px;
+}
+
+.planner-slot-clear {
+    background: rgba(255, 80, 80, 0.15);
+    border: 1px solid rgba(255, 80, 80, 0.3);
+    color: #ff6666;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+    flex-shrink: 0;
+}
+
+.planner-slot-clear:hover {
+    background: rgba(255, 80, 80, 0.3);
+}
+
+/* Dice panel */
+.dice-panel-combat {
+    margin-top: 12px;
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 10px;
+    padding: 12px 14px;
+}
+
+.dice-panel-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--accent-magic);
+    margin-bottom: 8px;
+}
+
+.dice-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.dice-row:last-child {
+    border-bottom: none;
+}
+
+.dice-name {
+    font-size: 12px;
+    color: var(--text-secondary);
+    flex: 1;
+}
+
+.dice-values {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.dice-atk {
+    background: rgba(212, 175, 55, 0.2);
+    color: var(--accent-gold);
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.dice-dmg {
+    background: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border-radius: 4px;
+    padding: 2px 7px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.dice-utility {
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-style: italic;
+}
+
+/* Combat slots (compact) */
+.combat-slots {
+    margin-bottom: 16px;
+}
+
+/* Combat action sections */
+.combat-section {
+    margin-bottom: 20px;
+}
+
+.combat-section-title {
+    font-family: var(--font-heading);
+    font-size: 12px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--accent-gold);
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.combat-action-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.combat-action-card {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: border-color var(--transition-fast), background var(--transition-fast);
+}
+
+.combat-action-card:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(212, 175, 55, 0.35);
+}
+
+.combat-action-card.selected {
+    background: rgba(212, 175, 55, 0.12);
+    border-color: rgba(212, 175, 55, 0.6);
+    box-shadow: 0 0 8px rgba(212, 175, 55, 0.15);
+}
+
+.combat-action-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 4px;
+}
+
+.combat-action-name {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-primary);
+    flex: 1;
+}
+
+.combat-action-dice {
+    font-size: 11px;
+    color: var(--accent-gold);
+    background: rgba(212, 175, 55, 0.12);
+    border-radius: 4px;
+    padding: 2px 7px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.combat-action-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* ============================================
    Character sheet - make it scroll properly
    ============================================ */
 .character-sheet-container {

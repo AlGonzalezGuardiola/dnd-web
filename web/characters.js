@@ -135,6 +135,15 @@ window.characterData = {
                 "nivel": 3,
                 "desc": "Te conviertes en niebla. Vuelo lento, atraviesas rendijas, muy difícil de dañar. No atacas ni lanzas. Concentración 1 h."
             }
+        ],
+        "combateExtra": [
+            {
+                "nombre": "Espada Demoníaca",
+                "tipo": "accion",
+                "atk": "1d20+8",
+                "dado": "1d10+1d4+5",
+                "desc": "Cort/Necr. +1d8 necrótico en Forma Demoníaca. Aura Necrótica activa dobla dados necróticos."
+            }
         ]
     },
     "Zero": {
@@ -280,6 +289,27 @@ window.characterData = {
                 "nombre": "⛓️ Cadenas del Vacío (Reacción)",
                 "nivel": "Esp",
                 "desc": "60-80ft. Inmoviliza (SAB CD 13) + 2d6 necrótico/turno."
+            }
+        ],
+        "combateExtra": [
+            {
+                "nombre": "Bastón Prohibido",
+                "tipo": "accion",
+                "atk": "1d20+9",
+                "dado": "1d6+1d12+4",
+                "desc": "Báculo mágico. Crítico necrótico con 18-19. +INT al daño."
+            },
+            {
+                "nombre": "Represión Infernal",
+                "tipo": "reaccion",
+                "dado": "2d10",
+                "desc": "Reacción al recibir daño. 2d10 fuego o necrótico al atacante. Recupera slots (Nv1/3 turnos)."
+            },
+            {
+                "nombre": "Brazalete (Intangible)",
+                "tipo": "adicional",
+                "dado": "—",
+                "desc": "1 turno intangible: Inmune a daño no mágico, atraviesas paredes."
             }
         ]
     },
@@ -436,6 +466,46 @@ window.characterData = {
                 "nombre": "Detectar Magia / Bien y Mal",
                 "nivel": 1,
                 "desc": "Utilidad."
+            }
+        ],
+        "combateExtra": [
+            {
+                "nombre": "Martillo Infernal (Melé)",
+                "tipo": "accion",
+                "atk": "1d20+7",
+                "dado": "1d10+1d6+4",
+                "desc": "Cont + 1d6 fuego. Ataques empujan 10ft (Runas). Si choca contra pared: +2d6 y aturdido 1 turno."
+            },
+            {
+                "nombre": "Martillo (Lanzamiento 30ft)",
+                "tipo": "accion",
+                "atk": "1d20+7",
+                "dado": "1d10+1d6+4",
+                "desc": "Ataque a distancia 30ft. Retorno mental si <=30ft."
+            },
+            {
+                "nombre": "TP al Martillo",
+                "tipo": "adicional",
+                "dado": "1d4",
+                "desc": "Bonus: TP instantáneo al martillo. Enemigos a 10ft: DEX Save o caen + 1d4 fuerza."
+            },
+            {
+                "nombre": "Velo de la Doncella",
+                "tipo": "reaccion",
+                "dado": "—",
+                "desc": "1/día. Reacción: Inmunidad total a un ataque o hechizo. Activar tras ver el resultado."
+            },
+            {
+                "nombre": "Lamento del Abismo",
+                "tipo": "accion",
+                "dado": "2d8+2d8",
+                "desc": "1/día. Cono 30ft. 2d8 necrótico + 2d8 psíquico (CON Save mitad)."
+            },
+            {
+                "nombre": "Conjuro Rúnico (Inmovilizar)",
+                "tipo": "adicional",
+                "dado": "1d10",
+                "desc": "Bonus. Toque, STR Save o Inmovilizado en piedra + 1d10 fuerza."
             }
         ]
     }
