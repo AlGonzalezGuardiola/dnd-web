@@ -1016,8 +1016,8 @@ function updateTabs(data) {
     const tabInventory = document.getElementById('tabInventory');
     const tabSpells = document.getElementById('tabSpells');
 
-    // 1. Tab Combat: Turn planner + action lists
-    tabCombat.innerHTML = renderCombatTab(data);
+    // 1. Tab Combat: on mobile this mirrors the inline combat section
+    if (tabCombat) tabCombat.innerHTML = renderCombatTab(data);
 
     // 2. Tab Narrative: Social, background, and passive traits
     let narrativeHTML = '<div class="feature-grid">';
@@ -1057,6 +1057,38 @@ function updateTabs(data) {
 // ============================================
 // Combat Tab – Turn Planner
 // ============================================
+
+// Extract dice notation (e.g. "2d10", "1d6+3") from a description string
+function extractDiceFromDesc(desc) {
+    if (!desc) return null;
+    const plain = desc.replace(/<[^>]+>/g, ' '); // strip HTML tags
+    const matches = plain.match(/\d+d\d+(?:[+-]\d+)?/gi);
+    if (!matches || matches.length === 0) return null;
+    return matches.join(' + ');
+}
+
+// Return styled dice badges for an action item
+function getDiceBadges(action) {
+    let parts = [];
+    if (action.atk) parts.push(`<span class="dice-atk">ATK ${action.atk}</span>`);
+    if (action.dado && action.dado !== '—') {
+        parts.push(`<span class="dice-dmg">DMG ${action.dado}</span>`);
+    } else if (!action.atk) {
+        // Try to extract from description
+        const extracted = extractDiceFromDesc(action.desc);
+        if (extracted) parts.push(`<span class="dice-dmg">${extracted}</span>`);
+    }
+    return parts.join('');
+}
+
+// Render combat content into both combatInline and tabCombat
+function renderCombatInline(data) {
+    const html = renderCombatTab(data);
+    const inline = document.getElementById('combatInline');
+    if (inline) inline.innerHTML = html;
+    const tab = document.getElementById('tabCombat');
+    if (tab) tab.innerHTML = html;
+}
 
 function inferActionType(item) {
     if (item.tipo) return item.tipo;
@@ -1141,17 +1173,15 @@ function renderCombatTab(data) {
         </div>`;
     }).join('');
 
-    // Dice panel
+    // Dice panel — uses getDiceBadges for consistent display incl. extracted dice
     const selectedActions = [planner.accion, planner.adicional, planner.reaccion].filter(Boolean);
     let diceHTML = '';
     if (selectedActions.length > 0) {
         const rows = selectedActions.map(action => {
-            let diceInfo = '';
-            if (action.atk) diceInfo += `<span class="dice-atk">ATK ${action.atk}</span>`;
-            if (action.dado && action.dado !== '—') diceInfo += `<span class="dice-dmg">DMG ${action.dado}</span>`;
+            const badges = getDiceBadges(action);
             return `<div class="dice-row">
                 <span class="dice-name">${action.nombre}</span>
-                <div class="dice-values">${diceInfo || '<span class="dice-utility">Sin tirada</span>'}</div>
+                <div class="dice-values">${badges || '<span class="dice-utility">Sin tirada</span>'}</div>
             </div>`;
         }).join('');
         diceHTML = `<div class="dice-panel-combat">
@@ -1172,9 +1202,11 @@ function renderCombatTab(data) {
         const cardsHTML = items.map(item => {
             const sel = planner[section.key];
             const isSelected = sel && sel.nombre === item.nombre;
+            // Dice badge: explicit fields first, then extracted from desc
             const diceStr = item.atk
                 ? `ATK ${item.atk}${item.dado && item.dado !== '—' ? ` | DMG ${item.dado}` : ''}`
-                : (item.dado && item.dado !== '—' ? `DMG ${item.dado}` : '');
+                : (item.dado && item.dado !== '—' ? `DMG ${item.dado}`
+                    : (extractDiceFromDesc(item.desc) || ''));
             const safeName = item.nombre.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
             return `<div class="combat-action-card${isSelected ? ' selected' : ''}"
                      onclick="selectCombatAction('${charId}','${section.key}','${safeName}')">
@@ -1209,16 +1241,22 @@ function selectCombatAction(charId, tipo, nombre) {
     if (!turnPlannerState[charId]) turnPlannerState[charId] = { accion: null, adicional: null, reaccion: null };
     const planner = turnPlannerState[charId];
     planner[tipo] = (planner[tipo] && planner[tipo].nombre === nombre) ? null : item;
-    const tabCombat = document.getElementById('tabCombat');
-    if (tabCombat) tabCombat.innerHTML = renderCombatTab(data);
+    refreshCombatSections(data);
 }
 
 function clearPlannerSlot(charId, tipo) {
     if (!turnPlannerState[charId]) return;
     turnPlannerState[charId][tipo] = null;
     const data = window.characterData[charId];
-    const tabCombat = document.getElementById('tabCombat');
-    if (tabCombat && data) tabCombat.innerHTML = renderCombatTab(data);
+    if (data) refreshCombatSections(data);
+}
+
+function refreshCombatSections(data) {
+    const html = renderCombatTab(data);
+    const inline = document.getElementById('combatInline');
+    if (inline) inline.innerHTML = html;
+    const tab = document.getElementById('tabCombat');
+    if (tab) tab.innerHTML = html;
 }
 
 function renderTraitItem(trait, index, tab) {
@@ -1592,8 +1630,8 @@ function renderCharacterSheet(charId) {
         </div>
     `;
 
-    // Quick Actions
-    renderQuickActions(data);
+    // Combat Planner (inline on desktop, in tab on mobile)
+    renderCombatInline(data);
 
     // Conditions bar + character-specific buttons
     const resourcesSection = document.getElementById('sheetResources');
@@ -1718,11 +1756,16 @@ function renderCharacterSheet(charId) {
             </div>`;
     }
 
-    // Reset Tabs
+    // Reset Tabs — combat is default on mobile (inline on desktop), features on desktop
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    document.querySelector('.tab-btn[data-tab="features"]').classList.add('active');
-    document.getElementById('tabFeatures').classList.add('active');
+    const isMobile = window.innerWidth <= 768;
+    const defaultTabKey = isMobile ? 'combat' : 'features';
+    const defaultBtn = document.querySelector(`.tab-btn[data-tab="${defaultTabKey}"]`);
+    const defaultId = 'tab' + defaultTabKey.charAt(0).toUpperCase() + defaultTabKey.slice(1);
+    if (defaultBtn) defaultBtn.classList.add('active');
+    const defaultContent = document.getElementById(defaultId);
+    if (defaultContent) defaultContent.classList.add('active');
 
     // Show Container + dice roller
     document.getElementById('characterSheetContainer').style.display = 'flex';

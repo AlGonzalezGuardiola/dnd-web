@@ -88,30 +88,26 @@
                     <!-- HP, AC, Init, Speed will be here with better design -->
                 </div>
 
-                <div class="quick-actions-container">
-                    <h3 class="section-label">Acciones Frecuentes</h3>
-                    <div id="quickActions" class="quick-actions-grid">
-                        <!-- Dynamic: Eldritch Blast, Sword Attack, etc. -->
-                    </div>
-                </div>
+                <!-- Combat Planner: always visible on desktop, in tab on mobile -->
+                <div id="combatInline" class="combat-inline-section"></div>
 
                 <div class="sheet-vitals-secondary" id="sheetResources" style="display: none;">
                     <!-- Resources like Spell Slots, Rage, etc. -->
                 </div>
 
                 <div class="sheet-tabs-nav">
-                    <button class="tab-btn active" data-tab="combat">⚔️ Combate</button>
-                    <button class="tab-btn" data-tab="features">📖 Narrativa</button>
+                    <button class="tab-btn combat-tab-mobile" data-tab="combat">⚔️ Combate</button>
+                    <button class="tab-btn active" data-tab="features">📖 Narrativa</button>
                     <button class="tab-btn" data-tab="inventory">🎒 Inventario</button>
                     <button class="tab-btn" data-tab="spells">✨ Conjuros</button>
                     <button class="tab-btn" data-tab="notes">📝 Notas</button>
                 </div>
 
                 <div class="sheet-body">
-                    <div id="tabCombat" class="tab-content active">
+                    <div id="tabCombat" class="tab-content">
                         <!-- Combat specific detailed traits/actions -->
                     </div>
-                    <div id="tabFeatures" class="tab-content">
+                    <div id="tabFeatures" class="tab-content active">
                         <!-- Narrative/Social/Background -->
                     </div>
                     <div id="tabInventory" class="tab-content">

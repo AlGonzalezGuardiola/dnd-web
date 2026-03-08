@@ -2509,3 +2509,59 @@ body.view-map .hud {
 .character-sheet-container {
     overflow-y: auto;
 }
+/* ============================================
+   Combat Inline Section (desktop only)
+   ============================================ */
+
+/* Desktop: show inline planner, hide the Combate tab button */
+@media (min-width: 769px) {
+    .combat-inline-section {
+        display: block;
+        margin-bottom: 20px;
+    }
+    .tab-btn.combat-tab-mobile {
+        display: none;
+    }
+    #tabCombat {
+        display: none !important;
+    }
+}
+
+/* Mobile: hide inline planner, show Combate tab */
+@media (max-width: 768px) {
+    .combat-inline-section {
+        display: none;
+    }
+    .tab-btn.combat-tab-mobile {
+        display: flex;
+    }
+}
+
+/* Desktop combat layout: 2 columns for action lists */
+@media (min-width: 1024px) {
+    .combat-inline-section .combat-action-list {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    .combat-inline-section .turn-planner {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        align-items: start;
+    }
+    .combat-inline-section .turn-planner-title {
+        grid-column: 1 / -1;
+    }
+    .combat-inline-section .planner-slots {
+        grid-column: 1;
+    }
+    .combat-inline-section .dice-panel-combat {
+        grid-column: 2;
+        margin-top: 0;
+        align-self: start;
+    }
+    .combat-inline-section .combat-slots {
+        margin-top: 0;
+    }
+}
