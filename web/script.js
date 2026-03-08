@@ -669,6 +669,7 @@ const deathSaveState = {};
 const notesState = {};
 const diceHistory = [];
 const demonicFormState = {}; // { charId: { active: bool, turnsLeft: int } }
+const turnPlannerState = {}; // { charId: { accion: null, adicional: null, reaccion: null } }
 
 const CONDITIONS = [
     { id: 'envenenado',    label: '🤢', title: 'Envenenado' },
@@ -1015,15 +1016,8 @@ function updateTabs(data) {
     const tabInventory = document.getElementById('tabInventory');
     const tabSpells = document.getElementById('tabSpells');
 
-    // 1. Tab Combat: Detailed actions and combat-related traits
-    let combatHTML = '<div class="feature-grid">';
-    data.rasgos.forEach((trait, index) => {
-        if (trait.nombre.includes("🗡️") || trait.nombre.includes("⚔️") || trait.nombre.includes("Aura") || trait.nombre.includes("Combate")) {
-            combatHTML += renderTraitItem(trait, index, 'combat');
-        }
-    });
-    combatHTML += '</div>';
-    tabCombat.innerHTML = combatHTML;
+    // 1. Tab Combat: Turn planner + action lists
+    tabCombat.innerHTML = renderCombatTab(data);
 
     // 2. Tab Narrative: Social, background, and passive traits
     let narrativeHTML = '<div class="feature-grid">';
@@ -1058,6 +1052,173 @@ function updateTabs(data) {
 
     // Re-attach expand events
     setupCollapsibleEvents();
+}
+
+// ============================================
+// Combat Tab – Turn Planner
+// ============================================
+
+function inferActionType(item) {
+    if (item.tipo) return item.tipo;
+    const nivel = String(item.nivel ?? '');
+    const nombre = item.nombre || '';
+    const desc = item.desc || '';
+    // Reaction
+    if (nivel === 'Reac' || /\(Reacci[oó]n\)/i.test(nombre) || /\(Reacci[oó]n\)/i.test(desc)) {
+        return 'reaccion';
+    }
+    // Bonus action – capital-B "Bonus" word, or "(Bonus)" in name
+    if (/\(Bonus\)/i.test(nombre) || /\bBonus\b/.test(desc)) {
+        return 'adicional';
+    }
+    return 'accion';
+}
+
+function renderCombatTab(data) {
+    const charId = data.id;
+    if (!turnPlannerState[charId]) {
+        turnPlannerState[charId] = { accion: null, adicional: null, reaccion: null };
+    }
+    const planner = turnPlannerState[charId];
+
+    // Collect all combat items
+    const allItems = [
+        ...(data.combateExtra || []),
+        ...(data.conjuros || [])
+    ];
+
+    // Group by type
+    const groups = { accion: [], adicional: [], reaccion: [] };
+    allItems.forEach(item => {
+        const tipo = inferActionType(item);
+        groups[tipo].push(item);
+    });
+
+    // Spell slots
+    let slotsHTML = '';
+    if (data.ranuras && data.ranuras.length > 0) {
+        initSpellSlotsForChar(charId);
+        slotsHTML = `<div class="slot-tracker combat-slots">
+            <div class="slot-tracker-header">
+                <span class="slot-tracker-title">✨ Ranuras</span>
+                <button class="slot-reset-btn" onclick="resetSpellSlots('${charId}')" title="Descanso largo">🌙</button>
+            </div>
+            ${data.ranuras.map(slot => {
+                const remaining = spellSlotState[charId]?.[slot.nombre] ?? slot.total;
+                const pips = Array.from({ length: slot.total }, (_, i) =>
+                    `<button class="slot-pip${i >= remaining ? ' used' : ''}"
+                        onclick="toggleSpellSlot('${charId}','${slot.nombre}',${i})"></button>`
+                ).join('');
+                return `<div class="slot-row">
+                    <span class="slot-name">${slot.nombre}</span>
+                    <div class="slot-track" data-slot="${slot.nombre}">${pips}</div>
+                    <span class="slot-count" data-slot="${slot.nombre}">${remaining}/${slot.total}</span>
+                </div>`;
+            }).join('')}
+        </div>`;
+    }
+
+    // Turn planner
+    const plannerSlots = [
+        { key: 'accion', icon: '🎯', label: 'Acción' },
+        { key: 'adicional', icon: '⚡', label: 'Adicional' },
+        { key: 'reaccion', icon: '↩️', label: 'Reacción' }
+    ];
+    const plannerSlotsHTML = plannerSlots.map(s => {
+        const sel = planner[s.key];
+        if (sel) {
+            return `<div class="planner-slot filled">
+                <span class="planner-slot-icon">${s.icon}</span>
+                <span class="planner-slot-label">${s.label}:</span>
+                <span class="planner-slot-value">${sel.nombre}</span>
+                <button class="planner-slot-clear" onclick="clearPlannerSlot('${charId}','${s.key}')">×</button>
+            </div>`;
+        }
+        return `<div class="planner-slot empty">
+            <span class="planner-slot-icon">${s.icon}</span>
+            <span class="planner-slot-label">${s.label}:</span>
+            <span class="planner-slot-empty">— selecciona abajo</span>
+        </div>`;
+    }).join('');
+
+    // Dice panel
+    const selectedActions = [planner.accion, planner.adicional, planner.reaccion].filter(Boolean);
+    let diceHTML = '';
+    if (selectedActions.length > 0) {
+        const rows = selectedActions.map(action => {
+            let diceInfo = '';
+            if (action.atk) diceInfo += `<span class="dice-atk">ATK ${action.atk}</span>`;
+            if (action.dado && action.dado !== '—') diceInfo += `<span class="dice-dmg">DMG ${action.dado}</span>`;
+            return `<div class="dice-row">
+                <span class="dice-name">${action.nombre}</span>
+                <div class="dice-values">${diceInfo || '<span class="dice-utility">Sin tirada</span>'}</div>
+            </div>`;
+        }).join('');
+        diceHTML = `<div class="dice-panel-combat">
+            <div class="dice-panel-title">🎲 Dados del Turno</div>
+            ${rows}
+        </div>`;
+    }
+
+    // Action lists
+    const sections = [
+        { key: 'accion', icon: '🎯', label: 'Acciones' },
+        { key: 'adicional', icon: '⚡', label: 'Adicionales' },
+        { key: 'reaccion', icon: '↩️', label: 'Reacciones' }
+    ];
+    const actionListHTML = sections.map(section => {
+        const items = groups[section.key];
+        if (items.length === 0) return '';
+        const cardsHTML = items.map(item => {
+            const sel = planner[section.key];
+            const isSelected = sel && sel.nombre === item.nombre;
+            const diceStr = item.atk
+                ? `ATK ${item.atk}${item.dado && item.dado !== '—' ? ` | DMG ${item.dado}` : ''}`
+                : (item.dado && item.dado !== '—' ? `DMG ${item.dado}` : '');
+            const safeName = item.nombre.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            return `<div class="combat-action-card${isSelected ? ' selected' : ''}"
+                     onclick="selectCombatAction('${charId}','${section.key}','${safeName}')">
+                <div class="combat-action-header">
+                    <span class="combat-action-name">${item.nombre}</span>
+                    ${diceStr ? `<span class="combat-action-dice">${diceStr}</span>` : ''}
+                </div>
+                <div class="combat-action-desc">${item.desc}</div>
+            </div>`;
+        }).join('');
+        return `<div class="combat-section">
+            <div class="combat-section-title">${section.icon} ${section.label}</div>
+            <div class="combat-action-list">${cardsHTML}</div>
+        </div>`;
+    }).join('');
+
+    return `<div class="turn-planner">
+        <div class="turn-planner-title">⚡ Planificador de Turno</div>
+        <div class="planner-slots">${plannerSlotsHTML}</div>
+        ${diceHTML}
+    </div>
+    ${slotsHTML}
+    ${actionListHTML}`;
+}
+
+function selectCombatAction(charId, tipo, nombre) {
+    const data = window.characterData[charId];
+    if (!data) return;
+    const allItems = [...(data.combateExtra || []), ...(data.conjuros || [])];
+    const item = allItems.find(i => i.nombre === nombre);
+    if (!item) return;
+    if (!turnPlannerState[charId]) turnPlannerState[charId] = { accion: null, adicional: null, reaccion: null };
+    const planner = turnPlannerState[charId];
+    planner[tipo] = (planner[tipo] && planner[tipo].nombre === nombre) ? null : item;
+    const tabCombat = document.getElementById('tabCombat');
+    if (tabCombat) tabCombat.innerHTML = renderCombatTab(data);
+}
+
+function clearPlannerSlot(charId, tipo) {
+    if (!turnPlannerState[charId]) return;
+    turnPlannerState[charId][tipo] = null;
+    const data = window.characterData[charId];
+    const tabCombat = document.getElementById('tabCombat');
+    if (tabCombat && data) tabCombat.innerHTML = renderCombatTab(data);
 }
 
 function renderTraitItem(trait, index, tab) {
