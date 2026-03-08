@@ -9,7 +9,7 @@ window.characterData = {
         "imagen": "assets/imagenes/Vel_profile_pic.jpg",
         "imagenScale": 1,
         "stats": {
-            "Fuerza": 10,
+            "Fuerza": 8,
             "Destreza": 16,
             "Constitución": 16,
             "Inteligencia": 10,
@@ -17,22 +17,22 @@ window.characterData = {
             "Carisma": 20
         },
         "resumen": {
-            "HP": "38",
+            "HP": "43",
             "CA": "17",
-            "Iniciativa": "+2",
+            "Iniciativa": "+3",
             "Velocidad": "30ft",
             "Competencia": "+3"
         },
         "habilidades": [
             "Arcanos",
-            "Engaño",
             "Intimidación",
-            "Persuasión"
+            "Persuasión",
+            "Juego de Manos"
         ],
         "rasgos": [
             {
                 "nombre": "🗡️ Pacto del Filo (Hexblade)",
-                "desc": "Arma invocada a voluntad. Usa CAR para ataque/daño. Crítico 19-20 contra maldito."
+                "desc": "Arma invocada/teletransportada a voluntad. Usa CAR para ataque/daño. Solo tú puedes usar su potencial."
             },
             {
                 "nombre": "🩸 Recuperación Oscura",
@@ -40,15 +40,15 @@ window.characterData = {
             },
             {
                 "nombre": "🔮 Invocaciones Sobrenaturales",
-                "desc": "<strong>Estallido Agonizante:</strong> +CAR al daño de Eldritch Blast.<br><strong>Estallido Repulsor:</strong> Empuja 10ft.<br><strong>Influencia Seductora:</strong> Comp. Engaño y Persuasión."
+                "desc": "<strong>Estallido Agonizante:</strong> +CAR al daño de Eldritch Blast.<br><strong>Estallido Repulsor:</strong> Empuja 10ft al golpear.<br><strong>Influencia Seductora:</strong> Comp. Engaño y Persuasión."
             },
             {
                 "nombre": "👹 Aura Demoníaca (Transformación)",
-                "desc": "Duración: 5 turnos. Efectos:<br>+2 CA.<br>Velocidad 50ft.<br>+1d8 extra por ataque.<br>Inmune a Hechizar y Ralentizar."
+                "desc": "Duración: 6 turnos. Efectos:<br>+2 CA.<br>Velocidad 50ft.<br>+1d8 necrótico extra por ataque.<br>Inmune a Hechizar y Ralentizar."
             },
             {
                 "nombre": "⚔️ Espada Demoníaca (Objeto)",
-                "desc": "Daño: 1d10 cort + 1d4 necrótico.<br><strong>Aura Necrótica (1/Largo - 1 min):</strong> Radio 20ft (móvil).<br>1. CD Miedo al activar.<br>2. Terreno Difícil.<br>3. Daño al salir (2d8 necrótico).<br>4. Daño dentro (1d12 necrótico/turno).<br>5. TODO daño necrótico dentro se duplica."
+                "desc": "Daño: 1d10 cort + 1d4 necrótico.<br><strong>Aura Necrótica (1/Largo - 1 min):</strong> Radio 30ft (móvil).<br>Al activar: TS CAR (CD 8+comp+CAR) o Asustado.<br>Terreno difícil dentro.<br>Al intentar salir: TS CON o 1d8 necrótico.<br>Inicio de turno dentro: 1d12 necrótico.<br>TODO daño necrótico dentro duplica sus dados."
             },
             {
                 "nombre": "🧣 Bufanda de Araña (Objeto)",
@@ -56,11 +56,19 @@ window.characterData = {
             },
             {
                 "nombre": "🪞 Espejo Vampírico (Objeto)",
-                "desc": "2 Horrocruxes. Si caes a 0 HP -> Espectro con 1 HP (salvo fuego/divino).<br><strong>TP Espejos:</strong> A voluntad a tus espejos o cualquier superficie reflectante."
+                "desc": "2 Horrocruxes. Si caes a 0 HP → Espectro con 1 HP (salvo fuego/divino).<br><strong>TP Espejos:</strong> A voluntad a tus espejos o cualquier superficie reflectante."
             },
             {
                 "nombre": "📜 Don de Lenguas",
-                "desc": "Lees todo. Hablas/entiendes cualquier idioma 1/día."
+                "desc": "Lees cualquier escritura a voluntad. Hablas/entiendes cualquier idioma 1/Largo."
+            },
+            {
+                "nombre": "👿 Enemigo Predilecto: Demonios",
+                "desc": "Contra demonios, rompes sus defensas:<br>Inmune → Resistente → Neutro → Débil."
+            },
+            {
+                "nombre": "🚫 Antimagia",
+                "desc": "Trucos y conjuros nivel 1 que te toquen o acerquen se desvanecen.<br>Conjuros de mayor nivel: el lanzador debe superar una TS o el hechizo no surte efecto."
             }
         ],
         "ranuras": [
@@ -70,47 +78,62 @@ window.characterData = {
             {
                 "nombre": "Estallido Arcano (Melee)",
                 "nivel": "Truco",
-                "desc": "1d10 fuerza + CAR (+Empuje)."
-            },
-            {
-                "nombre": "Manos Ardientes",
-                "nivel": 3,
-                "desc": "Cono 15ft. 3d6 fuego."
-            },
-            {
-                "nombre": "Orden Imperiosa",
-                "nivel": 3,
-                "desc": "1 palabra. SAB Save."
-            },
-            {
-                "nombre": "Ceguera/Sordera",
-                "nivel": 3,
-                "desc": "CON Save. Ciego o Sordo."
-            },
-            {
-                "nombre": "Rayo Abrasador",
-                "nivel": 3,
-                "desc": "3 Rayos de 2d6 fuego."
+                "desc": "2d10 fuerza imbuid. en espada + CAR. Bonus. (+Empuje 10ft)."
             },
             {
                 "nombre": "Escudo de Fe",
                 "nivel": "Esp",
-                "desc": "+2 CA (1/día gratis)."
+                "desc": "+2 CA. Bonus. Concentración. 3 usos/Largo."
+            },
+            {
+                "nombre": "Sirviente Invisible",
+                "nivel": "Esp",
+                "desc": "1/día gratis. 1 hora. Invisible → ventaja en ataques. 1 PG.<br>Atq acción: 1d8 divino +CAR (+7). Atq bonus: 1d4 + ventaja al sig. atacante."
+            },
+            {
+                "nombre": "Orden Imperiosa",
+                "nivel": 3,
+                "desc": "1 palabra. SAB Save. Acción."
+            },
+            {
+                "nombre": "Ceguera/Sordera",
+                "nivel": 3,
+                "desc": "CON Save. Ciego o Sordo. Puede repetir TS final de turno."
             },
             {
                 "nombre": "Hex / Mal de Ojo",
                 "nivel": 3,
-                "desc": "1d6 daño extra necrótico al golpear + Desventaja stat."
+                "desc": "Bonus. Concentración. +1d6 necrótico al golpear + Desventaja en stat elegida. Cambia objetivo al matar."
             },
             {
                 "nombre": "Paso Brumoso",
                 "nivel": 3,
-                "desc": "Teletransporte 30ft (Bonus)."
+                "desc": "Teletransporte 30ft. Bonus."
             },
             {
-                "nombre": "Escudo",
-                "nivel": 1,
-                "desc": "+5 CA Reacción (Hexblade)."
+                "nombre": "Inmovilizar Persona",
+                "nivel": 3,
+                "desc": "SAB Save o Paralizado. Ataques en melé = crítico auto. Concentración."
+            },
+            {
+                "nombre": "Patrón Hipnótico",
+                "nivel": 3,
+                "desc": "Cubo 30ft. TS SAB o Incapacitado + velocidad 0. Se rompe con daño o acción de aliado. Concentración 1 min."
+            },
+            {
+                "nombre": "Toque Vampírico",
+                "nivel": 3,
+                "desc": "Ataque CaC. 3d6 necrótico. Te curas mitad del daño. Concentración 1 min."
+            },
+            {
+                "nombre": "Contrahechizo",
+                "nivel": "Reac",
+                "desc": "Anula conjuro enemigo al lanzarse. Nivel 3 o inferior: automático."
+            },
+            {
+                "nombre": "Forma Gaseosa",
+                "nivel": 3,
+                "desc": "Te conviertes en niebla. Vuelo lento, atraviesas rendijas, muy difícil de dañar. No atacas ni lanzas. Concentración 1 h."
             }
         ]
     },
