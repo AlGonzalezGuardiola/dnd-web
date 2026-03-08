@@ -40,6 +40,7 @@ async function init() {
         setupDiceRoller();
         setView('landing');
         updateTaskMd('Initialize');
+        loadSavedCombatIfAny();
     } catch (error) {
         console.error('Error loading data:', error);
         showWelcomeScreen();
@@ -82,6 +83,7 @@ function setupEventListeners() {
         state.history = [];
         combatModeActive = false;
         combatState.isActive = false;
+        clearSavedCombat();
         const sheet = document.getElementById('characterSheetContainer');
         if (sheet) sheet.style.display = 'none';
         const manager = document.getElementById('combatManagerSection');
@@ -2065,9 +2067,13 @@ function goToCombatInitiative() {
             initiative: null,
             hp: { current: maxHp, max: maxHp },
             ac: char.resumen?.CA || '10',
+            baseAc: char.resumen?.CA || '10',
+            speed: char.resumen?.Velocidad || '30ft',
+            baseSpeed: char.resumen?.Velocidad || '30ft',
             conditions: [],
             note: '',
             charData: char,
+            demonicForm: false,
         };
     });
     setView('combatInit');
@@ -2088,6 +2094,7 @@ function beginCombat() {
     combatState.log = [];
     combatState.nextLogId = 0;
     createCurrentTurnEntry();
+    saveCombatState();
     setView('combatManager');
     renderCombatManager();
 }
@@ -2099,28 +2106,46 @@ function confirmEndCombat() {
         combatState.participants = [];
         combatState.log = [];
         combatState.nextLogId = 0;
+        clearSavedCombat();
         showCombatSetup();
     }
 }
 
 // ---- Setup Screen ----
+const COMBAT_CATEGORIES = [
+    { tipo: 'jugador', icon: '🗡️', label: 'Jugadores Principales', color: 'var(--accent-gold)' },
+    { tipo: 'aliado',  icon: '🤝', label: 'Aliados y NPCs',         color: '#4488ff'            },
+    { tipo: 'enemigo', icon: '💀', label: 'Enemigos',                color: '#cc3333'            },
+];
+
+function renderCombatSelectCard(char) {
+    const isSelected = combatState.selectedIds.includes(char.id);
+    return `<div class="combat-select-card${isSelected ? ' selected' : ''}"
+                 onclick="toggleCombatParticipant('${char.id}')">
+        <div class="combat-select-portrait">
+            <img src="${char.imagen || ''}" onerror="this.style.display='none'">
+        </div>
+        <div class="combat-select-info">
+            <div class="combat-select-name">${char.nombre}</div>
+            <div class="combat-select-meta">${char.clase || ''} · Nv ${char.nivel || '?'}</div>
+            <div class="combat-select-vitals">❤️ ${char.resumen?.HP || '?'} · 🛡️ ${char.resumen?.CA || '?'}</div>
+        </div>
+        <div class="combat-select-check">${isSelected ? '✓' : ''}</div>
+    </div>`;
+}
+
 function renderCombatSetup() {
     const grid = document.getElementById('combatParticipantGrid');
     if (!grid || !window.characterData) return;
-    grid.innerHTML = Object.values(window.characterData).map(char => {
-        const isSelected = combatState.selectedIds.includes(char.id);
-        const imgUrl = char.imagen || '';
-        return `<div class="combat-select-card${isSelected ? ' selected' : ''}"
-                     onclick="toggleCombatParticipant('${char.id}')">
-            <div class="combat-select-portrait">
-                <img src="${imgUrl}" onerror="this.style.display='none'">
-            </div>
-            <div class="combat-select-info">
-                <div class="combat-select-name">${char.nombre}</div>
-                <div class="combat-select-meta">${char.clase || ''} · Nv ${char.nivel || '?'}</div>
-                <div class="combat-select-vitals">❤️ ${char.resumen?.HP || '?'} · 🛡️ ${char.resumen?.CA || '?'}</div>
-            </div>
-            <div class="combat-select-check">${isSelected ? '✓' : ''}</div>
+    const characters = Object.values(window.characterData);
+    grid.innerHTML = COMBAT_CATEGORIES.map(cat => {
+        const chars = characters.filter(c => c.tipo === cat.tipo);
+        const cardsHTML = chars.length > 0
+            ? chars.map(renderCombatSelectCard).join('')
+            : `<div class="combat-category-empty">No hay ${cat.label.toLowerCase()} disponibles</div>`;
+        return `<div class="combat-category-section">
+            <div class="combat-category-header" style="border-left-color:${cat.color}">${cat.icon} ${cat.label}</div>
+            <div class="combat-category-cards">${cardsHTML}</div>
         </div>`;
     }).join('');
     const count = combatState.selectedIds.length;
@@ -2181,7 +2206,7 @@ function renderTurnQueue() {
         const isDead = p.hp.current <= 0;
         const hpPct = p.hp.max > 0 ? Math.max(0, (p.hp.current / p.hp.max) * 100) : 0;
         const hpColor = hpPct <= 0 ? '#555' : hpPct <= 25 ? '#ff4444' : hpPct <= 50 ? '#ffaa00' : '#4caf50';
-        const cls = ['turn-queue-item', isCurrent ? 'active' : '', isDead ? 'dead' : ''].filter(Boolean).join(' ');
+        const cls = ['turn-queue-item', isCurrent ? 'active' : '', isDead ? 'dead' : '', p.demonicForm ? 'demonic' : ''].filter(Boolean).join(' ');
         return `<div class="${cls}">
             <div class="tqi-init">${p.initiative}</div>
             <div class="tqi-name">${p.name.split(' ')[0]}</div>
@@ -2231,9 +2256,11 @@ function renderActivePanel() {
                 const isUsed = currentEntry?.actions.some(x => x.nombre === a.nombre) || false;
                 const safeName = a.nombre.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
                 const safeDice = dice.replace(/'/g, "\\'");
+                const demonicBonus = (p.demonicForm && p.id === 'Vel' && a.atk)
+                    ? '<small class="demonic-bonus">+1d8 Necr.</small>' : '';
                 return `<button class="combat-chip${isUsed ? ' used' : ''}"
                                 onclick="toggleCombatAction('${p.id}','${safeName}','${safeDice}')">
-                    ${a.nombre}${dice ? `<small>${dice}</small>` : ''}
+                    ${a.nombre}${dice ? `<small>${dice}</small>` : ''}${demonicBonus}
                 </button>`;
             }).join('');
             return `<div class="combat-chip-group">
@@ -2275,6 +2302,22 @@ function renderActivePanel() {
         }).join('')
         : `<div class="combat-recorded-empty">Sin acciones registradas</div>`;
 
+    // Demonic form toggle (Vel only)
+    const demonicToggleHTML = p.id === 'Vel' ? `
+        <button class="combat-demonic-toggle${p.demonicForm ? ' active' : ''}"
+                onclick="toggleDemonicFormInCombat('Vel')">
+            😈 Forma Demoníaca
+            ${p.demonicForm
+                ? '<span class="demonic-badge">ACTIVA · CA 19 · Vel. 50ft · +1d8 Necr.</span>'
+                : '<span style="color:var(--text-muted);font-size:12px">Inactiva</span>'}
+        </button>` : '';
+
+    // HP slider fill percentage
+    const sliderFillPct = p.hp.max > 0 ? Math.max(0, (p.hp.current / p.hp.max) * 100) : 0;
+
+    const panelClass = `combat-active-panel${p.demonicForm ? ' demonic-active' : ''}`;
+    panel.className = panelClass;
+
     panel.innerHTML = `
         <div class="combat-active-header">
             <div class="combat-active-portrait">
@@ -2286,23 +2329,24 @@ function renderActivePanel() {
             </div>
         </div>
         <div class="combat-active-vitals">
-            <div class="combat-vital-block ${hpClass}">
+            <div class="combat-vital-block ${hpClass}" id="activeHpBlock">
                 <div class="combat-vital-label">❤️ Puntos de Golpe</div>
-                <div class="combat-vital-value">${p.hp.current} / ${p.hp.max}</div>
-                <div class="combat-hp-btns">
-                    <button onclick="adjustParticipantHp('${p.id}',-5)">−5</button>
-                    <button onclick="adjustParticipantHp('${p.id}',-1)">−1</button>
-                    <input type="number" class="combat-hp-input" value="${p.hp.current}"
-                           onchange="setParticipantHp('${p.id}',parseInt(this.value)||0)">
-                    <button onclick="adjustParticipantHp('${p.id}',1)">+1</button>
-                    <button onclick="adjustParticipantHp('${p.id}',5)">+5</button>
+                <div class="combat-vital-value">
+                    <span id="activeHpDisplay">${p.hp.current}</span>
+                    <span style="font-size:16px;color:var(--text-muted)"> / ${p.hp.max}</span>
                 </div>
+                <input type="range" class="combat-hp-slider"
+                       min="0" max="${p.hp.max}" value="${p.hp.current}"
+                       style="--fill-pct:${sliderFillPct}%"
+                       oninput="setParticipantHp('${p.id}', parseInt(this.value))">
             </div>
             <div class="combat-vital-block">
                 <div class="combat-vital-label">🛡️ Clase de Armadura</div>
                 <div class="combat-vital-value">${p.ac}</div>
+                ${p.speed ? `<div style="font-size:12px;color:var(--text-muted);margin-top:4px">💨 ${p.speed}</div>` : ''}
             </div>
         </div>
+        ${demonicToggleHTML}
         <div class="combat-conds-bar">${condHTML}</div>
         ${actionChipsHTML}
         <div class="combat-recorded-section">
@@ -2345,6 +2389,7 @@ function toggleCombatAction(participantId, nombre, dice) {
     const idx = entry.actions.findIndex(a => a.nombre === nombre);
     if (idx >= 0) entry.actions.splice(idx, 1);
     else entry.actions.push({ nombre, dice: dice || '' });
+    saveCombatState();
     renderActivePanel();
     renderCombatLog();
 }
@@ -2353,6 +2398,7 @@ function removeCombatAction(participantId, nombre) {
     const entry = getCurrentLogEntry();
     if (!entry) return;
     entry.actions = entry.actions.filter(a => a.nombre !== nombre);
+    saveCombatState();
     renderActivePanel();
     renderCombatLog();
 }
@@ -2365,13 +2411,17 @@ function addCustomCombatAction(participantId) {
     if (!entry) return;
     entry.actions.push({ nombre: text, dice: '' });
     if (input) input.value = '';
+    saveCombatState();
     renderActivePanel();
     renderCombatLog();
 }
 
 function setCombatTurnNote(participantId, value) {
     const entry = getCurrentLogEntry();
-    if (entry) entry.note = value;
+    if (entry) {
+        entry.note = value;
+        saveCombatState();
+    }
 }
 
 function toggleLogAction(logId, nombre, dice) {
@@ -2465,21 +2515,23 @@ function renderCombatLog() {
 }
 
 // ---- HP + Conditions + Turn Advance ----
-function adjustParticipantHp(id, delta) {
-    const p = combatState.participants.find(x => x.id === id);
-    if (!p) return;
-    p.hp.current = Math.max(0, Math.min(p.hp.max, p.hp.current + delta));
-    renderTurnQueue();
-    renderActivePanel();
-}
-
 function setParticipantHp(id, value) {
     const p = combatState.participants.find(x => x.id === id);
     if (!p) return;
-    const v = isNaN(value) ? p.hp.current : value;
-    p.hp.current = Math.max(0, Math.min(p.hp.max, v));
+    p.hp.current = Math.max(0, Math.min(p.hp.max, isNaN(value) ? p.hp.current : value));
+    saveCombatState();
+    // Lightweight DOM update — don't rebuild panel (would kill slider focus)
+    const hpDisplay = document.getElementById('activeHpDisplay');
+    if (hpDisplay) hpDisplay.textContent = p.hp.current;
+    const hpBlock = document.getElementById('activeHpBlock');
+    if (hpBlock) {
+        const pct = p.hp.max > 0 ? (p.hp.current / p.hp.max) * 100 : 0;
+        hpBlock.className = 'combat-vital-block ' +
+            (pct <= 0 ? 'hp-dead' : pct <= 25 ? 'hp-critical' : pct <= 50 ? 'hp-low' : '');
+        const slider = hpBlock.querySelector('.combat-hp-slider');
+        if (slider) slider.style.setProperty('--fill-pct', pct + '%');
+    }
     renderTurnQueue();
-    renderActivePanel();
 }
 
 function toggleParticipantCondition(id, condId) {
@@ -2488,6 +2540,7 @@ function toggleParticipantCondition(id, condId) {
     const idx = p.conditions.indexOf(condId);
     if (idx >= 0) p.conditions.splice(idx, 1);
     else p.conditions.push(condId);
+    saveCombatState();
     renderActivePanel();
 }
 
@@ -2500,7 +2553,90 @@ function nextCombatTurn() {
         combatState.round++;
     }
     createCurrentTurnEntry();
+    saveCombatState();
     renderCombatManager();
+}
+
+// ---- Demonic Form in Combat ----
+function toggleDemonicFormInCombat(participantId) {
+    const p = combatState.participants.find(x => x.id === participantId);
+    if (!p) return;
+    p.demonicForm = !p.demonicForm;
+    if (p.demonicForm) {
+        p.ac    = String(parseInt(p.baseAc) + 2);
+        p.speed = '50ft';
+        showNotification('😈 ¡Forma Demoníaca activa! CA+2, Velocidad 50ft, +1d8 Necrótico', 2500);
+    } else {
+        p.ac    = p.baseAc;
+        p.speed = p.baseSpeed;
+        showNotification('💔 Forma Demoníaca desactivada', 2000);
+    }
+    saveCombatState();
+    renderCombatManager();
+}
+
+// ---- Auto-save Combat State ----
+const COMBAT_SAVE_KEY = 'dnd_combat_session';
+
+function saveCombatState() {
+    if (!combatState.isActive) return;
+    const toSave = {
+        ...combatState,
+        participants: combatState.participants.map(p => ({ ...p, charData: null })),
+    };
+    try { localStorage.setItem(COMBAT_SAVE_KEY, JSON.stringify(toSave)); } catch (e) {}
+}
+
+function clearSavedCombat() {
+    localStorage.removeItem(COMBAT_SAVE_KEY);
+}
+
+function loadSavedCombatIfAny() {
+    const raw = localStorage.getItem(COMBAT_SAVE_KEY);
+    if (!raw) return;
+    try {
+        const saved = JSON.parse(raw);
+        if (!saved.isActive || !saved.participants?.length) return;
+        saved.participants.forEach(p => { p.charData = window.characterData[p.id] || null; });
+        Object.assign(combatState, saved);
+        showCombatResumePrompt();
+    } catch (e) { clearSavedCombat(); }
+}
+
+function showCombatResumePrompt() {
+    const names = combatState.participants.map(p => p.name.split(' ')[0]).join(', ');
+    const overlay = document.createElement('div');
+    overlay.id = 'combatResumeOverlay';
+    overlay.className = 'combat-resume-overlay';
+    overlay.innerHTML = `
+        <div class="combat-resume-modal">
+            <div class="combat-resume-title">⚔️ Combate guardado</div>
+            <div class="combat-resume-info">
+                Ronda ${combatState.round} · ${combatState.participants.length} participantes
+                <br><small>${names}</small>
+            </div>
+            <div class="combat-resume-btns">
+                <button class="btn-combat-primary" onclick="resumeSavedCombat()">▶ Reanudar</button>
+                <button class="btn-combat-secondary" onclick="discardSavedCombat()">🗑 Descartar</button>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+}
+
+function resumeSavedCombat() {
+    document.getElementById('combatResumeOverlay')?.remove();
+    combatModeActive = true;
+    setView('combatManager');
+    renderCombatManager();
+}
+
+function discardSavedCombat() {
+    document.getElementById('combatResumeOverlay')?.remove();
+    Object.assign(combatState, {
+        isActive: false, participants: [], selectedIds: [],
+        log: [], round: 1, currentIndex: 0, nextLogId: 0,
+    });
+    clearSavedCombat();
 }
 
 // ============================================
