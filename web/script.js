@@ -2152,16 +2152,17 @@ function showPlayerCombat() {
     const cd = window.characterData?.[myId];
     if (!cd) { showNotification('Personaje no encontrado', 2000); return; }
 
+    const maxHp = parseInt(cd.resumen?.HP) || 10;
     combatState.participants = [{
         id: myId,
         name: cd.nombre,
-        tipo: 'jugador',
+        tipo: cd.tipo || 'jugador',
         initiative: 0,
-        hp: { current: cd.hp, max: cd.hp },
-        ac: cd.ca,
-        baseAc: cd.ca,
-        speed: cd.velocidad || '',
-        baseSpeed: cd.velocidad || '',
+        hp: { current: maxHp, max: maxHp },
+        ac: cd.resumen?.CA || '10',
+        baseAc: cd.resumen?.CA || '10',
+        speed: cd.resumen?.Velocidad || '30ft',
+        baseSpeed: cd.resumen?.Velocidad || '30ft',
         conditions: [],
         note: '',
         charData: cd,
