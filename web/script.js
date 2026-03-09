@@ -2134,6 +2134,12 @@ function renderCharacterSelectionMenu() {
 // ============================================
 function showCombatSetup() {
     combatModeActive = true;
+    if (!isMaster()) {
+        // Jugadores skip the setup screen entirely — go straight to their turn manager
+        setView('combatManager');
+        renderCombatManager();
+        return;
+    }
     setupNpcs = [];
     setupInitiatives = {};
     combatState.selectedIds = [];
@@ -2570,7 +2576,18 @@ function _renderPlayerCombatLayout(view) {
     if (masterLayout) masterLayout.style.display = 'none';
 
     const p = combatState.participants[combatState.currentIndex];
-    if (!p) { view.style.display = 'none'; return; }
+    if (!p) {
+        // Combat not started yet — show waiting screen
+        view.style.display = 'flex';
+        const charName = gameRole.characterId ? (window.characterData?.[gameRole.characterId]?.nombre || '') : '';
+        view.innerHTML = `
+            <div class="player-waiting-screen">
+                <div class="player-waiting-icon">⚔️</div>
+                <div class="player-waiting-title">${charName ? charName.split(' ')[0] : 'Jugador'}</div>
+                <div class="player-waiting-who" style="color:var(--text-muted);font-size:14px">Esperando al Master para iniciar el combate...</div>
+            </div>`;
+        return;
+    }
 
     const myId = gameRole.characterId;
     const isMyTurn = myId && p.id === myId;
