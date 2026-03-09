@@ -2578,17 +2578,12 @@ function _renderPlayerCombatLayout(view) {
     view.style.display = 'flex';
 
     if (!isMyTurn) {
-        // WAITING screen
-        let whoLabel;
-        if (p.tipo === 'enemigo') whoLabel = 'El enemigo actúa';
-        else whoLabel = `Turno de ${p.name.split(' ')[0]}`;
-
+        // WAITING screen — no info about who's acting
         view.innerHTML = `
             <div class="player-waiting-screen">
                 <div class="player-waiting-round">Ronda ${combatState.round}</div>
                 <div class="player-waiting-icon">⏳</div>
                 <div class="player-waiting-title">Esperando tu turno...</div>
-                <div class="player-waiting-who">${whoLabel}</div>
                 <button class="btn-combat-secondary player-waiting-pass" onclick="nextCombatTurn()">⏭ Pasar turno</button>
             </div>`;
     } else {
