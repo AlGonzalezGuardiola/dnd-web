@@ -2588,12 +2588,13 @@ body.view-map .hud {
     max-width: 1000px;
 }
 
-/* Mobile: shrink landing cards a bit so 3 fit comfortably */
+/* Mobile: landing cards stack vertically full-width */
 @media (max-width: 768px) {
     #landingPage .landing-cards .card {
-        width: clamp(120px, 28vw, 200px);
-        min-height: 160px;
-        padding: 20px 12px;
+        width: 100%;
+        max-width: none;
+        box-sizing: border-box;
+        padding: 20px 16px;
     }
 }
 

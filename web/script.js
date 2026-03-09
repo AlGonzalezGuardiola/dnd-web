@@ -3055,8 +3055,14 @@ function renderActivePanel(targetEl, forcePIdx) {
 
     // Attack target panel (master only)
     let attackTargetPanelHTML = '';
-    if (isMaster() && !isSegundaAccion && forcePIdx === undefined) {
-        const targets = combatState.participants.filter((_, i) => i !== idx);
+    if (isMaster() && forcePIdx === undefined) {
+        // Team filtering: jugador/aliado attack enemies; enemigo attacks jugadores/aliados
+        const attackerIsAlly = (p.tipo === 'jugador' || p.tipo === 'aliado');
+        const targets = combatState.participants.filter((t, i) => {
+            if (i === idx) return false; // exclude self
+            const targetIsAlly = (t.tipo === 'jugador' || t.tipo === 'aliado');
+            return attackerIsAlly !== targetIsAlly; // only opposing team
+        });
         if (targets.length > 0) {
             const targetRows = targets.map(t => {
                 const hpPct = t.hp.max > 0 ? Math.round(t.hp.current / t.hp.max * 100) : 0;
