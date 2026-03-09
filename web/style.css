@@ -4248,6 +4248,11 @@ body.role-jugador .master-only { display: none !important; }
     font-size: 17px;
     color: var(--accent-gold);
 }
+.player-active-title.player-title-waiting {
+    color: var(--text-muted);
+    font-size: 13px;
+    font-family: var(--font-body);
+}
 .player-active-body {
     flex: 1;
     overflow-y: auto;

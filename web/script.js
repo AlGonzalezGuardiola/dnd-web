@@ -2575,55 +2575,63 @@ function _renderPlayerCombatLayout(view) {
     const masterLayout = document.getElementById('combatMasterLayout');
     if (masterLayout) masterLayout.style.display = 'none';
 
-    const p = combatState.participants[combatState.currentIndex];
-    if (!p) {
-        // Combat not started yet — show waiting screen
-        view.style.display = 'flex';
-        const charName = gameRole.characterId ? (window.characterData?.[gameRole.characterId]?.nombre || '') : '';
-        view.innerHTML = `
-            <div class="player-waiting-screen">
-                <div class="player-waiting-icon">⚔️</div>
-                <div class="player-waiting-title">${charName ? charName.split(' ')[0] : 'Jugador'}</div>
-                <div class="player-waiting-who" style="color:var(--text-muted);font-size:14px">Esperando al Master para iniciar el combate...</div>
-            </div>`;
-        return;
-    }
-
-    const myId = gameRole.characterId;
-    const isMyTurn = myId && p.id === myId;
-
     view.style.display = 'flex';
 
-    if (!isMyTurn) {
-        // WAITING screen — no info about who's acting
-        view.innerHTML = `
-            <div class="player-waiting-screen">
-                <div class="player-waiting-round">Ronda ${combatState.round}</div>
-                <div class="player-waiting-icon">⏳</div>
-                <div class="player-waiting-title">Esperando tu turno...</div>
-                <button class="btn-combat-secondary player-waiting-pass" onclick="nextCombatTurn()">⏭ Pasar turno</button>
-            </div>`;
-    } else {
-        // ACTIVE TURN screen
-        const isSegundaAccion = combatState.segundaAccionTurn;
-        const turnLabel = isSegundaAccion ? '⚔️ Segunda Acción' : '⚔️ ¡Es tu turno!';
+    // Find the player's own participant by characterId
+    const myId = gameRole.characterId;
+    const myIdx = myId ? combatState.participants.findIndex(p => p.id === myId) : -1;
 
+    if (myIdx === -1) {
+        // Not in combat yet (combat not started or player not added)
         view.innerHTML = `
             <div class="player-active-header">
                 <div class="combat-round-badge">Ronda ${combatState.round}</div>
-                <div class="player-active-title">${turnLabel}</div>
+                <div class="player-active-title" style="color:var(--text-muted);font-size:14px">El Master aún no ha iniciado el combate</div>
                 <button class="btn-end-combat" onclick="confirmEndCombat()">✕ Fin</button>
             </div>
             <div class="player-active-body">
                 <div id="playerCombatPanel" class="combat-active-panel"></div>
-            </div>
-            <div class="player-active-footer">
-                <button class="btn-combat-primary" onclick="nextCombatTurn()">Siguiente Turno →</button>
             </div>`;
-
-        const playerPanel = document.getElementById('playerCombatPanel');
-        renderActivePanel(playerPanel);
+        // Still render own character sheet even before combat starts
+        const prePanel = document.getElementById('playerCombatPanel');
+        if (prePanel && myId && window.characterData?.[myId]) {
+            const cd = window.characterData[myId];
+            prePanel.innerHTML = `
+                <div class="combat-active-header">
+                    <div class="combat-active-portrait">
+                        ${cd.imagen ? `<img src="${cd.imagen}" onerror="this.style.display='none'">` : ''}
+                    </div>
+                    <div class="combat-active-meta">
+                        <div class="combat-active-name">${cd.nombre}</div>
+                        <div class="combat-active-class">${cd.clase} · Nv ${cd.nivel}</div>
+                    </div>
+                </div>`;
+        }
+        return;
     }
+
+    const isMyTurn = combatState.currentIndex === myIdx;
+    const isSegundaAccion = isMyTurn && combatState.segundaAccionTurn;
+    const turnLabel = isSegundaAccion ? '⚔️ Segunda Acción'
+                    : isMyTurn       ? '⚔️ ¡Es tu turno!'
+                    :                  '⏳ Esperando tu turno';
+
+    view.innerHTML = `
+        <div class="player-active-header">
+            <div class="combat-round-badge">Ronda ${combatState.round}</div>
+            <div class="player-active-title${isMyTurn ? '' : ' player-title-waiting'}">${turnLabel}</div>
+            <button class="btn-end-combat" onclick="confirmEndCombat()">✕ Fin</button>
+        </div>
+        <div class="player-active-body">
+            <div id="playerCombatPanel" class="combat-active-panel"></div>
+        </div>
+        ${isMyTurn ? `
+        <div class="player-active-footer">
+            <button class="btn-combat-primary" onclick="nextCombatTurn()">Siguiente Turno →</button>
+        </div>` : ''}`;
+
+    const playerPanel = document.getElementById('playerCombatPanel');
+    renderActivePanel(playerPanel, myIdx);
 }
 
 function renderTurnQueue() {
@@ -2801,15 +2809,17 @@ function removePermanentCustomAction(participantId, nombre) {
     renderActivePanel();
 }
 
-function renderActivePanel(targetEl) {
-    const p = combatState.participants[combatState.currentIndex];
+function renderActivePanel(targetEl, forcePIdx) {
+    const idx = (forcePIdx !== undefined) ? forcePIdx : combatState.currentIndex;
+    const p = combatState.participants[idx];
     const panel = targetEl || document.getElementById('combatActivePanel');
     if (!p || !panel) return;
 
-    const isSegundaAccion = combatState.segundaAccionTurn;
+    // isSegundaAccion only applies when rendering the actual current turn
+    const isSegundaAccion = combatState.segundaAccionTurn && (idx === combatState.currentIndex);
 
-    // ─── ROLE GATES ───────────────────────────────────────────────────────────
-    if (isMaster()) {
+    // ─── ROLE GATES — skipped when forcePIdx is set (player rendering own sheet) ──
+    if (forcePIdx === undefined && isMaster()) {
         // Master: locked view when it's a jugador's turn (player manages their own)
         if (p.tipo === 'jugador') {
             const hpPct0 = p.hp.max > 0 ? Math.max(0, (p.hp.current / p.hp.max) * 100) : 0;
@@ -2858,7 +2868,7 @@ function renderActivePanel(targetEl) {
                 </div>`;
             return;
         }
-    } else {
+    } else if (forcePIdx === undefined) {
         // Jugador: waiting panel when it's not their own character's turn
         const isMyTurn = gameRole.characterId && p.id === gameRole.characterId;
         if (!isMyTurn) {
