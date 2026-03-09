@@ -2135,9 +2135,7 @@ function renderCharacterSelectionMenu() {
 function showCombatSetup() {
     combatModeActive = true;
     if (!isMaster()) {
-        // Jugadores skip the setup screen entirely — go straight to their turn manager
-        setView('combatManager');
-        renderCombatManager();
+        showPlayerCombat();
         return;
     }
     setupNpcs = [];
@@ -2146,6 +2144,39 @@ function showCombatSetup() {
     setView('combatSetup');
     switchCombatSetupTab('jugadores');
     renderCombatSetup();
+}
+
+// Jugador personal turn manager — completely independent from master
+function showPlayerCombat() {
+    const myId = gameRole.characterId;
+    const cd = window.characterData?.[myId];
+    if (!cd) { showNotification('Personaje no encontrado', 2000); return; }
+
+    combatState.participants = [{
+        id: myId,
+        name: cd.nombre,
+        tipo: 'jugador',
+        initiative: 0,
+        hp: { current: cd.hp, max: cd.hp },
+        ac: cd.ca,
+        baseAc: cd.ca,
+        speed: cd.velocidad || '',
+        baseSpeed: cd.velocidad || '',
+        conditions: [],
+        note: '',
+        charData: cd,
+        customActions: [],
+        demonicForm: false,
+    }];
+    combatState.currentIndex = 0;
+    combatState.round = 1;
+    combatState.isActive = true;
+    combatState.segundaAccionTurn = false;
+    combatState.log = [];
+    combatState.nextLogId = 1;
+    createCurrentTurnEntry();
+    setView('combatManager');
+    renderCombatManager();
 }
 
 function showCombatMode() {
@@ -2566,72 +2597,37 @@ function renderCombatManager() {
     renderCombatLog();
 }
 
-// ---- Player Combat Layout (role=jugador) ----
+// ---- Player Combat Layout (role=jugador) — fully independent turn manager ----
 function _renderPlayerCombatLayout(view) {
     if (!view) view = document.getElementById('playerCombatView');
     if (!view) return;
 
-    // Always hide master layout in player mode
     const masterLayout = document.getElementById('combatMasterLayout');
     if (masterLayout) masterLayout.style.display = 'none';
 
     view.style.display = 'flex';
 
-    // Find the player's own participant by characterId
-    const myId = gameRole.characterId;
-    const myIdx = myId ? combatState.participants.findIndex(p => p.id === myId) : -1;
+    const p = combatState.participants[0];
+    if (!p) return;
 
-    if (myIdx === -1) {
-        // Not in combat yet (combat not started or player not added)
-        view.innerHTML = `
-            <div class="player-active-header">
-                <div class="combat-round-badge">Ronda ${combatState.round}</div>
-                <div class="player-active-title" style="color:var(--text-muted);font-size:14px">El Master aún no ha iniciado el combate</div>
-                <button class="btn-end-combat" onclick="confirmEndCombat()">✕ Fin</button>
-            </div>
-            <div class="player-active-body">
-                <div id="playerCombatPanel" class="combat-active-panel"></div>
-            </div>`;
-        // Still render own character sheet even before combat starts
-        const prePanel = document.getElementById('playerCombatPanel');
-        if (prePanel && myId && window.characterData?.[myId]) {
-            const cd = window.characterData[myId];
-            prePanel.innerHTML = `
-                <div class="combat-active-header">
-                    <div class="combat-active-portrait">
-                        ${cd.imagen ? `<img src="${cd.imagen}" onerror="this.style.display='none'">` : ''}
-                    </div>
-                    <div class="combat-active-meta">
-                        <div class="combat-active-name">${cd.nombre}</div>
-                        <div class="combat-active-class">${cd.clase} · Nv ${cd.nivel}</div>
-                    </div>
-                </div>`;
-        }
-        return;
-    }
-
-    const isMyTurn = combatState.currentIndex === myIdx;
-    const isSegundaAccion = isMyTurn && combatState.segundaAccionTurn;
-    const turnLabel = isSegundaAccion ? '⚔️ Segunda Acción'
-                    : isMyTurn       ? '⚔️ ¡Es tu turno!'
-                    :                  '⏳ Esperando tu turno';
+    const isSegundaAccion = combatState.segundaAccionTurn;
+    const roundLabel = isSegundaAccion
+        ? `Ronda ${combatState.round} · Segunda Acción`
+        : `Ronda ${combatState.round}`;
 
     view.innerHTML = `
         <div class="player-active-header">
-            <div class="combat-round-badge">Ronda ${combatState.round}</div>
-            <div class="player-active-title${isMyTurn ? '' : ' player-title-waiting'}">${turnLabel}</div>
+            <div class="combat-round-badge">${roundLabel}</div>
             <button class="btn-end-combat" onclick="confirmEndCombat()">✕ Fin</button>
         </div>
         <div class="player-active-body">
             <div id="playerCombatPanel" class="combat-active-panel"></div>
         </div>
-        ${isMyTurn ? `
         <div class="player-active-footer">
             <button class="btn-combat-primary" onclick="nextCombatTurn()">Siguiente Turno →</button>
-        </div>` : ''}`;
+        </div>`;
 
-    const playerPanel = document.getElementById('playerCombatPanel');
-    renderActivePanel(playerPanel, myIdx);
+    renderActivePanel(document.getElementById('playerCombatPanel'), 0);
 }
 
 function renderTurnQueue() {
@@ -3338,16 +3334,14 @@ function toggleParticipantCondition(id, condId) {
 }
 
 function nextCombatTurn() {
-    const p = combatState.participants[combatState.currentIndex];
-
     if (!isMaster()) {
-        // Jugador mode: can always advance when it's not their own turn
-        const isMyTurn = gameRole.characterId && p?.id === gameRole.characterId;
-        if (!isMyTurn) { _doNextTurn(); return; }
-    } else {
-        // Master mode: advance silently when it's a jugador's turn (player manages their own)
-        if (p?.tipo === 'jugador') { _doNextTurn(); return; }
+        // Jugador personal turn manager — always advance freely, no warnings
+        _doNextTurn();
+        return;
     }
+
+    const p = combatState.participants[combatState.currentIndex];
+    if (p?.tipo === 'jugador') { _doNextTurn(); return; }
 
     const current = getCurrentLogEntry();
     // Segunda acción mini-turn: no warning needed, can always pass
