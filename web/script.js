@@ -2809,7 +2809,7 @@ function removePermanentCustomAction(participantId, nombre) {
 function renderActivePanel(targetEl, forcePIdx) {
     const idx = (forcePIdx !== undefined) ? forcePIdx : combatState.currentIndex;
     const p = combatState.participants[idx];
-    const panel = targetEl || document.getElementById('combatActivePanel');
+    const panel = targetEl || document.getElementById('combatActivePanel') || document.getElementById('playerCombatPanel');
     if (!p || !panel) return;
 
     // isSegundaAccion only applies when rendering the actual current turn
