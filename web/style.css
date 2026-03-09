@@ -4159,3 +4159,368 @@ body.role-jugador .master-only { display: none !important; }
     color: #88aadd;
     text-align: center;
 }
+
+/* ============================================
+   FEATURE 17 — Player Mode: Personal Turn Manager
+   ============================================ */
+
+/* Player view overlay (positioned over master layout) */
+.combat-manager-section { position: relative; }
+.player-combat-view {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    background: var(--bg-dark);
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Waiting screen */
+.player-waiting-screen {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 40px 24px;
+    text-align: center;
+}
+.player-waiting-round {
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-family: var(--font-heading);
+    font-size: 12px;
+    color: var(--accent-gold);
+    background: rgba(212,175,55,0.1);
+    border: 1px solid rgba(212,175,55,0.4);
+    border-radius: 8px;
+    padding: 4px 14px;
+    white-space: nowrap;
+}
+.player-waiting-icon {
+    font-size: 60px;
+    opacity: 0.5;
+    animation: player-pulse 2.4s ease-in-out infinite;
+}
+@keyframes player-pulse {
+    0%, 100% { opacity: 0.35; transform: scale(1); }
+    50%       { opacity: 0.7;  transform: scale(1.06); }
+}
+.player-waiting-title {
+    font-family: var(--font-heading);
+    font-size: 26px;
+    color: var(--text-secondary);
+    letter-spacing: 1px;
+}
+.player-waiting-who {
+    font-size: 15px;
+    color: var(--text-muted);
+}
+.player-waiting-pass {
+    margin-top: 8px;
+    padding: 10px 36px;
+    font-size: 14px;
+}
+
+/* Active turn screen */
+.player-active-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    background: rgba(10,14,23,0.98);
+    border-bottom: 2px solid var(--accent-gold);
+    flex-shrink: 0;
+}
+.player-active-title {
+    font-family: var(--font-heading);
+    font-size: 17px;
+    color: var(--accent-gold);
+}
+.player-active-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    display: flex;
+    justify-content: center;
+}
+.player-active-body .combat-active-panel {
+    max-width: 620px;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    border: none;
+    padding: 0;
+}
+.player-active-footer {
+    padding: 14px 20px;
+    background: rgba(10,14,23,0.97);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+    flex-shrink: 0;
+}
+.player-active-footer .btn-combat-primary {
+    font-size: 15px;
+    padding: 12px 32px;
+}
+
+/* ============================================
+   FEATURE 18 — Master: Unified Tabbed Setup
+   ============================================ */
+
+.combat-setup-section {
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 20px 100px;
+    overflow-y: auto;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Tab nav */
+.combat-setup-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 2px solid var(--border-color);
+    width: 100%;
+    max-width: 860px;
+    margin-bottom: 20px;
+    flex-shrink: 0;
+}
+.combat-setup-tab-btn {
+    padding: 10px 24px;
+    background: none;
+    border: none;
+    border-bottom: 3px solid transparent;
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: -2px;
+    border-radius: 0;
+}
+.combat-setup-tab-btn:hover { color: var(--text-secondary); }
+.combat-setup-tab-btn.active {
+    color: var(--accent-gold);
+    border-bottom-color: var(--accent-gold);
+}
+
+/* Tab panels */
+.combat-setup-tab-panel {
+    width: 100%;
+    max-width: 860px;
+}
+
+/* Jugador setup card with initiative input */
+.setup-char-card {
+    position: relative;
+}
+.setup-card-right {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    min-width: 64px;
+}
+.setup-init-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+.setup-init-label {
+    font-size: 10px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.setup-init-input {
+    width: 52px;
+    text-align: center;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 15px;
+    font-weight: 700;
+    padding: 5px 6px;
+    transition: border-color 0.15s;
+}
+.setup-init-input:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 0 2px rgba(212,175,55,0.2);
+}
+
+/* NPC builder section */
+.npc-builder-section {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    width: 100%;
+    box-sizing: border-box;
+}
+.aliado-builder  { border-color: rgba(68,136,255,0.3); }
+.enemigo-builder { border-color: rgba(200,50,50,0.3);  }
+
+.npc-builder-title {
+    font-family: var(--font-heading);
+    font-size: 15px;
+    color: var(--text-primary);
+    margin-bottom: 14px;
+    font-weight: 700;
+}
+.aliado-builder  .npc-builder-title { color: #88bbff; }
+.enemigo-builder .npc-builder-title { color: #ff8888; }
+
+.npc-builder-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+.npc-actions-row {
+    align-items: flex-start;
+}
+
+.npc-input {
+    flex: 1;
+    min-width: 80px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-size: 13px;
+    padding: 8px 11px;
+    transition: border-color 0.15s;
+}
+.npc-input:focus { outline: none; border-color: var(--accent-gold); }
+.npc-input-sm   { flex: 0 0 72px; min-width: 0; text-align: center; }
+
+.npc-action-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 140px;
+}
+.npc-action-label {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.npc-builder-add-btn {
+    font-size: 13px;
+    padding: 8px 20px;
+    margin-top: 4px;
+}
+
+/* NPC list */
+.npc-builder-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    box-sizing: border-box;
+}
+.npc-list-empty {
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 13px;
+    padding: 16px;
+    border: 1px dashed var(--border-color);
+    border-radius: 10px;
+}
+.npc-builder-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 10px 14px;
+}
+.npc-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex: 1;
+    min-width: 0;
+}
+.npc-item-name   { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+.npc-item-stats  { font-size: 12px; color: var(--text-muted); }
+.npc-item-actions {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-style: italic;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.npc-remove-btn {
+    flex-shrink: 0;
+    background: rgba(255,60,60,0.1);
+    border: 1px solid rgba(255,60,60,0.3);
+    color: #ff8888;
+    border-radius: 6px;
+    width: 28px;
+    height: 28px;
+    cursor: pointer;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+}
+.npc-remove-btn:hover { background: rgba(255,60,60,0.25); }
+
+.npc-existing-label {
+    width: 100%;
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    margin-bottom: 4px;
+    padding-left: 4px;
+}
+
+/* Setup footer: sticky */
+.combat-setup-section .combat-setup-footer {
+    position: sticky;
+    bottom: 0;
+    width: 100%;
+    max-width: 860px;
+    background: rgba(10,14,23,0.96);
+    border-top: 1px solid var(--border-color);
+    backdrop-filter: blur(8px);
+    padding: 14px 20px;
+    box-sizing: border-box;
+    margin-top: 8px;
+}
+
+/* Mobile setup */
+@media (max-width: 768px) {
+    .combat-setup-tabs { gap: 0; }
+    .combat-setup-tab-btn { padding: 8px 14px; font-size: 13px; }
+    .npc-builder-row { flex-direction: column; }
+    .npc-input-sm { flex: none; width: 100%; }
+    .npc-actions-row { flex-direction: column; }
+    .npc-action-group { min-width: 0; }
+    .player-waiting-title { font-size: 22px; }
+    .player-active-header { padding: 10px 14px; }
+    .player-active-footer { padding: 10px 14px; }
+}

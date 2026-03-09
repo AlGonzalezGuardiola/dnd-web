@@ -800,6 +800,8 @@ const combatState = {
 
 // Combat mode navigation flag
 let combatModeActive = false;
+let setupNpcs = [];        // NPCs built in the setup screen before combat starts
+let setupInitiatives = {}; // { charId: number } — initiatives set in the setup screen
 let currentCharacterId = null;
 let isCharacterEditing = false;
 
@@ -2132,7 +2134,11 @@ function renderCharacterSelectionMenu() {
 // ============================================
 function showCombatSetup() {
     combatModeActive = true;
+    setupNpcs = [];
+    setupInitiatives = {};
+    combatState.selectedIds = [];
     setView('combatSetup');
+    switchCombatSetupTab('jugadores');
     renderCombatSetup();
 }
 
@@ -2184,6 +2190,110 @@ function beginCombat() {
     combatState.isActive = true;
     combatState.log = [];
     combatState.nextLogId = 0;
+    createCurrentTurnEntry();
+    saveCombatState();
+    setView('combatManager');
+    renderCombatManager();
+}
+
+function parseSetupActions(str, tipo) {
+    if (!str?.trim()) return [];
+    return str.split(',').map(s => s.trim()).filter(Boolean).map(s => {
+        // Format: "Name +hit/dado" | "Name +hit" | "Name 1d6+2" | "Name"
+        const m1 = s.match(/^(.+?)\s+([+-]\d+)(?:\/(\S+))?$/);
+        if (m1) return { nombre: m1[1].trim(), tipo, atk: m1[2], dado: m1[3] || '', desc: '' };
+        const m2 = s.match(/^(.+?)\s+(\d+d\d+\S*)$/);
+        if (m2) return { nombre: m2[1].trim(), tipo, atk: '', dado: m2[2], desc: '' };
+        return { nombre: s.trim(), tipo, atk: '', dado: '', desc: '' };
+    });
+}
+
+function beginCombatFromSetup() {
+    const total = combatState.selectedIds.length + setupNpcs.length;
+    if (total < 1) {
+        showNotification('Selecciona o añade al menos 1 participante', 2500);
+        return;
+    }
+
+    // Validate: selected jugadores/aliados/enemigos need initiatives
+    const missingInit = combatState.selectedIds.filter(id => {
+        const val = setupInitiatives[id];
+        return val === null || val === undefined || isNaN(val);
+    });
+    if (missingInit.length > 0) {
+        const names = missingInit.map(id => window.characterData[id]?.nombre || id).join(', ');
+        showNotification(`⚠️ Falta iniciativa para: ${names}`, 3000);
+        return;
+    }
+
+    // Build participants from selected existing characters
+    const participants = combatState.selectedIds.map(id => {
+        const char = window.characterData[id];
+        const maxHp = parseInt(char.resumen?.HP) || 10;
+        return {
+            id,
+            name: char.nombre,
+            initiative: setupInitiatives[id] || 0,
+            hp: { current: maxHp, max: maxHp },
+            ac: char.resumen?.CA || '10',
+            baseAc: char.resumen?.CA || '10',
+            speed: char.resumen?.Velocidad || '30ft',
+            baseSpeed: char.resumen?.Velocidad || '30ft',
+            conditions: [],
+            note: '',
+            charData: char,
+            demonicForm: false,
+            tipo: char.tipo || 'jugador',
+            customActions: [],
+        };
+    });
+
+    // Add setup NPCs
+    setupNpcs.forEach(npc => {
+        const uid = `setup_${npc.tipo}_${Date.now()}_${Math.random().toString(36).slice(2, 5)}`;
+        const combateExtra = [
+            ...parseSetupActions(npc.acciones    || '', 'accion'),
+            ...parseSetupActions(npc.adicionales || '', 'adicional'),
+            ...parseSetupActions(npc.reacciones  || '', 'reaccion'),
+        ];
+        const charData = {
+            id: uid, tipo: npc.tipo, nombre: npc.nombre,
+            clase: npc.tipo === 'aliado' ? 'Aliado' : 'Enemigo',
+            nivel: '—', imagen: '',
+            resumen: { HP: String(npc.pg), CA: String(npc.ca), Velocidad: '30ft' },
+            combateExtra, conjuros: [],
+        };
+        window.characterData[uid] = charData;
+        participants.push({
+            id: uid, name: npc.nombre,
+            initiative: npc.initiative,
+            hp: { current: npc.pg, max: npc.pg },
+            ac: String(npc.ca), baseAc: String(npc.ca),
+            speed: '30ft', baseSpeed: '30ft',
+            conditions: [], note: '', charData,
+            demonicForm: false, tipo: npc.tipo, customActions: [],
+        });
+    });
+
+    // Sort by initiative descending
+    participants.sort((a, b) => b.initiative - a.initiative);
+
+    // Start combat
+    Object.assign(combatState, {
+        participants,
+        selectedIds: [],
+        currentIndex: 0,
+        round: 1,
+        isActive: true,
+        log: [],
+        nextLogId: 0,
+        segundaAccionTurn: false,
+    });
+
+    // Clear setup state
+    setupNpcs = [];
+    setupInitiatives = {};
+
     createCurrentTurnEntry();
     saveCombatState();
     setView('combatManager');
@@ -2302,8 +2412,14 @@ const COMBAT_CATEGORIES = [
 ];
 
 function renderCombatSelectCard(char) {
+    // Legacy card (still used in some paths) — delegates to new version
+    return renderCombatSetupCard(char);
+}
+
+function renderCombatSetupCard(char) {
     const isSelected = combatState.selectedIds.includes(char.id);
-    return `<div class="combat-select-card${isSelected ? ' selected' : ''}"
+    const initVal = setupInitiatives[char.id] ?? '';
+    return `<div class="combat-select-card setup-char-card${isSelected ? ' selected' : ''}"
                  onclick="toggleCombatParticipant('${char.id}')">
         <div class="combat-select-portrait">
             <img src="${char.imagen || ''}" onerror="this.style.display='none'">
@@ -2313,29 +2429,53 @@ function renderCombatSelectCard(char) {
             <div class="combat-select-meta">${char.clase || ''} · Nv ${char.nivel || '?'}</div>
             <div class="combat-select-vitals">❤️ ${char.resumen?.HP || '?'} · 🛡️ ${char.resumen?.CA || '?'}</div>
         </div>
-        <div class="combat-select-check">${isSelected ? '✓' : ''}</div>
+        <div class="setup-card-right" onclick="event.stopPropagation()">
+            <div class="combat-select-check">${isSelected ? '✓' : ''}</div>
+            <div class="setup-init-wrap">
+                <label class="setup-init-label">Init</label>
+                <input type="number" class="setup-init-input"
+                       placeholder="—" min="-5" max="30"
+                       value="${initVal}"
+                       oninput="setSetupJugadorInitiative('${char.id}', this.value)">
+            </div>
+        </div>
     </div>`;
 }
 
 function renderCombatSetup() {
+    if (!window.characterData) return;
+    const chars = Object.values(window.characterData);
+
+    // --- Jugadores tab ---
     const grid = document.getElementById('combatParticipantGrid');
-    if (!grid || !window.characterData) return;
-    const characters = Object.values(window.characterData);
-    grid.innerHTML = COMBAT_CATEGORIES.map(cat => {
-        const chars = characters.filter(c => c.tipo === cat.tipo);
-        const cardsHTML = chars.length > 0
-            ? chars.map(renderCombatSelectCard).join('')
-            : `<div class="combat-category-empty">No hay ${cat.label.toLowerCase()} disponibles</div>`;
-        return `<div class="combat-category-section">
-            <div class="combat-category-header" style="border-left-color:${cat.color}">${cat.icon} ${cat.label}</div>
-            <div class="combat-category-cards">${cardsHTML}</div>
-        </div>`;
-    }).join('') + `<div style="text-align:center;margin-top:16px">
-        <button class="combat-quick-enemy-btn" onclick="showQuickEnemyModal('setup')">💀 Añadir Enemigo Rápido</button>
-    </div>`;
-    const count = combatState.selectedIds.length;
-    const countEl = document.getElementById('combatSetupCount');
-    if (countEl) countEl.textContent = `${count} seleccionado${count !== 1 ? 's' : ''}`;
+    if (grid) {
+        const jugadores = chars.filter(c => c.tipo === 'jugador');
+        grid.innerHTML = jugadores.length
+            ? jugadores.map(renderCombatSetupCard).join('')
+            : `<div class="combat-category-empty">No hay jugadores disponibles</div>`;
+    }
+
+    // --- Existing aliados / enemigos in their tabs ---
+    const aliadoGrid = document.getElementById('aliadoExistingGrid');
+    if (aliadoGrid) {
+        const aliados = chars.filter(c => c.tipo === 'aliado');
+        aliadoGrid.style.display = aliados.length ? 'flex' : 'none';
+        aliadoGrid.innerHTML = aliados.length
+            ? `<div class="npc-existing-label">📋 Personajes existentes</div>` +
+              aliados.map(renderCombatSetupCard).join('')
+            : '';
+    }
+    const enemigoGrid = document.getElementById('enemigoExistingGrid');
+    if (enemigoGrid) {
+        const enemigos = chars.filter(c => c.tipo === 'enemigo');
+        enemigoGrid.style.display = enemigos.length ? 'flex' : 'none';
+        enemigoGrid.innerHTML = enemigos.length
+            ? `<div class="npc-existing-label">📋 Personajes existentes</div>` +
+              enemigos.map(renderCombatSetupCard).join('')
+            : '';
+    }
+
+    _updateSetupCount();
 }
 
 function toggleCombatParticipant(charId) {
@@ -2343,6 +2483,30 @@ function toggleCombatParticipant(charId) {
     if (idx >= 0) combatState.selectedIds.splice(idx, 1);
     else combatState.selectedIds.push(charId);
     renderCombatSetup();
+}
+
+function setSetupJugadorInitiative(charId, value) {
+    setupInitiatives[charId] = value === '' ? null : parseInt(value);
+}
+
+function switchCombatSetupTab(tabName) {
+    document.querySelectorAll('.combat-setup-tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.setupTab === tabName);
+    });
+    const panels = {
+        jugadores: document.getElementById('setupTabJugadores'),
+        aliados:   document.getElementById('setupTabAliados'),
+        enemigos:  document.getElementById('setupTabEnemigos'),
+    };
+    Object.entries(panels).forEach(([key, el]) => {
+        if (el) el.style.display = key === tabName ? 'block' : 'none';
+    });
+}
+
+function _updateSetupCount() {
+    const total = combatState.selectedIds.length + setupNpcs.length;
+    const el = document.getElementById('combatSetupCount');
+    if (el) el.textContent = `${total} participante${total !== 1 ? 's' : ''}`;
 }
 
 // ---- Initiative Screen ----
@@ -2376,11 +2540,69 @@ function setParticipantInitiative(id, value) {
 
 // ---- Combat Manager ----
 function renderCombatManager() {
+    if (!isMaster()) {
+        _renderPlayerCombatLayout();
+        return;
+    }
+    // Hide player view when master is active
+    const pv = document.getElementById('playerCombatView');
+    if (pv) pv.style.display = 'none';
+
     const roundEl = document.getElementById('combatRoundBadge');
     if (roundEl) roundEl.textContent = `Ronda ${combatState.round}`;
     renderTurnQueue();
     renderActivePanel();
     renderCombatLog();
+}
+
+// ---- Player Combat Layout (role=jugador) ----
+function _renderPlayerCombatLayout() {
+    const view = document.getElementById('playerCombatView');
+    if (!view) return;
+
+    const p = combatState.participants[combatState.currentIndex];
+    if (!p) { view.style.display = 'none'; return; }
+
+    const myId = gameRole.characterId;
+    const isMyTurn = myId && p.id === myId;
+
+    view.style.display = 'flex';
+
+    if (!isMyTurn) {
+        // WAITING screen
+        let whoLabel;
+        if (p.tipo === 'enemigo') whoLabel = 'El enemigo actúa';
+        else whoLabel = `Turno de ${p.name.split(' ')[0]}`;
+
+        view.innerHTML = `
+            <div class="player-waiting-screen">
+                <div class="player-waiting-round">Ronda ${combatState.round}</div>
+                <div class="player-waiting-icon">⏳</div>
+                <div class="player-waiting-title">Esperando tu turno...</div>
+                <div class="player-waiting-who">${whoLabel}</div>
+                <button class="btn-combat-secondary player-waiting-pass" onclick="nextCombatTurn()">⏭ Pasar turno</button>
+            </div>`;
+    } else {
+        // ACTIVE TURN screen
+        const isSegundaAccion = combatState.segundaAccionTurn;
+        const turnLabel = isSegundaAccion ? '⚔️ Segunda Acción' : '⚔️ ¡Es tu turno!';
+
+        view.innerHTML = `
+            <div class="player-active-header">
+                <div class="combat-round-badge">Ronda ${combatState.round}</div>
+                <div class="player-active-title">${turnLabel}</div>
+                <button class="btn-end-combat" onclick="confirmEndCombat()">✕ Fin</button>
+            </div>
+            <div class="player-active-body">
+                <div id="playerCombatPanel" class="combat-active-panel"></div>
+            </div>
+            <div class="player-active-footer">
+                <button class="btn-combat-primary" onclick="nextCombatTurn()">Siguiente Turno →</button>
+            </div>`;
+
+        const playerPanel = document.getElementById('playerCombatPanel');
+        renderActivePanel(playerPanel);
+    }
 }
 
 function renderTurnQueue() {
@@ -2558,9 +2780,9 @@ function removePermanentCustomAction(participantId, nombre) {
     renderActivePanel();
 }
 
-function renderActivePanel() {
+function renderActivePanel(targetEl) {
     const p = combatState.participants[combatState.currentIndex];
-    const panel = document.getElementById('combatActivePanel');
+    const panel = targetEl || document.getElementById('combatActivePanel');
     if (!p || !panel) return;
 
     const isSegundaAccion = combatState.segundaAccionTurn;
@@ -3479,6 +3701,66 @@ function submitQuickNpc(context) {
 function toggleMobileLog() {
     const logPanel = document.querySelector('.combat-log-panel');
     if (logPanel) logPanel.classList.toggle('mobile-visible');
+}
+
+// ---- Setup NPC Builder ----
+function addSetupNpc(tipo) {
+    const p = tipo === 'aliado' ? 'aliado' : 'enemigo';
+    const nombre     = document.getElementById(`${p}Nombre`)?.value?.trim();
+    const pg         = parseInt(document.getElementById(`${p}Pg`)?.value)   || 10;
+    const ca         = parseInt(document.getElementById(`${p}Ca`)?.value)   || 10;
+    const initiative = parseInt(document.getElementById(`${p}Init`)?.value) || 0;
+    const acciones    = document.getElementById(`${p}Acciones`)?.value?.trim()    || '';
+    const adicionales = document.getElementById(`${p}Adicionales`)?.value?.trim() || '';
+    const reacciones  = document.getElementById(`${p}Reacciones`)?.value?.trim()  || '';
+
+    if (!nombre) { showNotification('⚠️ Introduce un nombre', 2000); return; }
+
+    setupNpcs.push({ tipo, nombre, pg, ca, initiative, acciones, adicionales, reacciones });
+
+    // Clear form fields
+    ['Nombre', 'Pg', 'Ca', 'Init', 'Acciones', 'Adicionales', 'Reacciones'].forEach(f => {
+        const el = document.getElementById(`${p}${f}`);
+        if (el) el.value = '';
+    });
+
+    renderSetupNpcList(tipo);
+    _updateSetupCount();
+    showNotification(`${tipo === 'aliado' ? '💙' : '💀'} ${nombre} añadido`, 1500);
+}
+
+function renderSetupNpcList(tipo) {
+    const listEl = document.getElementById(tipo === 'aliado' ? 'aliadoList' : 'enemigoList');
+    if (!listEl) return;
+    const items = setupNpcs.filter(n => n.tipo === tipo);
+    if (!items.length) {
+        listEl.innerHTML = `<div class="npc-list-empty">Ningún ${tipo} añadido todavía</div>`;
+        return;
+    }
+    listEl.innerHTML = items.map(npc => {
+        const idx = setupNpcs.indexOf(npc);
+        const actParts = [npc.acciones, npc.adicionales, npc.reacciones].filter(Boolean);
+        const actStr = actParts.join(' | ');
+        return `<div class="npc-builder-item">
+            <div class="npc-item-info">
+                <span class="npc-item-name">${npc.nombre}</span>
+                <span class="npc-item-stats">❤️ ${npc.pg} · 🛡️ ${npc.ca} · Init ${npc.initiative}</span>
+                ${actStr ? `<span class="npc-item-actions">⚔️ ${actStr}</span>` : ''}
+            </div>
+            <button class="npc-remove-btn" onclick="removeSetupNpc(${idx})">✕</button>
+        </div>`;
+    }).join('');
+}
+
+function removeSetupNpc(idx) {
+    if (idx < 0 || idx >= setupNpcs.length) return;
+    const name = setupNpcs[idx].nombre;
+    const tipo = setupNpcs[idx].tipo;
+    setupNpcs.splice(idx, 1);
+    renderSetupNpcList('aliado');
+    renderSetupNpcList('enemigo');
+    _updateSetupCount();
+    showNotification(`✕ ${name} eliminado`, 1200);
 }
 
 // ---- Auto-save Combat State ----

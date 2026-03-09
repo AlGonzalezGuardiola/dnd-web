@@ -13,8 +13,8 @@
         href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link rel="stylesheet" href="style.css?v=20260308j">
-    <link rel="stylesheet" href="mobile.css?v=20260308j" media="screen and (max-width: 768px)">
+    <link rel="stylesheet" href="style.css?v=20260308k">
+    <link rel="stylesheet" href="mobile.css?v=20260308k" media="screen and (max-width: 768px)">
 </head>
 
 <body>
@@ -62,30 +62,100 @@
         </div>
     </section>
 
-    <!-- Combat Setup (Screen 1): Select participants -->
-    <section id="combatSetupSection" class="character-section" style="display: none;">
-        <h1 class="landing-title">⚔️ Modo Combate — Participantes</h1>
-        <p class="combat-hint">Selecciona quién participa en el combate</p>
-        <div id="combatParticipantGrid" class="combat-participant-grid">
-            <!-- Dynamic: all characters in window.characterData as selectable cards -->
+    <!-- Combat Setup (Unified Tabbed Screen) -->
+    <section id="combatSetupSection" class="character-section combat-setup-section" style="display: none;">
+        <h1 class="landing-title">⚔️ Configuración del Combate</h1>
+
+        <!-- Tab navigation -->
+        <div class="combat-setup-tabs">
+            <button class="combat-setup-tab-btn active" data-setup-tab="jugadores" onclick="switchCombatSetupTab('jugadores')">👥 Jugadores</button>
+            <button class="combat-setup-tab-btn" data-setup-tab="aliados" onclick="switchCombatSetupTab('aliados')">💙 Aliados</button>
+            <button class="combat-setup-tab-btn" data-setup-tab="enemigos" onclick="switchCombatSetupTab('enemigos')">💀 Enemigos</button>
         </div>
+
+        <!-- Tab: Jugadores -->
+        <div id="setupTabJugadores" class="combat-setup-tab-panel">
+            <div id="combatParticipantGrid" class="combat-participant-grid">
+                <!-- Dynamic: jugador cards with initiative inputs -->
+            </div>
+        </div>
+
+        <!-- Tab: Aliados -->
+        <div id="setupTabAliados" class="combat-setup-tab-panel" style="display:none;">
+            <div class="npc-builder-section aliado-builder">
+                <div class="npc-builder-title">💙 Añadir Aliado</div>
+                <div class="npc-builder-row">
+                    <input id="aliadoNombre" class="npc-input" type="text" placeholder="Nombre (ej: Guardia Real)" autocomplete="off">
+                    <input id="aliadoPg"     class="npc-input npc-input-sm" type="number" placeholder="PG" min="1">
+                    <input id="aliadoCa"     class="npc-input npc-input-sm" type="number" placeholder="CA" min="1">
+                    <input id="aliadoInit"   class="npc-input npc-input-sm" type="number" placeholder="Init">
+                </div>
+                <div class="npc-builder-row npc-actions-row">
+                    <div class="npc-action-group">
+                        <label class="npc-action-label">⚔️ Acciones</label>
+                        <input id="aliadoAcciones"    class="npc-input" type="text" placeholder="Espada +5/1d8+3, Arco +4/1d6" autocomplete="off">
+                    </div>
+                    <div class="npc-action-group">
+                        <label class="npc-action-label">✚ Adicionales</label>
+                        <input id="aliadoAdicionales" class="npc-input" type="text" placeholder="Hacha adicional +4/1d6" autocomplete="off">
+                    </div>
+                    <div class="npc-action-group">
+                        <label class="npc-action-label">↩ Reacciones</label>
+                        <input id="aliadoReacciones"  class="npc-input" type="text" placeholder="Escudo, Parar" autocomplete="off">
+                    </div>
+                </div>
+                <button class="btn-combat-primary npc-builder-add-btn" onclick="addSetupNpc('aliado')">💙 Añadir Aliado</button>
+            </div>
+            <div id="aliadoList" class="npc-builder-list">
+                <div class="npc-list-empty">Ningún aliado añadido todavía</div>
+            </div>
+            <!-- Existing aliado characters from data -->
+            <div id="aliadoExistingGrid" class="combat-participant-grid" style="margin-top:16px;"></div>
+        </div>
+
+        <!-- Tab: Enemigos -->
+        <div id="setupTabEnemigos" class="combat-setup-tab-panel" style="display:none;">
+            <div class="npc-builder-section enemigo-builder">
+                <div class="npc-builder-title">💀 Añadir Enemigo</div>
+                <div class="npc-builder-row">
+                    <input id="enemigoNombre" class="npc-input" type="text" placeholder="Nombre (ej: Goblin)" autocomplete="off">
+                    <input id="enemigoPg"     class="npc-input npc-input-sm" type="number" placeholder="PG" min="1">
+                    <input id="enemigoCa"     class="npc-input npc-input-sm" type="number" placeholder="CA" min="1">
+                    <input id="enemigoInit"   class="npc-input npc-input-sm" type="number" placeholder="Init">
+                </div>
+                <div class="npc-builder-row npc-actions-row">
+                    <div class="npc-action-group">
+                        <label class="npc-action-label">⚔️ Acciones</label>
+                        <input id="enemigoAcciones"    class="npc-input" type="text" placeholder="Garra +4/1d6+2, Mordisco +3/1d4" autocomplete="off">
+                    </div>
+                    <div class="npc-action-group">
+                        <label class="npc-action-label">✚ Adicionales</label>
+                        <input id="enemigoAdicionales" class="npc-input" type="text" placeholder="Hacha de mano +3/1d6" autocomplete="off">
+                    </div>
+                    <div class="npc-action-group">
+                        <label class="npc-action-label">↩ Reacciones</label>
+                        <input id="enemigoReacciones"  class="npc-input" type="text" placeholder="Parar golpe" autocomplete="off">
+                    </div>
+                </div>
+                <button class="btn-combat-primary npc-builder-add-btn" onclick="addSetupNpc('enemigo')">💀 Añadir Enemigo</button>
+            </div>
+            <div id="enemigoList" class="npc-builder-list">
+                <div class="npc-list-empty">Ningún enemigo añadido todavía</div>
+            </div>
+            <!-- Existing enemigo characters from data -->
+            <div id="enemigoExistingGrid" class="combat-participant-grid" style="margin-top:16px;"></div>
+        </div>
+
+        <!-- Footer -->
         <div class="combat-setup-footer">
-            <span id="combatSetupCount" class="combat-setup-count">0 seleccionados</span>
-            <button class="btn-combat-primary" onclick="goToCombatInitiative()">Siguiente → Iniciativa</button>
+            <span id="combatSetupCount" class="combat-setup-count">0 participantes</span>
+            <button class="btn-combat-primary" onclick="beginCombatFromSetup()">⚔️ ¡Iniciar Combate!</button>
         </div>
     </section>
 
-    <!-- Combat Initiative (Screen 2): Enter initiative -->
+    <!-- Combat Initiative (Screen 2): Legacy — kept for JS compatibility -->
     <section id="combatInitSection" class="combat-init-section" style="display: none;">
-        <h1 class="landing-title">⚔️ Orden de Iniciativa</h1>
-        <p class="combat-hint">Introduce el resultado de la tirada de iniciativa de cada participante</p>
-        <div id="combatInitList" class="combat-init-list">
-            <!-- Dynamic: one row per participant -->
-        </div>
-        <div class="combat-init-footer">
-            <button class="btn-combat-secondary" onclick="showCombatSetup()">← Volver</button>
-            <button class="btn-combat-primary" onclick="beginCombat()">⚔️ ¡Iniciar Combate!</button>
-        </div>
+        <div id="combatInitList" class="combat-init-list"></div>
     </section>
 
     <!-- Combat Manager (Screen 3): Active combat -->
@@ -120,6 +190,9 @@
             <button class="btn-combat-primary btn-next-turn" onclick="nextCombatTurn()">Siguiente Turno →</button>
             <button class="btn-combat-secondary combat-log-mobile-btn" onclick="toggleMobileLog()" style="display:none" title="Ver registro">📋 Log</button>
         </div>
+
+        <!-- Player Combat View (overlaid in player mode, hidden in master mode) -->
+        <div id="playerCombatView" class="player-combat-view" style="display:none;"></div>
     </div>
 
     <!-- Detailed Character Sheet (BG3 Style) -->
@@ -295,9 +368,9 @@
         <button id="diceToggleBtn" class="dice-toggle-btn" title="Lanzador de dados" aria-label="Abrir lanzador de dados">🎲</button>
     </div>
 
-    <script src="characters.js?v=20260308j"></script>
-    <script src="data.js?v=20260308j"></script>
-    <script src="script.js?v=20260308j"></script>
+    <script src="characters.js?v=20260308k"></script>
+    <script src="data.js?v=20260308k"></script>
+    <script src="script.js?v=20260308k"></script>
 </body>
 
 </html>
