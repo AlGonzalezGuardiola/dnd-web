@@ -2926,6 +2926,7 @@ function renderActivePanel(targetEl, forcePIdx) {
         const safeAtk = atk.replace(/'/g, "\\'");
         const safeDado = dado.replace(/'/g, "\\'");
         const safeDesc = (a.desc || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' ');
+        const safeTipoDano = (a.tipo_dano || '').replace(/'/g, "\\'");
         const demonicBonus = (p.demonicForm && p.id === 'Vel' && atk)
             ? '<small class="demonic-bonus">+1d8 Necr.</small>' : '';
         const removeBtn = a._custom
@@ -2935,7 +2936,7 @@ function renderActivePanel(targetEl, forcePIdx) {
             ? ['accion_plan','adicional_plan','reaccion_plan'].some(k => currentEntry?.slots?.[k]?.nombre === a.nombre)
             : (currentEntry?.actions.some(x => x.nombre === a.nombre) || false);
         const chipOnclick = playerMode
-            ? `selectPlannerAction('${p.id}','${safeName}','${safeAtk}','${safeDado}')`
+            ? `selectPlannerAction('${p.id}','${safeName}','${safeAtk}','${safeDado}','${safeTipoDano}')`
             : `toggleCombatAction('${p.id}','${safeName}','${safeDice}')`;
         return `<div class="combat-chip-wrapper">
             <button class="combat-chip${isUsed ? ' used' : ''}${a._custom ? ' custom-action' : ''}"
@@ -2977,9 +2978,11 @@ function renderActivePanel(targetEl, forcePIdx) {
             if (!plan) return '';
             const atkBadge = plan.atk ? `<span class="planner-dice-badge atk">ATK ${plan.atk}</span>` : '';
             const dmgBadge = plan.dado ? `<span class="planner-dice-badge dmg">DMG ${plan.dado}</span>` : '';
+            const tipoDanoKey = plan.tipo_dano ? plan.tipo_dano.split('/')[0].trim().toLowerCase() : '';
+            const tipoBadge = plan.tipo_dano ? `<span class="planner-dice-badge tipo tipo-${tipoDanoKey}">${plan.tipo_dano}</span>` : '';
             return `<div class="planner-dice-row">
                 <span class="planner-dice-name">${plan.nombre}</span>
-                <div class="planner-dice-badges">${atkBadge}${dmgBadge}</div>
+                <div class="planner-dice-badges">${atkBadge}${dmgBadge}${tipoBadge}</div>
             </div>`;
         }).filter(Boolean).join('');
         const hasDice = PSLOTS.some(s => currentEntry?.slots?.[s.key + '_plan']);
@@ -3219,7 +3222,7 @@ function toggleCombatAction(participantId, nombre, dice) {
     renderCombatLog();
 }
 
-function selectPlannerAction(participantId, nombre, atk, dado) {
+function selectPlannerAction(participantId, nombre, atk, dado, tipoDano) {
     const p = combatState.participants.find(x => x.id === participantId);
     if (!p) return;
     const entry = getCurrentLogEntry();
@@ -3233,7 +3236,7 @@ function selectPlannerAction(participantId, nombre, atk, dado) {
         entry.slots[planKey] = null;
         entry.actions = entry.actions.filter(a => a.nombre !== nombre);
     } else {
-        entry.slots[planKey] = { nombre, atk: atk || '', dado: dado || '' };
+        entry.slots[planKey] = { nombre, atk: atk || '', dado: dado || '', tipo_dano: tipoDano || '' };
         if (!entry.actions.some(a => a.nombre === nombre))
             entry.actions.push({ nombre, dice: atk ? `${atk}${dado ? '/' + dado : ''}` : dado });
     }
@@ -3813,6 +3816,20 @@ function submitQuickNpc(context) {
 }
 
 // ---- Mobile Log Toggle ----
+function toggleLandingMenu() {
+    const dd = document.getElementById('landingDropdown');
+    if (!dd) return;
+    const isOpen = dd.style.display !== 'none';
+    dd.style.display = isOpen ? 'none' : 'block';
+    if (!isOpen) {
+        setTimeout(() => document.addEventListener('click', closeLandingMenu, { once: true }), 10);
+    }
+}
+function closeLandingMenu() {
+    const dd = document.getElementById('landingDropdown');
+    if (dd) dd.style.display = 'none';
+}
+
 function toggleMobileLog() {
     const logPanel = document.querySelector('.combat-log-panel');
     if (logPanel) logPanel.classList.toggle('mobile-visible');

@@ -144,6 +144,7 @@ window.characterData = {
                 "tipo": "accion",
                 "atk": "1d20+8",
                 "dado": "1d10+1d4+5",
+                "tipo_dano": "cortante/necrótico",
                 "desc": "Cort/Necr. +1d8 necrótico en Forma Demoníaca. Aura Necrótica activa dobla dados necróticos."
             }
         ]
@@ -300,12 +301,14 @@ window.characterData = {
                 "tipo": "accion",
                 "atk": "1d20+9",
                 "dado": "1d6+1d12+4",
+                "tipo_dano": "necrótico",
                 "desc": "Báculo mágico. Crítico necrótico con 18-19. +INT al daño."
             },
             {
                 "nombre": "Represión Infernal",
                 "tipo": "reaccion",
                 "dado": "2d10",
+                "tipo_dano": "fuego/necrótico",
                 "desc": "Reacción al recibir daño. 2d10 fuego o necrótico al atacante. Recupera slots (Nv1/3 turnos)."
             },
             {
@@ -534,6 +537,7 @@ window.characterData = {
                 "tipo": "accion",
                 "atk": "1d20+7",
                 "dado": "1d10+1d6+4",
+                "tipo_dano": "contundente/fuego",
                 "desc": "Cont + 1d6 fuego. Ataques empujan 10ft (Runas). Si choca contra pared: +2d6 y aturdido 1 turno."
             },
             {
@@ -541,12 +545,14 @@ window.characterData = {
                 "tipo": "accion",
                 "atk": "1d20+7",
                 "dado": "1d10+1d6+4",
+                "tipo_dano": "contundente/fuego",
                 "desc": "Ataque a distancia 30ft. Retorno mental si <=30ft."
             },
             {
                 "nombre": "TP al Martillo",
                 "tipo": "adicional",
                 "dado": "1d4",
+                "tipo_dano": "fuerza",
                 "desc": "Bonus: TP instantáneo al martillo. Enemigos a 10ft: DEX Save o caen + 1d4 fuerza."
             },
             {
@@ -559,12 +565,14 @@ window.characterData = {
                 "nombre": "Lamento del Abismo",
                 "tipo": "accion",
                 "dado": "2d8+2d8",
+                "tipo_dano": "necrótico/psíquico",
                 "desc": "1/día. Cono 30ft. 2d8 necrótico + 2d8 psíquico (CON Save mitad)."
             },
             {
                 "nombre": "Conjuro Rúnico (Inmovilizar)",
                 "tipo": "adicional",
                 "dado": "1d10",
+                "tipo_dano": "fuerza",
                 "desc": "Bonus. Toque, STR Save o Inmovilizado en piedra + 1d10 fuerza."
             }
         ]
@@ -658,24 +666,28 @@ window.characterData = {
                 "tipo": "accion",
                 "atk": "1d20+9",
                 "dado": "2d12+5",
+                "tipo_dano": "radiante",
                 "desc": "Distancia 120/360 ft, ancho 10 ft. 2d12 radiante + SAB (+5). Absorbe 1 Fragmento de Alma por impacto (2 vs demonios/no-muertos)."
             },
             {
                 "nombre": "Canalizar Culpa (Curación)",
                 "tipo": "adicional",
                 "dado": "2d10+5",
+                "tipo_dano": "curación",
                 "desc": "Coste: 2 Fragmentos. Se cura 2d10+SAB. Si <50% PV, gana resistencia a todo daño hasta su próximo turno."
             },
             {
                 "nombre": "Disparo del Juicio Roto",
                 "tipo": "adicional",
                 "dado": "4d10+2d10",
+                "tipo_dano": "radiante/necrótico",
                 "desc": "Coste: 3 Fragmentos. Convierte 1 ataque: 4d10 radiante + 2d10 necrótico. El objetivo tiene desventaja en su siguiente TS."
             },
             {
                 "nombre": "Liberación de Almas",
                 "tipo": "accion",
                 "dado": "4d8",
+                "tipo_dano": "radiante",
                 "desc": "Coste: 4 Fragmentos. Explosión 20 ft, TS SAB CD 18. 4d8 radiante. Demonios/no-muertos aturdidos hasta fin de su sig. turno si fallan."
             },
             {
@@ -747,6 +759,7 @@ window.characterData = {
                 "tipo": "accion",
                 "atk": "1d20+8",
                 "dado": "1d8+4",
+                "tipo_dano": "mágico",
                 "desc": "Ataque con carta mágica. +8 al ataque. 1d8+4 daño mágico. Elige el tipo de carta al atacar."
             },
             {
@@ -754,6 +767,7 @@ window.characterData = {
                 "tipo": "accion",
                 "atk": "1d20+8",
                 "dado": "1d8+4",
+                "tipo_dano": "mágico",
                 "desc": "1d8+4 daño. El enemigo queda Inmovilizado hasta que Tamariz vuelva a atacar o reciba daño de otra fuente."
             },
             {
@@ -761,12 +775,14 @@ window.characterData = {
                 "tipo": "accion",
                 "atk": "1d20+8",
                 "dado": "1d8+4",
+                "tipo_dano": "mágico",
                 "desc": "1d8+4 daño. El enemigo es empujado 20 ft en línea recta (TS FUE CD 13 para resistir)."
             },
             {
                 "nombre": "🔴 Carta Roja (Explosión)",
                 "tipo": "accion",
                 "dado": "1d8",
+                "tipo_dano": "mágico",
                 "desc": "Radio 15 ft a punto visible a 60 ft. TS DES CD 13. Fallan: 1d8 daño mágico. Éxito: mitad."
             },
             {
@@ -774,12 +790,14 @@ window.characterData = {
                 "tipo": "accion",
                 "atk": "1d20+8",
                 "dado": "1d8+4",
+                "tipo_dano": "mágico",
                 "desc": "1d8+4 daño. Permite un ataque inmediato adicional con otra Carta Azul (máx. 1 cadena)."
             },
             {
                 "nombre": "✨ Estilo Tridente (4/día)",
                 "tipo": "accion",
                 "dado": "3×1d8+4",
+                "tipo_dano": "mágico",
                 "desc": "Lanza 3 cartas en línea recta (60 ft). Cada carta aplica su efecto si impacta. Puede combinar tipos. Adicionalmente tira 1d4: 1-2 → carta amarilla/marrón (daño x2); 3-4 → carta roja/azul (daño x3)."
             },
             {
@@ -849,36 +867,42 @@ window.characterData = {
                 "tipo": "accion",
                 "atk": "1d20+6",
                 "dado": "1d6+3+1d4",
+                "tipo_dano": "perforante/necrótico",
                 "desc": "CaC, alcance 5 ft. 1d6+3 perforante + 1d4 necrótico. Recupera PV iguales al daño necrótico infligido."
             },
             {
                 "nombre": "Charco de Sangre",
                 "tipo": "adicional",
                 "dado": "3d6",
+                "tipo_dano": "contundente",
                 "desc": "Se disuelve en sangre 1 turno (5 ft radio). Resistencia a todo excepto fuego/radiante. Sin ataques de oportunidad. Al volver a forma material: TS CON a criaturas cercanas, fallan → 3d6 daño y se cura la mitad."
             },
             {
                 "nombre": "Transfusión Dolorosa",
                 "tipo": "accion",
                 "dado": "1d10–3d10",
+                "tipo_dano": "necrótico",
                 "desc": "Sacrifica hasta 15 PV. Por cada 5 PV sacrificados inflige 1d10 necrótico en cono 30 ft. TS DES CD 12, mitad en éxito."
             },
             {
                 "nombre": "Garra del Cautiverio (3/día)",
                 "tipo": "accion",
                 "dado": "2d6",
+                "tipo_dano": "necrótico",
                 "desc": "Línea 60 ft, 15 ft ancho. 2d6 necrótico. TS FUE CD 14 o queda atado+aturdido 1 turno y arrastrado 30 ft hacia Jayce."
             },
             {
                 "nombre": "Ojo del Vampiro (5/día)",
                 "tipo": "accion",
                 "dado": "1d10",
+                "tipo_dano": "psíquico",
                 "desc": "Radio 15 ft a punto a 60 ft. TS CON: fallan → 1d10 psíquico. Jayce se cura el daño infligido."
             },
             {
                 "nombre": "Apoteosis Carmesí (1/día)",
                 "tipo": "accion",
                 "dado": "3d10+1d8",
+                "tipo_dano": "necrótico",
                 "desc": "Estado vampírico 3 turnos. Al activar: cura 3d10. Cada turno: criaturas hostiles en 15 ft sufren 1d8+nº criaturas necrótico. Recupera mitad del daño total. Levita, inmune a parálisis/miedo/encantamiento."
             }
         ]

@@ -13,8 +13,8 @@
         href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link rel="stylesheet" href="style.css?v=20260309h">
-    <link rel="stylesheet" href="mobile.css?v=20260309h" media="screen and (max-width: 768px)">
+    <link rel="stylesheet" href="style.css?v=20260309i">
+    <link rel="stylesheet" href="mobile.css?v=20260309i" media="screen and (max-width: 768px)">
 </head>
 
 <body>
@@ -37,6 +37,13 @@
 
     <!-- Landing Page -->
     <section id="landingPage" class="landing-page">
+        <!-- Hamburger menu -->
+        <div class="landing-menu-wrap">
+            <button class="landing-hamburger" onclick="toggleLandingMenu()" title="Menú">☰</button>
+            <div id="landingDropdown" class="landing-dropdown" style="display:none;">
+                <button class="landing-dropdown-item" onclick="showRoleSelectionOverlay(); closeLandingMenu()">🔄 Cambiar de personaje</button>
+            </div>
+        </div>
         <h1 class="landing-title">Crónicas de Dungeons & Dragons</h1>
         <div class="landing-cards">
             <div class="card" id="cardWorld">
@@ -82,6 +89,11 @@
 
         <!-- Tab: Aliados -->
         <div id="setupTabAliados" class="combat-setup-tab-panel" style="display:none;">
+            <!-- Existing aliado characters from data (shown first) -->
+            <div id="aliadoExistingGrid" class="combat-participant-grid" style="margin-bottom:16px;"></div>
+            <div id="aliadoList" class="npc-builder-list">
+                <div class="npc-list-empty">Ningún aliado añadido todavía</div>
+            </div>
             <div class="npc-builder-section aliado-builder">
                 <div class="npc-builder-title">💙 Añadir Aliado</div>
                 <div class="npc-builder-row">
@@ -106,15 +118,15 @@
                 </div>
                 <button class="btn-combat-primary npc-builder-add-btn" onclick="addSetupNpc('aliado')">💙 Añadir Aliado</button>
             </div>
-            <div id="aliadoList" class="npc-builder-list">
-                <div class="npc-list-empty">Ningún aliado añadido todavía</div>
-            </div>
-            <!-- Existing aliado characters from data -->
-            <div id="aliadoExistingGrid" class="combat-participant-grid" style="margin-top:16px;"></div>
         </div>
 
         <!-- Tab: Enemigos -->
         <div id="setupTabEnemigos" class="combat-setup-tab-panel" style="display:none;">
+            <!-- Existing enemigo characters from data (shown first) -->
+            <div id="enemigoExistingGrid" class="combat-participant-grid" style="margin-bottom:16px;"></div>
+            <div id="enemigoList" class="npc-builder-list">
+                <div class="npc-list-empty">Ningún enemigo añadido todavía</div>
+            </div>
             <div class="npc-builder-section enemigo-builder">
                 <div class="npc-builder-title">💀 Añadir Enemigo</div>
                 <div class="npc-builder-row">
@@ -139,11 +151,6 @@
                 </div>
                 <button class="btn-combat-primary npc-builder-add-btn" onclick="addSetupNpc('enemigo')">💀 Añadir Enemigo</button>
             </div>
-            <div id="enemigoList" class="npc-builder-list">
-                <div class="npc-list-empty">Ningún enemigo añadido todavía</div>
-            </div>
-            <!-- Existing enemigo characters from data -->
-            <div id="enemigoExistingGrid" class="combat-participant-grid" style="margin-top:16px;"></div>
         </div>
 
         <!-- Footer -->
@@ -372,9 +379,9 @@
         <button id="diceToggleBtn" class="dice-toggle-btn" title="Lanzador de dados" aria-label="Abrir lanzador de dados">🎲</button>
     </div>
 
-    <script src="characters.js?v=20260309h"></script>
-    <script src="data.js?v=20260309h"></script>
-    <script src="script.js?v=20260309h"></script>
+    <script src="characters.js?v=20260309i"></script>
+    <script src="data.js?v=20260309i"></script>
+    <script src="script.js?v=20260309i"></script>
 </body>
 
 </html>

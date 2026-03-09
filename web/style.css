@@ -4697,3 +4697,92 @@ body.role-jugador .master-only { display: none !important; }
     flex-direction: column;
     gap: 0;
 }
+
+/* ============================================
+   DAMAGE TYPE BADGES
+   ============================================ */
+.planner-dice-badge.tipo {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 6px;
+    text-transform: capitalize;
+    border: 1px solid;
+}
+
+/* Damage type colors */
+.planner-dice-badge.tipo-necrótico,
+.planner-dice-badge.tipo-necrotic { background: rgba(139,0,255,0.15); color: #c08cff; border-color: rgba(139,0,255,0.35); }
+.planner-dice-badge.tipo-fuego,
+.planner-dice-badge.tipo-fire { background: rgba(255,100,0,0.15); color: #ffaa66; border-color: rgba(255,100,0,0.35); }
+.planner-dice-badge.tipo-radiante,
+.planner-dice-badge.tipo-radiant { background: rgba(255,220,60,0.15); color: #ffe070; border-color: rgba(255,220,60,0.35); }
+.planner-dice-badge.tipo-cortante { background: rgba(100,160,255,0.15); color: #8bbfff; border-color: rgba(100,160,255,0.35); }
+.planner-dice-badge.tipo-contundente { background: rgba(160,120,80,0.15); color: #c8a878; border-color: rgba(160,120,80,0.35); }
+.planner-dice-badge.tipo-perforante { background: rgba(160,160,160,0.15); color: #c0c0c0; border-color: rgba(160,160,160,0.3); }
+.planner-dice-badge.tipo-psíquico,
+.planner-dice-badge.tipo-psychic { background: rgba(255,80,200,0.15); color: #ff99e0; border-color: rgba(255,80,200,0.35); }
+.planner-dice-badge.tipo-veneno { background: rgba(80,200,80,0.15); color: #88dd88; border-color: rgba(80,200,80,0.35); }
+.planner-dice-badge.tipo-trueno { background: rgba(80,200,255,0.15); color: #88ddff; border-color: rgba(80,200,255,0.35); }
+.planner-dice-badge.tipo-fuerza { background: rgba(200,230,255,0.12); color: #c8e8ff; border-color: rgba(200,230,255,0.3); }
+.planner-dice-badge.tipo-mágico { background: rgba(180,100,255,0.15); color: #d0a0ff; border-color: rgba(180,100,255,0.35); }
+.planner-dice-badge.tipo-curación { background: rgba(60,220,120,0.15); color: #66ffaa; border-color: rgba(60,220,120,0.35); }
+
+/* ============================================
+   LANDING HAMBURGER MENU
+   ============================================ */
+.landing-menu-wrap {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 10;
+}
+
+.landing-hamburger {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 20px;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    line-height: 1;
+}
+
+.landing-hamburger:hover {
+    background: rgba(255,255,255,0.12);
+    color: var(--text-primary);
+    border-color: var(--accent-gold);
+}
+
+.landing-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 200px;
+    background: var(--bg-card, #1a2035);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 6px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+
+.landing-dropdown-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 10px 14px;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.15s;
+}
+
+.landing-dropdown-item:hover {
+    background: rgba(212,175,55,0.12);
+    color: var(--accent-gold);
+}
