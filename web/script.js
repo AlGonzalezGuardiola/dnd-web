@@ -2933,7 +2933,6 @@ function renderActivePanel(targetEl, forcePIdx) {
                     onclick="toggleCombatAction('${p.id}','${safeName}','${safeDice}')">
                 ${a.nombre}${diceDisplay ? `<small>${diceDisplay}</small>` : ''}${demonicBonus}
             </button>
-            ${(atk || dado) ? `<button class="chip-roll-btn" onclick="rollActionDice('${p.id}','${safeName}','${safeAtk}','${safeDado}')" title="Tirar dados">🎲</button>` : ''}
             ${a.desc && !a._custom ? `<button class="chip-info-btn" onclick="showActionDetail('${safeName}','${safeAtk}','${safeDado}','${safeDesc}')" title="Ver descripción">ℹ️</button>` : ''}
             ${removeBtn}
         </div>`;

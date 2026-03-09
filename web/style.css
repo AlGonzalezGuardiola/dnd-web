@@ -4255,10 +4255,12 @@ body.role-jugador .master-only { display: none !important; }
 }
 .player-active-body {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
     padding: 16px;
     display: flex;
     justify-content: center;
+    align-items: flex-start;
 }
 .player-active-body .combat-active-panel {
     max-width: 620px;
