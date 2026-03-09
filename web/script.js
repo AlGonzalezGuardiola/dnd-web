@@ -2816,24 +2816,26 @@ function renderActivePanel(targetEl, forcePIdx) {
     const isSegundaAccion = combatState.segundaAccionTurn && (idx === combatState.currentIndex);
 
     // ─── ROLE GATES — skipped when forcePIdx is set (player rendering own sheet) ──
-    if (forcePIdx === undefined && isMaster()) {
-        // Master always has full control — no lock for any participant type
-    } else if (forcePIdx === undefined) {
-        // Jugador: waiting panel when it's not their own character's turn
-        const isMyTurn = gameRole.characterId && p.id === gameRole.characterId;
-        if (!isMyTurn) {
-            let icon = '⏳', label = `Turno de ${p.name.split(' ')[0]}...`, note = 'El Master gestiona este turno';
-            if (p.tipo === 'enemigo')        { icon = '💀'; label = 'Turno del enemigo'; }
-            else if (p.tipo === 'aliado')    { icon = '🤝'; label = `Turno de ${p.name.split(' ')[0]}`; note = 'El Master gestiona este turno'; }
-            else if (p.tipo === 'jugador')   { icon = '🎮'; label = `Turno de ${p.name.split(' ')[0]}`; note = 'Ese jugador gestiona su propio turno'; }
-            panel.className = 'combat-active-panel';
-            panel.innerHTML = `<div class="waiting-panel">
-                <span>${icon} ${label}</span>
-                <small>${note}</small>
-                <button class="btn-combat-secondary waiting-pass-btn" onclick="nextCombatTurn()">⏭ Pasar turno</button>
-            </div>`;
-            return;
-        }
+    // canControl: master always yes; jugador yes for own char + their summoned allies
+    const isMyCharTurn  = !isMaster() && gameRole.characterId && p.id === gameRole.characterId;
+    const isMyAllyTurn  = !isMaster() && (
+        p.ownerCharId === gameRole.characterId ||
+        (p._isSirvienteInvisible && gameRole.characterId === 'Vel')
+    );
+    const canControl = isMaster() || isMyCharTurn || isMyAllyTurn;
+
+    if (forcePIdx === undefined && !canControl) {
+        let icon = '⏳', label = `Turno de ${p.name.split(' ')[0]}...`, note = 'El Master gestiona este turno';
+        if (p.tipo === 'enemigo')      { icon = '💀'; label = 'Turno del enemigo'; }
+        else if (p.tipo === 'aliado')  { icon = '🤝'; label = `Turno de ${p.name.split(' ')[0]}`; note = 'El Master gestiona este turno'; }
+        else if (p.tipo === 'jugador') { icon = '🎮'; label = `Turno de ${p.name.split(' ')[0]}`; note = 'Ese jugador gestiona su propio turno'; }
+        panel.className = 'combat-active-panel';
+        panel.innerHTML = `<div class="waiting-panel">
+            <span>${icon} ${label}</span>
+            <small>${note}</small>
+            <button class="btn-combat-secondary waiting-pass-btn" onclick="nextCombatTurn()">⏭ Pasar turno</button>
+        </div>`;
+        return;
     }
     // ─── END ROLE GATES ───────────────────────────────────────────────────────
 
@@ -3053,9 +3055,9 @@ function renderActivePanel(targetEl, forcePIdx) {
                 : '<span style="color:var(--text-muted);font-size:12px">Inactivo</span>'}
         </button>` : '';
 
-    // Attack target panel (master only)
+    // Attack target panel (master or controlling player)
     let attackTargetPanelHTML = '';
-    if (isMaster() && forcePIdx === undefined) {
+    if (canControl && forcePIdx === undefined) {
         // Team filtering: jugador/aliado attack enemies; enemigo attacks jugadores/aliados
         const attackerIsAlly = (p.tipo === 'jugador' || p.tipo === 'aliado');
         const targets = combatState.participants.filter((t, i) => {
@@ -3516,6 +3518,24 @@ function _doNextTurn() {
             }
         }
     }
+
+    // Skip invocations/summons waiting for their debut round
+    let skipGuard = 0;
+    while (skipGuard++ < combatState.participants.length) {
+        const next = combatState.participants[combatState.currentIndex];
+        if (next?._debutRound && next._debutRound > combatState.round) {
+            // Auto-advance past this participant for now
+            combatState.currentIndex++;
+            if (combatState.currentIndex >= combatState.participants.length) {
+                combatState.currentIndex = 0;
+                combatState.round++;
+            }
+        } else {
+            if (next?._debutRound) delete next._debutRound; // clear flag when ready
+            break;
+        }
+    }
+
     createCurrentTurnEntry();
     saveCombatState();
     renderCombatManager();
@@ -3670,6 +3690,7 @@ function toggleSirvienteInvisible(velParticipantId) {
             tipo: 'aliado',
             customActions: [],
             _isSirvienteInvisible: true,
+            ownerCharId: velParticipantId,           // belongs to Vel
         };
         combatState.participants.splice(velIdx + 1, 0, sirviente);
         // Shift currentIndex if we inserted before it
@@ -3746,15 +3767,28 @@ function addInvocationToCombat(charId, invId) {
         charData: null,
         demonicForm: false,
         tipo: 'aliado',
+        ownerCharId: charId,                         // tracks which character summoned it
+        _debutRound: combatState.round + 1,          // won't act until next round
     };
     // Prompt for initiative
     const initVal = prompt(`Iniciativa para ${inv.nombre}:`, '0');
     participant.initiative = parseInt(initVal) || 0;
+
+    // Save current participant ID so we can restore currentIndex after the sort
+    const currentPId = combatState.participants[combatState.currentIndex]?.id;
+
     combatState.participants.push(participant);
     combatState.participants.sort((a, b) => (b.initiative || 0) - (a.initiative || 0));
+
+    // Restore currentIndex to the same participant (sort may have shifted it)
+    if (currentPId) {
+        const newIdx = combatState.participants.findIndex(x => x.id === currentPId);
+        if (newIdx !== -1) combatState.currentIndex = newIdx;
+    }
+
     saveCombatState();
     renderCombatManager();
-    showNotification(`🔮 ${inv.nombre} añadido al combate`, 2000);
+    showNotification(`🔮 ${inv.nombre} añadido — actúa desde ronda ${combatState.round + 1}`, 2500);
 }
 
 // ---- Quick Enemy / Ally Functions ----
