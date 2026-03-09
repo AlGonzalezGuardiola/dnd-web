@@ -809,6 +809,450 @@ window.characterData = {
         ]
     },
 
+    "Tumulario": {
+        "id": "Tumulario",
+        "tipo": "enemigo",
+        "nombre": "Tumulario",
+        "raza": "Mediano · Muerto viviente",
+        "clase": "Guerrero no-muerto",
+        "nivel": "—",
+        "imagen": "",
+        "stats": {
+            "Fuerza": 15,
+            "Destreza": 14,
+            "Constitución": 16,
+            "Inteligencia": 10,
+            "Sabiduría": 13,
+            "Carisma": 15
+        },
+        "resumen": {
+            "HP": "82",
+            "CA": "14",
+            "Iniciativa": "+2",
+            "Velocidad": "30ft",
+            "Competencia": "+2"
+        },
+        "habilidades": ["Percepción", "Sigilo"],
+        "rasgos": [
+            {
+                "nombre": "☀️ Sensibilidad a la luz solar",
+                "desc": "Bajo la luz del sol tiene desventaja en pruebas de característica y tiradas de ataque."
+            },
+            {
+                "nombre": "🛡️ Resistencias",
+                "desc": "Necrótico."
+            },
+            {
+                "nombre": "🚫 Inmunidades",
+                "desc": "Veneno. Condiciones: Cansancio, Envenenado."
+            },
+            {
+                "nombre": "👁️ Sentidos",
+                "desc": "Visión en la oscuridad 18 m. Percepción pasiva 13."
+            },
+            {
+                "nombre": "⭐ Desafío",
+                "desc": "CR 3 (700 PX · BC +2)"
+            }
+        ],
+        "ranuras": [],
+        "conjuros": [],
+        "combateExtra": [
+            {
+                "nombre": "Ataque múltiple",
+                "tipo": "accion",
+                "atk": "",
+                "dado": "",
+                "tipo_dano": "",
+                "desc": "Realiza dos ataques con espada necrótica o arco necrótico en cualquier combinación. Puede sustituir un ataque por Consumir vida."
+            },
+            {
+                "nombre": "Espada necrótica",
+                "tipo": "accion",
+                "atk": "+4",
+                "dado": "1d8+2",
+                "tipo_dano": "cortante/necrótico",
+                "desc": "CaC, alcance 1,5 m. 1d8+2 cortante + 1d8 necrótico."
+            },
+            {
+                "nombre": "Arco necrótico",
+                "tipo": "accion",
+                "atk": "+4",
+                "dado": "1d8+2",
+                "tipo_dano": "perforante/necrótico",
+                "desc": "A distancia, alcance 45/180 m. 1d8+2 perforante + 1d8 necrótico."
+            },
+            {
+                "nombre": "Consumir vida",
+                "tipo": "accion",
+                "atk": "",
+                "dado": "1d8+2",
+                "tipo_dano": "necrótico",
+                "desc": "TS Constitución CD 13, criatura a 1,5 m. Fallo: 1d8+2 necrótico y reduce PG máximos por ese daño. Humanoide que muera se convierte en zombi bajo su control (máx. 12)."
+            }
+        ]
+    },
+
+    "SabuesoInfernal": {
+        "id": "SabuesoInfernal",
+        "tipo": "enemigo",
+        "nombre": "Sabueso Infernal",
+        "raza": "Mediano · Infernal",
+        "clase": "Bestia infernal",
+        "nivel": "—",
+        "imagen": "",
+        "stats": {
+            "Fuerza": 17,
+            "Destreza": 12,
+            "Constitución": 14,
+            "Inteligencia": 6,
+            "Sabiduría": 13,
+            "Carisma": 6
+        },
+        "resumen": {
+            "HP": "58",
+            "CA": "15",
+            "Iniciativa": "+1",
+            "Velocidad": "50ft",
+            "Competencia": "+2"
+        },
+        "habilidades": ["Percepción"],
+        "rasgos": [
+            {
+                "nombre": "👥 Atacar en manada",
+                "desc": "Tiene ventaja en tiradas de ataque si al menos un aliado está a 1,5 m o menos del objetivo y no está incapacitado."
+            },
+            {
+                "nombre": "🚫 Inmunidades",
+                "desc": "Fuego."
+            },
+            {
+                "nombre": "👁️ Sentidos",
+                "desc": "Visión en la oscuridad 18 m. Percepción pasiva 15."
+            },
+            {
+                "nombre": "⭐ Desafío",
+                "desc": "CR 3 (700 PX · BC +2)"
+            }
+        ],
+        "ranuras": [],
+        "conjuros": [],
+        "combateExtra": [
+            {
+                "nombre": "Ataque múltiple",
+                "tipo": "accion",
+                "atk": "",
+                "dado": "",
+                "tipo_dano": "",
+                "desc": "Realiza dos ataques de mordisco."
+            },
+            {
+                "nombre": "Mordisco",
+                "tipo": "accion",
+                "atk": "+5",
+                "dado": "1d8+3",
+                "tipo_dano": "perforante/fuego",
+                "desc": "CaC, alcance 1,5 m. 1d8+3 perforante + 1d6 fuego."
+            },
+            {
+                "nombre": "Aliento de fuego (rec. 5-6)",
+                "tipo": "accion",
+                "atk": "",
+                "dado": "5d6",
+                "tipo_dano": "fuego",
+                "desc": "TS Destreza CD 12, todas las criaturas en cono de 4,5 m. Fallo: 5d6 fuego. Éxito: mitad del daño."
+            }
+        ]
+    },
+
+    "Otyugh": {
+        "id": "Otyugh",
+        "tipo": "enemigo",
+        "nombre": "Otyugh",
+        "raza": "Grande · Aberración",
+        "clase": "Aberración",
+        "nivel": "—",
+        "imagen": "",
+        "stats": {
+            "Fuerza": 16,
+            "Destreza": 11,
+            "Constitución": 19,
+            "Inteligencia": 6,
+            "Sabiduría": 13,
+            "Carisma": 6
+        },
+        "resumen": {
+            "HP": "104",
+            "CA": "14",
+            "Iniciativa": "+0",
+            "Velocidad": "30ft",
+            "Competencia": "+3"
+        },
+        "habilidades": [],
+        "rasgos": [
+            {
+                "nombre": "🔊 Telepatía",
+                "desc": "Telepatía 36 m (unidireccional — no permite respuesta telepática al receptor)."
+            },
+            {
+                "nombre": "👁️ Sentidos",
+                "desc": "Visión en la oscuridad 36 m. Percepción pasiva 11."
+            },
+            {
+                "nombre": "⭐ Desafío",
+                "desc": "CR 5 (1800 PX · BC +3)"
+            }
+        ],
+        "ranuras": [],
+        "conjuros": [],
+        "combateExtra": [
+            {
+                "nombre": "Ataque múltiple",
+                "tipo": "accion",
+                "atk": "",
+                "dado": "",
+                "tipo_dano": "",
+                "desc": "Realiza un ataque de mordisco y dos ataques de tentáculo."
+            },
+            {
+                "nombre": "Mordisco",
+                "tipo": "accion",
+                "atk": "+6",
+                "dado": "2d8+3",
+                "tipo_dano": "perforante",
+                "desc": "CaC, alcance 1,5 m. 2d8+3 perforante y el objetivo queda envenenado. Al terminar descanso largo: TS CON CD 15 o reduce PG máximos en 1d10. Éxito: elimina envenenamiento."
+            },
+            {
+                "nombre": "Tentáculo",
+                "tipo": "accion",
+                "atk": "+6",
+                "dado": "2d8+3",
+                "tipo_dano": "perforante",
+                "desc": "CaC, alcance 3 m. 2d8+3 perforante. Criatura Mediana o menor: estado agarrado (CD 13 para escapar), hasta dos criaturas a la vez."
+            },
+            {
+                "nombre": "Golpe con tentáculo",
+                "tipo": "accion",
+                "atk": "",
+                "dado": "3d8+3",
+                "tipo_dano": "contundente",
+                "desc": "TS Constitución CD 14, todas las criaturas agarradas. Fallo: 3d8+3 contundente + estado aturdido hasta su próximo turno. Éxito: mitad del daño."
+            }
+        ]
+    },
+
+    "AcechadorOsgo": {
+        "id": "AcechadorOsgo",
+        "tipo": "enemigo",
+        "nombre": "Acechador Osgo",
+        "raza": "Mediano · Feérico (trasgo)",
+        "clase": "Guerrero feérico",
+        "nivel": "—",
+        "imagen": "",
+        "stats": {
+            "Fuerza": 17,
+            "Destreza": 14,
+            "Constitución": 14,
+            "Inteligencia": 11,
+            "Sabiduría": 12,
+            "Carisma": 11
+        },
+        "resumen": {
+            "HP": "65",
+            "CA": "15",
+            "Iniciativa": "+2",
+            "Velocidad": "30ft",
+            "Competencia": "+2"
+        },
+        "habilidades": ["Sigilo", "Supervivencia"],
+        "rasgos": [
+            {
+                "nombre": "🏃 Rapto",
+                "desc": "No necesita gastar movimiento adicional para desplazar a una criatura que tenga agarrada."
+            },
+            {
+                "nombre": "👁️ Sentidos",
+                "desc": "Visión en la oscuridad 18 m. Percepción pasiva 11."
+            },
+            {
+                "nombre": "⭐ Desafío",
+                "desc": "CR 3 (700 PX · BC +2)"
+            }
+        ],
+        "ranuras": [],
+        "conjuros": [],
+        "combateExtra": [
+            {
+                "nombre": "Ataque múltiple",
+                "tipo": "accion",
+                "atk": "",
+                "dado": "",
+                "tipo_dano": "",
+                "desc": "Realiza dos ataques con jabalina o lucero del alba."
+            },
+            {
+                "nombre": "Jabalina",
+                "tipo": "accion",
+                "atk": "+5",
+                "dado": "3d6+3",
+                "tipo_dano": "perforante",
+                "desc": "CaC o distancia, alcance 3 m o 9/36 m. 3d6+3 perforante."
+            },
+            {
+                "nombre": "Lucero del alba",
+                "tipo": "accion",
+                "atk": "+5",
+                "dado": "2d8+3",
+                "tipo_dano": "perforante",
+                "desc": "CaC, alcance 3 m. 2d8+3 perforante. Con ventaja si el objetivo está agarrado."
+            },
+            {
+                "nombre": "Agarre rápido",
+                "tipo": "adicional",
+                "atk": "",
+                "dado": "",
+                "tipo_dano": "",
+                "desc": "TS Destreza CD 13, criatura Mediana o menor a 3 m. Fallo: queda agarrada (CD 13 para escapar)."
+            }
+        ]
+    },
+
+    "Ogro": {
+        "id": "Ogro",
+        "tipo": "enemigo",
+        "nombre": "Ogro",
+        "raza": "Grande · Gigante",
+        "clase": "Gigante",
+        "nivel": "—",
+        "imagen": "",
+        "stats": {
+            "Fuerza": 19,
+            "Destreza": 8,
+            "Constitución": 16,
+            "Inteligencia": 5,
+            "Sabiduría": 7,
+            "Carisma": 7
+        },
+        "resumen": {
+            "HP": "68",
+            "CA": "11",
+            "Iniciativa": "-1",
+            "Velocidad": "40ft",
+            "Competencia": "+2"
+        },
+        "habilidades": [],
+        "rasgos": [
+            {
+                "nombre": "👁️ Sentidos",
+                "desc": "Visión en la oscuridad 18 m. Percepción pasiva 8."
+            },
+            {
+                "nombre": "⭐ Desafío",
+                "desc": "CR 2 (450 PX · BC +2)"
+            }
+        ],
+        "ranuras": [],
+        "conjuros": [],
+        "combateExtra": [
+            {
+                "nombre": "Garrote grande",
+                "tipo": "accion",
+                "atk": "+6",
+                "dado": "2d8+4",
+                "tipo_dano": "contundente",
+                "desc": "CaC, alcance 1,5 m. 2d8+4 contundente."
+            },
+            {
+                "nombre": "Jabalina",
+                "tipo": "accion",
+                "atk": "+6",
+                "dado": "2d6+4",
+                "tipo_dano": "perforante",
+                "desc": "CaC o distancia, alcance 1,5 m o 9/36 m. 2d6+4 perforante."
+            }
+        ]
+    },
+
+    "Nycaloth": {
+        "id": "Nycaloth",
+        "tipo": "enemigo",
+        "nombre": "Nycaloth",
+        "raza": "Grande · Infernal (yugoloth)",
+        "clase": "Yugoloth",
+        "nivel": "—",
+        "imagen": "",
+        "stats": {
+            "Fuerza": 20,
+            "Destreza": 11,
+            "Constitución": 19,
+            "Inteligencia": 12,
+            "Sabiduría": 10,
+            "Carisma": 15
+        },
+        "resumen": {
+            "HP": "152",
+            "CA": "18",
+            "Iniciativa": "+0",
+            "Velocidad": "40ft / Vuelo 60ft",
+            "Competencia": "+4"
+        },
+        "habilidades": ["Percepción", "Sigilo"],
+        "rasgos": [
+            {
+                "nombre": "🔄 Recuperación infernal",
+                "desc": "Si muere fuera de Gehenna, su cuerpo se disuelve en icor y revive con todos sus PG en algún lugar de Gehenna."
+            },
+            {
+                "nombre": "✨ Resistencia mágica",
+                "desc": "Ventaja en tiradas de salvación contra conjuros y efectos mágicos."
+            },
+            {
+                "nombre": "🛡️ Resistencias",
+                "desc": "Frío, fuego, relámpago."
+            },
+            {
+                "nombre": "🚫 Inmunidades",
+                "desc": "Ácido, veneno. Condición: Envenenado."
+            },
+            {
+                "nombre": "👁️ Sentidos",
+                "desc": "Visión ciega 18 m. Percepción pasiva 14."
+            },
+            {
+                "nombre": "⭐ Desafío",
+                "desc": "CR 9 (5000 PX · BC +4)"
+            }
+        ],
+        "ranuras": [],
+        "conjuros": [],
+        "combateExtra": [
+            {
+                "nombre": "Ataque múltiple",
+                "tipo": "accion",
+                "atk": "",
+                "dado": "",
+                "tipo_dano": "",
+                "desc": "Realiza dos ataques con hacha voluble."
+            },
+            {
+                "nombre": "Hacha voluble",
+                "tipo": "accion",
+                "atk": "+9",
+                "dado": "2d12+5",
+                "tipo_dano": "cortante/fuerza",
+                "desc": "CaC o distancia, alcance 3 m o 9/27 m. 2d12+5 cortante + 3d6 fuerza. El hacha regresa mágicamente a su mano tras un ataque a distancia."
+            },
+            {
+                "nombre": "Teletransporte sombrío",
+                "tipo": "adicional",
+                "atk": "",
+                "dado": "",
+                "tipo_dano": "",
+                "desc": "Se vuelve invisible 1 minuto y se teletransporta hasta 9 m a un espacio libre visible. La invisibilidad termina en cuanto causa daño."
+            }
+        ]
+    },
+
     "Jayce": {
         "id": "Jayce",
         "tipo": "enemigo",
