@@ -4072,3 +4072,90 @@ body.role-jugador .master-only { display: none !important; }
     cursor: pointer;
 }
 .add-custom-action-form button:hover { background: rgba(212,175,55,0.25); }
+
+/* ============================================
+   COMBAT IMPROVEMENTS v5 — Role Redesign
+   ============================================ */
+
+/* --- Master locked panel (jugador's turn) --- */
+.combat-active-panel.master-locked-player {
+    border-top: 3px solid #4488ff;
+    opacity: 0.9;
+}
+.master-locked-header {
+    background: rgba(68,136,255,0.1);
+    border: 1px solid rgba(68,136,255,0.3);
+    border-radius: 10px;
+    padding: 8px 14px;
+    margin-bottom: 14px;
+    color: #88bbff;
+    font-size: 13px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.master-locked-name {
+    font-weight: 700;
+    font-size: 15px;
+    color: #aaccff;
+}
+.master-locked-body {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    margin-bottom: 14px;
+}
+.master-locked-portrait img {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(68,136,255,0.4);
+    opacity: 0.85;
+}
+.portrait-placeholder {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+    border: 2px solid rgba(68,136,255,0.3);
+}
+.master-locked-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+.master-locked-charname {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.master-locked-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+.master-locked-stats {
+    display: flex;
+    gap: 10px;
+    margin-top: 4px;
+}
+.master-locked-stat {
+    font-size: 12px;
+    color: var(--text-secondary);
+    background: rgba(255,255,255,0.05);
+    padding: 2px 8px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+}
+.master-locked-message {
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: rgba(68,136,255,0.06);
+    border: 1px dashed rgba(68,136,255,0.25);
+    border-radius: 10px;
+    font-size: 13px;
+    color: #88aadd;
+    text-align: center;
+}

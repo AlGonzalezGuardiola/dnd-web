@@ -2565,27 +2565,74 @@ function renderActivePanel() {
 
     const isExtraAttack = combatState.extraAttackTurn;
 
-    // Role-gated: show waiting panel if jugador and not their turn
-    if (!isMaster()) {
-        if (p.tipo === 'enemigo') {
-            panel.className = 'combat-active-panel';
-            panel.innerHTML = `<div class="waiting-panel">
-                <span>💀 Turno del enemigo</span>
-                <small>El Master gestiona este turno</small>
-                <button class="btn-combat-secondary waiting-pass-btn" onclick="nextCombatTurn()">⏭ Pasar turno</button>
-            </div>`;
+    // ─── ROLE GATES ───────────────────────────────────────────────────────────
+    if (isMaster()) {
+        // Master: locked view when it's a jugador's turn (player manages their own)
+        if (p.tipo === 'jugador') {
+            const hpPct0 = p.hp.max > 0 ? Math.max(0, (p.hp.current / p.hp.max) * 100) : 0;
+            const hpClass0 = hpPct0 <= 0 ? 'hp-dead' : hpPct0 <= 25 ? 'hp-critical' : hpPct0 <= 50 ? 'hp-low' : '';
+            const sliderFill0 = hpPct0;
+            const condHTML0 = CONDITIONS.map(c => {
+                const isActive = p.conditions.includes(c.id);
+                return `<button class="combat-cond-btn${isActive ? ' active' : ''}"
+                                onclick="toggleParticipantCondition('${p.id}','${c.id}')"
+                                title="${c.title}">${c.label} ${c.title}</button>`;
+            }).join('');
+            panel.className = 'combat-active-panel master-locked-player';
+            panel.innerHTML = `
+                <div class="master-locked-header">
+                    🎮 Turno del jugador
+                    <span class="master-locked-name">${p.name.split(' ')[0]}</span>
+                </div>
+                <div class="master-locked-body">
+                    <div class="master-locked-portrait">
+                        ${p.charData?.imagen ? `<img src="${p.charData.imagen}" onerror="this.style.display='none'">` : '<div class="portrait-placeholder"></div>'}
+                    </div>
+                    <div class="master-locked-info">
+                        <div class="master-locked-charname">${p.name}</div>
+                        ${p.charData ? `<div class="master-locked-meta">${p.charData.clase} · Nv ${p.charData.nivel}</div>` : ''}
+                        <div class="master-locked-stats">
+                            <span class="master-locked-stat">🛡️ CA ${p.ac}</span>
+                            ${p.speed ? `<span class="master-locked-stat">💨 ${p.speed}</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+                <div class="combat-vital-block ${hpClass0}" id="activeHpBlock" style="margin:10px 0">
+                    <div class="combat-vital-label">❤️ Puntos de Golpe</div>
+                    <div class="combat-vital-value">
+                        <span id="activeHpDisplay">${p.hp.current}</span>
+                        <span style="font-size:16px;color:var(--text-muted)"> / ${p.hp.max}</span>
+                    </div>
+                    <input type="range" class="combat-hp-slider"
+                           min="0" max="${p.hp.max}" value="${p.hp.current}"
+                           style="--fill-pct:${sliderFill0}%"
+                           oninput="setParticipantHp('${p.id}', parseInt(this.value))">
+                </div>
+                <div class="combat-conds-bar">${condHTML0}</div>
+                <div class="master-locked-message">
+                    <span>El jugador gestiona este turno desde su dispositivo.</span>
+                    <span style="display:block;margin-top:4px;color:var(--text-muted);font-size:11px">Puedes avanzar cuando el jugador termine su turno.</span>
+                </div>`;
             return;
         }
-        if (gameRole.characterId && p.id !== gameRole.characterId) {
+    } else {
+        // Jugador: waiting panel when it's not their own character's turn
+        const isMyTurn = gameRole.characterId && p.id === gameRole.characterId;
+        if (!isMyTurn) {
+            let icon = '⏳', label = `Turno de ${p.name.split(' ')[0]}...`, note = 'El Master gestiona este turno';
+            if (p.tipo === 'enemigo')        { icon = '💀'; label = 'Turno del enemigo'; }
+            else if (p.tipo === 'aliado')    { icon = '🤝'; label = `Turno de ${p.name.split(' ')[0]}`; note = 'El Master gestiona este turno'; }
+            else if (p.tipo === 'jugador')   { icon = '🎮'; label = `Turno de ${p.name.split(' ')[0]}`; note = 'Ese jugador gestiona su propio turno'; }
             panel.className = 'combat-active-panel';
             panel.innerHTML = `<div class="waiting-panel">
-                <span>⏳ Turno de ${p.name.split(' ')[0]}...</span>
-                <small>El Master gestiona este turno</small>
+                <span>${icon} ${label}</span>
+                <small>${note}</small>
                 <button class="btn-combat-secondary waiting-pass-btn" onclick="nextCombatTurn()">⏭ Pasar turno</button>
             </div>`;
             return;
         }
     }
+    // ─── END ROLE GATES ───────────────────────────────────────────────────────
 
     const currentEntry = getCurrentLogEntry();
     const hpPct = p.hp.max > 0 ? Math.max(0, (p.hp.current / p.hp.max) * 100) : 0;
@@ -3028,11 +3075,15 @@ function toggleParticipantCondition(id, condId) {
 
 function nextCombatTurn() {
     const p = combatState.participants[combatState.currentIndex];
-    const isPlayersTurn = !isMaster() && gameRole.characterId && p?.id === gameRole.characterId;
-    const isNotMyTurn = !isMaster() && !isPlayersTurn;
 
-    // If player and it's not their own character's turn, just advance silently
-    if (isNotMyTurn) { _doNextTurn(); return; }
+    if (!isMaster()) {
+        // Jugador mode: can always advance when it's not their own turn
+        const isMyTurn = gameRole.characterId && p?.id === gameRole.characterId;
+        if (!isMyTurn) { _doNextTurn(); return; }
+    } else {
+        // Master mode: advance silently when it's a jugador's turn (player manages their own)
+        if (p?.tipo === 'jugador') { _doNextTurn(); return; }
+    }
 
     const current = getCurrentLogEntry();
     // Extra attack mini-turn: no warning needed, can always pass
