@@ -12,8 +12,10 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json({ limit: '2mb' }));  // combat state can be large with full log
 
-// ── Health check ──────────────────────────────────────────────────────────────
-app.get('/health', (_req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }));
+// ── Health check (ambas rutas: directa y via proxy Apache /api/health) ────────
+const health = (_req, res) => res.json({ status: 'ok', ts: new Date().toISOString() });
+app.get('/health',     health);
+app.get('/api/health', health);
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use('/api/combats', combatsRouter);
