@@ -104,6 +104,9 @@ const CombatSchema = new mongoose.Schema({
     // Metadata
     name:      { type: String, default: '' },
     createdBy: { type: String, default: '' },
+
+    // References to CombatEntity documents created during this combat
+    entities: [{ type: mongoose.Schema.Types.ObjectId, ref: 'CombatEntity' }],
 }, {
     timestamps: true,
 });
