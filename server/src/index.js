@@ -3,7 +3,8 @@ const express  = require('express');
 const mongoose = require('mongoose');
 const cors     = require('cors');
 
-const combatsRouter = require('./routes/combats');
+const combatsRouter        = require('./routes/combats');
+const combatEntitiesRouter = require('./routes/combatEntities');
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
@@ -18,7 +19,8 @@ app.get('/health',     health);
 app.get('/api/health', health);
 
 // ── Routes ────────────────────────────────────────────────────────────────────
-app.use('/api/combats', combatsRouter);
+app.use('/api/combats',         combatsRouter);
+app.use('/api/combat-entities', combatEntitiesRouter);
 
 // ── 404 ───────────────────────────────────────────────────────────────────────
 app.use((_req, res) => res.status(404).json({ error: 'Ruta no encontrada' }));

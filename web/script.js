@@ -2989,6 +2989,7 @@ function renderCombatManager() {
     renderTurnQueue();
     renderActivePanel();
     renderCombatLog();
+    renderKillScoreboard();
 }
 
 // ---- Player Combat Layout (role=jugador) — fully independent turn manager ----
@@ -3638,6 +3639,14 @@ function applyAttackDamage(attackerId) {
                     const cd = Math.max(10, Math.floor(damage / 2));
                     showNotification(`🧠 ${target.name.split(' ')[0]}: Concentración CD ${cd}`, 3500);
                 }
+                // Track kills for scoreboard (enemy drops to 0)
+                if (prevHp > 0 && target.hp.current === 0 && target.tipo === 'enemigo') {
+                    const currentEntry = getCurrentLogEntry();
+                    if (currentEntry) {
+                        if (!currentEntry.kills) currentEntry.kills = [];
+                        currentEntry.kills.push(target.id);
+                    }
+                }
                 log.push(`${target.name.split(' ')[0]} −${damage} PG`);
                 applied++;
                 input.value = '';
@@ -3649,6 +3658,7 @@ function applyAttackDamage(attackerId) {
         renderTurnQueue();
         renderActivePanel();
         renderCombatLog();
+        renderKillScoreboard();
         showNotification(`💥 ${log.join(' · ')}`, 3000);
     } else {
         showNotification('Introduce al menos 1 de daño a un objetivo', 1800);
@@ -3820,6 +3830,60 @@ function renderCombatLog() {
             </div>
         </div>`;
     }).join('');
+    // Keep the modal in sync if it's currently open
+    const modal = document.getElementById('combatLogModal');
+    if (modal && modal.style.display !== 'none') _syncCombatLogModal();
+}
+
+// ============================================
+// Combat Log Modal
+// ============================================
+function openCombatLogModal() {
+    const modal = document.getElementById('combatLogModal');
+    if (!modal) return;
+    _syncCombatLogModal();
+    modal.style.display = 'flex';
+}
+
+function closeCombatLogModal(e) {
+    const modal = document.getElementById('combatLogModal');
+    if (!modal) return;
+    if (!e || e.target === modal) modal.style.display = 'none';
+}
+
+function _syncCombatLogModal() {
+    const body = document.getElementById('combatLogModalBody');
+    const src  = document.getElementById('combatLog');
+    if (body && src) body.innerHTML = src.innerHTML;
+}
+
+// ============================================
+// Kill Scoreboard (allies vs enemies)
+// ============================================
+function computeKillScoreboard() {
+    const scores = {};
+    combatState.log.forEach(entry => {
+        if (!entry.kills?.length) return;
+        const actor = combatState.participants.find(p => p.id === entry.participantId);
+        // Only count kills by allies/players, not enemies
+        if (!actor || actor.tipo === 'enemigo') return;
+        const name = entry.participantName.split(' ')[0];
+        scores[name] = (scores[name] || 0) + entry.kills.length;
+    });
+    return Object.entries(scores).sort((a, b) => b[1] - a[1]);
+}
+
+function renderKillScoreboard() {
+    const board = document.getElementById('combatScoreboard');
+    const list  = document.getElementById('scoreboardList');
+    if (!board || !list) return;
+    const scores = computeKillScoreboard();
+    if (!scores.length) { board.style.display = 'none'; return; }
+    board.style.display = 'flex';
+    list.innerHTML = scores
+        .map(([name, kills]) =>
+            `<span class="scoreboard-entry"><span class="sb-name">${name}</span><span class="sb-kills">${kills} kill${kills !== 1 ? 's' : ''}</span></span>`)
+        .join('');
 }
 
 // ---- HP + Conditions + Turn Advance ----
@@ -4251,7 +4315,14 @@ function showQuickNpcModal(context, tipo) {
             <input id="qeName" class="quick-enemy-input" placeholder="${placeholder}" autocomplete="off">
             <input id="qeHp" class="quick-enemy-input" type="number" placeholder="PG máximos" min="1">
             <input id="qeAc" class="quick-enemy-input" type="number" placeholder="Clase de Armadura" min="1">
-            ${context === 'combat' ? `<input id="qeInit" class="quick-enemy-input" type="number" placeholder="Iniciativa (opcional)">` : ''}
+            ${context === 'combat' ? `<input id="qeInit" class="quick-enemy-input" type="number" placeholder="Iniciativa (opcional, 0 = al final)">` : ''}
+
+            <div class="qe-actions-section">
+                <div class="qe-actions-title">⚔️ Acciones (opcional)</div>
+                <div id="qeActionsList" class="qe-actions-list"></div>
+                <button class="qe-add-action-btn" onclick="addQeAction()">+ Añadir acción</button>
+            </div>
+
             <div class="quick-enemy-btns">
                 <button class="btn-combat-primary" onclick="submitQuickNpc('${context}')">Añadir</button>
                 <button class="btn-combat-secondary" onclick="document.getElementById('quickEnemyOverlay')?.remove()">Cancelar</button>
@@ -4259,6 +4330,39 @@ function showQuickNpcModal(context, tipo) {
         </div>`;
     document.body.appendChild(overlay);
     document.getElementById('qeName')?.focus();
+}
+
+function addQeAction() {
+    const list = document.getElementById('qeActionsList');
+    if (!list) return;
+    const row = document.createElement('div');
+    row.className = 'qe-action-row';
+    row.innerHTML = `
+        <input class="quick-enemy-input qe-action-name" placeholder="Nombre">
+        <select class="qe-action-select qe-action-type">
+            <option value="ACTION">Acción</option>
+            <option value="BONUS_ACTION">Ac. adicional</option>
+            <option value="REACTION">Reacción</option>
+            <option value="EXTRA_ATTACK">Ataque extra</option>
+        </select>
+        <input class="quick-enemy-input qe-action-desc" placeholder="Descripción corta">
+        <button class="qe-action-remove-btn" onclick="this.closest('.qe-action-row').remove()">✕</button>
+    `;
+    list.appendChild(row);
+}
+
+function getQeActions() {
+    return Array.from(document.querySelectorAll('#qeActionsList .qe-action-row'))
+        .map(row => ({
+            name:        row.querySelector('.qe-action-name')?.value?.trim() || '',
+            type:        row.querySelector('.qe-action-type')?.value        || 'ACTION',
+            description: row.querySelector('.qe-action-desc')?.value?.trim() || '',
+        }))
+        .filter(a => a.name);
+}
+
+function _actionTypeToTipo(type) {
+    return { ACTION: 'accion', BONUS_ACTION: 'adicional', REACTION: 'reaccion', EXTRA_ATTACK: 'accion' }[type] || 'accion';
 }
 
 function submitQuickEnemy(context) { submitQuickNpc(context); } // backward compat alias
@@ -4274,15 +4378,41 @@ function submitQuickNpc(context) {
     const initiative = initEl ? (parseInt(initEl.value) || 0) : 0;
     if (!name) { showNotification('⚠️ Introduce un nombre', 2000); return; }
 
+    // Collect actions defined in the form
+    const actions = getQeActions();
+    const combateExtra = actions.map(a => ({
+        nombre: a.name,
+        tipo:   _actionTypeToTipo(a.type),
+        atk:    '',
+        dado:   '',
+        desc:   a.description,
+    }));
+
     const uid = `qe_${Date.now()}`;
     const charData = {
         id: uid, tipo, nombre: name,
         clase: isEnemy ? 'Enemigo' : 'Aliado NPC', nivel: '—', imagen: '',
         resumen: { HP: String(hp), CA: String(ac), Velocidad: '30ft' },
-        combateExtra: [], conjuros: [],
+        combateExtra, conjuros: [],
     };
     window.characterData[uid] = charData;
     document.getElementById('quickEnemyOverlay')?.remove();
+
+    // Persist to backend (fire-and-forget; doesn't block the UI)
+    if (isOnlineCombat && activeCombatId) {
+        fetch(`${API_BASE}/api/combat-entities`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name,
+                type:      isEnemy ? 'ENEMY' : 'ALLY',
+                stats:     { hp, ac, initiative },
+                actions,
+                combatId:  activeCombatId,
+                sessionId: activeJoinCode || '',
+            }),
+        }).catch(e => console.warn('[combat-entities] save failed:', e.message));
+    }
 
     if (context === 'setup') {
         combatState.selectedIds.push(uid);

@@ -13,8 +13,8 @@
         href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link rel="stylesheet" href="style.css?v=20260310k">
-    <link rel="stylesheet" href="mobile.css?v=20260310k" media="screen and (max-width: 768px)">
+    <link rel="stylesheet" href="style.css?v=20260310l">
+    <link rel="stylesheet" href="mobile.css?v=20260310l" media="screen and (max-width: 768px)">
 </head>
 
 <body>
@@ -246,8 +246,15 @@
                         <button id="showSessionCodeBtn" onclick="showCurrentSessionCode();document.getElementById('optionsMenu').classList.remove('open');document.getElementById('optionsMenuToggle').classList.remove('open')" style="display:none">🌐 Código de sesión</button>
                         <button onclick="showQuickEnemyModal('combat');document.getElementById('optionsMenu').classList.remove('open');document.getElementById('optionsMenuToggle').classList.remove('open')">💀 Añadir enemigo</button>
                         <button onclick="showQuickAllyModal('combat');document.getElementById('optionsMenu').classList.remove('open');document.getElementById('optionsMenuToggle').classList.remove('open')">💙 Añadir aliado</button>
+                        <button onclick="openCombatLogModal();document.getElementById('optionsMenu').classList.remove('open');document.getElementById('optionsMenuToggle').classList.remove('open')">📝 Ver registro</button>
                     </div>
                 </div>
+            </div>
+
+            <!-- Row 3: Kill scoreboard (allies only, hidden until first kill) -->
+            <div id="combatScoreboard" class="combat-scoreboard" style="display:none;">
+                <span class="scoreboard-crown">🏆</span>
+                <div class="scoreboard-list" id="scoreboardList"></div>
             </div>
 
             <!-- Main body: Active panel + Combat Log -->
@@ -441,9 +448,22 @@
         <button id="diceToggleBtn" class="dice-toggle-btn" title="Lanzador de dados" aria-label="Abrir lanzador de dados">🎲</button>
     </div>
 
-    <script src="characters.js?v=20260310k"></script>
-    <script src="data.js?v=20260310k"></script>
-    <script src="script.js?v=20260310k"></script>
+    <!-- Combat Log Modal (accessible from ☰ menu, always available but essential on mobile) -->
+    <div id="combatLogModal" class="combat-log-modal-overlay" style="display:none;" onclick="closeCombatLogModal(event)">
+        <div class="combat-log-modal">
+            <div class="combat-log-modal-header">
+                <span>📜 Registro del Combate</span>
+                <button class="combat-log-modal-close" onclick="closeCombatLogModal()">✕</button>
+            </div>
+            <div id="combatLogModalBody" class="combat-log-modal-body">
+                <!-- Populated dynamically from combatLog -->
+            </div>
+        </div>
+    </div>
+
+    <script src="characters.js?v=20260310l"></script>
+    <script src="data.js?v=20260310l"></script>
+    <script src="script.js?v=20260310l"></script>
 </body>
 
 </html>
