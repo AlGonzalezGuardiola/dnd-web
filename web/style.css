@@ -5422,3 +5422,69 @@ body.role-jugador .master-only { display: none !important; }
     padding: 12px; background: rgba(255,255,255,0.03);
     border-radius: 10px; width: 100%;
 }
+
+/* ============================================================
+   GROUPS + SUMMONS — v20260310m
+   ============================================================ */
+
+/* ── Turn queue badges for groups and summons ─────────────── */
+.tqi-group-badge {
+    font-size: 10px; color: #f0a040; font-weight: 700;
+    line-height: 1; text-align: center;
+}
+.tqi-summon-badge {
+    font-size: 10px; color: #b388ff; font-weight: 700;
+    line-height: 1; text-align: center;
+}
+
+/* ── Setup form: toggle rows ──────────────────────────────── */
+.npc-toggle-row {
+    display: flex; flex-direction: column; gap: 6px;
+    padding: 8px 0; border-top: 1px solid rgba(255,255,255,0.06);
+}
+.npc-toggle-label {
+    display: flex; align-items: center; gap: 8px;
+    cursor: pointer; font-size: 13px; color: var(--text-secondary);
+    user-select: none;
+}
+.npc-toggle-label input[type="checkbox"] {
+    width: 16px; height: 16px; cursor: pointer;
+    accent-color: var(--accent-gold);
+}
+.npc-toggle-label span { line-height: 1; }
+.npc-group-hint {
+    font-size: 11px; color: var(--text-muted); opacity: 0.75;
+    font-style: italic;
+}
+
+/* ── Quick-add modal: toggle rows ────────────────────────── */
+.qe-toggle-row {
+    padding: 8px 0;
+    border-top: 1px solid rgba(255,255,255,0.07);
+}
+.qe-toggle-label {
+    display: flex; align-items: center; gap: 8px;
+    cursor: pointer; font-size: 13px; color: var(--text-secondary);
+    user-select: none;
+}
+.qe-toggle-label input[type="checkbox"] {
+    width: 16px; height: 16px; cursor: pointer;
+    accent-color: var(--accent-gold);
+}
+
+/* ── Active panel: group HP display ──────────────────────── */
+.group-hp-detail {
+    display: flex; flex-direction: column; align-items: flex-end;
+    gap: 2px;
+}
+.group-member-count {
+    font-size: 20px; font-weight: 800; color: #f0a040;
+    line-height: 1;
+}
+.group-member-label {
+    font-size: 10px; color: var(--text-muted); text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+.group-front-hp {
+    font-size: 11px; color: var(--text-secondary);
+}

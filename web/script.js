@@ -2669,33 +2669,50 @@ function beginCombatFromSetup() {
 
     // Add setup NPCs
     setupNpcs.forEach(npc => {
-        const uid = `setup_${npc.tipo}_${Date.now()}_${Math.random().toString(36).slice(2, 5)}`;
+        const uid = npc._uid || `setup_${npc.tipo}_${Date.now()}_${Math.random().toString(36).slice(2, 5)}`;
         const combateExtra = [
             ...parseSetupActions(npc.acciones    || '', 'accion'),
             ...parseSetupActions(npc.adicionales || '', 'adicional'),
             ...parseSetupActions(npc.reacciones  || '', 'reaccion'),
         ];
+        const isGroup   = !!npc.isGroup;
+        const groupSize = isGroup ? (npc.groupSize || 2) : 1;
+        const totalHp   = isGroup ? npc.pg * groupSize : npc.pg;
+
         const charData = {
             id: uid, tipo: npc.tipo, nombre: npc.nombre,
             clase: npc.tipo === 'aliado' ? 'Aliado' : 'Enemigo',
             nivel: '—', imagen: '',
-            resumen: { HP: String(npc.pg), CA: String(npc.ca), Velocidad: '30ft' },
+            resumen: { HP: String(totalHp), CA: String(npc.ca), Velocidad: '30ft' },
             combateExtra, conjuros: [],
         };
         window.characterData[uid] = charData;
         participants.push({
             id: uid, name: npc.nombre,
             initiative: npc.initiative,
-            hp: { current: npc.pg, max: npc.pg },
+            hp: { current: totalHp, max: totalHp },
             ac: String(npc.ca), baseAc: String(npc.ca),
             speed: '30ft', baseSpeed: '30ft',
             conditions: [], note: '', charData,
             demonicForm: false, tipo: npc.tipo, customActions: [],
+            // Group fields
+            isGroup, groupSize,
+            membersRemaining: groupSize,
+            hpPerMember:      npc.pg,
+            totalHp,
+            currentMemberHp:  npc.pg,
+            // Summon fields
+            isSummon:             !!npc.isSummon,
+            summoner:             npc.summoner || '',
+            summonedBeforeCombat: !!npc.summonedBeforeCombat,
         });
     });
 
     // Sort by initiative descending
     participants.sort((a, b) => b.initiative - a.initiative);
+
+    // Reposition pre-combat summons right after their summoner
+    _insertPreCombatSummons(participants);
 
     // Start combat
     Object.assign(combatState, {
@@ -2718,6 +2735,39 @@ function beginCombatFromSetup() {
     setView('combatManager');
     renderCombatManager();
     if (isOnlineCombat) startCombatSession(); // solo en modo online: crear sesión en BD
+}
+
+// ── Pre-combat summon positioning ─────────────────────────────────────────────
+// Repositions pre-combat summons right after their summoner in the initiative order.
+// Must be called AFTER participants are sorted by initiative.
+function _insertPreCombatSummons(participants) {
+    const summons = participants.filter(p => p.isSummon && p.summonedBeforeCombat);
+    if (!summons.length) return;
+
+    summons.forEach(summon => {
+        const idx = participants.indexOf(summon);
+        if (idx === -1) return;
+        participants.splice(idx, 1); // remove from current position
+
+        // Find the summoner participant
+        const summonerP = participants.find(p => {
+            if (summon.summoner === 'ASTHOR') {
+                return p.id === 'Vel'  || p.charData?.id === 'Vel'  || p.name === 'Vel';
+            }
+            if (summon.summoner === 'ZERO') {
+                return p.id === 'Zero' || p.charData?.id === 'Zero' || p.name === 'Zero';
+            }
+            return false;
+        });
+
+        if (summonerP) {
+            const summonerIdx = participants.indexOf(summonerP);
+            participants.splice(summonerIdx + 1, 0, summon);
+        } else {
+            // Summoner not found in combat → push at end
+            participants.push(summon);
+        }
+    });
 }
 
 function confirmEndCombat() {
@@ -3030,27 +3080,53 @@ function renderTurnQueue() {
     if (!queue) return;
     queue.innerHTML = combatState.participants.map((p, i) => {
         const isCurrent = i === combatState.currentIndex;
-        const isDead = p.hp.current <= 0;
-        const hpPct = p.hp.max > 0 ? Math.max(0, (p.hp.current / p.hp.max) * 100) : 0;
-        const hpColor = hpPct <= 0 ? '#555' : hpPct <= 25 ? '#ff4444' : hpPct <= 50 ? '#ffaa00' : '#4caf50';
-        const tipoClass = p.tipo || 'jugador';
+
+        // ── Group vs single HP calculations ──────────────────────────────────────
+        let isDead, hpPct, hpDisplay;
+        if (p.isGroup) {
+            isDead    = (p.membersRemaining ?? 0) <= 0;
+            const maxTotalHp = (p.groupSize || 1) * (p.hpPerMember || 1);
+            hpPct     = maxTotalHp > 0 ? Math.max(0, ((p.totalHp ?? 0) / maxTotalHp) * 100) : 0;
+            const showHpGroup = !(!isMaster() && p.tipo === 'enemigo');
+            hpDisplay = showHpGroup
+                ? `${p.membersRemaining ?? 0}/${p.groupSize ?? 1}`
+                : '? / ?';
+        } else {
+            isDead    = p.hp.current <= 0;
+            hpPct     = p.hp.max > 0 ? Math.max(0, (p.hp.current / p.hp.max) * 100) : 0;
+            const showHp = !(!isMaster() && p.tipo === 'enemigo');
+            hpDisplay = showHp ? `${p.hp.current}/${p.hp.max}` : '? / ?';
+        }
+
+        const hpColor    = hpPct <= 0 ? '#555' : hpPct <= 25 ? '#ff4444' : hpPct <= 50 ? '#ffaa00' : '#4caf50';
+        const tipoClass  = p.tipo || 'jugador';
         const cls = ['turn-queue-item', isCurrent ? 'active' : '', isDead ? 'dead' : '', p.demonicForm ? 'demonic' : '', tipoClass].filter(Boolean).join(' ');
+
         const condIcons = p.conditions.length
             ? `<div class="tqi-conditions">${p.conditions.map(cId => {
                   const c = CONDITIONS.find(x => x.id === cId);
                   return c ? `<span title="${c.title}">${c.label}</span>` : '';
               }).join('')}</div>`
             : '';
-        const isCurrentParticipant = isCurrent;
-        const showHp = !(!isMaster() && (p.tipo === 'enemigo'));
+
+        // Group counter badge
+        const groupBadge = p.isGroup
+            ? `<div class="tqi-group-badge" title="Grupo: ${p.membersRemaining}/${p.groupSize} miembros">👥</div>`
+            : '';
+        // Summon indicator
+        const summonBadge = p.isSummon
+            ? `<div class="tqi-summon-badge" title="Invocación de ${p.summoner}">✨</div>`
+            : '';
+
         return `<div class="${cls}">
             <div class="tqi-init">${p.initiative}</div>
             <div class="tqi-name">${p.name.split(' ')[0]}</div>
+            ${groupBadge}${summonBadge}
             <div class="tqi-hp-bar"><div class="tqi-hp-fill" style="width:${hpPct}%;background:${hpColor}"></div></div>
-            <div class="tqi-hp-text">${showHp ? `${p.hp.current}/${p.hp.max}` : '? / ?'}</div>
+            <div class="tqi-hp-text">${hpDisplay}</div>
             ${condIcons}
-            ${isCurrentParticipant && combatState.extraAttackTurn ? '<div class="tqi-extra-badge">+ATQ</div>' : ''}
-            ${isCurrentParticipant && combatState.segundaAccionTurn ? '<div class="tqi-extra-badge">+2ª</div>' : ''}
+            ${isCurrent && combatState.extraAttackTurn  ? '<div class="tqi-extra-badge">+ATQ</div>' : ''}
+            ${isCurrent && combatState.segundaAccionTurn ? '<div class="tqi-extra-badge">+2ª</div>' : ''}
         </div>`;
     }).join('');
     setTimeout(() => {
@@ -3623,6 +3699,30 @@ function toggleCombatAction(participantId, nombre, dice) {
     renderCombatLog();
 }
 
+// ── Group damage helper ───────────────────────────────────────────────────────
+// Returns the number of members killed by this damage application.
+function applyGroupDamage(p, damage) {
+    const prevMembers = p.membersRemaining ?? p.groupSize ?? 1;
+    p.totalHp = Math.max(0, (p.totalHp ?? 0) - damage);
+
+    if (p.totalHp <= 0) {
+        p.membersRemaining = 0;
+        p.currentMemberHp  = 0;
+        p.hp.current       = 0;
+    } else {
+        const hpPer = p.hpPerMember || 1;
+        // How many members still standing (including a partially damaged front member)
+        p.membersRemaining = Math.ceil(p.totalHp / hpPer);
+        // HP of the partially-damaged front member
+        const remainder    = p.totalHp % hpPer;
+        p.currentMemberHp  = remainder === 0 ? hpPer : remainder;
+        // Keep hp.current mirroring totalHp so the bar works
+        p.hp.current = p.totalHp;
+        p.hp.max     = (p.groupSize || 1) * hpPer;
+    }
+    return Math.max(0, prevMembers - (p.membersRemaining ?? 0));
+}
+
 function applyAttackDamage(attackerId) {
     const inputs = document.querySelectorAll('.attack-dmg-input');
     let applied = 0;
@@ -3634,20 +3734,38 @@ function applyAttackDamage(attackerId) {
             const target = combatState.participants.find(p => p.id === targetId);
             if (target) {
                 const prevHp = target.hp.current;
-                target.hp.current = Math.max(0, target.hp.current - damage);
-                if (prevHp > target.hp.current && target.conditions.includes('concentracion')) {
-                    const cd = Math.max(10, Math.floor(damage / 2));
-                    showNotification(`🧠 ${target.name.split(' ')[0]}: Concentración CD ${cd}`, 3500);
-                }
-                // Track kills for scoreboard (enemy drops to 0)
-                if (prevHp > 0 && target.hp.current === 0 && target.tipo === 'enemigo') {
-                    const currentEntry = getCurrentLogEntry();
-                    if (currentEntry) {
-                        if (!currentEntry.kills) currentEntry.kills = [];
-                        currentEntry.kills.push(target.id);
+
+                if (target.isGroup) {
+                    // ── Group damage ─────────────────────────────────────────────
+                    const killed = applyGroupDamage(target, damage);
+                    // Track each killed member for scoreboard
+                    if (killed > 0 && target.tipo === 'enemigo') {
+                        const currentEntry = getCurrentLogEntry();
+                        if (currentEntry) {
+                            if (!currentEntry.kills) currentEntry.kills = [];
+                            for (let k = 0; k < killed; k++) currentEntry.kills.push(target.id);
+                        }
                     }
+                    const suffix = killed > 0 ? ` (×${killed} caídos)` : '';
+                    log.push(`${target.name.split(' ')[0]} −${damage} PG${suffix}`);
+                } else {
+                    // ── Single target damage ─────────────────────────────────────
+                    target.hp.current = Math.max(0, target.hp.current - damage);
+                    if (prevHp > target.hp.current && target.conditions.includes('concentracion')) {
+                        const cd = Math.max(10, Math.floor(damage / 2));
+                        showNotification(`🧠 ${target.name.split(' ')[0]}: Concentración CD ${cd}`, 3500);
+                    }
+                    // Track kills for scoreboard (enemy drops to 0)
+                    if (prevHp > 0 && target.hp.current === 0 && target.tipo === 'enemigo') {
+                        const currentEntry = getCurrentLogEntry();
+                        if (currentEntry) {
+                            if (!currentEntry.kills) currentEntry.kills = [];
+                            currentEntry.kills.push(target.id);
+                        }
+                    }
+                    log.push(`${target.name.split(' ')[0]} −${damage} PG`);
                 }
-                log.push(`${target.name.split(' ')[0]} −${damage} PG`);
+
                 applied++;
                 input.value = '';
             }
@@ -4309,13 +4427,40 @@ function showQuickNpcModal(context, tipo) {
     const overlay = document.createElement('div');
     overlay.id = 'quickEnemyOverlay';
     overlay.className = 'combat-resume-overlay';
+
+    // Extra fields differ by tipo
+    const extraToggle = isEnemy ? `
+        <div class="qe-toggle-row">
+            <label class="qe-toggle-label">
+                <input type="checkbox" id="qeIsGroup" onchange="toggleQeGroupFields()">
+                <span>Es un grupo</span>
+            </label>
+            <div id="qeGroupFields" style="display:none;">
+                <input id="qeGroupSize" class="quick-enemy-input" type="number" placeholder="Nº miembros" min="2" style="margin-top:6px;">
+                <small class="npc-group-hint">PG = HP por miembro</small>
+            </div>
+        </div>` : `
+        <div class="qe-toggle-row">
+            <label class="qe-toggle-label">
+                <input type="checkbox" id="qeIsSummon" onchange="toggleQeSummonFields()">
+                <span>Es una invocación</span>
+            </label>
+            <div id="qeSummonFields" style="display:none;">
+                <select id="qeSummoner" class="quick-enemy-input" style="margin-top:6px;">
+                    <option value="ASTHOR">Asthor (Sirviente)</option>
+                    <option value="ZERO">Zero</option>
+                </select>
+            </div>
+        </div>`;
+
     overlay.innerHTML = `
         <div class="quick-enemy-modal">
             <div class="quick-enemy-title">${icon} ${label} Rápido</div>
             <input id="qeName" class="quick-enemy-input" placeholder="${placeholder}" autocomplete="off">
-            <input id="qeHp" class="quick-enemy-input" type="number" placeholder="PG máximos" min="1">
+            <input id="qeHp" class="quick-enemy-input" type="number" placeholder="${isEnemy ? 'PG máximos (por miembro si es grupo)' : 'PG máximos'}" min="1">
             <input id="qeAc" class="quick-enemy-input" type="number" placeholder="Clase de Armadura" min="1">
             ${context === 'combat' ? `<input id="qeInit" class="quick-enemy-input" type="number" placeholder="Iniciativa (opcional, 0 = al final)">` : ''}
+            ${extraToggle}
 
             <div class="qe-actions-section">
                 <div class="qe-actions-title">⚔️ Acciones (opcional)</div>
@@ -4330,6 +4475,30 @@ function showQuickNpcModal(context, tipo) {
         </div>`;
     document.body.appendChild(overlay);
     document.getElementById('qeName')?.focus();
+}
+
+function toggleQeGroupFields() {
+    const checked = document.getElementById('qeIsGroup')?.checked;
+    const fields  = document.getElementById('qeGroupFields');
+    if (fields) fields.style.display = checked ? 'block' : 'none';
+}
+
+function toggleQeSummonFields() {
+    const checked = document.getElementById('qeIsSummon')?.checked;
+    const fields  = document.getElementById('qeSummonFields');
+    if (fields) fields.style.display = checked ? 'block' : 'none';
+}
+
+function toggleSetupGroupFields(tipo) {
+    const checked = document.getElementById(`${tipo}EsGrupo`)?.checked;
+    const fields  = document.getElementById(`${tipo}GroupFields`);
+    if (fields) fields.style.display = checked ? 'flex' : 'none';
+}
+
+function toggleSetupSummonFields(tipo) {
+    const checked = document.getElementById(`${tipo}EsInvocacion`)?.checked;
+    const fields  = document.getElementById(`${tipo}SummonFields`);
+    if (fields) fields.style.display = checked ? 'block' : 'none';
 }
 
 function addQeAction() {
@@ -4367,32 +4536,51 @@ function _actionTypeToTipo(type) {
 
 function submitQuickEnemy(context) { submitQuickNpc(context); } // backward compat alias
 
-function submitQuickNpc(context) {
+async function submitQuickNpc(context) {
     const tipo = _quickNpcTipo || 'enemigo';
     const isEnemy = tipo === 'enemigo';
     const icon = isEnemy ? '💀' : '💙';
     const name = document.getElementById('qeName')?.value?.trim();
-    const hp = parseInt(document.getElementById('qeHp')?.value) || 10;
-    const ac = parseInt(document.getElementById('qeAc')?.value) || 10;
+    const hp   = parseInt(document.getElementById('qeHp')?.value) || 10;
+    const ac   = parseInt(document.getElementById('qeAc')?.value) || 10;
     const initEl = document.getElementById('qeInit');
     const initiative = initEl ? (parseInt(initEl.value) || 0) : 0;
     if (!name) { showNotification('⚠️ Introduce un nombre', 2000); return; }
+
+    // ── Group / summon flags ──────────────────────────────────────────────────
+    const isGroup   = !!(document.getElementById('qeIsGroup')?.checked);
+    const groupSize = isGroup ? (parseInt(document.getElementById('qeGroupSize')?.value) || 2) : 1;
+    const isSummon  = !!(document.getElementById('qeIsSummon')?.checked);
+    const summoner  = isSummon ? (document.getElementById('qeSummoner')?.value || '') : '';
+
+    // ── Zero one-summon check (frontend fast-path) ────────────────────────────
+    if (isSummon && summoner === 'ZERO') {
+        const existingZero = combatState.participants.find(p =>
+            p.isSummon && p.summoner === 'ZERO' && (p.hp.current > 0 || (p.totalHp ?? 0) > 0)
+        );
+        if (existingZero) {
+            showNotification('⚠️ Zero ya tiene una invocación activa', 3000);
+            return;
+        }
+    }
 
     // Collect actions defined in the form
     const actions = getQeActions();
     const combateExtra = actions.map(a => ({
         nombre: a.name,
         tipo:   _actionTypeToTipo(a.type),
-        atk:    '',
-        dado:   '',
-        desc:   a.description,
+        atk: '', dado: '', desc: a.description,
     }));
+
+    // Total HP for groups
+    const totalHp    = hp * groupSize;
+    const displayHp  = isGroup ? totalHp : hp;
 
     const uid = `qe_${Date.now()}`;
     const charData = {
         id: uid, tipo, nombre: name,
         clase: isEnemy ? 'Enemigo' : 'Aliado NPC', nivel: '—', imagen: '',
-        resumen: { HP: String(hp), CA: String(ac), Velocidad: '30ft' },
+        resumen: { HP: String(displayHp), CA: String(ac), Velocidad: '30ft' },
         combateExtra, conjuros: [],
     };
     window.characterData[uid] = charData;
@@ -4400,35 +4588,73 @@ function submitQuickNpc(context) {
 
     // Persist to backend (fire-and-forget; doesn't block the UI)
     if (isOnlineCombat && activeCombatId) {
-        fetch(`${API_BASE}/api/combat-entities`, {
-            method:  'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                name,
-                type:      isEnemy ? 'ENEMY' : 'ALLY',
-                stats:     { hp, ac, initiative },
-                actions,
-                combatId:  activeCombatId,
-                sessionId: activeJoinCode || '',
-            }),
-        }).catch(e => console.warn('[combat-entities] save failed:', e.message));
+        try {
+            const resp = await fetch(`${API_BASE}/api/combat-entities`, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name,
+                    type:      isEnemy ? 'ENEMY' : 'ALLY',
+                    stats:     { hp, ac, initiative },
+                    actions,
+                    combatId:  activeCombatId,
+                    sessionId: activeJoinCode || '',
+                    isGroup, groupSize,
+                    membersRemaining: groupSize,
+                    hpPerMember:      hp,
+                    totalHp,
+                    currentMemberHp:  hp,
+                    isSummon, summoner,
+                    summonedBeforeCombat: false,
+                }),
+            });
+            if (!resp.ok) {
+                const err = await resp.json().catch(() => ({}));
+                if (err.code === 'ZERO_SUMMON_LIMIT') {
+                    showNotification('⚠️ Zero ya tiene una invocación activa', 3000);
+                    return;
+                }
+            }
+        } catch (e) {
+            console.warn('[combat-entities] save failed:', e.message);
+        }
     }
 
+    // Build participant object
+    const participant = {
+        id: uid, name,
+        initiative,
+        hp: { current: displayHp, max: displayHp },
+        ac: String(ac), baseAc: String(ac),
+        speed: '30ft', baseSpeed: '30ft',
+        conditions: [], note: '', charData,
+        demonicForm: false, tipo,
+        customActions: [],
+        // Group fields
+        isGroup, groupSize,
+        membersRemaining: groupSize,
+        hpPerMember: hp,
+        totalHp,
+        currentMemberHp: hp,
+        // Summon fields
+        isSummon, summoner,
+        summonedBeforeCombat: false,
+    };
+
     if (context === 'setup') {
-        combatState.selectedIds.push(uid);
-        renderCombatSetup();
+        // Push to setupNpcs (same path as the NPC builder form)
+        // so beginCombatFromSetup picks up group/summon fields correctly.
+        setupNpcs.push({
+            tipo, nombre: name, pg: hp, ca: ac, initiative,
+            acciones: '', adicionales: '', reacciones: '',
+            isGroup, groupSize,
+            isSummon, summoner, summonedBeforeCombat: false,
+            _uid: uid,
+        });
+        renderSetupNpcList(tipo);
+        _updateSetupCount();
         showNotification(`${icon} ${name} añadido a la selección`, 2000);
     } else {
-        const participant = {
-            id: uid, name,
-            initiative,
-            hp: { current: hp, max: hp },
-            ac: String(ac), baseAc: String(ac),
-            speed: '30ft', baseSpeed: '30ft',
-            conditions: [], note: '', charData,
-            demonicForm: false, tipo,
-            customActions: [],
-        };
         combatState.participants.push(participant);
         combatState.participants.sort((a, b) => (b.initiative || 0) - (a.initiative || 0));
         saveCombatState();
@@ -4470,13 +4696,32 @@ function addSetupNpc(tipo) {
 
     if (!nombre) { showNotification('⚠️ Introduce un nombre', 2000); return; }
 
-    setupNpcs.push({ tipo, nombre, pg, ca, initiative, acciones, adicionales, reacciones });
+    // ── Group (enemies only) ──────────────────────────────────────────────────
+    const isGroup   = tipo === 'enemigo' && !!(document.getElementById('enemigoEsGrupo')?.checked);
+    const groupSize = isGroup ? (parseInt(document.getElementById('enemigoGroupSize')?.value) || 2) : 1;
+
+    // ── Summon (allies only) ──────────────────────────────────────────────────
+    const isSummon  = tipo === 'aliado' && !!(document.getElementById('aliadoEsInvocacion')?.checked);
+    const summoner  = isSummon ? (document.getElementById('aliadoSumoner')?.value || '') : '';
+
+    setupNpcs.push({
+        tipo, nombre, pg, ca, initiative,
+        acciones, adicionales, reacciones,
+        isGroup, groupSize,
+        isSummon, summoner,
+        summonedBeforeCombat: isSummon, // if added in setup, it was summoned before combat
+    });
 
     // Clear form fields
     ['Nombre', 'Pg', 'Ca', 'Init', 'Acciones', 'Adicionales', 'Reacciones'].forEach(f => {
         const el = document.getElementById(`${p}${f}`);
         if (el) el.value = '';
     });
+    // Reset toggles
+    const groupChk  = document.getElementById('enemigoEsGrupo');
+    const summonChk = document.getElementById('aliadoEsInvocacion');
+    if (groupChk)  { groupChk.checked  = false; toggleSetupGroupFields('enemigo');  }
+    if (summonChk) { summonChk.checked = false; toggleSetupSummonFields('aliado'); }
 
     renderSetupNpcList(tipo);
     _updateSetupCount();
@@ -4495,10 +4740,12 @@ function renderSetupNpcList(tipo) {
         const idx = setupNpcs.indexOf(npc);
         const actParts = [npc.acciones, npc.adicionales, npc.reacciones].filter(Boolean);
         const actStr = actParts.join(' | ');
+        const groupLabel  = npc.isGroup  ? ` · 👥 ${npc.groupSize}×${npc.pg}PG` : '';
+        const summonLabel = npc.isSummon ? ` · ✨ ${npc.summoner}` : '';
         return `<div class="npc-builder-item">
             <div class="npc-item-info">
                 <span class="npc-item-name">${npc.nombre}</span>
-                <span class="npc-item-stats">❤️ ${npc.pg} · 🛡️ ${npc.ca} · Init ${npc.initiative}</span>
+                <span class="npc-item-stats">❤️ ${npc.pg} · 🛡️ ${npc.ca} · Init ${npc.initiative}${groupLabel}${summonLabel}</span>
                 ${actStr ? `<span class="npc-item-actions">⚔️ ${actStr}</span>` : ''}
             </div>
             <button class="npc-remove-btn" onclick="removeSetupNpc(${idx})">✕</button>
@@ -4547,6 +4794,13 @@ function loadSavedCombatIfAny() {
                 p.charData = window.characterData[p.id] || null;
             }
             if (!p.customActions) p.customActions = []; // migration for old saves
+            // Migration: ensure group fields exist
+            if (p.isGroup) {
+                if (p.totalHp          === undefined) p.totalHp          = p.hp.current;
+                if (p.hpPerMember      === undefined) p.hpPerMember      = p.hp.max / (p.groupSize || 1);
+                if (p.membersRemaining === undefined) p.membersRemaining = Math.ceil(p.totalHp / (p.hpPerMember || 1));
+                if (p.currentMemberHp  === undefined) p.currentMemberHp  = p.hp.current % (p.hpPerMember || 1) || p.hpPerMember;
+            }
         });
         Object.assign(combatState, saved);
         showCombatResumePrompt();

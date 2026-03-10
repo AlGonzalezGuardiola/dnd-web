@@ -13,8 +13,8 @@
         href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link rel="stylesheet" href="style.css?v=20260310l">
-    <link rel="stylesheet" href="mobile.css?v=20260310l" media="screen and (max-width: 768px)">
+    <link rel="stylesheet" href="style.css?v=20260310m">
+    <link rel="stylesheet" href="mobile.css?v=20260310m" media="screen and (max-width: 768px)">
 </head>
 
 <body>
@@ -151,6 +151,18 @@
                     <input id="aliadoCa"     class="npc-input npc-input-sm" type="number" placeholder="CA" min="1">
                     <input id="aliadoInit"   class="npc-input npc-input-sm" type="number" placeholder="Init">
                 </div>
+                <div class="npc-builder-row npc-toggle-row">
+                    <label class="npc-toggle-label">
+                        <input type="checkbox" id="aliadoEsInvocacion" onchange="toggleSetupSummonFields('aliado')">
+                        <span>Es una invocación</span>
+                    </label>
+                    <div id="aliadoSummonFields" style="display:none;">
+                        <select id="aliadoSumoner" class="npc-input npc-input-sm">
+                            <option value="ASTHOR">Asthor (Sirviente)</option>
+                            <option value="ZERO">Zero</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="npc-builder-row npc-actions-row">
                     <div class="npc-action-group">
                         <label class="npc-action-label">⚔️ Acciones</label>
@@ -183,6 +195,16 @@
                     <input id="enemigoPg"     class="npc-input npc-input-sm" type="number" placeholder="PG" min="1">
                     <input id="enemigoCa"     class="npc-input npc-input-sm" type="number" placeholder="CA" min="1">
                     <input id="enemigoInit"   class="npc-input npc-input-sm" type="number" placeholder="Init">
+                </div>
+                <div class="npc-builder-row npc-toggle-row">
+                    <label class="npc-toggle-label">
+                        <input type="checkbox" id="enemigoEsGrupo" onchange="toggleSetupGroupFields('enemigo')">
+                        <span>Es un grupo</span>
+                    </label>
+                    <div id="enemigoGroupFields" style="display:none; gap:8px; align-items:center; flex-wrap:wrap;">
+                        <input id="enemigoGroupSize" class="npc-input npc-input-sm" type="number" placeholder="Nº miembros" min="2">
+                        <small class="npc-group-hint">PG = HP por miembro</small>
+                    </div>
                 </div>
                 <div class="npc-builder-row npc-actions-row">
                     <div class="npc-action-group">
@@ -463,7 +485,7 @@
 
     <script src="characters.js?v=20260310l"></script>
     <script src="data.js?v=20260310l"></script>
-    <script src="script.js?v=20260310l"></script>
+    <script src="script.js?v=20260310m"></script>
 </body>
 
 </html>
