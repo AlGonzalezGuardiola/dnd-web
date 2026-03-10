@@ -13,8 +13,8 @@
         href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link rel="stylesheet" href="style.css?v=20260310d">
-    <link rel="stylesheet" href="mobile.css?v=20260310d" media="screen and (max-width: 768px)">
+    <link rel="stylesheet" href="style.css?v=20260310e">
+    <link rel="stylesheet" href="mobile.css?v=20260310e" media="screen and (max-width: 768px)">
 </head>
 
 <body>
@@ -57,6 +57,30 @@
             <div class="card" id="cardCombatMode">
                 <div class="card-title">⚔️ Modo Combate</div>
                 <p>Inicia un combate en partida. Selecciona jugador o enemigo.</p>
+            </div>
+            <div class="card card-online" id="cardOnlineCombat" onclick="showOnlineLobby()">
+                <div class="card-title">🌐 Combate en Línea</div>
+                <p>Partida sincronizada en tiempo real. Juega desde varios dispositivos a la vez.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Online Combat Lobby -->
+    <section id="onlineLobbyView" class="character-section" style="display:none;">
+        <h1 class="landing-title">🌐 Combate en Línea</h1>
+        <div class="online-lobby">
+            <div class="online-lobby-card" onclick="startOnlineCombatSetup()">
+                <div class="online-lobby-icon">⚔️</div>
+                <div class="online-lobby-title">Crear partida</div>
+                <div class="online-lobby-desc">Configura el combate y obtén un código para compartir con los demás jugadores.</div>
+                <button class="btn-combat-primary" style="margin-top:16px">Crear sala</button>
+            </div>
+            <div class="online-lobby-card">
+                <div class="online-lobby-icon">🔗</div>
+                <div class="online-lobby-title">Unirse a partida</div>
+                <div class="online-lobby-desc">Pega el link o el ID que te hayan compartido.</div>
+                <input id="onlineJoinInput" class="online-join-input" placeholder="https://algonzalez.cloud/dnd/web/?combat=..." autocomplete="off">
+                <button class="btn-combat-primary" style="margin-top:12px" onclick="joinOnlineSession()">Unirse</button>
             </div>
         </div>
     </section>
@@ -380,9 +404,9 @@
         <button id="diceToggleBtn" class="dice-toggle-btn" title="Lanzador de dados" aria-label="Abrir lanzador de dados">🎲</button>
     </div>
 
-    <script src="characters.js?v=20260310d"></script>
-    <script src="data.js?v=20260310d"></script>
-    <script src="script.js?v=20260310d"></script>
+    <script src="characters.js?v=20260310e"></script>
+    <script src="data.js?v=20260310e"></script>
+    <script src="script.js?v=20260310e"></script>
 </body>
 
 </html>

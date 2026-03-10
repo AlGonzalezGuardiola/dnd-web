@@ -42,7 +42,6 @@ async function init() {
         updateTaskMd('Initialize');
         initRole();
         loadSavedCombatIfAny();
-        initCombatSync(); // auto-join if ?combat=ID is in the URL
     } catch (error) {
         console.error('Error loading data:', error);
         showWelcomeScreen();
@@ -715,6 +714,7 @@ const CLIENT_ID     = Math.random().toString(36).slice(2, 10); // unique per tab
 let activeCombatId = localStorage.getItem(COMBAT_ID_KEY) || null;
 let sseSource      = null;
 let _saveTimer     = null;
+let isOnlineCombat = false; // true solo en modo Combate en Línea
 
 // Debounced PUT to API — called after every saveCombatState()
 function saveToApi() {
@@ -822,16 +822,80 @@ function renderCombatShareLink() {
     el.style.display = 'flex';
 }
 
-// Players: called on init() — auto-join if ?combat=ID is in the URL
-function initCombatSync() {
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get('combat');
-    if (!id) return;
-    activeCombatId = id;
-    localStorage.setItem(COMBAT_ID_KEY, id);
-    connectToSSE(id);
-    combatModeActive = true;
-    setView('combatManager');
+// ── Combate en Línea ─────────────────────────────────────────────────────────
+
+function showOnlineLobby() {
+    setView('onlineLobby');
+    document.getElementById('onlineJoinError')?.remove();
+}
+
+// Activar modo online y redirigir al setup normal de combate
+function startOnlineCombatSetup() {
+    isOnlineCombat = true;
+    // Forzar rol master para el creador
+    gameRole = { type: 'master', characterId: null };
+    localStorage.setItem(ROLE_KEY, JSON.stringify(gameRole));
+    updateRoleIndicator();
+    showCombatSetup();
+}
+
+// Unirse a una partida existente por código/URL
+async function joinOnlineSession() {
+    const input = document.getElementById('onlineJoinInput')?.value?.trim() || '';
+    // Extraer el ID: puede ser URL completa o ID directo (24 chars hex)
+    const idMatch = input.match(/([a-f0-9]{24})/i);
+    if (!idMatch) {
+        showOnlineError('Código inválido — pega la URL o el ID de 24 caracteres');
+        return;
+    }
+    const id = idMatch[1];
+    try {
+        const res = await fetch(`${API_BASE}/api/combats/${id}`);
+        if (!res.ok) { showOnlineError('Partida no encontrada'); return; }
+        const data = await res.json();
+        if (!data.isActive) { showOnlineError('Esta partida ya ha terminado'); return; }
+
+        // Entrar como master (control total)
+        isOnlineCombat = true;
+        gameRole = { type: 'master', characterId: null };
+        localStorage.setItem(ROLE_KEY, JSON.stringify(gameRole));
+        updateRoleIndicator();
+
+        // Aplicar estado remoto
+        activeCombatId = id;
+        localStorage.setItem(COMBAT_ID_KEY, id);
+        applyRemoteState({ ...data, _clientId: null }); // _clientId null → fuerza aplicar
+        combatModeActive = true;
+        connectToSSE(id);
+        setView('combatManager');
+        renderCombatManager();
+        renderCombatShareLink();
+    } catch (e) {
+        showOnlineError('Error de conexión — comprueba que el servidor está activo');
+    }
+}
+
+function showOnlineError(msg) {
+    const el = document.getElementById('onlineLobbyView');
+    if (!el) return;
+    let err = document.getElementById('onlineJoinError');
+    if (!err) {
+        err = document.createElement('div');
+        err.id = 'onlineJoinError';
+        err.className = 'online-error';
+        el.appendChild(err);
+    }
+    err.textContent = '⚠️ ' + msg;
+}
+
+// Limpiar estado online al salir del combate
+function clearOnlineSession() {
+    isOnlineCombat = false;
+    activeCombatId = null;
+    localStorage.removeItem(COMBAT_ID_KEY);
+    if (sseSource) { sseSource.close(); sseSource = null; }
+    const el = document.getElementById('combatShareLink');
+    if (el) el.style.display = 'none';
 }
 
 // ============================================
@@ -2369,7 +2433,7 @@ function beginCombat() {
     saveCombatState();
     setView('combatManager');
     renderCombatManager();
-    if (isMaster()) startCombatSession(); // create combat in DB + get share link
+    if (isOnlineCombat) startCombatSession(); // solo en modo online: crear sesión en BD
 }
 
 function parseSetupActions(str, tipo) {
@@ -4143,7 +4207,7 @@ function saveCombatState() {
         participants: combatState.participants.map(p => ({ ...p, charData: null })),
     };
     try { localStorage.setItem(COMBAT_SAVE_KEY, JSON.stringify(toSave)); } catch (e) {}
-    saveToApi(); // sync to MongoDB → SSE broadcast to all connected clients
+    if (isOnlineCombat) saveToApi(); // solo en modo online
 }
 
 function clearSavedCombat() {
@@ -4225,6 +4289,8 @@ function setView(viewName) {
     document.getElementById('combatInitSection').style.display = 'none';
     document.getElementById('combatManagerSection').style.display = 'none';
     document.getElementById('welcomeScreen').style.display = 'none';
+    const onlineLobby = document.getElementById('onlineLobbyView');
+    if (onlineLobby) onlineLobby.style.display = 'none';
 
     // Also hide the character sheet if it was open
     const sheetContainer = document.getElementById('characterSheetContainer');
@@ -4278,6 +4344,14 @@ function setView(viewName) {
             if (editorToolbar) editorToolbar.style.display = 'none';
             if (hud) hud.style.display = 'none';
             if (diceWidget) diceWidget.style.display = 'flex';
+            break;
+        case 'onlineLobby':
+            document.getElementById('onlineLobbyView').style.display = 'flex';
+            if (editorToolbar) editorToolbar.style.display = 'none';
+            if (hud) hud.style.display = 'flex';
+            if (diceWidget) diceWidget.style.display = 'none';
+            document.getElementById('breadcrumbs').textContent = '🌐 Combate en Línea';
+            document.getElementById('btnBack').style.display = 'flex';
             break;
     }
 }
