@@ -783,6 +783,7 @@ function connectToSSE(id) {
 
 // Master: POST to create a new combat session, then open SSE
 async function startCombatSession() {
+    showNotification('⏳ Creando sesión online…', 2000);
     try {
         const body = {
             participants:      combatState.participants.map(p => ({ ...p, charData: null })),
@@ -800,25 +801,67 @@ async function startCombatSession() {
             headers: { 'Content-Type': 'application/json' },
             body:    JSON.stringify(body),
         });
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            showNotification(`❌ Error al crear sesión: ${err.error || res.status}`, 4000);
+            return;
+        }
         const data = await res.json();
         activeCombatId = String(data.combatId);
         localStorage.setItem(COMBAT_ID_KEY, activeCombatId);
         connectToSSE(activeCombatId);
         renderCombatShareLink();
-    } catch (e) { console.warn('[sync] startCombatSession failed:', e.message); }
+        showOnlineCodeModal(activeCombatId); // modal prominente con el código
+    } catch (e) {
+        console.warn('[sync] startCombatSession failed:', e.message);
+        showNotification(`❌ Sin conexión con el servidor (${e.message})`, 5000);
+    }
 }
 
-// Render the share link in the combat top bar (master only)
+// Modal prominente que muestra el código de sala al crear una partida
+function showOnlineCodeModal(combatId) {
+    document.getElementById('onlineCodeModal')?.remove();
+    const url  = `${window.location.origin}${window.location.pathname}?combat=${combatId}`;
+    const code = combatId.slice(-6).toUpperCase();
+    // Auto-copiar al portapapeles
+    navigator.clipboard?.writeText(url).catch(() => {});
+    const modal = document.createElement('div');
+    modal.id = 'onlineCodeModal';
+    modal.className = 'online-code-modal-overlay';
+    modal.innerHTML = `
+        <div class="online-code-modal">
+            <div class="online-code-modal-title">🌐 Partida creada</div>
+            <div class="online-code-modal-subtitle">Comparte este código con los demás jugadores</div>
+            <div class="online-code-big">${code}</div>
+            <div class="online-code-url">${url}</div>
+            <div class="online-code-modal-btns">
+                <button class="online-code-copy-btn"
+                        onclick="navigator.clipboard.writeText('${url}').then(()=>showNotification('✅ Link copiado',1500))">
+                    📋 Copiar link
+                </button>
+                <button class="online-code-copy-btn online-code-copy-btn-sec"
+                        onclick="navigator.clipboard.writeText('${code}').then(()=>showNotification('✅ Código copiado',1500))">
+                    🔢 Copiar código
+                </button>
+            </div>
+            <div class="online-code-hint">El link ya se ha copiado automáticamente al portapapeles</div>
+            <button class="online-code-close-btn" onclick="document.getElementById('onlineCodeModal').remove()">Entrar al combate →</button>
+        </div>`;
+    document.body.appendChild(modal);
+}
+
+// Render the share link in the combat top bar (master only, recordatorio siempre visible)
 function renderCombatShareLink() {
     const el = document.getElementById('combatShareLink');
     if (!el || !activeCombatId) return;
-    const url = `${window.location.origin}${window.location.pathname}?combat=${activeCombatId}`;
+    const url  = `${window.location.origin}${window.location.pathname}?combat=${activeCombatId}`;
     const code = activeCombatId.slice(-6).toUpperCase();
     el.innerHTML = `
+        <span class="share-link-label">🌐</span>
         <span class="share-link-code" title="Código de sala">${code}</span>
         <button class="share-link-copy"
-                onclick="navigator.clipboard.writeText('${url}').then(()=>showNotification('✅ Link copiado — compártelo con los jugadores',2000))"
-                title="Copiar link para jugadores">📋</button>`;
+                onclick="navigator.clipboard.writeText('${url}').then(()=>showNotification('✅ Link copiado',1500));showOnlineCodeModal('${activeCombatId}')"
+                title="Ver código y copiar link">📋</button>`;
     el.style.display = 'flex';
 }
 
