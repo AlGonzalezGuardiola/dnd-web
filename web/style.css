@@ -3398,7 +3398,7 @@ body.view-map .hud {
     display: none;
     flex-direction: column;
     min-width: 210px;
-    z-index: 300;
+    z-index: 1200;   /* above combat-body content + clv-header */
     box-shadow: 0 8px 28px rgba(0,0,0,0.55);
     overflow: hidden;
 }
@@ -3410,9 +3410,10 @@ body.view-map .hud {
     border-bottom: 1px solid rgba(255,255,255,0.05);
     color: var(--text-primary);
     text-align: left;
-    padding: 11px 16px;
+    padding: 14px 16px;   /* larger hit area */
     font-size: 14px;
     cursor: pointer;
+    touch-action: manipulation;
     transition: background 0.12s;
 }
 .options-dropdown button:last-child { border-bottom: none; }
@@ -5510,14 +5511,17 @@ body.role-jugador .master-only { display: none !important; }
     flex-shrink: 0;
 }
 .clv-back-btn {
-    padding: 8px 16px; border-radius: 10px; cursor: pointer;
-    font-size: 13px; font-weight: 600;
+    padding: 10px 20px; border-radius: 10px; cursor: pointer;
+    font-size: 14px; font-weight: 600;
     background: rgba(255,255,255,0.06);
     border: 1px solid var(--border-color);
     color: var(--text-primary); transition: background 0.15s;
     white-space: nowrap;
+    touch-action: manipulation;  /* prevents 300ms delay on mobile */
+    -webkit-tap-highlight-color: rgba(255,255,255,0.1);
 }
-.clv-back-btn:hover { background: rgba(255,255,255,0.12); }
+.clv-back-btn:hover  { background: rgba(255,255,255,0.12); }
+.clv-back-btn:active { background: rgba(255,255,255,0.20); }
 .clv-title {
     font-family: var(--font-heading); font-size: 18px;
     color: var(--accent-gold); font-weight: 700;
@@ -5569,3 +5573,22 @@ body.role-jugador .master-only { display: none !important; }
     .clv-title  { font-size: 15px; }
     .clv-body   { padding: 12px; }
 }
+
+/* ── v20260310o: group-row in setup + quick-add modal ───────── */
+.npc-group-hint {
+    display: block;
+    font-size: 11px; color: var(--text-muted);
+    font-style: italic; padding: 2px 0 4px;
+    opacity: 0.75;
+}
+.qe-group-row {
+    display: flex; flex-direction: column; gap: 4px;
+    padding: 4px 0;
+}
+/* Make ☰ toggle button bigger tap target on mobile */
+.options-toggle {
+    min-width: 44px; min-height: 44px;
+    touch-action: manipulation;
+}
+/* Ensure the combat toolbar stacks above the body content */
+.combat-toolbar { position: relative; z-index: 100; }
