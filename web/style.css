@@ -5017,3 +5017,70 @@ body.role-jugador .master-only { display: none !important; }
     border-radius: 8px;
     width: 100%;
 }
+
+/* ── Modal de código de sala (Combate en Línea) ─────────────────────────────── */
+.online-code-modal-overlay {
+    position: fixed; inset: 0; z-index: 9998;
+    background: rgba(5,8,15,0.85);
+    display: flex; align-items: center; justify-content: center;
+    backdrop-filter: blur(6px);
+}
+.online-code-modal {
+    background: var(--bg-panel);
+    border: 1px solid rgba(76,175,80,0.4);
+    border-radius: 20px;
+    padding: 40px 36px;
+    text-align: center;
+    max-width: 420px; width: 90%;
+    box-shadow: 0 0 40px rgba(76,175,80,0.2);
+}
+.online-code-modal-title {
+    font-family: var(--font-heading);
+    font-size: 22px; color: #81c784; margin-bottom: 6px;
+}
+.online-code-modal-subtitle {
+    color: var(--text-muted); font-size: 13px; margin-bottom: 28px;
+}
+.online-code-big {
+    font-size: 52px; font-weight: 900;
+    letter-spacing: 0.18em;
+    color: #fff;
+    font-family: var(--font-heading);
+    background: rgba(76,175,80,0.1);
+    border: 2px solid rgba(76,175,80,0.35);
+    border-radius: 14px; padding: 16px 24px;
+    margin-bottom: 14px;
+}
+.online-code-url {
+    font-size: 11px; color: var(--text-muted);
+    word-break: break-all; margin-bottom: 20px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 8px; padding: 8px;
+}
+.online-code-modal-btns {
+    display: flex; gap: 10px; justify-content: center; margin-bottom: 14px;
+}
+.online-code-copy-btn {
+    padding: 10px 18px; border-radius: 10px; cursor: pointer;
+    font-size: 13px; font-weight: 600; border: 1px solid rgba(76,175,80,0.5);
+    background: rgba(76,175,80,0.15); color: #81c784;
+    transition: all 0.15s;
+}
+.online-code-copy-btn:hover { background: rgba(76,175,80,0.28); }
+.online-code-copy-btn-sec {
+    background: rgba(255,255,255,0.06); border-color: var(--border-color); color: var(--text-secondary);
+}
+.online-code-copy-btn-sec:hover { background: rgba(255,255,255,0.12); }
+.online-code-hint {
+    font-size: 11px; color: var(--text-muted); margin-bottom: 24px; opacity: 0.7;
+}
+.online-code-close-btn {
+    display: block; width: 100%; padding: 13px;
+    border-radius: 12px; cursor: pointer; font-size: 14px; font-weight: 700;
+    background: rgba(76,175,80,0.2); border: 1px solid rgba(76,175,80,0.5);
+    color: #81c784; transition: all 0.15s;
+}
+.online-code-close-btn:hover { background: rgba(76,175,80,0.35); }
+
+/* share-link label icon */
+.share-link-label { font-size: 12px; opacity: 0.8; }
