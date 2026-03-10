@@ -1409,10 +1409,21 @@ function setupDiceRoller() {
 // ============================================
 // Combat Options Menu (sandwich ☰)
 // ============================================
+
+// Helper: close the sandwich menu from anywhere (menu-item buttons call this)
+function _closeOptionsMenu() {
+    document.getElementById('optionsMenu')?.classList.remove('open');
+    document.getElementById('optionsMenuToggle')?.classList.remove('open');
+}
+
 function setupCombatOptionsMenu() {
     const toggleBtn = document.getElementById('optionsMenuToggle');
     const menu      = document.getElementById('optionsMenu');
     if (!toggleBtn || !menu) return;
+
+    // Prevent duplicate listeners by flagging the element
+    if (toggleBtn.dataset.menuBound) return;
+    toggleBtn.dataset.menuBound = '1';
 
     toggleBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -1420,12 +1431,12 @@ function setupCombatOptionsMenu() {
         toggleBtn.classList.toggle('open', isOpen);
     });
 
+    // Close when clicking outside — use capture phase to run before other handlers
     document.addEventListener('click', (e) => {
-        if (!menu.contains(e.target) && e.target !== toggleBtn) {
-            menu.classList.remove('open');
-            toggleBtn.classList.remove('open');
+        if (!menu.contains(e.target) && !toggleBtn.contains(e.target)) {
+            _closeOptionsMenu();
         }
-    });
+    }, true /* capture */);
 }
 
 function rollDie(sides) {
@@ -3959,8 +3970,12 @@ function openCombatLogView() {
 }
 
 function closeCombatLogView() {
+    // Guard: only navigate back if combat is still active
+    if (!combatState.isActive) { setView('landing'); return; }
     setView('combatManager');
-    renderCombatManager();
+    // renderCombatManager is called inside setView via the combatManager case? No —
+    // setView just shows/hides DOM. Call render explicitly.
+    try { renderCombatManager(); } catch (e) { console.warn('renderCombatManager error:', e); }
 }
 
 function renderCombatLogView() {
@@ -4472,15 +4487,10 @@ function showQuickNpcModal(context, tipo) {
 
     // Extra fields differ by tipo
     const extraToggle = isEnemy ? `
-        <div class="qe-toggle-row">
-            <label class="qe-toggle-label">
-                <input type="checkbox" id="qeIsGroup" onchange="toggleQeGroupFields()">
-                <span>Es un grupo</span>
-            </label>
-            <div id="qeGroupFields" style="display:none;">
-                <input id="qeGroupSize" class="quick-enemy-input" type="number" placeholder="Nº miembros" min="2" style="margin-top:6px;">
-                <small class="npc-group-hint">PG = HP por miembro</small>
-            </div>
+        <div class="qe-group-row">
+            <input id="qeGroupSize" class="quick-enemy-input" type="number" placeholder="Nº miembros (grupo)" min="1"
+                   title="Pon 2 o más para crear un grupo. PG = HP por miembro.">
+            <small class="npc-group-hint">Nº miembros ≥ 2 → grupo (PG = HP/miembro)</small>
         </div>` : `
         <div class="qe-toggle-row">
             <label class="qe-toggle-label">
@@ -4601,8 +4611,9 @@ async function submitQuickNpc(context) {
     if (!name) { showNotification('⚠️ Introduce un nombre', 2000); return; }
 
     // ── Group / summon flags ──────────────────────────────────────────────────
-    const isGroup   = !!(document.getElementById('qeIsGroup')?.checked);
-    const groupSize = isGroup ? (parseInt(document.getElementById('qeGroupSize')?.value) || 2) : 1;
+    const rawQeGroupSize = parseInt(document.getElementById('qeGroupSize')?.value) || 1;
+    const isGroup   = isEnemy && rawQeGroupSize >= 2;
+    const groupSize = isGroup ? rawQeGroupSize : 1;
     const isSummon  = !!(document.getElementById('qeIsSummon')?.checked);
     const summoner  = isSummon ? (document.getElementById('qeSummoner')?.value || '') : '';
 
@@ -4761,9 +4772,10 @@ function addSetupNpc(tipo) {
 
     if (!nombre) { showNotification('⚠️ Introduce un nombre', 2000); return; }
 
-    // ── Group (enemies only) ──────────────────────────────────────────────────
-    const isGroup   = tipo === 'enemigo' && !!(document.getElementById('enemigoEsGrupo')?.checked);
-    const groupSize = isGroup ? (parseInt(document.getElementById('enemigoGroupSize')?.value) || 2) : 1;
+    // ── Group (enemies only) — just read the nº miembros field; ≥2 → group ────
+    const rawGroupSize = parseInt(document.getElementById('enemigoGroupSize')?.value) || 1;
+    const isGroup   = tipo === 'enemigo' && rawGroupSize >= 2;
+    const groupSize = isGroup ? rawGroupSize : 1;
 
     // ── Summon (allies only) ──────────────────────────────────────────────────
     const isSummon  = tipo === 'aliado' && !!(document.getElementById('aliadoEsInvocacion')?.checked);
@@ -4792,10 +4804,11 @@ function addSetupNpc(tipo) {
         const el = document.getElementById(`${p}${f}`);
         if (el) el.value = '';
     });
-    // Reset toggles
-    const groupChk  = document.getElementById('enemigoEsGrupo');
+    // Clear group size (enemies)
+    const groupSizeEl = document.getElementById('enemigoGroupSize');
+    if (groupSizeEl) groupSizeEl.value = '';
+    // Reset summon toggle (allies)
     const summonChk = document.getElementById('aliadoEsInvocacion');
-    if (groupChk)  { groupChk.checked  = false; toggleSetupGroupFields('enemigo');  }
     if (summonChk) { summonChk.checked = false; toggleSetupSummonFields('aliado'); }
 
     renderSetupNpcList(tipo);

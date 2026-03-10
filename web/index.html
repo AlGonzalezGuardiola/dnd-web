@@ -13,8 +13,8 @@
         href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link rel="stylesheet" href="style.css?v=20260310n">
-    <link rel="stylesheet" href="mobile.css?v=20260310n" media="screen and (max-width: 768px)">
+    <link rel="stylesheet" href="style.css?v=20260310o">
+    <link rel="stylesheet" href="mobile.css?v=20260310o" media="screen and (max-width: 768px)">
 </head>
 
 <body>
@@ -191,21 +191,14 @@
             <div class="npc-builder-section enemigo-builder">
                 <div class="npc-builder-title">💀 Añadir Enemigo</div>
                 <div class="npc-builder-row">
-                    <input id="enemigoNombre" class="npc-input" type="text" placeholder="Nombre (ej: Goblin)" autocomplete="off">
-                    <input id="enemigoPg"     class="npc-input npc-input-sm" type="number" placeholder="PG" min="1">
-                    <input id="enemigoCa"     class="npc-input npc-input-sm" type="number" placeholder="CA" min="1">
-                    <input id="enemigoInit"   class="npc-input npc-input-sm" type="number" placeholder="Init">
+                    <input id="enemigoNombre"    class="npc-input" type="text" placeholder="Nombre (ej: Goblin)" autocomplete="off">
+                    <input id="enemigoPg"         class="npc-input npc-input-sm" type="number" placeholder="PG" min="1">
+                    <input id="enemigoCa"         class="npc-input npc-input-sm" type="number" placeholder="CA" min="1">
+                    <input id="enemigoInit"        class="npc-input npc-input-sm" type="number" placeholder="Init">
+                    <input id="enemigoGroupSize"   class="npc-input npc-input-sm" type="number" placeholder="Grupo (nº)" min="1"
+                           title="Número de miembros del grupo. Deja en blanco o pon 1 para un enemigo individual.">
                 </div>
-                <div class="npc-toggle-row">
-                    <label class="npc-toggle-label">
-                        <input type="checkbox" id="enemigoEsGrupo" onchange="toggleSetupGroupFields('enemigo')">
-                        <span>Es un grupo</span>
-                    </label>
-                    <div id="enemigoGroupFields" style="display:none; margin-top:6px; display:none;">
-                        <input id="enemigoGroupSize" class="npc-input npc-input-sm" type="number" placeholder="Nº miembros" min="2">
-                        <small class="npc-group-hint" style="display:block;margin-top:4px;">PG = HP por miembro</small>
-                    </div>
-                </div>
+                <small class="npc-group-hint">💡 Rellena «Grupo» con 2+ para crear un grupo (PG = HP por miembro)</small>
                 <div class="npc-builder-row npc-actions-row">
                     <div class="npc-action-group">
                         <label class="npc-action-label">⚔️ Acciones</label>
@@ -263,11 +256,11 @@
                 <div class="combat-options-menu">
                     <button class="options-toggle" id="optionsMenuToggle" title="Opciones">☰</button>
                     <div class="options-dropdown" id="optionsMenu">
-                        <button onclick="confirmEndCombat();document.getElementById('optionsMenu').classList.remove('open');document.getElementById('optionsMenuToggle').classList.remove('open')">✕ Fin de combate</button>
-                        <button id="showSessionCodeBtn" onclick="showCurrentSessionCode();document.getElementById('optionsMenu').classList.remove('open');document.getElementById('optionsMenuToggle').classList.remove('open')" style="display:none">🌐 Código de sesión</button>
-                        <button onclick="showQuickEnemyModal('combat');document.getElementById('optionsMenu').classList.remove('open');document.getElementById('optionsMenuToggle').classList.remove('open')">💀 Añadir enemigo</button>
-                        <button onclick="showQuickAllyModal('combat');document.getElementById('optionsMenu').classList.remove('open');document.getElementById('optionsMenuToggle').classList.remove('open')">💙 Añadir aliado</button>
-                        <button onclick="openCombatLogView();document.getElementById('optionsMenu').classList.remove('open');document.getElementById('optionsMenuToggle').classList.remove('open')">📝 Ver registro</button>
+                        <button onclick="_closeOptionsMenu();confirmEndCombat()">✕ Fin de combate</button>
+                        <button id="showSessionCodeBtn" onclick="_closeOptionsMenu();showCurrentSessionCode()" style="display:none">🌐 Código de sesión</button>
+                        <button onclick="_closeOptionsMenu();showQuickEnemyModal('combat')">💀 Añadir enemigo</button>
+                        <button onclick="_closeOptionsMenu();showQuickAllyModal('combat')">💙 Añadir aliado</button>
+                        <button onclick="_closeOptionsMenu();openCombatLogView()">📝 Ver registro</button>
                     </div>
                 </div>
             </div>
@@ -481,9 +474,9 @@
         </div>
     </div>
 
-    <script src="characters.js?v=20260310n"></script>
-    <script src="data.js?v=20260310n"></script>
-    <script src="script.js?v=20260310n"></script>
+    <script src="characters.js?v=20260310o"></script>
+    <script src="data.js?v=20260310o"></script>
+    <script src="script.js?v=20260310o"></script>
 </body>
 
 </html>
