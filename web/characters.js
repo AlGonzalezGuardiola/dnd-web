@@ -1261,7 +1261,7 @@ window.characterData = {
         "clase": "Pícaro",
         "nivel": 4,
         "fondo": "—",
-        "imagen": "",
+        "imagen": "assets/imagenes/Yin_profile_pic.jpg",
         "imagenScale": 1,
         "stats": {
             "Fuerza": 8,
