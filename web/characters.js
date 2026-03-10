@@ -1444,6 +1444,344 @@ window.characterData = {
         ]
     },
 
+    "Behir": {
+        "id": "Behir",
+        "tipo": "enemigo",
+        "nombre": "Behir",
+        "raza": "Monstruosidad Enorme · Neutral malvada",
+        "clase": "Bestia serpentina",
+        "nivel": "—",
+        "imagen": "",
+        "stats": {
+            "Fuerza": 23,
+            "Destreza": 16,
+            "Constitución": 18,
+            "Inteligencia": 7,
+            "Sabiduría": 14,
+            "Carisma": 12
+        },
+        "resumen": {
+            "HP": "168",
+            "CA": "17",
+            "Iniciativa": "+3",
+            "Velocidad": "15 m / Trepar 15 m",
+            "Competencia": "+4"
+        },
+        "habilidades": ["Percepción", "Sigilo"],
+        "rasgos": [
+            {
+                "nombre": "⚡ Inmunidad",
+                "desc": "Inmune al daño de relámpago."
+            },
+            {
+                "nombre": "👁️ Sentidos",
+                "desc": "Visión en la oscuridad 27 m. Percepción pasiva 16. Idiomas: dracónico."
+            },
+            {
+                "nombre": "⭐ Desafío",
+                "desc": "VD 11 (7200 PX · BC +4)"
+            }
+        ],
+        "ranuras": [],
+        "conjuros": [],
+        "combateExtra": [
+            {
+                "nombre": "Mordisco",
+                "tipo": "accion",
+                "atk": "+10",
+                "dado": "2d12+6+2d10",
+                "tipo_dano": "perforante/relámpago",
+                "desc": "CaC alcance 3 m. 2d12+6 perforante + 2d10 relámpago. Úsalo junto a Constreñir (Ataque múltiple)."
+            },
+            {
+                "nombre": "Constreñir",
+                "tipo": "accion",
+                "dado": "5d8+6",
+                "tipo_dano": "contundente",
+                "desc": "TS FUE CD 18 a criatura Grande o menor a 1,5 m. Fallo: 5d8+6 contundente + queda Agarrado (CD 16 para escapar) y Apresado."
+            },
+            {
+                "nombre": "Aliento de Relámpago (recarga 5–6)",
+                "tipo": "accion",
+                "dado": "12d10",
+                "tipo_dano": "relámpago",
+                "desc": "TS DES CD 16, criaturas en línea 27 m × 1,5 m. Fallo: 12d10 relámpago. Éxito: mitad del daño."
+            },
+            {
+                "nombre": "Engullir",
+                "tipo": "adicional",
+                "dado": "6d6",
+                "tipo_dano": "ácido",
+                "desc": "TS DES CD 18, criatura Grande o menor que esté Agarrada. Fallo: la engulle (Apresada + Cegada + cobertura total). Inflige 6d6 ácido al inicio de cada turno del behir. Si recibe 30+ daño en un turno de la criatura engullida: TS CON CD 14 o la regurgita."
+            }
+        ]
+    },
+
+    "Ettin": {
+        "id": "Ettin",
+        "tipo": "enemigo",
+        "nombre": "Ettin",
+        "raza": "Gigante Grande · Caótico malvado",
+        "clase": "Gigante de dos cabezas",
+        "nivel": "—",
+        "imagen": "",
+        "stats": {
+            "Fuerza": 21,
+            "Destreza": 8,
+            "Constitución": 17,
+            "Inteligencia": 6,
+            "Sabiduría": 10,
+            "Carisma": 8
+        },
+        "resumen": {
+            "HP": "85",
+            "CA": "12",
+            "Iniciativa": "-1",
+            "Velocidad": "12 m",
+            "Competencia": "+2"
+        },
+        "habilidades": ["Percepción"],
+        "rasgos": [
+            {
+                "nombre": "🚫 Inmunidades (condiciones)",
+                "desc": "Asustado, aturdido, cegado, ensordecido, hechizado, inconsciente."
+            },
+            {
+                "nombre": "👁️ Sentidos",
+                "desc": "Visión en la oscuridad 18 m. Percepción pasiva 14. Idiomas: gigante."
+            },
+            {
+                "nombre": "⭐ Desafío",
+                "desc": "VD 4 (1100 PX · BC +2)"
+            }
+        ],
+        "ranuras": [],
+        "conjuros": [],
+        "combateExtra": [
+            {
+                "nombre": "Hacha de Guerra",
+                "tipo": "accion",
+                "atk": "+7",
+                "dado": "2d8+5",
+                "tipo_dano": "cortante",
+                "desc": "CaC alcance 1,5 m. 2d8+5 cortante. Si el objetivo es Grande o menor, queda Derribado. Úsalo junto a Lucero del alba (Ataque múltiple)."
+            },
+            {
+                "nombre": "Lucero del Alba",
+                "tipo": "accion",
+                "atk": "+7",
+                "dado": "2d8+5",
+                "tipo_dano": "perforante",
+                "desc": "CaC alcance 1,5 m. 2d8+5 perforante. El objetivo tiene desventaja en su siguiente tirada de ataque antes del final de su siguiente turno."
+            }
+        ]
+    },
+
+    "Hezrou": {
+        "id": "Hezrou",
+        "tipo": "enemigo",
+        "nombre": "Hezrou",
+        "raza": "Infernal Grande (demonio) · Caótico malvado",
+        "clase": "Demonio del Abismo",
+        "nivel": "—",
+        "imagen": "",
+        "stats": {
+            "Fuerza": 19,
+            "Destreza": 17,
+            "Constitución": 20,
+            "Inteligencia": 5,
+            "Sabiduría": 12,
+            "Carisma": 13
+        },
+        "resumen": {
+            "HP": "157",
+            "CA": "18",
+            "Iniciativa": "+6",
+            "Velocidad": "9 m",
+            "Competencia": "+3"
+        },
+        "habilidades": [],
+        "rasgos": [
+            {
+                "nombre": "🛡️ Resistencias",
+                "desc": "Frío, fuego, relámpago."
+            },
+            {
+                "nombre": "🚫 Inmunidades",
+                "desc": "Veneno (daño). Condición: Envenenado."
+            },
+            {
+                "nombre": "🤢 Hedor",
+                "desc": "TS CON CD 16 a criaturas que empiecen su turno en 3 m del hezrou. Fallo: quedan Envenenadas hasta el inicio de su siguiente turno."
+            },
+            {
+                "nombre": "💀 Recuperación Demoníaca",
+                "desc": "Si muere fuera del Abismo, su cuerpo se disuelve y revive con todos sus PV en el Abismo."
+            },
+            {
+                "nombre": "✨ Resistencia Mágica",
+                "desc": "Ventaja en tiradas de salvación contra conjuros y efectos mágicos."
+            },
+            {
+                "nombre": "👁️ Sentidos",
+                "desc": "Visión en la oscuridad 36 m. Percepción pasiva 11. Telepatía 36 m. Idiomas: abisal."
+            },
+            {
+                "nombre": "⭐ Desafío",
+                "desc": "VD 8 (3900 PX · BC +3)"
+            }
+        ],
+        "ranuras": [],
+        "conjuros": [],
+        "combateExtra": [
+            {
+                "nombre": "Desgarro",
+                "tipo": "accion",
+                "atk": "+7",
+                "dado": "1d4+4+2d8",
+                "tipo_dano": "cortante/veneno",
+                "desc": "CaC alcance 1,5 m. 1d4+4 cortante + 2d8 veneno. Ataque múltiple: realiza tres desgarros."
+            },
+            {
+                "nombre": "Salto",
+                "tipo": "adicional",
+                "dado": "",
+                "tipo_dano": "",
+                "desc": "Gasta 3 m de movimiento para saltar hasta 9 m."
+            }
+        ]
+    },
+
+    "HombreRata": {
+        "id": "HombreRata",
+        "tipo": "enemigo",
+        "nombre": "Hombre Rata",
+        "raza": "Monstruosidad Mediana/Pequeña (licántropo) · Legal malvada",
+        "clase": "Licántropo",
+        "nivel": "—",
+        "imagen": "",
+        "stats": {
+            "Fuerza": 10,
+            "Destreza": 16,
+            "Constitución": 12,
+            "Inteligencia": 11,
+            "Sabiduría": 10,
+            "Carisma": 8
+        },
+        "resumen": {
+            "HP": "60",
+            "CA": "13",
+            "Iniciativa": "+3",
+            "Velocidad": "9 m / Trepar 9 m",
+            "Competencia": "+2"
+        },
+        "habilidades": ["Percepción", "Sigilo"],
+        "rasgos": [
+            {
+                "nombre": "👁️ Sentidos",
+                "desc": "Visión en la oscuridad 18 m. Percepción pasiva 14. Idiomas: común (no puede hablar en forma de rata)."
+            },
+            {
+                "nombre": "⭐ Desafío",
+                "desc": "VD 2 (450 PX · BC +2)"
+            }
+        ],
+        "ranuras": [],
+        "conjuros": [],
+        "combateExtra": [
+            {
+                "nombre": "Arañazo",
+                "tipo": "accion",
+                "atk": "+5",
+                "dado": "1d6+3",
+                "tipo_dano": "cortante",
+                "desc": "CaC alcance 1,5 m. Ataque múltiple: dos arañazos/ballestas en cualquier combinación, puede sustituir uno por Mordisco."
+            },
+            {
+                "nombre": "Mordisco (forma rata/híbrida)",
+                "tipo": "accion",
+                "atk": "+5",
+                "dado": "2d4+3",
+                "tipo_dano": "perforante",
+                "desc": "CaC alcance 1,5 m. 2d4+3 perforante. Si el objetivo es humanoide: TS CON CD 11. Fallo: queda Maldito. Si sus PV llegan a 0 maldito, se convierte en Hombre Rata controlado por el DM con 10 PV."
+            },
+            {
+                "nombre": "Ballesta de Mano (forma humanoide/híbrida)",
+                "tipo": "accion",
+                "atk": "+5",
+                "dado": "1d6+3",
+                "tipo_dano": "perforante",
+                "desc": "Ataque a distancia, alcance 9/36 m. 1d6+3 perforante."
+            },
+            {
+                "nombre": "Cambio de Forma",
+                "tipo": "adicional",
+                "dado": "",
+                "tipo_dano": "",
+                "desc": "Adopta forma híbrida rata-humanoide Mediana, rata Pequeña, o recupera su forma humanoide. Sus estadísticas son iguales en todas las formas."
+            }
+        ]
+    },
+
+    "DragonRojoJoven": {
+        "id": "DragonRojoJoven",
+        "tipo": "enemigo",
+        "nombre": "Dragón Rojo Joven",
+        "raza": "Dragón Enorme · Caótico malvado",
+        "clase": "Dragón cromático",
+        "nivel": "—",
+        "imagen": "",
+        "stats": {
+            "Fuerza": 19,
+            "Destreza": 10,
+            "Constitución": 17,
+            "Inteligencia": 12,
+            "Sabiduría": 11,
+            "Carisma": 15
+        },
+        "resumen": {
+            "HP": "75",
+            "CA": "17",
+            "Iniciativa": "+2",
+            "Velocidad": "9 m / Trepar 9 m / Volar 18 m",
+            "Competencia": "+2"
+        },
+        "habilidades": ["Percepción", "Sigilo"],
+        "rasgos": [
+            {
+                "nombre": "🔥 Inmunidad",
+                "desc": "Inmune al daño de fuego."
+            },
+            {
+                "nombre": "👁️ Sentidos",
+                "desc": "Visión ciega 3 m, visión en la oscuridad 18 m. Percepción pasiva 14. Idiomas: dracónico."
+            },
+            {
+                "nombre": "⭐ Desafío",
+                "desc": "VD 4 (1100 PX · BC +2)"
+            }
+        ],
+        "ranuras": [],
+        "conjuros": [],
+        "combateExtra": [
+            {
+                "nombre": "Desgarro",
+                "tipo": "accion",
+                "atk": "+6",
+                "dado": "1d10+4+1d6",
+                "tipo_dano": "cortante/fuego",
+                "desc": "CaC alcance 1,5 m. 1d10+4 cortante + 1d6 fuego. Ataque múltiple: realiza dos desgarros."
+            },
+            {
+                "nombre": "Aliento de Fuego (recarga 5–6)",
+                "tipo": "accion",
+                "dado": "7d6",
+                "tipo_dano": "fuego",
+                "desc": "TS DES CD 13, criaturas en cono de 4,5 m. Fallo: 7d6 fuego. Éxito: mitad del daño."
+            }
+        ]
+    },
+
     "Jayce": {
         "id": "Jayce",
         "tipo": "enemigo",
