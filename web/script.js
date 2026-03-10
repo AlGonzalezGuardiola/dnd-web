@@ -42,6 +42,7 @@ async function init() {
         updateTaskMd('Initialize');
         initRole();
         loadSavedCombatIfAny();
+        initCombatSync(); // auto-join if ?combat=ID is in the URL
     } catch (error) {
         console.error('Error loading data:', error);
         showWelcomeScreen();
@@ -698,6 +699,138 @@ const notesState = {};
 const diceHistory = [];
 const demonicFormState = {}; // { charId: { active: bool, turnsLeft: int } }
 const turnPlannerState = {}; // { charId: { accion: null, adicional: null, reaccion: null } }
+// ============================================
+// Role System
+// ============================================
+// ============================================
+// Real-time Sync (API + SSE)
+// ============================================
+const API_BASE      = 'http://54.170.166.165:3001';
+const COMBAT_ID_KEY = 'dnd_combat_id';
+const CLIENT_ID     = Math.random().toString(36).slice(2, 10); // unique per tab
+
+let activeCombatId = localStorage.getItem(COMBAT_ID_KEY) || null;
+let sseSource      = null;
+let _saveTimer     = null;
+
+// Debounced PUT to API — called after every saveCombatState()
+function saveToApi() {
+    if (!activeCombatId || !combatState.isActive) return;
+    clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(async () => {
+        try {
+            const body = {
+                participants:      combatState.participants.map(p => ({ ...p, charData: null })),
+                currentIndex:      combatState.currentIndex,
+                round:             combatState.round,
+                isActive:          combatState.isActive,
+                segundaAccionTurn: combatState.segundaAccionTurn,
+                extraAttackTurn:   combatState.extraAttackTurn,
+                nextLogId:         combatState.nextLogId,
+                log:               combatState.log,
+                _clientId:         CLIENT_ID,
+            };
+            await fetch(`${API_BASE}/api/combats/${activeCombatId}`, {
+                method:  'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify(body),
+            });
+        } catch (e) { console.warn('[sync] PUT failed:', e.message); }
+    }, 800);
+}
+
+// Re-attach charData after receiving remote state (charData is stripped before saving)
+function _hydrateParticipants(participants) {
+    (participants || []).forEach(p => {
+        if (p._isSirvienteInvisible) {
+            p.charData = buildSirvienteCharData(p.ac);
+        } else {
+            p.charData = window.characterData?.[p.id] || null;
+        }
+        if (!p.customActions) p.customActions = [];
+    });
+}
+
+// Apply state received from SSE (skip own echoes via _clientId)
+function applyRemoteState(data) {
+    if (data._clientId === CLIENT_ID) return; // own echo — ignore
+    _hydrateParticipants(data.participants);
+    Object.assign(combatState, {
+        participants:      data.participants      || [],
+        currentIndex:      data.currentIndex      ?? combatState.currentIndex,
+        round:             data.round             ?? combatState.round,
+        isActive:          data.isActive          ?? combatState.isActive,
+        segundaAccionTurn: data.segundaAccionTurn ?? false,
+        extraAttackTurn:   data.extraAttackTurn   ?? false,
+        nextLogId:         data.nextLogId         ?? combatState.nextLogId,
+        log:               data.log               || combatState.log,
+    });
+    if (combatModeActive) renderCombatManager();
+}
+
+// Open SSE connection to receive real-time updates
+function connectToSSE(id) {
+    if (sseSource) { sseSource.close(); sseSource = null; }
+    sseSource = new EventSource(`${API_BASE}/api/combats/${id}/stream`);
+    sseSource.onmessage = e => {
+        try { applyRemoteState(JSON.parse(e.data)); } catch (_) {}
+    };
+    // EventSource auto-reconnects on error — no action needed
+}
+
+// Master: POST to create a new combat session, then open SSE
+async function startCombatSession() {
+    try {
+        const body = {
+            participants:      combatState.participants.map(p => ({ ...p, charData: null })),
+            currentIndex:      combatState.currentIndex,
+            round:             combatState.round,
+            isActive:          true,
+            segundaAccionTurn: false,
+            extraAttackTurn:   false,
+            nextLogId:         combatState.nextLogId,
+            log:               combatState.log,
+            _clientId:         CLIENT_ID,
+        };
+        const res  = await fetch(`${API_BASE}/api/combats`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify(body),
+        });
+        const data = await res.json();
+        activeCombatId = String(data.combatId);
+        localStorage.setItem(COMBAT_ID_KEY, activeCombatId);
+        connectToSSE(activeCombatId);
+        renderCombatShareLink();
+    } catch (e) { console.warn('[sync] startCombatSession failed:', e.message); }
+}
+
+// Render the share link in the combat top bar (master only)
+function renderCombatShareLink() {
+    const el = document.getElementById('combatShareLink');
+    if (!el || !activeCombatId) return;
+    const url = `${window.location.origin}${window.location.pathname}?combat=${activeCombatId}`;
+    const code = activeCombatId.slice(-6).toUpperCase();
+    el.innerHTML = `
+        <span class="share-link-code" title="Código de sala">${code}</span>
+        <button class="share-link-copy"
+                onclick="navigator.clipboard.writeText('${url}').then(()=>showNotification('✅ Link copiado — compártelo con los jugadores',2000))"
+                title="Copiar link para jugadores">📋</button>`;
+    el.style.display = 'flex';
+}
+
+// Players: called on init() — auto-join if ?combat=ID is in the URL
+function initCombatSync() {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get('combat');
+    if (!id) return;
+    activeCombatId = id;
+    localStorage.setItem(COMBAT_ID_KEY, id);
+    connectToSSE(id);
+    combatModeActive = true;
+    setView('combatManager');
+}
+
 // ============================================
 // Role System
 // ============================================
@@ -2233,6 +2366,7 @@ function beginCombat() {
     saveCombatState();
     setView('combatManager');
     renderCombatManager();
+    if (isMaster()) startCombatSession(); // create combat in DB + get share link
 }
 
 function parseSetupActions(str, tipo) {
@@ -2594,6 +2728,7 @@ function renderCombatManager() {
 
     const roundEl = document.getElementById('combatRoundBadge');
     if (roundEl) roundEl.textContent = `Ronda ${combatState.round}`;
+    renderCombatShareLink();
     renderTurnQueue();
     renderActivePanel();
     renderCombatLog();
@@ -4005,6 +4140,7 @@ function saveCombatState() {
         participants: combatState.participants.map(p => ({ ...p, charData: null })),
     };
     try { localStorage.setItem(COMBAT_SAVE_KEY, JSON.stringify(toSave)); } catch (e) {}
+    saveToApi(); // sync to MongoDB → SSE broadcast to all connected clients
 }
 
 function clearSavedCombat() {

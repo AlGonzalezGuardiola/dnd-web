@@ -4914,3 +4914,31 @@ body.role-jugador .master-only { display: none !important; }
     border-color: #ff6666;
     color: #ffcccc;
 }
+
+/* --- Real-time sync share link (master combat top bar) --- */
+.combat-share-link {
+    align-items: center;
+    gap: 6px;
+    background: rgba(76,175,80,0.12);
+    border: 1px solid rgba(76,175,80,0.35);
+    border-radius: 8px;
+    padding: 4px 10px;
+    flex-shrink: 0;
+}
+.share-link-code {
+    font-size: 13px;
+    font-weight: 700;
+    color: #81c784;
+    letter-spacing: 0.08em;
+}
+.share-link-copy {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 0;
+    line-height: 1;
+    opacity: 0.8;
+    transition: opacity 0.15s;
+}
+.share-link-copy:hover { opacity: 1; }
