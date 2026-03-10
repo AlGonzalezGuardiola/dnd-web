@@ -3948,32 +3948,74 @@ function renderCombatLog() {
             </div>
         </div>`;
     }).join('');
-    // Keep the modal in sync if it's currently open
-    const modal = document.getElementById('combatLogModal');
-    if (modal && modal.style.display !== 'none') _syncCombatLogModal();
 }
 
 // ============================================
-// Combat Log Modal
+// Combat Log View  (full-screen, replaces modal)
 // ============================================
-function openCombatLogModal() {
-    const modal = document.getElementById('combatLogModal');
-    if (!modal) return;
-    _syncCombatLogModal();
-    modal.style.display = 'flex';
+function openCombatLogView() {
+    renderCombatLogView();
+    setView('combatLogView');
 }
 
-function closeCombatLogModal(e) {
-    const modal = document.getElementById('combatLogModal');
-    if (!modal) return;
-    if (!e || e.target === modal) modal.style.display = 'none';
+function closeCombatLogView() {
+    setView('combatManager');
+    renderCombatManager();
 }
 
-function _syncCombatLogModal() {
-    const body = document.getElementById('combatLogModalBody');
-    const src  = document.getElementById('combatLog');
-    if (body && src) body.innerHTML = src.innerHTML;
+function renderCombatLogView() {
+    // ── Scoreboard ───────────────────────────────────────────────────────────
+    const sbEl = document.getElementById('clvScoreboard');
+    if (sbEl) {
+        const scores = computeKillScoreboard();
+        if (scores.length) {
+            sbEl.innerHTML = `
+                <div class="clv-sb-title">🏆 Bajas por aliado</div>
+                <div class="clv-sb-list">
+                    ${scores.map(([name, kills]) =>
+                        `<span class="clv-sb-entry">
+                            <span class="clv-sb-name">${name}</span>
+                            <span class="clv-sb-kills">${kills} kill${kills !== 1 ? 's' : ''}</span>
+                        </span>`
+                    ).join('')}
+                </div>`;
+            sbEl.style.display = '';
+        } else {
+            sbEl.style.display = 'none';
+        }
+    }
+
+    // ── Log entries (newest first, same rendering as sidebar log) ────────────
+    const logEl = document.getElementById('clvLog');
+    if (!logEl) return;
+    const entries = [...combatState.log].reverse();
+    if (!entries.length) {
+        logEl.innerHTML = '<div class="clv-empty">Sin entradas en el registro todavía.</div>';
+        return;
+    }
+    logEl.innerHTML = entries.map(entry => {
+        const actionsHTML = entry.actions.length
+            ? entry.actions.map(a => `<div class="log-action-item">
+                <div>✓ ${a.nombre}${a.dice && !a.rollText ? ` (${a.dice})` : ''}</div>
+                ${a.rollText ? `<div class="combat-roll-result">${renderRollText(a.rollText)}</div>` : ''}
+                ${a.narratorText ? `<div class="combat-narrator-text">${a.narratorText}</div>` : ''}
+            </div>`).join('')
+            : '<span style="color:var(--text-muted)">—</span>';
+        return `<div class="combat-log-entry${entry.isCurrent ? ' log-current' : ''}">
+            <div class="log-entry-header">
+                <span class="log-round-badge">R${entry.round}</span>
+                <span class="log-participant-name">${entry.participantName.split(' ')[0]}</span>
+                ${entry.isCurrent ? '<span class="log-current-badge">← ahora</span>' : ''}
+            </div>
+            <div class="log-actions-display">${actionsHTML}</div>
+            ${entry.note ? `<div class="log-note">📝 ${entry.note}</div>` : ''}
+        </div>`;
+    }).join('');
 }
+
+// Kept for backward-compat (called from renderCombatLog previously)
+function openCombatLogModal() { openCombatLogView(); }
+function closeCombatLogModal() { closeCombatLogView(); }
 
 // ============================================
 // Kill Scoreboard (allies vs enemies)
@@ -4477,6 +4519,17 @@ function showQuickNpcModal(context, tipo) {
     document.getElementById('qeName')?.focus();
 }
 
+// ── Entity Template: save to backend catalog (fire-and-forget) ───────────────
+// Always called when creating a new NPC so it's reusable in future combats.
+// No initiative is stored — that is rolled fresh each time.
+function _saveEntityTemplate({ name, type, stats, actions, isGroup, groupSize, isSummon, summoner }) {
+    fetch(`${API_BASE}/api/entity-templates`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, type, stats, actions, isGroup, groupSize, isSummon, summoner }),
+    }).catch(e => console.warn('[entity-templates] save failed:', e.message));
+}
+
 function toggleQeGroupFields() {
     const checked = document.getElementById('qeIsGroup')?.checked;
     const fields  = document.getElementById('qeGroupFields');
@@ -4555,10 +4608,12 @@ async function submitQuickNpc(context) {
 
     // ── Zero one-summon check (frontend fast-path) ────────────────────────────
     if (isSummon && summoner === 'ZERO') {
-        const existingZero = combatState.participants.find(p =>
-            p.isSummon && p.summoner === 'ZERO' && (p.hp.current > 0 || (p.totalHp ?? 0) > 0)
+        // Check both active participants AND setup NPCs (pre-combat phase)
+        const existingInCombat = combatState.participants.find(p =>
+            p.isSummon && p.summoner === 'ZERO' && (p.hp?.current > 0 || (p.totalHp ?? 0) > 0)
         );
-        if (existingZero) {
+        const existingInSetup = setupNpcs.find(n => n.isSummon && n.summoner === 'ZERO');
+        if (existingInCombat || existingInSetup) {
             showNotification('⚠️ Zero ya tiene una invocación activa', 3000);
             return;
         }
@@ -4585,6 +4640,16 @@ async function submitQuickNpc(context) {
     };
     window.characterData[uid] = charData;
     document.getElementById('quickEnemyOverlay')?.remove();
+
+    // ── Save as reusable template (always, not just when online) ─────────────
+    _saveEntityTemplate({
+        name,
+        type:      isEnemy ? 'ENEMY' : 'ALLY',
+        stats:     { hp, ac },
+        actions,
+        isGroup, groupSize,
+        isSummon, summoner,
+    });
 
     // Persist to backend (fire-and-forget; doesn't block the UI)
     if (isOnlineCombat && activeCombatId) {
@@ -4710,6 +4775,16 @@ function addSetupNpc(tipo) {
         isGroup, groupSize,
         isSummon, summoner,
         summonedBeforeCombat: isSummon, // if added in setup, it was summoned before combat
+    });
+
+    // ── Save as reusable template (no initiative) ─────────────────────────────
+    _saveEntityTemplate({
+        name:    nombre,
+        type:    tipo === 'aliado' ? 'ALLY' : 'ENEMY',
+        stats:   { hp: pg, ac: ca },
+        actions: [], // text-based actions from setup form; no structured actions to store
+        isGroup, groupSize,
+        isSummon, summoner,
     });
 
     // Clear form fields
@@ -4867,6 +4942,8 @@ function setView(viewName) {
     if (onlineLobby) onlineLobby.style.display = 'none';
     const onlineWaiting = document.getElementById('onlineWaitingView');
     if (onlineWaiting) onlineWaiting.style.display = 'none';
+    const combatLogViewEl = document.getElementById('combatLogView');
+    if (combatLogViewEl) combatLogViewEl.style.display = 'none';
 
     // Also hide the character sheet if it was open
     const sheetContainer = document.getElementById('characterSheetContainer');
@@ -4936,6 +5013,12 @@ function setView(viewName) {
             if (diceWidget) diceWidget.style.display = 'none';
             document.getElementById('breadcrumbs').textContent = '🌐 Sala de espera';
             document.getElementById('btnBack').style.display = 'flex';
+            break;
+        case 'combatLogView':
+            document.getElementById('combatLogView').style.display = 'flex';
+            if (editorToolbar) editorToolbar.style.display = 'none';
+            if (hud) hud.style.display = 'none';
+            if (diceWidget) diceWidget.style.display = 'none';
             break;
     }
 }

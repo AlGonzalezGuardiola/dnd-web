@@ -13,8 +13,8 @@
         href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link rel="stylesheet" href="style.css?v=20260310m">
-    <link rel="stylesheet" href="mobile.css?v=20260310m" media="screen and (max-width: 768px)">
+    <link rel="stylesheet" href="style.css?v=20260310n">
+    <link rel="stylesheet" href="mobile.css?v=20260310n" media="screen and (max-width: 768px)">
 </head>
 
 <body>
@@ -151,12 +151,12 @@
                     <input id="aliadoCa"     class="npc-input npc-input-sm" type="number" placeholder="CA" min="1">
                     <input id="aliadoInit"   class="npc-input npc-input-sm" type="number" placeholder="Init">
                 </div>
-                <div class="npc-builder-row npc-toggle-row">
+                <div class="npc-toggle-row">
                     <label class="npc-toggle-label">
                         <input type="checkbox" id="aliadoEsInvocacion" onchange="toggleSetupSummonFields('aliado')">
                         <span>Es una invocación</span>
                     </label>
-                    <div id="aliadoSummonFields" style="display:none;">
+                    <div id="aliadoSummonFields" style="display:none; margin-top:6px;">
                         <select id="aliadoSumoner" class="npc-input npc-input-sm">
                             <option value="ASTHOR">Asthor (Sirviente)</option>
                             <option value="ZERO">Zero</option>
@@ -196,14 +196,14 @@
                     <input id="enemigoCa"     class="npc-input npc-input-sm" type="number" placeholder="CA" min="1">
                     <input id="enemigoInit"   class="npc-input npc-input-sm" type="number" placeholder="Init">
                 </div>
-                <div class="npc-builder-row npc-toggle-row">
+                <div class="npc-toggle-row">
                     <label class="npc-toggle-label">
                         <input type="checkbox" id="enemigoEsGrupo" onchange="toggleSetupGroupFields('enemigo')">
                         <span>Es un grupo</span>
                     </label>
-                    <div id="enemigoGroupFields" style="display:none; gap:8px; align-items:center; flex-wrap:wrap;">
+                    <div id="enemigoGroupFields" style="display:none; margin-top:6px; display:none;">
                         <input id="enemigoGroupSize" class="npc-input npc-input-sm" type="number" placeholder="Nº miembros" min="2">
-                        <small class="npc-group-hint">PG = HP por miembro</small>
+                        <small class="npc-group-hint" style="display:block;margin-top:4px;">PG = HP por miembro</small>
                     </div>
                 </div>
                 <div class="npc-builder-row npc-actions-row">
@@ -256,7 +256,6 @@
                 <div class="combat-turn-controls">
                     <button class="btn-tc-secondary" onclick="previousCombatTurn()" title="Volver al turno anterior">← Anterior</button>
                     <button class="btn-tc-primary" onclick="nextCombatTurn()">Siguiente →</button>
-                    <button class="btn-tc-secondary combat-log-mobile-btn" onclick="toggleMobileLog()" style="display:none" title="Ver registro">📋</button>
                 </div>
 
                 <div class="combat-actor-info" id="combatActorName"></div>
@@ -268,7 +267,7 @@
                         <button id="showSessionCodeBtn" onclick="showCurrentSessionCode();document.getElementById('optionsMenu').classList.remove('open');document.getElementById('optionsMenuToggle').classList.remove('open')" style="display:none">🌐 Código de sesión</button>
                         <button onclick="showQuickEnemyModal('combat');document.getElementById('optionsMenu').classList.remove('open');document.getElementById('optionsMenuToggle').classList.remove('open')">💀 Añadir enemigo</button>
                         <button onclick="showQuickAllyModal('combat');document.getElementById('optionsMenu').classList.remove('open');document.getElementById('optionsMenuToggle').classList.remove('open')">💙 Añadir aliado</button>
-                        <button onclick="openCombatLogModal();document.getElementById('optionsMenu').classList.remove('open');document.getElementById('optionsMenuToggle').classList.remove('open')">📝 Ver registro</button>
+                        <button onclick="openCombatLogView();document.getElementById('optionsMenu').classList.remove('open');document.getElementById('optionsMenuToggle').classList.remove('open')">📝 Ver registro</button>
                     </div>
                 </div>
             </div>
@@ -470,22 +469,21 @@
         <button id="diceToggleBtn" class="dice-toggle-btn" title="Lanzador de dados" aria-label="Abrir lanzador de dados">🎲</button>
     </div>
 
-    <!-- Combat Log Modal (accessible from ☰ menu, always available but essential on mobile) -->
-    <div id="combatLogModal" class="combat-log-modal-overlay" style="display:none;" onclick="closeCombatLogModal(event)">
-        <div class="combat-log-modal">
-            <div class="combat-log-modal-header">
-                <span>📜 Registro del Combate</span>
-                <button class="combat-log-modal-close" onclick="closeCombatLogModal()">✕</button>
-            </div>
-            <div id="combatLogModalBody" class="combat-log-modal-body">
-                <!-- Populated dynamically from combatLog -->
-            </div>
+    <!-- Combat Log View — dedicated full screen, opened via ☰ menu -->
+    <div id="combatLogView" class="combat-log-view" style="display:none;">
+        <div class="clv-header">
+            <button class="clv-back-btn" onclick="closeCombatLogView()">← Volver al combate</button>
+            <div class="clv-title">📜 Registro del Combate</div>
+        </div>
+        <div class="clv-body">
+            <div id="clvScoreboard" class="clv-scoreboard"></div>
+            <div id="clvLog" class="clv-log-entries"></div>
         </div>
     </div>
 
-    <script src="characters.js?v=20260310l"></script>
-    <script src="data.js?v=20260310l"></script>
-    <script src="script.js?v=20260310m"></script>
+    <script src="characters.js?v=20260310n"></script>
+    <script src="data.js?v=20260310n"></script>
+    <script src="script.js?v=20260310n"></script>
 </body>
 
 </html>
