@@ -3858,7 +3858,21 @@ body.role-jugador .master-only { display: none !important; }
     margin-top: 4px;
 }
 
-/* --- Segunda Acción mini-turn panel --- */
+/* --- Mini-turn panels (Ataque Extra + Segunda Acción) --- */
+.combat-active-panel.extra-attack-active {
+    border-top: 3px solid #ff8b44;
+}
+.extra-attack-header {
+    background: rgba(255,139,68,0.12);
+    border: 1px solid rgba(255,139,68,0.3);
+    border-radius: 10px;
+    padding: 8px 14px;
+    margin-bottom: 12px;
+    color: #ffc0a8;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+}
 .combat-active-panel.segunda-accion-active {
     border-top: 3px solid #8b6fff;
 }
