@@ -2108,7 +2108,7 @@ function renderCharacterSelectionMenu() {
 
     if (!window.characterData) return;
 
-    Object.values(window.characterData).forEach(char => {
+    Object.values(window.characterData).filter(char => char.tipo === 'jugador').forEach(char => {
         const card = document.createElement('div');
         card.className = 'card character-card'; // Added class for specific styling
         card.onclick = () => {
