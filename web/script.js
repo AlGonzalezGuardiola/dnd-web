@@ -705,7 +705,10 @@ const turnPlannerState = {}; // { charId: { accion: null, adicional: null, reacc
 // ============================================
 // Real-time Sync (API + SSE)
 // ============================================
-const API_BASE      = 'http://54.170.166.165:3001';
+// En producción nginx proxea /api/ → localhost:3001; en local apunta directo
+const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
+    ? 'http://localhost:3001'
+    : window.location.origin;
 const COMBAT_ID_KEY = 'dnd_combat_id';
 const CLIENT_ID     = Math.random().toString(36).slice(2, 10); // unique per tab
 
