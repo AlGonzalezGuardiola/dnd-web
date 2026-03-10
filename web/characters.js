@@ -1253,6 +1253,197 @@ window.characterData = {
         ]
     },
 
+    "YinBarkka": {
+        "id": "YinBarkka",
+        "tipo": "jugador",
+        "nombre": "Yin Barkka",
+        "raza": "—",
+        "clase": "Pícaro",
+        "nivel": 4,
+        "fondo": "—",
+        "imagen": "",
+        "imagenScale": 1,
+        "stats": {
+            "Fuerza": 8,
+            "Destreza": 18,
+            "Constitución": 16,
+            "Inteligencia": 10,
+            "Sabiduría": 14,
+            "Carisma": 12
+        },
+        "resumen": {
+            "HP": "43",
+            "CA": "19",
+            "Iniciativa": "+4",
+            "Velocidad": "30ft",
+            "Competencia": "+2"
+        },
+        "habilidades": [
+            "Sigilo",
+            "Acrobacias",
+            "Percepción",
+            "Engaño",
+            "Juego de Manos",
+            "Investigación"
+        ],
+        "rasgos": [
+            {
+                "nombre": "⚡ Ataque Furtivo (3d6)",
+                "desc": "Si atacas con ventaja O hay un aliado a 5ft del objetivo: +3d6 de daño extra. Solo una vez por turno. Usa el chip 'Furtivo' junto al ataque."
+            },
+            {
+                "nombre": "🎯 Forzar Críticos",
+                "desc": "Si la criatura aún no ha actuado en esta iniciativa: ataca con ventaja.<br>Si está escondida/invisible/retenida/paralizada al atacar: crítico automático."
+            },
+            {
+                "nombre": "⚔️ Katana del Dios del Trueno",
+                "desc": "Daño: 1d10 cortante · Ignora resistencias e inmunidades.<br><strong>Desenvainar (1/largo, adicional):</strong> Durante 3 turnos +1d8 trueno por ataque. La magia de trueno queda en el cuerpo del enemigo.<br><strong>Envainar (1/largo, adicional):</strong> Todos los enemigos con trueno acumulado sufren 1d8 por cada impacto (máx. 6 veces a nv. 4).<br><strong>Danza de la Tormenta (adicional, +4 usos/descanso):</strong> +20ft velocidad + un ataque CaC adicional este turno."
+            },
+            {
+                "nombre": "🔥 Daga de Fuego",
+                "desc": "Daño: 1d12 fuego + 1d8 divino · Crítico automático → desmembra parte del cuerpo (lo elige el Master) · Puede cauterizar heridas."
+            },
+            {
+                "nombre": "🌪️ Tornado (1/día, acción)",
+                "desc": "Desde tu posición, crea un tornado en línea recta (20ft de largo · 5ft de ancho). TS Destreza o salen volando 1 turno + 2d8 daño (se aplica Furtivo si no han actuado aún).<br><strong>Acción adicional:</strong> Te teletransportas encima de todos los que estén volando y los atacas con ventaja (crítico si aplica, Furtivo no)."
+            },
+            {
+                "nombre": "💨 Magia de Viento",
+                "desc": "Al matar a una criatura, puedes realizar un ataque adicional inmediatamente."
+            },
+            {
+                "nombre": "👢 Botas Rápidas",
+                "desc": "<strong>Paso Brumoso (2/día, adicional):</strong> Te teletransportas hasta 30ft a cualquier lugar visible."
+            },
+            {
+                "nombre": "🦺 Capa Espectral",
+                "desc": "Siempre tienes ventaja en las pruebas de Sigilo · Si no hay mucha luz, te vuelves invisible."
+            },
+            {
+                "nombre": "🌙 Armadura Espectral de Luna (CA 19 · 3 cargas)",
+                "desc": "CA = 15 + DES (+4). Se recarga con la luz de la luna. Cada carga se usa como reacción:<br>• <strong>1d8 radiante</strong> cuando sabes que un ataque tuyo golpea.<br>• <strong>+2 CA</strong> cuando sabes que te van a golpear.<br>• <strong>Cegar</strong> a una criatura (TS CON CD 13 · cegada hasta su siguiente turno)."
+            },
+            {
+                "nombre": "🛡️ Reacción: Mitad de daño",
+                "desc": "Cuando recibes daño de un ataque, puedes usar tu reacción para sufrir solo la mitad.<br><strong>⚠️ Solo 1 reacción por ronda:</strong> si la usas, no puedes volver a reaccionar hasta el inicio de tu siguiente turno. Esto incluye las cargas de la armadura y el ataque de oportunidad."
+            }
+        ],
+        "ranuras": [],
+        "conjuros": [
+            {
+                "nombre": "Paso Brumoso",
+                "nivel": "Obj",
+                "desc": "2/día (Botas Rápidas). Teletransporte 30ft a lugar visible. Acción adicional."
+            }
+        ],
+        "combateExtra": [
+            {
+                "nombre": "Katana del Trueno",
+                "tipo": "accion",
+                "atk": "+6",
+                "dado": "1d10",
+                "tipo_dano": "cortante/trueno",
+                "desc": "CaC · 1d10 cortante (ignora resistencias e inmunidades) · +1d8 trueno si Desenvainar está activo · Impregna Magia de Trueno en el objetivo."
+            },
+            {
+                "nombre": "Daga de Fuego",
+                "tipo": "accion",
+                "atk": "+6",
+                "dado": "1d12+1d8",
+                "tipo_dano": "fuego/divino",
+                "desc": "CaC · 1d12 fuego + 1d8 divino · Crítico → desmembra · Puede cauterizar heridas."
+            },
+            {
+                "nombre": "Furtivo (+3d6)",
+                "tipo": "accion",
+                "atk": "",
+                "dado": "3d6",
+                "tipo_dano": "furtivo",
+                "desc": "Añade 3d6 al daño cuando ataca con ventaja O hay un aliado a 5ft del objetivo. Solo 1 vez por turno. Combina con Katana o Daga en el mismo ataque."
+            },
+            {
+                "nombre": "Tornado (1/día)",
+                "tipo": "accion",
+                "atk": "",
+                "dado": "2d8",
+                "tipo_dano": "cortante/trueno",
+                "desc": "Línea 20ft × 5ft. TS DES o salen volando 1 turno + 2d8. Furtivo si no han actuado aún."
+            },
+            {
+                "nombre": "Danza de la Tormenta",
+                "tipo": "adicional",
+                "atk": "+6",
+                "dado": "1d10",
+                "tipo_dano": "cortante/trueno",
+                "desc": "+20ft velocidad + ataque CaC adicional este turno · Hasta 4 usos por descanso corto o largo."
+            },
+            {
+                "nombre": "Paso Brumoso (2/día)",
+                "tipo": "adicional",
+                "atk": "",
+                "dado": "",
+                "tipo_dano": "",
+                "desc": "Teletransporte 30ft a lugar visible (Botas Rápidas)."
+            },
+            {
+                "nombre": "Desenvainar ⛈️ (1/largo)",
+                "tipo": "adicional",
+                "atk": "",
+                "dado": "1d8",
+                "tipo_dano": "trueno",
+                "desc": "Activa Magia de Trueno: durante 3 turnos, cada ataque con Katana añade +1d8 trueno y deja trueno impregnado en el objetivo."
+            },
+            {
+                "nombre": "Envainar ⚡ (1/largo)",
+                "tipo": "adicional",
+                "atk": "",
+                "dado": "1d8×N",
+                "tipo_dano": "trueno",
+                "desc": "Todos los enemigos con trueno impregnado sufren 1d8 por cada impacto de trueno acumulado (acumulable, máx. 6 impactos a nv. 4)."
+            },
+            {
+                "nombre": "Esconderse / Correr",
+                "tipo": "adicional",
+                "atk": "",
+                "dado": "",
+                "tipo_dano": "",
+                "desc": "Esconderse (prueba de Sigilo) · o Correr (duplica velocidad este turno)."
+            },
+            {
+                "nombre": "⚠️ Mitad de daño",
+                "tipo": "reaccion",
+                "atk": "",
+                "dado": "",
+                "tipo_dano": "",
+                "desc": "Al recibir daño de un ataque: sufres solo la mitad. · ⚠️ Consume la reacción del asalto — no puedes usar otras reacciones (armadura, ataque de oportunidad) hasta tu siguiente turno."
+            },
+            {
+                "nombre": "Armadura: +2 CA (carga)",
+                "tipo": "reaccion",
+                "atk": "",
+                "dado": "",
+                "tipo_dano": "",
+                "desc": "Al saber que te van a golpear: +2 CA contra ese ataque. Consume 1 carga (3 totales). · ⚠️ Consume la reacción del asalto."
+            },
+            {
+                "nombre": "Armadura: Cegar (carga)",
+                "tipo": "reaccion",
+                "atk": "",
+                "dado": "",
+                "tipo_dano": "",
+                "desc": "TS CON CD 13 o la criatura queda ciega hasta su siguiente turno. Consume 1 carga. · ⚠️ Consume la reacción del asalto."
+            },
+            {
+                "nombre": "Armadura: 1d8 Radiante (carga)",
+                "tipo": "reaccion",
+                "atk": "",
+                "dado": "1d8",
+                "tipo_dano": "radiante",
+                "desc": "Al saber que un ataque tuyo golpea: +1d8 radiante. Consume 1 carga. · ⚠️ Consume la reacción del asalto."
+            }
+        ]
+    },
+
     "Jayce": {
         "id": "Jayce",
         "tipo": "enemigo",
