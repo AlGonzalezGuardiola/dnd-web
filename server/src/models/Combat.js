@@ -67,6 +67,9 @@ const LogEntrySchema = new mongoose.Schema({
 // ── Main Combat schema ───────────────────────────────────────────────────────
 
 const CombatSchema = new mongoose.Schema({
+    // Código corto para unirse (6 chars, único, generado al crear)
+    joinCode: { type: String, required: true, unique: true, uppercase: true },
+
     // Participants split by role for quick filtering
     players:  { type: [ParticipantSchema], default: [] },  // tipo jugador
     npcs:     { type: [ParticipantSchema], default: [] },  // tipo aliado

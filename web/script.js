@@ -782,6 +782,9 @@ function connectToSSE(id) {
 }
 
 // Master: POST to create a new combat session, then open SSE
+// joinCode activo (viene del servidor al crear o unirse)
+let activeJoinCode = null;
+
 async function startCombatSession() {
     showNotification('⏳ Creando sesión online…', 2000);
     try {
@@ -796,7 +799,7 @@ async function startCombatSession() {
             log:               combatState.log,
             _clientId:         CLIENT_ID,
         };
-        const res  = await fetch(`${API_BASE}/api/combats`, {
+        const res = await fetch(`${API_BASE}/api/combats`, {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
             body:    JSON.stringify(body),
@@ -808,23 +811,24 @@ async function startCombatSession() {
         }
         const data = await res.json();
         activeCombatId = String(data.combatId);
+        activeJoinCode = data.joinCode;           // ← código corto del servidor
         localStorage.setItem(COMBAT_ID_KEY, activeCombatId);
         connectToSSE(activeCombatId);
         renderCombatShareLink();
-        showOnlineCodeModal(activeCombatId); // modal prominente con el código
+        showOnlineCodeModal(activeJoinCode);       // ← mostrar modal con código real
     } catch (e) {
         console.warn('[sync] startCombatSession failed:', e.message);
         showNotification(`❌ Sin conexión con el servidor (${e.message})`, 5000);
     }
 }
 
-// Modal prominente que muestra el código de sala al crear una partida
-function showOnlineCodeModal(combatId) {
+// Modal prominente con el joinCode real que viene del servidor
+function showOnlineCodeModal(joinCode) {
+    if (!joinCode) return;
     document.getElementById('onlineCodeModal')?.remove();
-    const url  = `${window.location.origin}${window.location.pathname}?combat=${combatId}`;
-    const code = combatId.slice(-6).toUpperCase();
-    // Auto-copiar al portapapeles
-    navigator.clipboard?.writeText(url).catch(() => {});
+    const url = `${window.location.origin}${window.location.pathname}`;
+    // Auto-copiar código al portapapeles
+    navigator.clipboard?.writeText(joinCode).catch(() => {});
     const modal = document.createElement('div');
     modal.id = 'onlineCodeModal';
     modal.className = 'online-code-modal-overlay';
@@ -832,36 +836,33 @@ function showOnlineCodeModal(combatId) {
         <div class="online-code-modal">
             <div class="online-code-modal-title">🌐 Partida creada</div>
             <div class="online-code-modal-subtitle">Comparte este código con los demás jugadores</div>
-            <div class="online-code-big">${code}</div>
-            <div class="online-code-url">${url}</div>
+            <div class="online-code-big">${joinCode}</div>
             <div class="online-code-modal-btns">
                 <button class="online-code-copy-btn"
+                        onclick="navigator.clipboard.writeText('${joinCode}').then(()=>showNotification('✅ Código copiado',1500))">
+                    🔢 Copiar código
+                </button>
+                <button class="online-code-copy-btn online-code-copy-btn-sec"
                         onclick="navigator.clipboard.writeText('${url}').then(()=>showNotification('✅ Link copiado',1500))">
                     📋 Copiar link
                 </button>
-                <button class="online-code-copy-btn online-code-copy-btn-sec"
-                        onclick="navigator.clipboard.writeText('${code}').then(()=>showNotification('✅ Código copiado',1500))">
-                    🔢 Copiar código
-                </button>
             </div>
-            <div class="online-code-hint">El link ya se ha copiado automáticamente al portapapeles</div>
+            <div class="online-code-hint">El código ya se ha copiado automáticamente al portapapeles</div>
             <button class="online-code-close-btn" onclick="document.getElementById('onlineCodeModal').remove()">Entrar al combate →</button>
         </div>`;
     document.body.appendChild(modal);
 }
 
-// Render the share link in the combat top bar (master only, recordatorio siempre visible)
+// Render the share link en la barra superior (recordatorio siempre visible)
 function renderCombatShareLink() {
     const el = document.getElementById('combatShareLink');
-    if (!el || !activeCombatId) return;
-    const url  = `${window.location.origin}${window.location.pathname}?combat=${activeCombatId}`;
-    const code = activeCombatId.slice(-6).toUpperCase();
+    if (!el || !activeJoinCode) return;
     el.innerHTML = `
         <span class="share-link-label">🌐</span>
-        <span class="share-link-code" title="Código de sala">${code}</span>
+        <span class="share-link-code" title="Código de sala">${activeJoinCode}</span>
         <button class="share-link-copy"
-                onclick="navigator.clipboard.writeText('${url}').then(()=>showNotification('✅ Link copiado',1500));showOnlineCodeModal('${activeCombatId}')"
-                title="Ver código y copiar link">📋</button>`;
+                onclick="navigator.clipboard.writeText('${activeJoinCode}').then(()=>showNotification('✅ Código copiado',1500));showOnlineCodeModal('${activeJoinCode}')"
+                title="Ver código y copiar">📋</button>`;
     el.style.display = 'flex';
 }
 
@@ -875,41 +876,46 @@ function showOnlineLobby() {
 // Activar modo online y redirigir al setup normal de combate
 function startOnlineCombatSetup() {
     isOnlineCombat = true;
-    // Forzar rol master para el creador
     gameRole = { type: 'master', characterId: null };
     localStorage.setItem(ROLE_KEY, JSON.stringify(gameRole));
     updateRoleIndicator();
     showCombatSetup();
 }
 
-// Unirse a una partida existente por código/URL
+// Unirse a una partida por joinCode (6 chars) — llama a POST /api/combats/join
 async function joinOnlineSession() {
-    const input = document.getElementById('onlineJoinInput')?.value?.trim() || '';
-    // Extraer el ID: puede ser URL completa o ID directo (24 chars hex)
-    const idMatch = input.match(/([a-f0-9]{24})/i);
-    if (!idMatch) {
-        showOnlineError('Código inválido — pega la URL o el ID de 24 caracteres');
+    const input = (document.getElementById('onlineJoinInput')?.value || '').trim().toUpperCase();
+
+    // Admitir código de 6 chars alfanuméricos
+    if (!/^[A-Z0-9]{6}$/.test(input)) {
+        showOnlineError('Introduce el código de 6 caracteres (ej: AB12CD)');
         return;
     }
-    const id = idMatch[1];
+
     try {
-        const res = await fetch(`${API_BASE}/api/combats/${id}`);
-        if (!res.ok) { showOnlineError('Partida no encontrada'); return; }
+        const res = await fetch(`${API_BASE}/api/combats/join`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ joinCode: input }),
+        });
         const data = await res.json();
-        if (!data.isActive) { showOnlineError('Esta partida ya ha terminado'); return; }
+        if (!res.ok) {
+            showOnlineError(data.error || 'Partida no encontrada');
+            return;
+        }
 
         // Entrar como master (control total)
-        isOnlineCombat = true;
+        isOnlineCombat  = true;
+        activeJoinCode  = data.joinCode;
+        activeCombatId  = String(data.combatId);
         gameRole = { type: 'master', characterId: null };
         localStorage.setItem(ROLE_KEY, JSON.stringify(gameRole));
+        localStorage.setItem(COMBAT_ID_KEY, activeCombatId);
         updateRoleIndicator();
 
-        // Aplicar estado remoto
-        activeCombatId = id;
-        localStorage.setItem(COMBAT_ID_KEY, id);
-        applyRemoteState({ ...data, _clientId: null }); // _clientId null → fuerza aplicar
+        applyRemoteState({ ...data.combat, _clientId: null });
         combatModeActive = true;
-        connectToSSE(id);
+        connectToSSE(activeCombatId);
         setView('combatManager');
         renderCombatManager();
         renderCombatShareLink();
@@ -935,6 +941,7 @@ function showOnlineError(msg) {
 function clearOnlineSession() {
     isOnlineCombat = false;
     activeCombatId = null;
+    activeJoinCode = null;
     localStorage.removeItem(COMBAT_ID_KEY);
     if (sseSource) { sseSource.close(); sseSource = null; }
     const el = document.getElementById('combatShareLink');
