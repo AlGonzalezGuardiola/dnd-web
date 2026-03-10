@@ -13,8 +13,8 @@
         href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
-    <link rel="stylesheet" href="style.css?v=20260310g">
-    <link rel="stylesheet" href="mobile.css?v=20260310g" media="screen and (max-width: 768px)">
+    <link rel="stylesheet" href="style.css?v=20260310h">
+    <link rel="stylesheet" href="mobile.css?v=20260310h" media="screen and (max-width: 768px)">
 </head>
 
 <body>
@@ -82,6 +82,31 @@
                 <input id="onlineJoinInput" class="online-join-input" placeholder="Ej: AB12CD" maxlength="6" autocomplete="off" style="letter-spacing:0.15em;text-transform:uppercase;font-size:20px;font-weight:700;text-align:center">
                 <button class="btn-combat-primary" style="margin-top:12px" onclick="joinOnlineSession()">Unirse</button>
             </div>
+        </div>
+    </section>
+
+    <!-- Online Waiting Room -->
+    <section id="onlineWaitingView" class="character-section" style="display:none;">
+        <h1 class="landing-title">🌐 Sala de espera</h1>
+        <div class="online-waiting-card">
+            <div class="waiting-label">Código de sala</div>
+            <div class="waiting-code" id="waitingJoinCode">------</div>
+            <button class="online-code-copy-btn" style="margin-bottom:24px"
+                    onclick="navigator.clipboard.writeText(document.getElementById('waitingJoinCode').textContent).then(()=>showNotification('✅ Código copiado',1500))">
+                📋 Copiar código
+            </button>
+            <div class="waiting-devices-row">
+                <span class="waiting-devices-icon">👥</span>
+                <span class="waiting-devices-num" id="waitingDeviceCount">1</span>
+                <span class="waiting-devices-label">/ 2 jugadores conectados</span>
+            </div>
+            <div class="waiting-status-msg" id="waitingDeviceMsg">Esperando más jugadores… (mínimo 2)</div>
+            <button id="btnStartCombat" class="btn-combat-primary waiting-start-btn"
+                    style="display:none" disabled
+                    onclick="startOnlineCombat()">
+                ⏳ Esperando jugadores (1/2)
+            </button>
+            <div class="waiting-hint">Los demás jugadores entran en <strong>Combate en Línea → Unirse</strong> e introducen el código</div>
         </div>
     </section>
 
@@ -404,9 +429,9 @@
         <button id="diceToggleBtn" class="dice-toggle-btn" title="Lanzador de dados" aria-label="Abrir lanzador de dados">🎲</button>
     </div>
 
-    <script src="characters.js?v=20260310g"></script>
-    <script src="data.js?v=20260310g"></script>
-    <script src="script.js?v=20260310g"></script>
+    <script src="characters.js?v=20260310h"></script>
+    <script src="data.js?v=20260310h"></script>
+    <script src="script.js?v=20260310h"></script>
 </body>
 
 </html>

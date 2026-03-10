@@ -757,6 +757,34 @@ function _hydrateParticipants(participants) {
 // Apply state received from SSE (skip own echoes via _clientId)
 function applyRemoteState(data) {
     if (data._clientId === CLIENT_ID) return; // own echo — ignore
+
+    // Si el combate pasa a RUNNING mientras estamos en la sala de espera → entrar al combate
+    if (data.status === 'RUNNING' && currentView() === 'onlineWaiting') {
+        _hydrateParticipants(data.participants);
+        Object.assign(combatState, {
+            participants:      data.participants      || [],
+            currentIndex:      data.currentIndex      ?? 0,
+            round:             data.round             ?? 1,
+            isActive:          true,
+            segundaAccionTurn: data.segundaAccionTurn ?? false,
+            extraAttackTurn:   data.extraAttackTurn   ?? false,
+            nextLogId:         data.nextLogId         ?? 0,
+            log:               data.log               || [],
+        });
+        combatModeActive = true;
+        setView('combatManager');
+        renderCombatManager();
+        renderCombatShareLink();
+        return;
+    }
+
+    // Si estamos en sala de espera y llega actualización de devices → refrescar contador
+    if (currentView() === 'onlineWaiting') {
+        updateWaitingRoom(data.connectedDevices?.length ?? 1, data.joinCode || activeJoinCode);
+        return;
+    }
+
+    // Actualización normal de estado de combate
     _hydrateParticipants(data.participants);
     Object.assign(combatState, {
         participants:      data.participants      || [],
@@ -778,13 +806,14 @@ function connectToSSE(id) {
     sseSource.onmessage = e => {
         try { applyRemoteState(JSON.parse(e.data)); } catch (_) {}
     };
-    // EventSource auto-reconnects on error — no action needed
 }
 
 // Master: POST to create a new combat session, then open SSE
 // joinCode activo (viene del servidor al crear o unirse)
 let activeJoinCode = null;
 
+// Llamado desde beginCombatFromSetup() cuando isOnlineCombat=true
+// Crea la sesión, va a sala de espera, espera ≥2 devices antes de iniciar
 async function startCombatSession() {
     showNotification('⏳ Creando sesión online…', 2000);
     try {
@@ -792,49 +821,103 @@ async function startCombatSession() {
             participants:      combatState.participants.map(p => ({ ...p, charData: null })),
             currentIndex:      combatState.currentIndex,
             round:             combatState.round,
-            isActive:          true,
+            isActive:          false,           // todavía no está activo
             segundaAccionTurn: false,
             extraAttackTurn:   false,
             nextLogId:         combatState.nextLogId,
             log:               combatState.log,
-            _clientId:         CLIENT_ID,
+            deviceId:          CLIENT_ID,       // registrar dispositivo creador
         };
         const res = await fetch(`${API_BASE}/api/combats`, {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
             body:    JSON.stringify(body),
         });
+
+        console.log('[online] POST /api/combats status:', res.status);
         if (!res.ok) {
             const err = await res.json().catch(() => ({}));
             showNotification(`❌ Error al crear sesión: ${err.error || res.status}`, 4000);
             return;
         }
         const data = await res.json();
+        console.log('[online] create response:', data);   // DEBUG: ver joinCode aquí
+
         activeCombatId = String(data.combatId);
-        activeJoinCode = data.joinCode;           // ← código corto del servidor
+        activeJoinCode = data.joinCode;
         localStorage.setItem(COMBAT_ID_KEY, activeCombatId);
+
         connectToSSE(activeCombatId);
-        renderCombatShareLink();
-        showOnlineCodeModal(activeJoinCode);       // ← mostrar modal con código real
+        setView('onlineWaiting');
+        updateWaitingRoom(data.deviceCount ?? 1, activeJoinCode, true /*isMaster*/);
     } catch (e) {
-        console.warn('[sync] startCombatSession failed:', e.message);
+        console.error('[online] startCombatSession error:', e);
         showNotification(`❌ Sin conexión con el servidor (${e.message})`, 5000);
     }
 }
 
-// Modal prominente con el joinCode real que viene del servidor
+// Mostrar/actualizar la sala de espera con el estado actual de conexiones
+function updateWaitingRoom(deviceCount, joinCode, isMasterDevice) {
+    const el = document.getElementById('onlineWaitingView');
+    if (!el) return;
+
+    const code    = joinCode || activeJoinCode || '------';
+    const enough  = deviceCount >= 2;
+    const isMstr  = isMasterDevice !== undefined ? isMasterDevice : isMaster();
+
+    el.querySelector('#waitingJoinCode').textContent = code;
+    el.querySelector('#waitingDeviceCount').textContent = deviceCount;
+    el.querySelector('#waitingDeviceMsg').textContent =
+        enough ? '✅ ¡Listo para empezar!' : `Esperando más jugadores… (mínimo 2)`;
+
+    const btn = el.querySelector('#btnStartCombat');
+    if (btn) {
+        btn.style.display   = isMstr ? 'block' : 'none';
+        btn.disabled        = !enough;
+        btn.textContent     = enough ? '⚔️ Iniciar combate' : `⏳ Esperando jugadores (${deviceCount}/2)`;
+    }
+}
+
+// Master: iniciar el combate cuando haya ≥2 devices
+async function startOnlineCombat() {
+    if (!activeCombatId) return;
+    try {
+        const res  = await fetch(`${API_BASE}/api/combats/${activeCombatId}/start`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ _clientId: CLIENT_ID }),
+        });
+        const data = await res.json();
+        console.log('[online] start response:', data);
+
+        if (!res.ok) {
+            showNotification(`❌ ${data.error}`, 4000);
+            return;
+        }
+        // El SSE recibirá status:RUNNING y todos cambiarán a combatManager
+        // El master también lo recibe y entra (applyRemoteState lo gestiona)
+        // Pero como el _clientId coincide, lo manejamos aquí directamente:
+        combatState.isActive = true;
+        combatModeActive = true;
+        setView('combatManager');
+        renderCombatManager();
+        renderCombatShareLink();
+    } catch (e) {
+        showNotification(`❌ Error al iniciar: ${e.message}`, 4000);
+    }
+}
+
+// Modal con el código de sala (reabre al pulsar el widget de la barra superior)
 function showOnlineCodeModal(joinCode) {
     if (!joinCode) return;
     document.getElementById('onlineCodeModal')?.remove();
-    const url = `${window.location.origin}${window.location.pathname}`;
-    // Auto-copiar código al portapapeles
     navigator.clipboard?.writeText(joinCode).catch(() => {});
     const modal = document.createElement('div');
     modal.id = 'onlineCodeModal';
     modal.className = 'online-code-modal-overlay';
     modal.innerHTML = `
         <div class="online-code-modal">
-            <div class="online-code-modal-title">🌐 Partida creada</div>
+            <div class="online-code-modal-title">🌐 Código de sala</div>
             <div class="online-code-modal-subtitle">Comparte este código con los demás jugadores</div>
             <div class="online-code-big">${joinCode}</div>
             <div class="online-code-modal-btns">
@@ -842,13 +925,9 @@ function showOnlineCodeModal(joinCode) {
                         onclick="navigator.clipboard.writeText('${joinCode}').then(()=>showNotification('✅ Código copiado',1500))">
                     🔢 Copiar código
                 </button>
-                <button class="online-code-copy-btn online-code-copy-btn-sec"
-                        onclick="navigator.clipboard.writeText('${url}').then(()=>showNotification('✅ Link copiado',1500))">
-                    📋 Copiar link
-                </button>
             </div>
             <div class="online-code-hint">El código ya se ha copiado automáticamente al portapapeles</div>
-            <button class="online-code-close-btn" onclick="document.getElementById('onlineCodeModal').remove()">Entrar al combate →</button>
+            <button class="online-code-close-btn" onclick="document.getElementById('onlineCodeModal').remove()">Cerrar</button>
         </div>`;
     document.body.appendChild(modal);
 }
@@ -862,7 +941,7 @@ function renderCombatShareLink() {
         <span class="share-link-code" title="Código de sala">${activeJoinCode}</span>
         <button class="share-link-copy"
                 onclick="navigator.clipboard.writeText('${activeJoinCode}').then(()=>showNotification('✅ Código copiado',1500));showOnlineCodeModal('${activeJoinCode}')"
-                title="Ver código y copiar">📋</button>`;
+                title="Ver código">📋</button>`;
     el.style.display = 'flex';
 }
 
@@ -882,11 +961,10 @@ function startOnlineCombatSetup() {
     showCombatSetup();
 }
 
-// Unirse a una partida por joinCode (6 chars) — llama a POST /api/combats/join
+// Unirse a una partida por joinCode de 6 chars → sala de espera
 async function joinOnlineSession() {
     const input = (document.getElementById('onlineJoinInput')?.value || '').trim().toUpperCase();
 
-    // Admitir código de 6 chars alfanuméricos
     if (!/^[A-Z0-9]{6}$/.test(input)) {
         showOnlineError('Introduce el código de 6 caracteres (ej: AB12CD)');
         return;
@@ -896,31 +974,51 @@ async function joinOnlineSession() {
         const res = await fetch(`${API_BASE}/api/combats/join`, {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify({ joinCode: input }),
+            body:    JSON.stringify({ joinCode: input, deviceId: CLIENT_ID }),
         });
         const data = await res.json();
+        console.log('[online] join response:', data);   // DEBUG
+
         if (!res.ok) {
             showOnlineError(data.error || 'Partida no encontrada');
             return;
         }
 
-        // Entrar como master (control total)
-        isOnlineCombat  = true;
-        activeJoinCode  = data.joinCode;
-        activeCombatId  = String(data.combatId);
+        isOnlineCombat = true;
+        activeJoinCode = data.joinCode;
+        activeCombatId = String(data.combatId);
         gameRole = { type: 'master', characterId: null };
         localStorage.setItem(ROLE_KEY, JSON.stringify(gameRole));
         localStorage.setItem(COMBAT_ID_KEY, activeCombatId);
         updateRoleIndicator();
 
-        applyRemoteState({ ...data.combat, _clientId: null });
-        combatModeActive = true;
         connectToSSE(activeCombatId);
-        setView('combatManager');
-        renderCombatManager();
-        renderCombatShareLink();
+
+        // Si la partida ya está RUNNING, entrar directamente al combate
+        if (data.status === 'RUNNING' || data.combat?.status === 'RUNNING') {
+            _hydrateParticipants(data.combat?.participants || []);
+            Object.assign(combatState, {
+                participants:      data.combat?.participants || [],
+                currentIndex:      data.combat?.currentIndex ?? 0,
+                round:             data.combat?.round ?? 1,
+                isActive:          true,
+                segundaAccionTurn: data.combat?.segundaAccionTurn ?? false,
+                extraAttackTurn:   data.combat?.extraAttackTurn ?? false,
+                nextLogId:         data.combat?.nextLogId ?? 0,
+                log:               data.combat?.log || [],
+            });
+            combatModeActive = true;
+            setView('combatManager');
+            renderCombatManager();
+            renderCombatShareLink();
+        } else {
+            // Sala de espera
+            setView('onlineWaiting');
+            updateWaitingRoom(data.deviceCount ?? 1, activeJoinCode, false /*no es master*/);
+        }
     } catch (e) {
         showOnlineError('Error de conexión — comprueba que el servidor está activo');
+        console.error('[online] join error:', e);
     }
 }
 
@@ -4341,6 +4439,8 @@ function setView(viewName) {
     document.getElementById('welcomeScreen').style.display = 'none';
     const onlineLobby = document.getElementById('onlineLobbyView');
     if (onlineLobby) onlineLobby.style.display = 'none';
+    const onlineWaiting = document.getElementById('onlineWaitingView');
+    if (onlineWaiting) onlineWaiting.style.display = 'none';
 
     // Also hide the character sheet if it was open
     const sheetContainer = document.getElementById('characterSheetContainer');
@@ -4403,8 +4503,19 @@ function setView(viewName) {
             document.getElementById('breadcrumbs').textContent = '🌐 Combate en Línea';
             document.getElementById('btnBack').style.display = 'flex';
             break;
+        case 'onlineWaiting':
+            document.getElementById('onlineWaitingView').style.display = 'flex';
+            if (editorToolbar) editorToolbar.style.display = 'none';
+            if (hud) hud.style.display = 'flex';
+            if (diceWidget) diceWidget.style.display = 'none';
+            document.getElementById('breadcrumbs').textContent = '🌐 Sala de espera';
+            document.getElementById('btnBack').style.display = 'flex';
+            break;
     }
 }
+
+// Getter para la vista actual
+function currentView() { return state.currentView; }
 
 // ============================================
 // Start Application

@@ -64,11 +64,23 @@ const LogEntrySchema = new mongoose.Schema({
     },
 }, { _id: false });
 
+// ── Connected device sub-schema ───────────────────────────────────────────────
+const ConnectedDeviceSchema = new mongoose.Schema({
+    deviceId: { type: String, required: true },
+    joinedAt: { type: Date,   default: Date.now },
+}, { _id: false });
+
 // ── Main Combat schema ───────────────────────────────────────────────────────
 
 const CombatSchema = new mongoose.Schema({
     // Código corto para unirse (6 chars, único, generado al crear)
     joinCode: { type: String, required: true, unique: true, uppercase: true },
+
+    // Estado de la sala: WAITING = esperando jugadores, RUNNING = combate en curso
+    status: { type: String, enum: ['WAITING', 'RUNNING', 'ENDED'], default: 'WAITING' },
+
+    // Dispositivos que han entrado a la sala (cada CLIENT_ID único es un dispositivo)
+    connectedDevices: { type: [ConnectedDeviceSchema], default: [] },
 
     // Participants split by role for quick filtering
     players:  { type: [ParticipantSchema], default: [] },  // tipo jugador
@@ -90,10 +102,10 @@ const CombatSchema = new mongoose.Schema({
     log: { type: [LogEntrySchema], default: [] },
 
     // Metadata
-    name:      { type: String, default: '' },   // optional session name
-    createdBy: { type: String, default: '' },   // optional GM identifier
+    name:      { type: String, default: '' },
+    createdBy: { type: String, default: '' },
 }, {
-    timestamps: true,   // adds createdAt + updatedAt
+    timestamps: true,
 });
 
 module.exports = mongoose.model('Combat', CombatSchema);

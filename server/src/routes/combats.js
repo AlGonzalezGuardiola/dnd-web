@@ -13,8 +13,7 @@ function generateJoinCode(length = 6) {
 }
 
 // ── In-memory SSE client registry ────────────────────────────────────────────
-// combatId (string) → Set<res>
-const sseClients = new Map();
+const sseClients = new Map(); // combatId → Set<res>
 
 function broadcast(combatId, payload) {
     const clients = sseClients.get(String(combatId));
@@ -24,13 +23,16 @@ function broadcast(combatId, payload) {
 }
 
 // ── POST /api/combats ─────────────────────────────────────────────────────────
+// Crea la sesión de combate con status WAITING.
+// El creador se registra como primer dispositivo.
 router.post('/', async (req, res) => {
     try {
         const body         = req.body;
         const participants = body.participants || [];
+        const deviceId     = body.deviceId || 'unknown';
 
-        // Generar joinCode único (reintenta si colisiona)
-        let combat = null;
+        // Generar joinCode único (reintenta si colisiona con índice unique)
+        let combat   = null;
         let attempts = 0;
         while (!combat && attempts < 10) {
             attempts++;
@@ -38,9 +40,11 @@ router.post('/', async (req, res) => {
             try {
                 combat = await Combat.create({
                     joinCode,
-                    players:           participants.filter(p => p.tipo === 'jugador'),
-                    npcs:              participants.filter(p => p.tipo === 'aliado'),
-                    enemies:           participants.filter(p => p.tipo === 'enemigo'),
+                    status:           'WAITING',
+                    connectedDevices: [{ deviceId }],
+                    players:          participants.filter(p => p.tipo === 'jugador'),
+                    npcs:             participants.filter(p => p.tipo === 'aliado'),
+                    enemies:          participants.filter(p => p.tipo === 'enemigo'),
                     participants,
                     currentIndex:      body.currentIndex      ?? 0,
                     round:             body.round             ?? 1,
@@ -53,8 +57,7 @@ router.post('/', async (req, res) => {
                     createdBy:         body.createdBy         ?? '',
                 });
             } catch (e) {
-                // Si es colisión de índice único, reintenta; si es otro error, lanza
-                if (e.code !== 11000) throw e;
+                if (e.code !== 11000) throw e; // solo reintentar en colisión de índice único
             }
         }
 
@@ -62,10 +65,14 @@ router.post('/', async (req, res) => {
             return res.status(500).json({ error: 'No se pudo generar un código único, reintenta' });
         }
 
+        console.log(`[POST /api/combats] Creado combate ${combat._id} | joinCode: ${combat.joinCode} | devices: ${combat.connectedDevices.length}`);
+
         res.status(201).json({
-            success:  true,
-            combatId: combat._id,
-            joinCode: combat.joinCode,
+            success:      true,
+            combatId:     combat._id,
+            joinCode:     combat.joinCode,
+            status:       combat.status,
+            deviceCount:  combat.connectedDevices.length,
             combat,
         });
     } catch (err) {
@@ -75,34 +82,82 @@ router.post('/', async (req, res) => {
 });
 
 // ── POST /api/combats/join — unirse por joinCode ──────────────────────────────
-// IMPORTANTE: esta ruta va ANTES de /:id para que Express no confunda "join" con un id
+// IMPORTANTE: va ANTES de /:id para que Express no confunda "join" con un id
 router.post('/join', async (req, res) => {
     try {
-        const { joinCode } = req.body;
+        const { joinCode, deviceId } = req.body;
         if (!joinCode) {
             return res.status(400).json({ error: 'Falta el campo joinCode' });
         }
 
+        // Buscar la partida por código (case-insensitive)
         const combat = await Combat.findOne({
             joinCode: joinCode.trim().toUpperCase(),
-        }).lean();
+        });
 
         if (!combat) {
             return res.status(404).json({ error: 'Código de partida no encontrado' });
         }
-        if (!combat.isActive) {
+        if (combat.status === 'ENDED') {
             return res.status(410).json({ error: 'Esta partida ya ha terminado' });
         }
 
+        // Registrar dispositivo si no está ya (evitar duplicados)
+        const id = deviceId || 'unknown';
+        const alreadyConnected = combat.connectedDevices.some(d => d.deviceId === id);
+        if (!alreadyConnected) {
+            combat.connectedDevices.push({ deviceId: id });
+            await combat.save();
+        }
+
+        const doc = combat.toObject();
+        console.log(`[POST /api/combats/join] joinCode: ${doc.joinCode} | devices: ${doc.connectedDevices.length}`);
+
+        // Notificar a todos los conectados que alguien se unió
+        broadcast(String(combat._id), { ...doc, _clientId: null });
+
         res.json({
-            success:  true,
-            combatId: combat._id,
-            joinCode: combat.joinCode,
-            combat,
+            success:     true,
+            combatId:    doc._id,
+            joinCode:    doc.joinCode,
+            status:      doc.status,
+            deviceCount: doc.connectedDevices.length,
+            combat:      doc,
         });
     } catch (err) {
         console.error('[POST /api/combats/join]', err);
         res.status(500).json({ error: 'Error al unirse al combate', detail: err.message });
+    }
+});
+
+// ── POST /api/combats/:id/start — iniciar combate (requiere ≥2 dispositivos) ──
+router.post('/:id/start', async (req, res) => {
+    try {
+        const combat = await Combat.findById(req.params.id);
+        if (!combat) return res.status(404).json({ error: 'Combate no encontrado' });
+        if (combat.status === 'RUNNING') return res.json({ message: 'Ya en curso', combat: combat.toObject() });
+
+        const uniqueDevices = new Set(combat.connectedDevices.map(d => d.deviceId)).size;
+        if (uniqueDevices < 2) {
+            return res.status(400).json({
+                error: `No se puede iniciar: se necesita al menos 1 jugador más unido desde otro dispositivo (ahora mismo: ${uniqueDevices} dispositivo${uniqueDevices === 1 ? '' : 's'}).`,
+                deviceCount: uniqueDevices,
+            });
+        }
+
+        combat.status   = 'RUNNING';
+        combat.isActive = true;
+        await combat.save();
+
+        const doc = combat.toObject();
+        broadcast(String(combat._id), { ...doc, _clientId: req.body._clientId || null });
+
+        console.log(`[POST /api/combats/:id/start] Combate ${combat._id} INICIADO | devices: ${uniqueDevices}`);
+        res.json({ success: true, combat: doc });
+    } catch (err) {
+        console.error('[POST /api/combats/:id/start]', err);
+        if (err.name === 'CastError') return res.status(400).json({ error: 'ID inválido' });
+        res.status(500).json({ error: 'Error al iniciar el combate', detail: err.message });
     }
 });
 
@@ -112,24 +167,20 @@ router.get('/:id/stream', async (req, res) => {
         const combat = await Combat.findById(req.params.id).lean();
         if (!combat) return res.status(404).json({ error: 'Combate no encontrado' });
 
-        // SSE headers
-        res.setHeader('Content-Type',  'text/event-stream');
-        res.setHeader('Cache-Control', 'no-cache');
-        res.setHeader('Connection',    'keep-alive');
+        res.setHeader('Content-Type',      'text/event-stream');
+        res.setHeader('Cache-Control',     'no-cache');
+        res.setHeader('Connection',        'keep-alive');
         res.setHeader('X-Accel-Buffering', 'no');
         res.flushHeaders();
 
-        // Push current state immediately so the client is in sync
+        // Enviar estado actual al conectarse
         res.write(`data: ${JSON.stringify(combat)}\n\n`);
 
-        // Register client
         const id = String(req.params.id);
         if (!sseClients.has(id)) sseClients.set(id, new Set());
         sseClients.get(id).add(res);
 
-        // Heartbeat every 20 s to prevent load-balancer / proxy timeouts
         const hb = setInterval(() => { try { res.write(': ping\n\n'); } catch (_) {} }, 20000);
-
         req.on('close', () => {
             clearInterval(hb);
             sseClients.get(id)?.delete(res);
@@ -159,8 +210,9 @@ router.put('/:id', async (req, res) => {
     try {
         const body   = req.body;
         const update = { ...body };
-        delete update._clientId; // don't persist the sender's client ID
-        delete update.joinCode;  // joinCode es inmutable, no permitir sobrescritura
+        delete update._clientId;     // no persistir el clientId del emisor
+        delete update.joinCode;      // joinCode es inmutable
+        delete update.connectedDevices; // no sobrescribir la lista de devices por PUT
 
         if (Array.isArray(body.participants)) {
             update.players  = body.participants.filter(p => p.tipo === 'jugador');
@@ -177,7 +229,6 @@ router.put('/:id', async (req, res) => {
         if (!combat) return res.status(404).json({ error: 'Combate no encontrado' });
 
         broadcast(req.params.id, { ...combat, _clientId: body._clientId });
-
         res.json(combat);
     } catch (err) {
         console.error('[PUT /api/combats/:id]', err);
@@ -191,7 +242,7 @@ router.delete('/:id', async (req, res) => {
     try {
         const combat = await Combat.findByIdAndUpdate(
             req.params.id,
-            { $set: { isActive: false } },
+            { $set: { isActive: false, status: 'ENDED' } },
             { new: true }
         ).lean();
         if (!combat) return res.status(404).json({ error: 'Combate no encontrado' });
