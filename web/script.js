@@ -888,19 +888,19 @@ function updateWaitingRoom(deviceCount, joinCode, isMasterDevice) {
     if (!el) return;
 
     const code    = joinCode || activeJoinCode || '------';
-    const enough  = deviceCount >= 2;
     const isMstr  = isMasterDevice !== undefined ? isMasterDevice : isMaster();
 
     el.querySelector('#waitingJoinCode').textContent = code;
     el.querySelector('#waitingDeviceCount').textContent = deviceCount;
-    el.querySelector('#waitingDeviceMsg').textContent =
-        enough ? '✅ ¡Listo para empezar!' : `Esperando más jugadores… (mínimo 2)`;
+    el.querySelector('#waitingDeviceMsg').textContent = deviceCount >= 1
+        ? `✅ ${deviceCount} jugador${deviceCount !== 1 ? 'es' : ''} conectado${deviceCount !== 1 ? 's' : ''}`
+        : 'Conectando…';
 
     const btn = el.querySelector('#btnStartCombat');
     if (btn) {
         btn.style.display   = isMstr ? 'block' : 'none';
-        btn.disabled        = !enough;
-        btn.textContent     = enough ? '⚔️ Iniciar combate' : `⏳ Esperando jugadores (${deviceCount}/2)`;
+        btn.disabled        = false;
+        btn.textContent     = '⚔️ Iniciar combate';
     }
 }
 
