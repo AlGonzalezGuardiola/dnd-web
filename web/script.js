@@ -908,26 +908,26 @@ function updateWaitingRoom(deviceCount, joinCode, isMasterDevice) {
 async function startOnlineCombat() {
     if (!activeCombatId) return;
     try {
-        const res  = await fetch(`${API_BASE}/api/combats/${activeCombatId}/start`, {
+        const res = await fetch(`${API_BASE}/api/combats/${activeCombatId}/start`, {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
             body:    JSON.stringify({ _clientId: CLIENT_ID }),
         });
-        const data = await res.json().catch(() => ({}));
-
-        // Si el servidor devuelve error pero el combate ya quedó como RUNNING
-        // (el save ocurre antes del broadcast), entrar igualmente.
-        if (!res.ok && data?.combat?.status !== 'RUNNING') {
-            showNotification(`❌ ${data.error || 'Error al iniciar el combate'}`, 4000);
+        // 404 = el combate no existe en el servidor
+        if (res.status === 404) {
+            showNotification('❌ Sesión no encontrada', 4000);
             return;
         }
+        // Para cualquier otra respuesta (200, 500…) el servidor ya guardó RUNNING
+        // antes de cualquier posible error de broadcast. Navegar siempre.
         combatState.isActive = true;
-        combatModeActive = true;
+        combatModeActive     = true;
         setView('combatManager');
         renderCombatManager();
         renderCombatShareLink();
     } catch (e) {
-        showNotification(`❌ Error al iniciar: ${e.message}`, 4000);
+        // Error de red — el servidor no recibió la petición
+        showNotification(`❌ Error de conexión: ${e.message}`, 4000);
     }
 }
 
