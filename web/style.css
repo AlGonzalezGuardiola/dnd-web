@@ -5,11 +5,14 @@
     /* Colors - Dark Fantasy Theme */
     --bg-primary: #0a0e17;
     --bg-secondary: #151b2b;
+    --bg-dark: #080c14;
+    --bg-panel: #1a2035;
     --bg-glass: rgba(15, 23, 42, 0.8);
     --accent-gold: #d4af37;
     --accent-magic: #8b5cf6;
     --text-primary: #f1f5f9;
     --text-secondary: #94a3b8;
+    --text-muted: #64748b;
     --border-color: rgba(212, 175, 55, 0.3);
 
     /* Shadows & Effects */
@@ -24,6 +27,9 @@
     /* Transitions */
     --transition-fast: 150ms ease;
     --transition-smooth: 300ms ease;
+
+    /* Focus ring */
+    --focus-ring: 0 0 0 3px rgba(212, 175, 55, 0.45);
 }
 
 /* ============================================
@@ -264,8 +270,8 @@ body::before {
 
 /* HUD Buttons (Shared Styles) */
 .hud-btn {
-    width: 45px;
-    height: 45px;
+    min-width: 44px;
+    min-height: 44px;
     background: var(--bg-glass);
     border: 2px solid var(--accent-gold);
     color: var(--text-primary);
@@ -293,32 +299,35 @@ body::before {
 /* Home button specific */
 .btn-home {
     width: auto;
-    padding: 0 15px;
+    padding: 0 14px;
     gap: 8px;
-    font-size: 20px;
 }
 
 .btn-home::after {
     content: 'INICIO';
     font-family: var(--font-heading);
-    font-size: 14px;
+    font-size: 13px;
     font-weight: bold;
     letter-spacing: 1px;
 }
 
 .btn-back-nav {
     width: auto;
-    padding: 0 15px;
+    padding: 0 14px;
     gap: 8px;
-    font-size: 20px;
 }
 
 .btn-back-nav::after {
     content: 'VOLVER';
     font-family: var(--font-heading);
-    font-size: 14px;
+    font-size: 13px;
     font-weight: bold;
     letter-spacing: 1px;
+}
+
+/* SVG icons inside hud buttons */
+.hud-btn svg {
+    flex-shrink: 0;
 }
 
 .btn-zoom {
@@ -700,10 +709,15 @@ body::before {
 }
 
 .card:hover {
-    transform: translateY(-10px);
+    transform: translateY(-5px);
     border-color: var(--accent-gold);
-    box-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
-    background: rgba(21, 27, 43, 0.8);
+    box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5), 0 0 24px rgba(212, 175, 55, 0.2);
+    background: rgba(21, 27, 43, 0.85);
+}
+
+.card:active {
+    transform: translateY(-2px) scale(0.98);
+    transition: transform 80ms ease;
 }
 
 .card-icon {
@@ -2585,7 +2599,12 @@ body.view-map .hud {
 
 /* Landing page: 3 cards — allow them to wrap gracefully on mobile */
 #landingPage .landing-cards {
-    max-width: 1000px;
+    max-width: 1100px;
+}
+
+/* Online lobby card: use pointer since it's clickable */
+.online-lobby-card {
+    cursor: pointer;
 }
 
 /* Mobile: landing cards stack vertically full-width */
@@ -2604,7 +2623,7 @@ body.view-map .hud {
 
 /* --- Shared Combat Buttons --- */
 .btn-combat-primary {
-    background: var(--accent-gold);
+    background: linear-gradient(135deg, var(--accent-gold), #b8941e);
     color: #0a0e17;
     border: none;
     border-radius: 10px;
@@ -2613,9 +2632,19 @@ body.view-map .hud {
     font-weight: 700;
     cursor: pointer;
     font-family: var(--font-body);
-    transition: opacity 0.2s;
+    transition: filter 0.2s, transform 0.1s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
 }
-.btn-combat-primary:hover { opacity: 0.85; }
+.btn-combat-primary:hover {
+    filter: brightness(1.12);
+    box-shadow: 0 4px 16px rgba(212, 175, 55, 0.45);
+    transform: translateY(-1px);
+}
+.btn-combat-primary:active {
+    transform: scale(0.97) translateY(0);
+    filter: brightness(0.95);
+    box-shadow: 0 1px 4px rgba(212, 175, 55, 0.2);
+}
 
 .btn-combat-secondary {
     background: transparent;
@@ -3335,10 +3364,11 @@ body.view-map .hud {
     font-size: 13px;
     font-weight: 700;
     cursor: pointer;
-    transition: opacity 0.15s;
+    transition: filter 0.15s, transform 0.1s;
     white-space: nowrap;
 }
-.btn-tc-primary:hover { opacity: 0.85; }
+.btn-tc-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.btn-tc-primary:active { transform: scale(0.96); filter: brightness(0.95); }
 
 .btn-tc-secondary {
     background: rgba(255,255,255,0.05);
@@ -3348,10 +3378,11 @@ body.view-map .hud {
     padding: 6px 12px;
     font-size: 13px;
     cursor: pointer;
-    transition: background 0.15s;
+    transition: background 0.15s, border-color 0.15s;
     white-space: nowrap;
 }
-.btn-tc-secondary:hover { background: rgba(255,255,255,0.1); }
+.btn-tc-secondary:hover { background: rgba(255,255,255,0.1); border-color: rgba(212,175,55,0.4); }
+.btn-tc-secondary:active { transform: scale(0.96); background: rgba(255,255,255,0.06); }
 
 .combat-actor-info {
     flex: 1;
@@ -5687,4 +5718,220 @@ body.role-jugador .master-only { display: none !important; }
 .ssc-badge-locked {
     color: var(--text-muted);
     background: rgba(255, 255, 255, 0.07);
+}
+
+/* ============================================
+   GLOBAL FOCUS STYLES — Keyboard Navigation
+   ============================================ */
+
+/* Remove browser default and replace with branded ring */
+*:focus {
+    outline: none;
+}
+
+*:focus-visible {
+    outline: 2px solid var(--accent-gold);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+/* Tighter focus ring for circular elements */
+.dice-toggle-btn:focus-visible,
+.btn-close-sheet:focus-visible,
+.ds-pip:focus-visible,
+.slot-pip:focus-visible,
+.inspiration-btn:focus-visible {
+    outline-offset: 2px;
+    border-radius: 50%;
+}
+
+/* Inputs use box-shadow ring instead of outline (non-overridable inset) */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-color: var(--accent-gold) !important;
+}
+
+/* ============================================
+   GLOBAL BUTTON ACTIVE (PRESS) STATES
+   ============================================ */
+
+.hud-btn:active {
+    transform: scale(0.93) !important;
+    transition: transform 80ms ease;
+}
+
+.btn-primary:active,
+.btn-secondary:active {
+    transform: scale(0.97);
+    transition: transform 80ms ease;
+}
+
+.btn-editor:active {
+    transform: scale(0.96);
+    transition: transform 80ms ease;
+}
+
+.tab-btn:active {
+    transform: scale(0.95);
+    transition: transform 80ms ease;
+}
+
+.spell-filter-btn:active,
+.condition-btn:active,
+.combat-chip:active,
+.combat-cond-btn:active {
+    transform: scale(0.94);
+    transition: transform 80ms ease;
+}
+
+.role-card:active,
+.player-picker-card:active,
+.combat-select-card:active {
+    transform: scale(0.97);
+    transition: transform 80ms ease;
+}
+
+.online-lobby-card:active {
+    transform: scale(0.98);
+    transition: transform 80ms ease;
+}
+
+.clv-back-btn:active {
+    transform: scale(0.97);
+}
+
+.combat-setup-tab-btn:active {
+    transform: scale(0.96);
+}
+
+.slot-reset-btn:active,
+.npc-remove-btn:active,
+.chip-roll-btn:active,
+.chip-info-btn:active,
+.qe-action-remove-btn:active {
+    transform: scale(0.92);
+    transition: transform 80ms ease;
+}
+
+/* ============================================
+   ENHANCED TURN QUEUE ITEMS
+   ============================================ */
+
+.turn-queue-item {
+    transition: border-color 0.15s, background 0.15s, transform 0.1s;
+}
+
+.turn-queue-item:hover {
+    transform: translateY(-2px);
+}
+
+.turn-queue-item:active {
+    transform: scale(0.96);
+}
+
+/* ============================================
+   CARD VISUAL POLISH
+   ============================================ */
+
+/* Landing page cards — golden shimmer border on hover */
+.card {
+    position: relative;
+    overflow: hidden;
+}
+
+.card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(212,175,55,0.06) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity var(--transition-smooth);
+    pointer-events: none;
+}
+
+.card:hover::after {
+    opacity: 1;
+}
+
+/* ============================================
+   IMPROVED NOTIFICATION STATES
+   ============================================ */
+
+.notification.success {
+    border-color: #4caf50;
+    box-shadow: 0 8px 32px rgba(76, 175, 80, 0.3);
+}
+
+.notification.error {
+    border-color: #f44336;
+    box-shadow: 0 8px 32px rgba(244, 67, 54, 0.3);
+}
+
+/* ============================================
+   MIN-HEIGHT MOBILE FIX (100dvh)
+   ============================================ */
+
+@supports (height: 100dvh) {
+    .landing-page,
+    .character-section,
+    .combat-init-section {
+        min-height: 100dvh;
+    }
+
+    body.view-map {
+        height: 100dvh;
+    }
+
+    @media (max-width: 768px) {
+        .hud {
+            /* Ensures HUD stays within safe viewport area */
+            top: env(safe-area-inset-top, 0);
+        }
+    }
+}
+
+/* ============================================
+   PREFERS-REDUCED-MOTION
+   Disable / simplify all animations for users
+   who have enabled "Reduce Motion" in their OS
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    /* Keep skeleton shimmer functional but slower */
+    .skeleton {
+        animation: shimmer 3s infinite !important;
+    }
+
+    /* Keep pulse animations off — they're distracting */
+    .btn-demonic.active,
+    .inspiration-btn.active,
+    .hp-bar-section.critical .hp-slider,
+    .player-waiting-icon,
+    .dice-result-value.rolling {
+        animation: none !important;
+    }
+
+    /* Disable background star twinkle */
+    body::before {
+        animation: none !important;
+        opacity: 0.2 !important;
+    }
+
+    /* Dice roll animation — show result immediately */
+    .dice-result-value {
+        animation: none !important;
+    }
 }

@@ -14,7 +14,14 @@
 
     body.view-map {
         overflow: hidden;
-        height: 100vh;
+        height: 100dvh;
+        height: 100vh; /* fallback */
+    }
+
+    @supports (height: 100dvh) {
+        body.view-map {
+            height: 100dvh;
+        }
     }
 
     /* Scrollable views: landing, characters */
