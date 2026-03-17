@@ -70,6 +70,18 @@
                 <div class="card-title">🌐 Combate en Línea</div>
                 <p>Partida sincronizada en tiempo real. Juega desde varios dispositivos a la vez.</p>
             </div>
+            <div class="card card-encounters" id="cardEncounters" onclick="openEncounters()">
+                <div class="card-title">⚔️ Encuentros</div>
+                <p>Gestiona encuentros de combate con iniciativa, turnos, PV y condiciones por criatura.</p>
+            </div>
+            <div class="card card-npc" id="cardNpcGen" onclick="openNpcGenerator()">
+                <div class="card-title">🎭 Generador PNJ</div>
+                <p>Genera personajes no jugadores al instante con nombre, raza, rol, personalidad y aspecto.</p>
+            </div>
+            <div class="card card-notes" id="cardNotes" onclick="openSessionNotes()">
+                <div class="card-title">📝 Notas de Sesión</div>
+                <p>Apunta ideas, secretos y eventos de la partida. Búsqueda y filtrado por etiquetas.</p>
+            </div>
         </div>
     </section>
 
@@ -506,9 +518,146 @@
         </div>
     </div>
 
+    <!-- ===== ENCUENTROS DE COMBATE ===== -->
+    <section id="encountersSection" class="encounters-section" style="display:none;" aria-label="Gestor de Encuentros">
+        <!-- List view -->
+        <div id="encListView">
+            <div class="encounters-header">
+                <h2>⚔️ Encuentros de Combate</h2>
+            </div>
+            <form class="encounter-create-form" onsubmit="encCreateSubmit(event)">
+                <input id="encNewName" class="npc-input" type="text" placeholder="Nombre del encuentro…" autocomplete="off" maxlength="80" required>
+                <button class="btn-combat-primary" type="submit">+ Nuevo</button>
+            </form>
+            <div class="encounter-list" id="encList">
+                <div class="enc-empty" id="encListEmpty">Sin encuentros guardados. ¡Crea el primero!</div>
+            </div>
+        </div>
+        <!-- Detail view -->
+        <div id="encDetailView" style="display:none;" class="encounter-detail">
+            <div class="encounter-detail-header">
+                <button class="btn-combat-secondary" onclick="encShowList()">← Encuentros</button>
+                <h2 id="encDetailTitle">—</h2>
+                <span class="enc-round-counter" id="encRoundCounter"></span>
+                <span class="enc-turn-badge" id="encTurnBadge" style="display:none;">Turno activo</span>
+            </div>
+            <!-- Add creature form -->
+            <div class="enc-add-creature-form">
+                <input id="encCreatureName" class="enc-input-name" type="text" placeholder="Nombre criatura" autocomplete="off">
+                <select id="encCreatureType">
+                    <option value="player">Jugador</option>
+                    <option value="ally">Aliado</option>
+                    <option value="enemy" selected>Enemigo</option>
+                </select>
+                <input id="encCreatureHp" class="enc-input-sm" type="number" placeholder="PV" min="1">
+                <input id="encCreatureInit" class="enc-input-sm" type="number" placeholder="Init">
+                <button class="btn-combat-secondary" type="button" onclick="encAddCreature()">+ Criatura</button>
+                <button class="btn-combat-secondary" type="button" onclick="encRollAllInit()" title="Tirar iniciativa aleatoria para todas las criaturas sin iniciativa">🎲 Init</button>
+            </div>
+            <!-- Creatures -->
+            <div class="creature-list" id="encCreatureList"></div>
+            <!-- Combat controls -->
+            <div class="enc-combat-footer">
+                <button class="btn-combat-primary" id="encNextTurnBtn" onclick="encNextTurn()">▶ Siguiente Turno</button>
+                <button class="btn-combat-secondary" onclick="encResetCombat()">↺ Reiniciar</button>
+                <button class="btn-danger" onclick="encDeleteCurrent()">🗑 Borrar Encuentro</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== GENERADOR PNJ ===== -->
+    <section id="npcGenSection" class="npc-gen-section" style="display:none;" aria-label="Generador de PNJ">
+        <div class="npc-gen-card">
+            <h2>🎭 Generador de PNJ</h2>
+            <div id="npcFields">
+                <div class="npc-field-row">
+                    <span class="npc-field-label">Nombre</span>
+                    <span class="npc-field-value" id="npcFieldNombre">—</span>
+                    <button class="npc-reroll-btn" onclick="npcReroll('nombre')" title="Regenerar nombre" aria-label="Regenerar nombre">⟳</button>
+                </div>
+                <div class="npc-field-row">
+                    <span class="npc-field-label">Raza</span>
+                    <span class="npc-field-value" id="npcFieldRaza">—</span>
+                    <button class="npc-reroll-btn" onclick="npcReroll('raza')" title="Regenerar raza" aria-label="Regenerar raza">⟳</button>
+                </div>
+                <div class="npc-field-row">
+                    <span class="npc-field-label">Rol</span>
+                    <span class="npc-field-value" id="npcFieldRol">—</span>
+                    <button class="npc-reroll-btn" onclick="npcReroll('rol')" title="Regenerar rol" aria-label="Regenerar rol">⟳</button>
+                </div>
+                <div class="npc-field-row">
+                    <span class="npc-field-label">Personalidad</span>
+                    <span class="npc-field-value" id="npcFieldPersonalidad">—</span>
+                    <button class="npc-reroll-btn" onclick="npcReroll('personalidad')" title="Regenerar personalidad" aria-label="Regenerar personalidad">⟳</button>
+                </div>
+                <div class="npc-field-row">
+                    <span class="npc-field-label">Aspecto</span>
+                    <span class="npc-field-value" id="npcFieldAspecto">—</span>
+                    <button class="npc-reroll-btn" onclick="npcReroll('aspecto')" title="Regenerar aspecto" aria-label="Regenerar aspecto">⟳</button>
+                </div>
+                <div class="npc-field-row">
+                    <span class="npc-field-label">Motivación</span>
+                    <span class="npc-field-value" id="npcFieldMotivacion">—</span>
+                    <button class="npc-reroll-btn" onclick="npcReroll('motivacion')" title="Regenerar motivación" aria-label="Regenerar motivación">⟳</button>
+                </div>
+            </div>
+            <div class="npc-gen-actions">
+                <button class="btn-combat-primary" onclick="npcGenerate()">🎲 Generar PNJ</button>
+                <button class="btn-combat-secondary" onclick="npcSaveCurrent()">⭐ Guardar</button>
+            </div>
+        </div>
+        <!-- Saved NPCs -->
+        <div class="npc-saved-header">
+            <h3>⭐ PNJ Guardados</h3>
+        </div>
+        <div class="npc-saved-list" id="npcSavedList">
+            <p style="color:var(--text-muted);font-size:14px;text-align:center;padding:16px 0;">Ningún PNJ guardado todavía.</p>
+        </div>
+    </section>
+
+    <!-- ===== NOTAS DE SESIÓN ===== -->
+    <section id="sessionNotesSection" class="notes-section" style="display:none;" aria-label="Notas de Sesión">
+        <div class="encounters-header">
+            <h2>📝 Notas de Sesión</h2>
+            <button class="btn-combat-primary" onclick="notesNewNote()">+ Nueva Nota</button>
+        </div>
+        <div class="notes-layout">
+            <!-- Sidebar: search + filter + list -->
+            <div class="notes-sidebar">
+                <input id="notesSearch" class="notes-search" type="search" placeholder="Buscar notas…" oninput="notesRenderList()" aria-label="Buscar notas">
+                <div class="notes-tag-filters" id="notesTagFilters">
+                    <button class="note-tag-filter active" data-tag="" onclick="notesSetTagFilter(this, '')">Todas</button>
+                </div>
+                <div class="notes-list" id="notesList"></div>
+            </div>
+            <!-- Editor -->
+            <div class="notes-editor" id="notesEditor">
+                <div class="notes-empty-editor" id="notesEmptyState">
+                    <p>Selecciona una nota o crea una nueva.</p>
+                    <button class="btn-combat-primary" onclick="notesNewNote()">+ Nueva Nota</button>
+                </div>
+                <div id="notesEditorForm" style="display:none; flex-direction:column; gap:12px;">
+                    <div class="note-editor-header">
+                        <input id="noteTitleInput" class="note-title-input" type="text" placeholder="Título de la nota…" oninput="notesAutoSave()">
+                        <input id="noteTagInput" class="note-tag-input" type="text" placeholder="Etiqueta…" oninput="notesAutoSave()">
+                    </div>
+                    <textarea id="noteContentInput" class="note-content-textarea" placeholder="Escribe tus notas aquí…" oninput="notesAutoSave()"></textarea>
+                    <div class="note-editor-footer">
+                        <span class="note-date-display" id="noteDateDisplay"></span>
+                        <button class="btn-combat-primary" onclick="notesSave()">Guardar</button>
+                        <button class="btn-danger" onclick="notesDeleteCurrent()">🗑 Borrar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <script src="characters.js?v=20260310o"></script>
     <script src="data.js?v=20260310o"></script>
     <script src="script.js?v=20260310q"></script>
+    <script src="encounters.js?v=20260318a"></script>
+    <script src="npc-generator.js?v=20260318a"></script>
+    <script src="session-notes.js?v=20260318a"></script>
 </body>
 
 </html>

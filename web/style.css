@@ -6085,6 +6085,810 @@ select:focus-visible {
 }
 
 /* ============================================
+   ENCOUNTERS — Gestor de Encuentros
+   ============================================ */
+.encounters-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: clamp(80px, 12vw, 120px) clamp(16px, 5vw, 40px) 40px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.encounters-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 900px;
+    margin-bottom: 28px;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.encounters-header h2 {
+    font-family: var(--font-heading);
+    color: var(--accent-gold);
+    font-size: clamp(20px, 3vw, 28px);
+    margin: 0;
+}
+
+.encounter-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 900px;
+}
+
+.encounter-list-item {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.encounter-list-item:hover {
+    border-color: var(--accent-gold);
+    background: rgba(201, 162, 39, 0.06);
+}
+
+.encounter-list-item .enc-name {
+    font-family: var(--font-heading);
+    font-size: 16px;
+    color: var(--text-primary);
+    flex: 1;
+}
+
+.encounter-list-item .enc-meta {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.encounter-list-item .enc-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.enc-empty {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 48px 0;
+    font-size: 15px;
+}
+
+/* Encounter create form */
+.encounter-create-form {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    max-width: 900px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.encounter-create-form input {
+    flex: 1;
+    min-width: 160px;
+    padding: 10px 14px;
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 14px;
+    transition: border-color var(--transition-fast);
+}
+
+.encounter-create-form input:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+}
+
+/* Encounter detail */
+.encounter-detail {
+    width: 100%;
+    max-width: 900px;
+}
+
+.encounter-detail-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.encounter-detail-header h2 {
+    font-family: var(--font-heading);
+    color: var(--accent-gold);
+    font-size: clamp(18px, 2.5vw, 24px);
+    margin: 0;
+    flex: 1;
+}
+
+.enc-turn-badge {
+    background: var(--accent-gold);
+    color: var(--bg-primary);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-family: var(--font-heading);
+    letter-spacing: 0.05em;
+}
+
+.enc-round-counter {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.creature-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.creature-card {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 14px 16px;
+    transition: all var(--transition-fast);
+}
+
+.creature-card.current-turn {
+    border-color: var(--accent-gold);
+    background: rgba(201, 162, 39, 0.08);
+    box-shadow: 0 0 16px rgba(201, 162, 39, 0.15);
+}
+
+.creature-card.type-ally {
+    border-left: 3px solid #4caf50;
+}
+
+.creature-card.type-enemy {
+    border-left: 3px solid var(--accent-blood);
+}
+
+.creature-card.type-player {
+    border-left: 3px solid var(--accent-magic);
+}
+
+.creature-card-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.creature-initiative {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-heading);
+    font-size: 15px;
+    color: var(--accent-gold);
+    flex-shrink: 0;
+}
+
+.creature-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    flex: 1;
+    font-size: 15px;
+}
+
+.creature-type-badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.creature-type-badge.ally { background: rgba(76,175,80,0.2); color: #4caf50; }
+.creature-type-badge.enemy { background: rgba(139,26,26,0.25); color: #e57373; }
+.creature-type-badge.player { background: rgba(124,58,237,0.2); color: #a78bfa; }
+
+.creature-hp-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.hp-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    min-width: 28px;
+}
+
+.hp-display {
+    font-family: var(--font-heading);
+    font-size: 15px;
+    color: var(--text-primary);
+    min-width: 70px;
+}
+
+.hp-display.low { color: #ef4444; }
+.hp-display.mid { color: #f59e0b; }
+
+.hp-btn {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    min-width: 30px;
+    min-height: 30px;
+}
+
+.hp-btn:hover { background: var(--accent-gold); color: var(--bg-primary); border-color: var(--accent-gold); }
+
+.hp-input-delta {
+    width: 50px;
+    padding: 4px 8px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 14px;
+    text-align: center;
+}
+
+.creature-conditions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.condition-tag {
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    user-select: none;
+}
+
+.condition-tag.active {
+    background: rgba(201, 162, 39, 0.2);
+    border-color: var(--accent-gold);
+    color: var(--accent-gold);
+}
+
+.creature-notes-row {
+    margin-top: 10px;
+}
+
+.creature-notes-input {
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 13px;
+    resize: none;
+    box-sizing: border-box;
+    transition: border-color var(--transition-fast);
+}
+
+.creature-notes-input:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+}
+
+.enc-add-creature-form {
+    background: var(--bg-glass);
+    border: 1px dashed var(--border-color);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    margin-bottom: 20px;
+}
+
+.enc-add-creature-form input,
+.enc-add-creature-form select {
+    padding: 8px 12px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 13px;
+    transition: border-color var(--transition-fast);
+}
+
+.enc-add-creature-form input:focus,
+.enc-add-creature-form select:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+}
+
+.enc-add-creature-form .enc-input-name { flex: 2; min-width: 120px; }
+.enc-add-creature-form .enc-input-sm { width: 70px; flex-shrink: 0; }
+
+.enc-combat-footer {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
+}
+
+/* ============================================
+   NPC GENERATOR — Generador de PNJ
+   ============================================ */
+.npc-gen-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: clamp(80px, 12vw, 120px) clamp(16px, 5vw, 40px) 40px;
+    width: 100%;
+    box-sizing: border-box;
+    gap: 24px;
+}
+
+.npc-gen-card {
+    width: 100%;
+    max-width: 700px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: clamp(20px, 4vw, 32px);
+    box-sizing: border-box;
+}
+
+.npc-gen-card h2 {
+    font-family: var(--font-heading);
+    color: var(--accent-gold);
+    font-size: clamp(18px, 2.5vw, 24px);
+    margin: 0 0 20px 0;
+}
+
+.npc-field-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    gap: 12px;
+}
+
+.npc-field-row:last-child { border-bottom: none; }
+
+.npc-field-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    min-width: 100px;
+    flex-shrink: 0;
+}
+
+.npc-field-value {
+    color: var(--text-primary);
+    font-size: 15px;
+    flex: 1;
+    line-height: 1.4;
+}
+
+.npc-reroll-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+    min-width: 30px;
+    min-height: 30px;
+}
+
+.npc-reroll-btn:hover {
+    border-color: var(--accent-gold);
+    color: var(--accent-gold);
+    background: rgba(201, 162, 39, 0.08);
+}
+
+.npc-gen-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+/* Saved NPCs list */
+.npc-saved-list {
+    width: 100%;
+    max-width: 700px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.npc-saved-item {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: border-color var(--transition-fast);
+}
+
+.npc-saved-item:hover { border-color: rgba(201,162,39,0.4); }
+
+.npc-saved-info { flex: 1; }
+
+.npc-saved-name {
+    font-family: var(--font-heading);
+    font-size: 15px;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.npc-saved-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.npc-saved-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 700px;
+    margin-bottom: 0;
+}
+
+.npc-saved-header h3 {
+    font-family: var(--font-heading);
+    color: var(--text-secondary);
+    font-size: 16px;
+    margin: 0;
+}
+
+/* ============================================
+   SESSION NOTES — Panel de Notas de Sesión
+   ============================================ */
+.notes-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: clamp(80px, 12vw, 120px) clamp(16px, 5vw, 40px) 40px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.notes-layout {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    max-width: 1000px;
+    align-items: flex-start;
+}
+
+.notes-sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.notes-search {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: border-color var(--transition-fast);
+}
+
+.notes-search:focus { outline: none; border-color: var(--accent-gold); }
+
+.notes-tag-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.note-tag-filter {
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.note-tag-filter.active,
+.note-tag-filter:hover {
+    border-color: var(--accent-gold);
+    color: var(--accent-gold);
+    background: rgba(201,162,39,0.08);
+}
+
+.notes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    overflow-y: auto;
+    max-height: calc(100vh - 280px);
+}
+
+.note-list-item {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.note-list-item:hover,
+.note-list-item.active {
+    border-color: var(--accent-gold);
+    background: rgba(201,162,39,0.06);
+}
+
+.note-list-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.note-list-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.note-list-tag {
+    padding: 1px 7px;
+    border-radius: 8px;
+    background: rgba(201,162,39,0.15);
+    color: var(--accent-gold);
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.notes-editor {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+}
+
+.note-editor-header {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.note-title-input {
+    flex: 1;
+    min-width: 180px;
+    padding: 10px 14px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: var(--font-heading);
+    font-size: 16px;
+    transition: border-color var(--transition-fast);
+}
+
+.note-title-input:focus { outline: none; border-color: var(--accent-gold); }
+
+.note-tag-input {
+    width: 140px;
+    padding: 10px 14px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 13px;
+    transition: border-color var(--transition-fast);
+}
+
+.note-tag-input:focus { outline: none; border-color: var(--accent-gold); }
+
+.note-content-textarea {
+    width: 100%;
+    min-height: 340px;
+    padding: 14px 16px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.7;
+    resize: vertical;
+    box-sizing: border-box;
+    transition: border-color var(--transition-fast);
+}
+
+.note-content-textarea:focus { outline: none; border-color: var(--accent-gold); }
+
+.note-editor-footer {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.note-date-display {
+    font-size: 12px;
+    color: var(--text-muted);
+    flex: 1;
+}
+
+.notes-empty-editor {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 60px 20px;
+    background: var(--bg-glass);
+    border: 1px dashed var(--border-color);
+    border-radius: 12px;
+}
+
+.notes-empty-editor p { font-size: 15px; }
+
+/* Mobile: notes layout stacks */
+@media (max-width: 768px) {
+    .notes-layout {
+        flex-direction: column;
+    }
+
+    .notes-sidebar {
+        width: 100%;
+    }
+
+    .notes-list {
+        max-height: 240px;
+    }
+}
+
+/* Landing card variants for new features */
+.card.card-encounters {
+    border-color: rgba(201, 162, 39, 0.35);
+    background: linear-gradient(145deg, rgba(18, 14, 5, 0.94), rgba(10, 8, 2, 0.97));
+}
+
+.card.card-encounters:hover {
+    border-color: rgba(201, 162, 39, 0.7);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.7), 0 0 28px rgba(201,162,39,0.18);
+}
+
+.card.card-npc {
+    border-color: rgba(124, 58, 237, 0.35);
+    background: linear-gradient(145deg, rgba(12, 8, 22, 0.94), rgba(7, 4, 15, 0.97));
+}
+
+.card.card-npc:hover {
+    border-color: rgba(124, 58, 237, 0.7);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.7), 0 0 28px rgba(124,58,237,0.18);
+}
+
+.card.card-notes {
+    border-color: rgba(45, 140, 180, 0.35);
+    background: linear-gradient(145deg, rgba(5, 12, 20, 0.94), rgba(3, 7, 14, 0.97));
+}
+
+.card.card-notes:hover {
+    border-color: rgba(45, 140, 180, 0.7);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.7), 0 0 28px rgba(45,140,180,0.18);
+}
+
+/* btn-combat-secondary for less prominent actions */
+.btn-combat-secondary {
+    background: transparent;
+    border: 2px solid var(--border-color);
+    color: var(--text-secondary);
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all var(--transition-smooth);
+    min-height: 44px;
+}
+
+.btn-combat-secondary:hover {
+    border-color: var(--accent-gold);
+    color: var(--accent-gold);
+    background: rgba(201, 162, 39, 0.06);
+}
+
+.btn-danger {
+    background: transparent;
+    border: 2px solid rgba(239, 68, 68, 0.4);
+    color: #ef4444;
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all var(--transition-smooth);
+    min-height: 44px;
+}
+
+.btn-danger:hover {
+    background: rgba(239, 68, 68, 0.12);
+    border-color: #ef4444;
+}
+
+/* ============================================
    PREFERS-REDUCED-MOTION
    Disable / simplify all animations for users
    who have enabled "Reduce Motion" in their OS

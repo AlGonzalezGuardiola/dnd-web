@@ -366,6 +366,9 @@ function navigateBack() {
     const view = state.currentView;
     if (view === 'characters') { setView('landing'); return; }
     if (view === 'onlineLobby' || view === 'onlineWaiting') { setView('landing'); return; }
+    if (view === 'encounters') { setView('landing'); return; }
+    if (view === 'npcGenerator') { setView('landing'); return; }
+    if (view === 'sessionNotes') { setView('landing'); return; }
 
     // Map navigation back
     if (state.history.length === 0) return;
@@ -5532,6 +5535,12 @@ function setView(viewName) {
     if (onlineWaiting) onlineWaiting.style.display = 'none';
     const combatLogViewEl = document.getElementById('combatLogView');
     if (combatLogViewEl) combatLogViewEl.style.display = 'none';
+    const encountersEl = document.getElementById('encountersSection');
+    if (encountersEl) encountersEl.style.display = 'none';
+    const npcGenEl = document.getElementById('npcGenSection');
+    if (npcGenEl) npcGenEl.style.display = 'none';
+    const sessionNotesEl = document.getElementById('sessionNotesSection');
+    if (sessionNotesEl) sessionNotesEl.style.display = 'none';
 
     // Also hide the character sheet if it was open
     const sheetContainer = document.getElementById('characterSheetContainer');
@@ -5609,6 +5618,30 @@ function setView(viewName) {
             if (editorToolbar) editorToolbar.style.display = 'none';
             if (hud) hud.style.display = 'none';
             if (diceWidget) diceWidget.style.display = 'none';
+            break;
+        case 'encounters':
+            document.getElementById('encountersSection').style.display = 'flex';
+            if (editorToolbar) editorToolbar.style.display = 'none';
+            if (hud) hud.style.display = 'flex';
+            if (diceWidget) diceWidget.style.display = 'none';
+            document.getElementById('breadcrumbs').textContent = '⚔️ Encuentros';
+            document.getElementById('btnBack').style.display = 'flex';
+            break;
+        case 'npcGenerator':
+            document.getElementById('npcGenSection').style.display = 'flex';
+            if (editorToolbar) editorToolbar.style.display = 'none';
+            if (hud) hud.style.display = 'flex';
+            if (diceWidget) diceWidget.style.display = 'none';
+            document.getElementById('breadcrumbs').textContent = '🎭 Generador PNJ';
+            document.getElementById('btnBack').style.display = 'flex';
+            break;
+        case 'sessionNotes':
+            document.getElementById('sessionNotesSection').style.display = 'flex';
+            if (editorToolbar) editorToolbar.style.display = 'none';
+            if (hud) hud.style.display = 'flex';
+            if (diceWidget) diceWidget.style.display = 'none';
+            document.getElementById('breadcrumbs').textContent = '📝 Notas de Sesión';
+            document.getElementById('btnBack').style.display = 'flex';
             break;
     }
 }
