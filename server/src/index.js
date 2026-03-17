@@ -3,9 +3,10 @@ const express  = require('express');
 const mongoose = require('mongoose');
 const cors     = require('cors');
 
-const combatsRouter         = require('./routes/combats');
-const combatEntitiesRouter  = require('./routes/combatEntities');
-const entityTemplatesRouter = require('./routes/entityTemplates');
+const combatsRouter           = require('./routes/combats');
+const combatEntitiesRouter    = require('./routes/combatEntities');
+const entityTemplatesRouter   = require('./routes/entityTemplates');
+const playerCharactersRouter  = require('./routes/playerCharacters');
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
@@ -20,9 +21,10 @@ app.get('/health',     health);
 app.get('/api/health', health);
 
 // ── Routes ────────────────────────────────────────────────────────────────────
-app.use('/api/combats',           combatsRouter);
-app.use('/api/combat-entities',   combatEntitiesRouter);
-app.use('/api/entity-templates',  entityTemplatesRouter);
+app.use('/api/combats',             combatsRouter);
+app.use('/api/combat-entities',     combatEntitiesRouter);
+app.use('/api/entity-templates',    entityTemplatesRouter);
+app.use('/api/player-characters',   playerCharactersRouter);
 
 // ── 404 ───────────────────────────────────────────────────────────────────────
 app.use((_req, res) => res.status(404).json({ error: 'Ruta no encontrada' }));

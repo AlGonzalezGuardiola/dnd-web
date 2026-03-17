@@ -53,6 +53,38 @@ router.get('/', async (req, res) => {
     }
 });
 
+// PUT /api/entity-templates/:id  — update a saved template by ID
+router.put('/:id', async (req, res) => {
+    try {
+        const { name, type, stats, isGroup, groupSize, isSummon, summoner, actionsText } = req.body;
+        if (!name || !type) return res.status(400).json({ error: 'name y type son obligatorios' });
+
+        const template = await EntityTemplate.findByIdAndUpdate(
+            req.params.id,
+            {
+                $set: {
+                    name, type,
+                    stats:     stats     || { hp: 10, ac: 10 },
+                    isGroup:   !!isGroup,
+                    groupSize: isGroup ? (groupSize || 2) : 1,
+                    isSummon:  !!isSummon,
+                    summoner:  summoner || '',
+                    actionsText: {
+                        acciones:    actionsText?.acciones    || '',
+                        adicionales: actionsText?.adicionales || '',
+                        reacciones:  actionsText?.reacciones  || '',
+                    },
+                },
+            },
+            { new: true }
+        );
+        if (!template) return res.status(404).json({ error: 'Plantilla no encontrada' });
+        res.json({ success: true, template });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
 // DELETE /api/entity-templates/:id  — remove a saved template
 router.delete('/:id', async (req, res) => {
     try {

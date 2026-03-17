@@ -4943,6 +4943,21 @@ body.role-jugador .master-only { display: none !important; }
     transition: background 0.15s;
 }
 .template-delete-btn:hover { background: rgba(255,60,60,0.22); }
+.template-edit-btn {
+    background: rgba(100,150,255,0.1);
+    border: 1px solid rgba(100,150,255,0.3);
+    color: #88aaff;
+    border-radius: 6px;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s;
+}
+.template-edit-btn:hover { background: rgba(100,150,255,0.25); }
 
 /* ============================================
    Personajes section — sub-tabs

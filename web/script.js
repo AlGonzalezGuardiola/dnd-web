@@ -37,6 +37,7 @@ async function init() {
         loadStateFromStorage();
         renderCharacterSelectionMenu();
         setupEventListeners();
+        initPlayerCharactersFromDB();
         setupDiceRoller();
         setupCombatOptionsMenu();
         setView('landing');
@@ -360,6 +361,11 @@ function navigateBack() {
         }
         return;
     }
+
+    // Non-map single-level views
+    const view = state.currentView;
+    if (view === 'characters') { setView('landing'); return; }
+    if (view === 'onlineLobby' || view === 'onlineWaiting') { setView('landing'); return; }
 
     // Map navigation back
     if (state.history.length === 0) return;
@@ -2041,7 +2047,7 @@ function updateDemonicFormDisplay(charId) {
     const pillCA = document.getElementById('pillCA');
     if (pillCA) {
         const v = pillCA.querySelector('.pill-value');
-        if (v) v.textContent = ds.active ? String(parseInt(data.resumen.CA) + 2) : data.resumen.CA;
+        if (v) v.textContent = ds.active ? String((parseInt(data.resumen?.CA) || 0) + 2) : (data.resumen?.CA ?? '?');
         pillCA.classList.toggle('demonic-active', ds.active);
         pillCA.style.borderLeftColor = ds.active ? '#ff2222' : '#4488ff';
     }
@@ -2381,8 +2387,15 @@ function saveCharacterChanges() {
 
     isCharacterEditing = false;
     renderCharacterSheet(currentCharacterId);
-    showNotification('Cambios guardados. ¡Recuerda EXPORTAR para no perderlos!', 4000);
     renderCharacterSelectionMenu();
+
+    // Persist to DB
+    fetch(`${API_BASE}/api/player-characters/${currentCharacterId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ data: window.characterData[currentCharacterId] }),
+    }).then(() => showNotification('💾 Cambios guardados', 2000))
+      .catch(() => showNotification('💾 Guardado localmente (sin conexión al servidor)', 2500));
 }
 
 function updateFeature(index, field, value) {
@@ -2565,7 +2578,10 @@ function renderPersonajesTemplatesList(tipo) {
                     <span class="npc-item-stats">❤️ ${t.stats.hp} · 🛡️ ${t.stats.ac}${badges ? ' · ' + badges : ''}</span>
                     ${actStr ? `<span class="npc-item-actions">⚔️ ${actStr}</span>` : ''}
                 </div>
-                <button class="npc-remove-btn" onclick="deletePersonajesTemplate('${t._id}','${tipo}')">🗑</button>
+                <div style="display:flex;gap:4px;">
+                    <button class="template-edit-btn" onclick="editCharTemplate('${t._id}','${tipo}')">✎</button>
+                    <button class="npc-remove-btn"    onclick="deletePersonajesTemplate('${t._id}','${tipo}')">🗑</button>
+                </div>
             </div>`;
         }).join('')}`;
 }
@@ -2621,6 +2637,110 @@ async function deletePersonajesTemplate(templateId, tipo) {
         await loadPersonajesTemplates(tipo);
     } catch (e) {
         showNotification('⚠️ Error al eliminar', 2000);
+    }
+}
+
+// ---- Player Characters in DB ----
+
+async function initPlayerCharactersFromDB() {
+    try {
+        const res = await fetch(`${API_BASE}/api/player-characters`);
+        const data = await res.json();
+        if (!data.success || !window.characterData) return;
+        data.characters.forEach(c => {
+            if (window.characterData[c.charId]) {
+                Object.assign(window.characterData[c.charId], c.data);
+            }
+        });
+        renderCharacterSelectionMenu();
+    } catch (e) {
+        // Server not available — use local defaults silently
+    }
+}
+
+// ---- Edit Template Modal ----
+
+function editCharTemplate(templateId, tipo) {
+    const apiType = tipo === 'aliado' ? 'ALLY' : 'ENEMY';
+    const t = savedTemplates[apiType].find(x => x._id === templateId);
+    if (!t) return;
+
+    document.getElementById('editTemplateOverlay')?.remove();
+
+    const groupField = tipo === 'enemigo'
+        ? `<input id="etGroupSize" class="npc-input npc-input-sm" type="number" value="${t.groupSize || 1}" placeholder="Grupo (nº)" min="1" title="2+ para grupo">`
+        : '';
+
+    const overlay = document.createElement('div');
+    overlay.id = 'editTemplateOverlay';
+    overlay.className = 'combat-resume-overlay';
+    overlay.innerHTML = `
+        <div class="combat-summary-modal" style="max-width:540px;">
+            <div class="combat-summary-title">${tipo === 'aliado' ? '💙' : '💀'} Editar ${tipo === 'aliado' ? 'Aliado' : 'Enemigo'}</div>
+            <div class="npc-builder-row" style="margin-bottom:10px;">
+                <input id="etNombre"    class="npc-input" type="text"   value="${t.name}"          placeholder="Nombre">
+                <input id="etPg"        class="npc-input npc-input-sm" type="number" value="${t.stats.hp}" placeholder="PG">
+                <input id="etCa"        class="npc-input npc-input-sm" type="number" value="${t.stats.ac}" placeholder="CA">
+                ${groupField}
+            </div>
+            <div class="npc-builder-row npc-actions-row" style="margin-bottom:14px;">
+                <div class="npc-action-group">
+                    <label class="npc-action-label">⚔️ Acciones</label>
+                    <input id="etAcciones"    class="npc-input" type="text" value="${t.actionsText?.acciones    || ''}">
+                </div>
+                <div class="npc-action-group">
+                    <label class="npc-action-label">✚ Adicionales</label>
+                    <input id="etAdicionales" class="npc-input" type="text" value="${t.actionsText?.adicionales || ''}">
+                </div>
+                <div class="npc-action-group">
+                    <label class="npc-action-label">↩ Reacciones</label>
+                    <input id="etReacciones"  class="npc-input" type="text" value="${t.actionsText?.reacciones  || ''}">
+                </div>
+            </div>
+            <div class="combat-summary-btns">
+                <button class="btn-combat-primary"   onclick="saveEditedTemplate('${templateId}','${tipo}')">💾 Guardar</button>
+                <button class="btn-combat-secondary" onclick="document.getElementById('editTemplateOverlay').remove()">Cancelar</button>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+}
+
+async function saveEditedTemplate(templateId, tipo) {
+    const nombre     = document.getElementById('etNombre')?.value?.trim();
+    const pg         = parseInt(document.getElementById('etPg')?.value)    || 10;
+    const ca         = parseInt(document.getElementById('etCa')?.value)    || 10;
+    const acciones    = document.getElementById('etAcciones')?.value?.trim()    || '';
+    const adicionales = document.getElementById('etAdicionales')?.value?.trim() || '';
+    const reacciones  = document.getElementById('etReacciones')?.value?.trim()  || '';
+
+    if (!nombre) { showNotification('⚠️ Introduce un nombre', 2000); return; }
+
+    const rawGroupSize = parseInt(document.getElementById('etGroupSize')?.value) || 1;
+    const isGroup  = tipo === 'enemigo' && rawGroupSize >= 2;
+    const groupSize = isGroup ? rawGroupSize : 1;
+
+    const apiType = tipo === 'aliado' ? 'ALLY' : 'ENEMY';
+    const t = savedTemplates[apiType].find(x => x._id === templateId);
+
+    try {
+        const res = await fetch(`${API_BASE}/api/entity-templates/${templateId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: nombre, type: apiType,
+                stats: { hp: pg, ac: ca },
+                isGroup, groupSize,
+                isSummon: !!t?.isSummon, summoner: t?.summoner || '',
+                actionsText: { acciones, adicionales, reacciones },
+            }),
+        });
+        if (!res.ok) throw new Error('Server error');
+        document.getElementById('editTemplateOverlay')?.remove();
+        showNotification(`💾 ${nombre} actualizado`, 1500);
+        await loadPersonajesTemplates(tipo);
+        renderSavedTemplatesSection(tipo);
+    } catch (e) {
+        showNotification('⚠️ Error al guardar', 2000);
     }
 }
 
@@ -4637,7 +4757,7 @@ function toggleDemonicFormInCombat(participantId) {
     if (!p) return;
     p.demonicForm = !p.demonicForm;
     if (p.demonicForm) {
-        p.ac    = String(parseInt(p.baseAc) + 2);
+        p.ac    = String((parseInt(p.baseAc) || 0) + 2);
         p.speed = '50ft';
         showNotification('😈 ¡Forma Demoníaca activa! CA+2, Velocidad 50ft, +1d8 Necrótico', 2500);
     } else {
@@ -5442,7 +5562,9 @@ function setView(viewName) {
             document.getElementById('characterSection').style.display = 'flex';
             if (editorToolbar) editorToolbar.style.display = 'none';
             if (hud) hud.style.display = 'flex';
-            if (diceWidget) diceWidget.style.display = 'flex';
+            if (diceWidget) diceWidget.style.display = 'none';
+            document.getElementById('breadcrumbs').textContent = '👥 Personajes';
+            document.getElementById('btnBack').style.display = 'flex';
             break;
         case 'combatSetup':
             document.getElementById('combatSetupSection').style.display = 'flex';
