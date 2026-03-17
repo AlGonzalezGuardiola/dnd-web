@@ -120,9 +120,89 @@
 
     <!-- Character Sheets Section -->
     <section id="characterSection" class="character-section" style="display: none;">
-        <h1 class="landing-title">Selecciona tu Personaje</h1>
-        <div class="landing-cards" id="characterListContainer">
-            <!-- Dynamic Content -->
+        <h1 class="landing-title">Personajes</h1>
+
+        <!-- Sub-tabs -->
+        <div class="char-section-tabs">
+            <button class="char-tab-btn active" data-char-tab="principales" onclick="switchPersonajesTab('principales')">⚔️ Principales</button>
+            <button class="char-tab-btn" data-char-tab="aliados" onclick="switchPersonajesTab('aliados')">💙 Aliados</button>
+            <button class="char-tab-btn" data-char-tab="enemigos" onclick="switchPersonajesTab('enemigos')">💀 Enemigos</button>
+        </div>
+
+        <!-- Tab: Principales -->
+        <div id="charTabPrincipales" class="char-tab-panel">
+            <div class="landing-cards" id="characterListContainer"></div>
+        </div>
+
+        <!-- Tab: Aliados -->
+        <div id="charTabAliados" class="char-tab-panel" style="display:none;">
+            <div id="charAliadoTemplatesList" class="char-templates-list"></div>
+            <div class="npc-builder-section aliado-builder">
+                <div class="npc-builder-title">💙 Crear Aliado</div>
+                <div class="npc-builder-row">
+                    <input id="charAliadoNombre" class="npc-input" type="text" placeholder="Nombre" autocomplete="off">
+                    <input id="charAliadoPg"     class="npc-input npc-input-sm" type="number" placeholder="PG" min="1">
+                    <input id="charAliadoCa"     class="npc-input npc-input-sm" type="number" placeholder="CA" min="1">
+                </div>
+                <div class="npc-toggle-row">
+                    <label class="npc-toggle-label">
+                        <input type="checkbox" id="charAliadoEsInvocacion" onchange="toggleCharSummonFields('aliado')">
+                        <span>Es una invocación</span>
+                    </label>
+                    <div id="charAliadoSummonFields" style="display:none; margin-top:6px;">
+                        <select id="charAliadoSumoner" class="npc-input npc-input-sm">
+                            <option value="ASTHOR">Asthor (Sirviente)</option>
+                            <option value="ZERO">Zero</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="npc-builder-row npc-actions-row">
+                    <div class="npc-action-group">
+                        <label class="npc-action-label">⚔️ Acciones</label>
+                        <input id="charAliadoAcciones"    class="npc-input" type="text" placeholder="Espada +5/1d8+3" autocomplete="off">
+                    </div>
+                    <div class="npc-action-group">
+                        <label class="npc-action-label">✚ Adicionales</label>
+                        <input id="charAliadoAdicionales" class="npc-input" type="text" placeholder="Hacha +4/1d6" autocomplete="off">
+                    </div>
+                    <div class="npc-action-group">
+                        <label class="npc-action-label">↩ Reacciones</label>
+                        <input id="charAliadoReacciones"  class="npc-input" type="text" placeholder="Escudo, Parar" autocomplete="off">
+                    </div>
+                </div>
+                <button class="btn-combat-primary npc-builder-add-btn" onclick="createCharTemplate('aliado')">💙 Guardar Aliado</button>
+            </div>
+        </div>
+
+        <!-- Tab: Enemigos -->
+        <div id="charTabEnemigos" class="char-tab-panel" style="display:none;">
+            <div id="charEnemigoTemplatesList" class="char-templates-list"></div>
+            <div class="npc-builder-section enemigo-builder">
+                <div class="npc-builder-title">💀 Crear Enemigo</div>
+                <div class="npc-builder-row">
+                    <input id="charEnemigoNombre"    class="npc-input" type="text" placeholder="Nombre (ej: Goblin)" autocomplete="off">
+                    <input id="charEnemigoPg"        class="npc-input npc-input-sm" type="number" placeholder="PG" min="1">
+                    <input id="charEnemigoCa"        class="npc-input npc-input-sm" type="number" placeholder="CA" min="1">
+                    <input id="charEnemigoGroupSize" class="npc-input npc-input-sm" type="number" placeholder="Grupo (nº)" min="1"
+                           title="2+ para crear un grupo (PG = HP por miembro)">
+                </div>
+                <small class="npc-group-hint">💡 Rellena «Grupo» con 2+ para crear un grupo (PG = HP por miembro)</small>
+                <div class="npc-builder-row npc-actions-row">
+                    <div class="npc-action-group">
+                        <label class="npc-action-label">⚔️ Acciones</label>
+                        <input id="charEnemigoAcciones"    class="npc-input" type="text" placeholder="Garra +4/1d6+2" autocomplete="off">
+                    </div>
+                    <div class="npc-action-group">
+                        <label class="npc-action-label">✚ Adicionales</label>
+                        <input id="charEnemigoAdicionales" class="npc-input" type="text" placeholder="Mordisco +3/1d4" autocomplete="off">
+                    </div>
+                    <div class="npc-action-group">
+                        <label class="npc-action-label">↩ Reacciones</label>
+                        <input id="charEnemigoReacciones"  class="npc-input" type="text" placeholder="Parar golpe" autocomplete="off">
+                    </div>
+                </div>
+                <button class="btn-combat-primary npc-builder-add-btn" onclick="createCharTemplate('enemigo')">💀 Guardar Enemigo</button>
+            </div>
         </div>
     </section>
 
@@ -153,42 +233,6 @@
             <div id="aliadoList" class="npc-builder-list">
                 <div class="npc-list-empty">Ningún aliado añadido todavía</div>
             </div>
-            <div class="npc-builder-section aliado-builder">
-                <div class="npc-builder-title">💙 Añadir Aliado</div>
-                <div class="npc-builder-row">
-                    <input id="aliadoNombre" class="npc-input" type="text" placeholder="Nombre (ej: Guardia Real)" autocomplete="off">
-                    <input id="aliadoPg"     class="npc-input npc-input-sm" type="number" placeholder="PG" min="1">
-                    <input id="aliadoCa"     class="npc-input npc-input-sm" type="number" placeholder="CA" min="1">
-                    <input id="aliadoInit"   class="npc-input npc-input-sm" type="number" placeholder="Init">
-                </div>
-                <div class="npc-toggle-row">
-                    <label class="npc-toggle-label">
-                        <input type="checkbox" id="aliadoEsInvocacion" onchange="toggleSetupSummonFields('aliado')">
-                        <span>Es una invocación</span>
-                    </label>
-                    <div id="aliadoSummonFields" style="display:none; margin-top:6px;">
-                        <select id="aliadoSumoner" class="npc-input npc-input-sm">
-                            <option value="ASTHOR">Asthor (Sirviente)</option>
-                            <option value="ZERO">Zero</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="npc-builder-row npc-actions-row">
-                    <div class="npc-action-group">
-                        <label class="npc-action-label">⚔️ Acciones</label>
-                        <input id="aliadoAcciones"    class="npc-input" type="text" placeholder="Espada +5/1d8+3, Arco +4/1d6" autocomplete="off">
-                    </div>
-                    <div class="npc-action-group">
-                        <label class="npc-action-label">✚ Adicionales</label>
-                        <input id="aliadoAdicionales" class="npc-input" type="text" placeholder="Hacha adicional +4/1d6" autocomplete="off">
-                    </div>
-                    <div class="npc-action-group">
-                        <label class="npc-action-label">↩ Reacciones</label>
-                        <input id="aliadoReacciones"  class="npc-input" type="text" placeholder="Escudo, Parar" autocomplete="off">
-                    </div>
-                </div>
-                <button class="btn-combat-primary npc-builder-add-btn" onclick="addSetupNpc('aliado')">💙 Añadir Aliado</button>
-            </div>
         </div>
 
         <!-- Tab: Enemigos -->
@@ -198,33 +242,6 @@
             <div id="enemigoSavedTemplates"></div>
             <div id="enemigoList" class="npc-builder-list">
                 <div class="npc-list-empty">Ningún enemigo añadido todavía</div>
-            </div>
-            <div class="npc-builder-section enemigo-builder">
-                <div class="npc-builder-title">💀 Añadir Enemigo</div>
-                <div class="npc-builder-row">
-                    <input id="enemigoNombre"    class="npc-input" type="text" placeholder="Nombre (ej: Goblin)" autocomplete="off">
-                    <input id="enemigoPg"         class="npc-input npc-input-sm" type="number" placeholder="PG" min="1">
-                    <input id="enemigoCa"         class="npc-input npc-input-sm" type="number" placeholder="CA" min="1">
-                    <input id="enemigoInit"        class="npc-input npc-input-sm" type="number" placeholder="Init">
-                    <input id="enemigoGroupSize"   class="npc-input npc-input-sm" type="number" placeholder="Grupo (nº)" min="1"
-                           title="Número de miembros del grupo. Deja en blanco o pon 1 para un enemigo individual.">
-                </div>
-                <small class="npc-group-hint">💡 Rellena «Grupo» con 2+ para crear un grupo (PG = HP por miembro)</small>
-                <div class="npc-builder-row npc-actions-row">
-                    <div class="npc-action-group">
-                        <label class="npc-action-label">⚔️ Acciones</label>
-                        <input id="enemigoAcciones"    class="npc-input" type="text" placeholder="Garra +4/1d6+2, Mordisco +3/1d4" autocomplete="off">
-                    </div>
-                    <div class="npc-action-group">
-                        <label class="npc-action-label">✚ Adicionales</label>
-                        <input id="enemigoAdicionales" class="npc-input" type="text" placeholder="Hacha de mano +3/1d6" autocomplete="off">
-                    </div>
-                    <div class="npc-action-group">
-                        <label class="npc-action-label">↩ Reacciones</label>
-                        <input id="enemigoReacciones"  class="npc-input" type="text" placeholder="Parar golpe" autocomplete="off">
-                    </div>
-                </div>
-                <button class="btn-combat-primary npc-builder-add-btn" onclick="addSetupNpc('enemigo')">💀 Añadir Enemigo</button>
             </div>
         </div>
 

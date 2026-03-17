@@ -109,7 +109,7 @@ function setupEventListeners() {
 
     document.getElementById('cardCharacters').addEventListener('click', () => {
         combatModeActive = false;
-        setView('characters');
+        openPersonajesSection();
     });
 
     // Character Selection
@@ -2508,6 +2508,128 @@ function setupCharacterSheetListeners() {
         }
     });
 }
+// ---- Personajes Section ----
+
+function openPersonajesSection() {
+    setView('characters');
+    switchPersonajesTab('principales');
+    loadPersonajesTemplates('aliado');
+    loadPersonajesTemplates('enemigo');
+}
+
+function switchPersonajesTab(tab) {
+    ['principales', 'aliados', 'enemigos'].forEach(t => {
+        const panel = document.getElementById(`charTab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        if (panel) panel.style.display = t === tab ? 'block' : 'none';
+        const btn = document.querySelector(`.char-tab-btn[data-char-tab="${t}"]`);
+        if (btn) btn.classList.toggle('active', t === tab);
+    });
+    if (tab === 'principales') renderCharacterSelectionMenu();
+}
+
+async function loadPersonajesTemplates(tipo) {
+    const apiType = tipo === 'aliado' ? 'ALLY' : 'ENEMY';
+    try {
+        const res = await fetch(`${API_BASE}/api/entity-templates?type=${apiType}`);
+        const data = await res.json();
+        if (data.success) {
+            savedTemplates[apiType] = data.templates;
+            renderPersonajesTemplatesList(tipo);
+        }
+    } catch (e) {
+        console.warn('[personajes] load failed:', e.message);
+    }
+}
+
+function renderPersonajesTemplatesList(tipo) {
+    const container = document.getElementById(`char${tipo.charAt(0).toUpperCase() + tipo.slice(1)}TemplatesList`);
+    if (!container) return;
+    const apiType = tipo === 'aliado' ? 'ALLY' : 'ENEMY';
+    const templates = savedTemplates[apiType];
+    if (!templates.length) {
+        container.innerHTML = `<div class="npc-list-empty">No hay ${tipo}s guardados todavía</div>`;
+        return;
+    }
+    container.innerHTML = `
+        <div class="npc-existing-label">📋 ${tipo === 'aliado' ? 'Aliados' : 'Enemigos'} guardados</div>
+        ${templates.map(t => {
+            const badges = [
+                t.isGroup && t.groupSize >= 2 ? `👥 ×${t.groupSize}` : '',
+                t.isSummon ? `✨ ${t.summoner}` : '',
+            ].filter(Boolean).join(' · ');
+            const actStr = [t.actionsText?.acciones, t.actionsText?.adicionales, t.actionsText?.reacciones]
+                .filter(Boolean).join(' | ');
+            return `<div class="npc-builder-item">
+                <div class="npc-item-info">
+                    <span class="npc-item-name">${t.name}</span>
+                    <span class="npc-item-stats">❤️ ${t.stats.hp} · 🛡️ ${t.stats.ac}${badges ? ' · ' + badges : ''}</span>
+                    ${actStr ? `<span class="npc-item-actions">⚔️ ${actStr}</span>` : ''}
+                </div>
+                <button class="npc-remove-btn" onclick="deletePersonajesTemplate('${t._id}','${tipo}')">🗑</button>
+            </div>`;
+        }).join('')}`;
+}
+
+async function createCharTemplate(tipo) {
+    const p = `char${tipo.charAt(0).toUpperCase() + tipo.slice(1)}`;
+    const nombre     = document.getElementById(`${p}Nombre`)?.value?.trim();
+    const pg         = parseInt(document.getElementById(`${p}Pg`)?.value)    || 10;
+    const ca         = parseInt(document.getElementById(`${p}Ca`)?.value)    || 10;
+    const acciones    = document.getElementById(`${p}Acciones`)?.value?.trim()    || '';
+    const adicionales = document.getElementById(`${p}Adicionales`)?.value?.trim() || '';
+    const reacciones  = document.getElementById(`${p}Reacciones`)?.value?.trim()  || '';
+
+    if (!nombre) { showNotification('⚠️ Introduce un nombre', 2000); return; }
+
+    const rawGroupSize = parseInt(document.getElementById('charEnemigoGroupSize')?.value) || 1;
+    const isGroup  = tipo === 'enemigo' && rawGroupSize >= 2;
+    const groupSize = isGroup ? rawGroupSize : 1;
+
+    const isSummon = tipo === 'aliado' && !!(document.getElementById('charAliadoEsInvocacion')?.checked);
+    const summoner = isSummon ? (document.getElementById('charAliadoSumoner')?.value || '') : '';
+
+    await fetch(`${API_BASE}/api/entity-templates`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            name: nombre,
+            type: tipo === 'aliado' ? 'ALLY' : 'ENEMY',
+            stats: { hp: pg, ac: ca },
+            actions: [],
+            isGroup, groupSize, isSummon, summoner,
+            actionsText: { acciones, adicionales, reacciones },
+        }),
+    }).catch(e => console.warn('[personajes] save failed:', e.message));
+
+    // Clear form
+    [`${p}Nombre`, `${p}Pg`, `${p}Ca`, `${p}Acciones`, `${p}Adicionales`, `${p}Reacciones`].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    if (tipo === 'enemigo') { const gs = document.getElementById('charEnemigoGroupSize'); if (gs) gs.value = ''; }
+    if (tipo === 'aliado')  { const chk = document.getElementById('charAliadoEsInvocacion'); if (chk) { chk.checked = false; toggleCharSummonFields('aliado'); } }
+
+    showNotification(`${tipo === 'aliado' ? '💙' : '💀'} ${nombre} guardado`, 1500);
+    await loadPersonajesTemplates(tipo);
+    // Also refresh saved templates in combat setup section if it's open
+    renderSavedTemplatesSection(tipo);
+}
+
+async function deletePersonajesTemplate(templateId, tipo) {
+    try {
+        await fetch(`${API_BASE}/api/entity-templates/${templateId}`, { method: 'DELETE' });
+        await loadPersonajesTemplates(tipo);
+    } catch (e) {
+        showNotification('⚠️ Error al eliminar', 2000);
+    }
+}
+
+function toggleCharSummonFields(tipo) {
+    const checked = document.getElementById(`char${tipo.charAt(0).toUpperCase() + tipo.slice(1)}EsInvocacion`)?.checked;
+    const fields  = document.getElementById(`char${tipo.charAt(0).toUpperCase() + tipo.slice(1)}SummonFields`);
+    if (fields) fields.style.display = checked ? 'block' : 'none';
+}
+
 function renderCharacterSelectionMenu() {
     const container = document.getElementById('characterListContainer');
     if (!container) return;
@@ -2816,6 +2938,11 @@ function confirmEndCombat() {
 
 function _doClearCombat() {
     document.getElementById('combatSummaryOverlay')?.remove();
+    // Mark the online session as ENDED and let the server clean up when all clients disconnect
+    if (isOnlineCombat && activeCombatId) {
+        fetch(`${API_BASE}/api/combats/${activeCombatId}`, { method: 'DELETE' }).catch(() => {});
+        clearOnlineSession();
+    }
     combatState.isActive = false;
     combatState.participants = [];
     combatState.selectedIds = [];
@@ -2895,15 +3022,30 @@ function showCombatSummary() {
         </div>`;
     }).join('');
 
+    // Build kill scoreboard
+    const scores = computeKillScoreboard();
+    const medals = ['🥇', '🥈', '🥉'];
+    const scoreboardHTML = scores.length ? `
+        <div class="summary-scoreboard">
+            <div class="summary-scoreboard-title">🏆 Clasificación de Bajas</div>
+            ${scores.map(([name, kills], i) => `
+                <div class="summary-score-entry${i === 0 ? ' first-place' : ''}">
+                    <span class="score-medal">${medals[i] || `${i + 1}.`}</span>
+                    <span class="score-name">${name}</span>
+                    <span class="score-kills">${kills} baja${kills !== 1 ? 's' : ''}</span>
+                </div>`).join('')}
+        </div>` : '';
+
     const overlay = document.createElement('div');
     overlay.id = 'combatSummaryOverlay';
     overlay.className = 'combat-resume-overlay';
     overlay.innerHTML = `
         <div class="combat-summary-modal">
-            <div class="combat-summary-title">⚔️ Resumen del Combate</div>
-            <div style="text-align:center;color:var(--text-muted);font-size:13px;margin-bottom:8px">
+            <div class="combat-summary-title">⚔️ Fin del Combate</div>
+            <div style="text-align:center;color:var(--text-muted);font-size:13px;margin-bottom:16px">
                 ${combatState.round} ronda(s) · ${combatState.participants.length} participantes
             </div>
+            ${scoreboardHTML}
             <div class="combat-summary-body">${bodyHTML || '<div style="color:var(--text-muted);font-style:italic">Sin historial registrado</div>'}</div>
             <div class="combat-summary-btns">
                 <button class="btn-combat-secondary" onclick="copyHistoryToClipboard()">📋 Copiar</button>

@@ -183,7 +183,19 @@ router.get('/:id/stream', async (req, res) => {
         const hb = setInterval(() => { try { res.write(': ping\n\n'); } catch (_) {} }, 20000);
         req.on('close', () => {
             clearInterval(hb);
-            sseClients.get(id)?.delete(res);
+            const clients = sseClients.get(id);
+            if (clients) {
+                clients.delete(res);
+                // When the last client disconnects from an ended session, delete the document
+                if (clients.size === 0) {
+                    sseClients.delete(id);
+                    Combat.findById(id).then(combat => {
+                        if (combat && combat.status === 'ENDED') {
+                            return Combat.findByIdAndDelete(id);
+                        }
+                    }).catch(() => {});
+                }
+            }
         });
     } catch (err) {
         console.error('[GET /api/combats/:id/stream]', err);
