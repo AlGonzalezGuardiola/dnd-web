@@ -142,7 +142,11 @@ router.post('/:id/start', async (req, res) => {
         await combat.save();
 
         const doc = combat.toObject();
-        broadcast(String(combat._id), { ...doc, _clientId: req.body._clientId || null });
+        try {
+            broadcast(String(combat._id), { ...doc, _clientId: req.body._clientId || null });
+        } catch (broadcastErr) {
+            console.error('[start] broadcast error (combat already RUNNING):', broadcastErr);
+        }
 
         console.log(`[POST /api/combats/:id/start] Combate ${combat._id} INICIADO | devices: ${combat.connectedDevices.length}`);
         res.json({ success: true, combat: doc });

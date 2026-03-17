@@ -904,7 +904,7 @@ function updateWaitingRoom(deviceCount, joinCode, isMasterDevice) {
     }
 }
 
-// Master: iniciar el combate cuando haya ≥2 devices
+// Master: iniciar el combate
 async function startOnlineCombat() {
     if (!activeCombatId) return;
     try {
@@ -913,16 +913,14 @@ async function startOnlineCombat() {
             headers: { 'Content-Type': 'application/json' },
             body:    JSON.stringify({ _clientId: CLIENT_ID }),
         });
-        const data = await res.json();
-        console.log('[online] start response:', data);
+        const data = await res.json().catch(() => ({}));
 
-        if (!res.ok) {
-            showNotification(`❌ ${data.error}`, 4000);
+        // Si el servidor devuelve error pero el combate ya quedó como RUNNING
+        // (el save ocurre antes del broadcast), entrar igualmente.
+        if (!res.ok && data?.combat?.status !== 'RUNNING') {
+            showNotification(`❌ ${data.error || 'Error al iniciar el combate'}`, 4000);
             return;
         }
-        // El SSE recibirá status:RUNNING y todos cambiarán a combatManager
-        // El master también lo recibe y entra (applyRemoteState lo gestiona)
-        // Pero como el _clientId coincide, lo manejamos aquí directamente:
         combatState.isActive = true;
         combatModeActive = true;
         setView('combatManager');
