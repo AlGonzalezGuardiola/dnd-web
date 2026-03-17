@@ -130,20 +130,12 @@ router.post('/join', async (req, res) => {
     }
 });
 
-// ── POST /api/combats/:id/start — iniciar combate (requiere ≥2 dispositivos) ──
+// ── POST /api/combats/:id/start — iniciar combate (sin mínimo de dispositivos) ──
 router.post('/:id/start', async (req, res) => {
     try {
         const combat = await Combat.findById(req.params.id);
         if (!combat) return res.status(404).json({ error: 'Combate no encontrado' });
         if (combat.status === 'RUNNING') return res.json({ message: 'Ya en curso', combat: combat.toObject() });
-
-        const uniqueDevices = new Set(combat.connectedDevices.map(d => d.deviceId)).size;
-        if (uniqueDevices < 2) {
-            return res.status(400).json({
-                error: `No se puede iniciar: se necesita al menos 1 jugador más unido desde otro dispositivo (ahora mismo: ${uniqueDevices} dispositivo${uniqueDevices === 1 ? '' : 's'}).`,
-                deviceCount: uniqueDevices,
-            });
-        }
 
         combat.status   = 'RUNNING';
         combat.isActive = true;
