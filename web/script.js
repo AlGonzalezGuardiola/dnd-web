@@ -112,8 +112,6 @@ function setupEventListeners() {
         setView('characters');
     });
 
-    document.getElementById('cardCombatMode').addEventListener('click', showCombatSetup);
-
     // Character Selection
     ['Vel', 'Zero', 'Asthor'].forEach(id => {
         const card = document.getElementById(`charCard${id}`);
@@ -1178,6 +1176,7 @@ const combatState = {
 let combatModeActive = false;
 let setupNpcs = [];        // NPCs built in the setup screen before combat starts
 let setupInitiatives = {}; // { charId: number } — initiatives set in the setup screen
+let savedTemplates = { ALLY: [], ENEMY: [] }; // templates loaded from DB
 let currentCharacterId = null;
 let isCharacterEditing = false;
 
@@ -2553,6 +2552,8 @@ function showCombatSetup() {
     setView('combatSetup');
     switchCombatSetupTab('jugadores');
     renderCombatSetup();
+    loadSavedTemplates('aliado');
+    loadSavedTemplates('enemigo');
 }
 
 // Jugador personal turn manager — completely independent from master
@@ -4751,11 +4752,11 @@ function showQuickNpcModal(context, tipo) {
 // ── Entity Template: save to backend catalog (fire-and-forget) ───────────────
 // Always called when creating a new NPC so it's reusable in future combats.
 // No initiative is stored — that is rolled fresh each time.
-function _saveEntityTemplate({ name, type, stats, actions, isGroup, groupSize, isSummon, summoner }) {
+function _saveEntityTemplate({ name, type, stats, actions, isGroup, groupSize, isSummon, summoner, actionsText }) {
     fetch(`${API_BASE}/api/entity-templates`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, type, stats, actions, isGroup, groupSize, isSummon, summoner }),
+        body: JSON.stringify({ name, type, stats, actions, isGroup, groupSize, isSummon, summoner, actionsText }),
     }).catch(e => console.warn('[entity-templates] save failed:', e.message));
 }
 
@@ -5013,9 +5014,10 @@ function addSetupNpc(tipo) {
         name:    nombre,
         type:    tipo === 'aliado' ? 'ALLY' : 'ENEMY',
         stats:   { hp: pg, ac: ca },
-        actions: [], // text-based actions from setup form; no structured actions to store
+        actions: [],
         isGroup, groupSize,
         isSummon, summoner,
+        actionsText: { acciones, adicionales, reacciones },
     });
 
     // Clear form fields
@@ -5070,6 +5072,94 @@ function removeSetupNpc(idx) {
     renderSpecialSummonsSection(); // refresh so removed summons become selectable again
     _updateSetupCount();
     showNotification(`✕ ${name} eliminado`, 1200);
+}
+
+// ---- Saved Templates (DB) ----
+
+async function loadSavedTemplates(tipo) {
+    const apiType = tipo === 'aliado' ? 'ALLY' : 'ENEMY';
+    try {
+        const res = await fetch(`${API_BASE}/api/entity-templates?type=${apiType}`);
+        const data = await res.json();
+        if (data.success) {
+            savedTemplates[apiType] = data.templates;
+            renderSavedTemplatesSection(tipo);
+        }
+    } catch (e) {
+        console.warn('[entity-templates] load failed:', e.message);
+    }
+}
+
+function renderSavedTemplatesSection(tipo) {
+    const container = document.getElementById(`${tipo}SavedTemplates`);
+    if (!container) return;
+    const apiType = tipo === 'aliado' ? 'ALLY' : 'ENEMY';
+    const templates = savedTemplates[apiType];
+    if (!templates.length) {
+        container.innerHTML = '';
+        return;
+    }
+    container.innerHTML = `
+        <div class="saved-templates-header">${tipo === 'aliado' ? '💙' : '💀'} Plantillas guardadas</div>
+        <div class="saved-templates-grid">
+            ${templates.map(t => _renderTemplateCard(t, tipo)).join('')}
+        </div>`;
+}
+
+function _renderTemplateCard(t, tipo) {
+    const badges = [
+        t.isGroup && t.groupSize >= 2 ? `👥 ×${t.groupSize}` : '',
+        t.isSummon ? `✨ ${t.summoner}` : '',
+    ].filter(Boolean).join(' · ');
+    const actStr = [t.actionsText?.acciones, t.actionsText?.adicionales, t.actionsText?.reacciones]
+        .filter(Boolean).join(' | ');
+    return `<div class="template-card">
+        <div class="template-card-info">
+            <span class="template-card-name">${t.name}</span>
+            <span class="template-card-stats">❤️ ${t.stats.hp} · 🛡️ ${t.stats.ac}${badges ? ' · ' + badges : ''}</span>
+            ${actStr ? `<span class="template-card-acts">⚔️ ${actStr}</span>` : ''}
+        </div>
+        <div class="template-card-controls">
+            <input type="number" class="setup-init-input" placeholder="Init" id="tInit_${t._id}" min="-5" max="30">
+            <button class="template-add-btn" onclick="addTemplateToSetup('${t._id}','${tipo}')">＋</button>
+            <button class="template-delete-btn" onclick="deleteEntityTemplate('${t._id}','${tipo}')">🗑</button>
+        </div>
+    </div>`;
+}
+
+function addTemplateToSetup(templateId, tipo) {
+    const apiType = tipo === 'aliado' ? 'ALLY' : 'ENEMY';
+    const t = savedTemplates[apiType].find(x => x._id === templateId);
+    if (!t) return;
+    const initEl = document.getElementById(`tInit_${templateId}`);
+    const initiative = parseInt(initEl?.value) || 0;
+    setupNpcs.push({
+        tipo,
+        nombre:      t.name,
+        pg:          t.stats.hp,
+        ca:          t.stats.ac,
+        initiative,
+        acciones:    t.actionsText?.acciones    || '',
+        adicionales: t.actionsText?.adicionales || '',
+        reacciones:  t.actionsText?.reacciones  || '',
+        isGroup:   !!t.isGroup,
+        groupSize: t.groupSize || 1,
+        isSummon:  !!t.isSummon,
+        summoner:  t.summoner || '',
+        summonedBeforeCombat: !!t.isSummon,
+    });
+    renderSetupNpcList(tipo);
+    _updateSetupCount();
+    showNotification(`${tipo === 'aliado' ? '💙' : '💀'} ${t.name} añadido`, 1500);
+}
+
+async function deleteEntityTemplate(templateId, tipo) {
+    try {
+        await fetch(`${API_BASE}/api/entity-templates/${templateId}`, { method: 'DELETE' });
+        await loadSavedTemplates(tipo);
+    } catch (e) {
+        showNotification('⚠️ Error al eliminar plantilla', 2000);
+    }
 }
 
 // ---- Auto-save Combat State ----

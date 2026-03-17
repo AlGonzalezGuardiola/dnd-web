@@ -6,7 +6,7 @@ const EntityTemplate = require('../models/EntityTemplate');
 // Called whenever a new ally/enemy is created so it becomes reusable.
 router.post('/', async (req, res) => {
     try {
-        const { name, type, stats, actions, isGroup, groupSize, isSummon, summoner } = req.body;
+        const { name, type, stats, actions, isGroup, groupSize, isSummon, summoner, actionsText } = req.body;
 
         if (!name || !type) {
             return res.status(400).json({ error: 'name y type son obligatorios' });
@@ -23,6 +23,11 @@ router.post('/', async (req, res) => {
                     groupSize: isGroup ? (groupSize || 2) : 1,
                     isSummon:  !!isSummon,
                     summoner:  summoner || '',
+                    actionsText: {
+                        acciones:    actionsText?.acciones    || '',
+                        adicionales: actionsText?.adicionales || '',
+                        reacciones:  actionsText?.reacciones  || '',
+                    },
                 },
             },
             { upsert: true, new: true, setDefaultsOnInsert: true }
@@ -43,6 +48,17 @@ router.get('/', async (req, res) => {
         if (req.query.type) filter.type = req.query.type;
         const templates = await EntityTemplate.find(filter).sort({ name: 1 });
         res.json({ success: true, templates });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// DELETE /api/entity-templates/:id  — remove a saved template
+router.delete('/:id', async (req, res) => {
+    try {
+        const deleted = await EntityTemplate.findByIdAndDelete(req.params.id);
+        if (!deleted) return res.status(404).json({ error: 'Plantilla no encontrada' });
+        res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

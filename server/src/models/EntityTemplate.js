@@ -29,6 +29,13 @@ const EntityTemplateSchema = new mongoose.Schema({
     // Summon config
     isSummon: { type: Boolean, default: false },
     summoner: { type: String, enum: ['ASTHOR', 'ZERO', ''], default: '' },
+
+    // Raw action text strings (as entered in the setup form)
+    actionsText: {
+        acciones:    { type: String, default: '' },
+        adicionales: { type: String, default: '' },
+        reacciones:  { type: String, default: '' },
+    },
 }, {
     timestamps: true,
 });

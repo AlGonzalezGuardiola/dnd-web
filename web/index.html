@@ -66,10 +66,6 @@
                 <div class="card-title">👥 Personajes</div>
                 <p>Gestiona las hojas de personaje y estadísticas.</p>
             </div>
-            <div class="card" id="cardCombatMode">
-                <div class="card-title">⚔️ Modo Combate</div>
-                <p>Inicia un combate en partida. Selecciona jugador o enemigo.</p>
-            </div>
             <div class="card card-online" id="cardOnlineCombat" onclick="showOnlineLobby()">
                 <div class="card-title">🌐 Combate en Línea</div>
                 <p>Partida sincronizada en tiempo real. Juega desde varios dispositivos a la vez.</p>
@@ -153,6 +149,7 @@
             <!-- Existing aliado characters from data (shown first) -->
             <div id="aliadoExistingGrid" class="combat-participant-grid" style="margin-bottom:16px;"></div>
             <div id="specialSummonsSection"></div>
+            <div id="aliadoSavedTemplates"></div>
             <div id="aliadoList" class="npc-builder-list">
                 <div class="npc-list-empty">Ningún aliado añadido todavía</div>
             </div>
@@ -198,6 +195,7 @@
         <div id="setupTabEnemigos" class="combat-setup-tab-panel" style="display:none;">
             <!-- Existing enemigo characters from data (shown first) -->
             <div id="enemigoExistingGrid" class="combat-participant-grid" style="margin-bottom:16px;"></div>
+            <div id="enemigoSavedTemplates"></div>
             <div id="enemigoList" class="npc-builder-list">
                 <div class="npc-list-empty">Ningún enemigo añadido todavía</div>
             </div>
