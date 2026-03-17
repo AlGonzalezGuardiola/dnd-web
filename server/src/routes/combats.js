@@ -144,7 +144,7 @@ router.post('/:id/start', async (req, res) => {
         const doc = combat.toObject();
         broadcast(String(combat._id), { ...doc, _clientId: req.body._clientId || null });
 
-        console.log(`[POST /api/combats/:id/start] Combate ${combat._id} INICIADO | devices: ${uniqueDevices}`);
+        console.log(`[POST /api/combats/:id/start] Combate ${combat._id} INICIADO | devices: ${combat.connectedDevices.length}`);
         res.json({ success: true, combat: doc });
     } catch (err) {
         console.error('[POST /api/combats/:id/start]', err);
