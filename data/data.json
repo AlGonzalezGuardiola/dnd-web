@@ -1,9 +1,0 @@
-{
-    "mapa_inicial": "Mundo",
-    "mapas": {
-        "Mundo": {
-            "imagen": "C:/Users/alvar/DnD/dnd/imagenes/World.jpg",
-            "pines": []
-        }
-    }
-}
