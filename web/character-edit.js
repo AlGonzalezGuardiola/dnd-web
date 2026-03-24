@@ -265,10 +265,8 @@ function renderCharacterSheet(charId) {
     const defaultContent = document.getElementById(defaultId);
     if (defaultContent) defaultContent.classList.add('active');
 
-    // Show Container + dice roller
+    // Show Container
     document.getElementById('characterSheetContainer').style.display = 'flex';
-    const diceWidget = document.getElementById('diceRollerWidget');
-    if (diceWidget) diceWidget.style.display = 'flex';
 
     // Update HUD breadcrumbs based on navigation context
     const hud = document.getElementById('hud');
@@ -301,11 +299,7 @@ function setupCharacterSheetListeners() {
     document.getElementById('closeSheetBtn').addEventListener('click', () => {
         document.getElementById('characterSheetContainer').style.display = 'none';
         isCharacterEditing = false;
-        const diceWidget = document.getElementById('diceRollerWidget');
         // Combat mode no longer opens character sheets, so just go to characters view
-        if (state.currentView === 'landing') {
-            if (diceWidget) diceWidget.style.display = 'none';
-        }
     });
 
     // Tab Navigation
@@ -598,6 +592,10 @@ function toggleCharSummonFields(tipo) {
 // === Edit Actions ===
 function toggleCharacterEditMode() {
     isCharacterEditing = !isCharacterEditing;
+    const saveBtn = document.getElementById('saveCharBtn');
+    const editBtn = document.getElementById('editCharBtn');
+    if (saveBtn) saveBtn.style.display = isCharacterEditing ? 'inline-flex' : 'none';
+    if (editBtn) editBtn.textContent = isCharacterEditing ? '✕ Cancelar' : '✎ Editar Hoja';
     renderCharacterSheet(currentCharacterId);
 }
 
@@ -645,6 +643,10 @@ function saveCharacterChanges() {
     }
 
     isCharacterEditing = false;
+    const saveBtn = document.getElementById('saveCharBtn');
+    const editBtn = document.getElementById('editCharBtn');
+    if (saveBtn) saveBtn.style.display = 'none';
+    if (editBtn) editBtn.textContent = '✎ Editar Hoja';
     renderCharacterSheet(currentCharacterId);
     renderCharacterSelectionMenu();
 
