@@ -2293,36 +2293,132 @@ body.view-map .hud {
 /* ============================================
    Combat Tab – Turn Planner
    ============================================ */
-.summon-planner-section {
-    margin-top: 28px;
-    padding-top: 20px;
-    border-top: 1px solid rgba(160, 100, 220, 0.35);
+/* ── Entity Sheet (summon/servant detail overlay) ── */
+.btn-entity-sheet {
+    background: rgba(160, 100, 220, 0.15);
+    border: 1px solid rgba(160, 100, 220, 0.4);
+    color: #c49aff;
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+.btn-entity-sheet:hover {
+    background: rgba(160, 100, 220, 0.3);
 }
 
-.summon-planner-header {
+.entity-sheet-overlay {
+    position: absolute;
+    inset: 0;
+    background: var(--bg-primary, #1a1a2e);
+    z-index: 20;
+    flex-direction: column;
+    overflow-y: auto;
+    padding: 20px;
+    display: none;
+}
+
+.entity-sheet-back {
+    background: none;
+    border: none;
+    color: var(--accent-gold, #d4af37);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 0 0 16px 0;
+    text-align: left;
+    opacity: 0.8;
+}
+.entity-sheet-back:hover { opacity: 1; }
+
+.entity-sheet-body {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.entity-sheet-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.entity-sheet-emoji {
+    font-size: 42px;
+    line-height: 1;
+}
+.entity-sheet-name {
+    font-family: var(--font-heading);
+    font-size: 22px;
+    color: var(--text-primary, #e8d5b7);
+    margin-bottom: 4px;
+}
+.entity-sheet-meta {
+    font-size: 13px;
+    color: var(--text-secondary, #a89070);
+}
+
+.entity-sheet-stats {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.entity-stat {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    padding: 8px 14px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 13px;
+    color: var(--text-primary, #e8d5b7);
+}
+
+.entity-action-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.entity-action-group-title {
+    font-family: var(--font-heading);
+    font-size: 12px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--accent-gold, #d4af37);
+    margin-bottom: 4px;
+}
+.entity-action-card {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 10px 14px;
+}
+.entity-action-name {
+    font-size: 14px;
+    color: var(--text-primary, #e8d5b7);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    font-family: var(--font-heading);
-    font-size: 15px;
-    color: #c49aff;
-    margin-bottom: 14px;
-    letter-spacing: 0.5px;
+    margin-bottom: 4px;
 }
-
-.summon-planner-hp {
+.entity-action-dice {
     font-size: 12px;
-    color: var(--text-secondary);
-    font-family: var(--font-body);
+    color: var(--accent-gold, #d4af37);
+    font-family: monospace;
 }
-
-.summon-planner-section .turn-planner {
-    border-color: rgba(160, 100, 220, 0.3);
-    background: rgba(160, 100, 220, 0.05);
+.entity-action-desc {
+    font-size: 12px;
+    color: var(--text-secondary, #a89070);
+    line-height: 1.4;
 }
-
-.summon-planner-section .turn-planner-title {
-    color: #c49aff;
+.entity-habilidad {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--text-secondary, #a89070);
+    line-height: 1.5;
 }
 
 .turn-planner {
