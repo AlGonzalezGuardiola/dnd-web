@@ -478,14 +478,99 @@ function renderActivePanel(targetEl, forcePIdx) {
             </div>`;
         }).filter(Boolean).join('');
         const hasDice = PSLOTS.some(s => currentEntry?.slots?.[s.key + '_plan']);
-        const chipSections = SLOTS.map(slot => {
-            const items = regularItems.filter(a => inferActionType(a) === slot.tipo);
+
+        // Spell slot tracker (same as character sheet)
+        const charData = p.charData;
+        let combatSlotsHTML = '';
+        if (charData?.ranuras?.length > 0) {
+            initSpellSlotsForChar(p.id);
+            combatSlotsHTML = `<div class="slot-tracker combat-slots">
+                <div class="slot-tracker-header">
+                    <span class="slot-tracker-title">✨ Ranuras</span>
+                    <button class="slot-reset-btn" onclick="resetSpellSlots('${p.id}')" title="Descanso largo">🌙</button>
+                </div>
+                ${charData.ranuras.map(slot => {
+                    const remaining = spellSlotState[p.id]?.[slot.nombre] ?? slot.total;
+                    const pips = Array.from({ length: slot.total }, (_, i) =>
+                        `<button class="slot-pip${i >= remaining ? ' used' : ''}"
+                            onclick="toggleSpellSlot('${p.id}','${slot.nombre}',${i})"></button>`
+                    ).join('');
+                    return `<div class="slot-row">
+                        <span class="slot-name">${slot.nombre}</span>
+                        <div class="slot-track" data-slot="${slot.nombre}">${pips}</div>
+                        <span class="slot-count" data-slot="${slot.nombre}">${remaining}/${slot.total}</span>
+                    </div>`;
+                }).join('')}
+            </div>`;
+        }
+
+        // Card renderer — same style as character sheet, calls selectPlannerAction
+        const renderPlannerCard = (item, sectionKey) => {
+            const plan = currentEntry?.slots?.[sectionKey + '_plan'];
+            const isSelected = plan?.nombre === item.nombre;
+            const diceStr = item.atk
+                ? `ATK ${item.atk}${item.dado && item.dado !== '—' ? ` | DMG ${item.dado}` : ''}`
+                : (item.dado && item.dado !== '—' ? `DMG ${item.dado}` : (extractDiceFromDesc(item.desc) || ''));
+            const safeName = item.nombre.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            const safeAtk  = (item.atk || '').replace(/'/g, "\\'");
+            const safeDado = (item.dado || '').replace(/'/g, "\\'");
+            const safeTipo = (item.tipo_dano || '').replace(/'/g, "\\'");
+            return `<div class="combat-action-card${isSelected ? ' selected' : ''}"
+                     onclick="selectPlannerAction('${p.id}','${safeName}','${safeAtk}','${safeDado}','${safeTipo}')">
+                <div class="combat-action-header">
+                    <span class="combat-action-name">${item.nombre}</span>
+                    ${diceStr ? `<span class="combat-action-dice">${diceStr}</span>` : ''}
+                </div>
+                <div class="combat-action-desc">${item.desc || ''}</div>
+            </div>`;
+        };
+
+        // Action sections with trucos/hechizos split — same structure as character sheet
+        const ACTION_SECTIONS = [
+            { key: 'accion',    icon: '🎯', label: 'Acciones' },
+            { key: 'adicional', icon: '⚡', label: 'Adicionales' },
+            { key: 'reaccion',  icon: '↩️', label: 'Reacciones' },
+        ];
+        const cardSections = ACTION_SECTIONS.map(section => {
+            const items = regularItems.filter(a => inferActionType(a) === section.key);
             if (!items.length) return '';
-            return `<div class="combat-slot-section">
-                <div class="combat-slot-header"><span>${slot.icon} ${slot.label}</span></div>
-                <div class="combat-chips">${renderChips(items)}</div>
+            const trucos   = items.filter(i => !i.nivel || typeof i.nivel !== 'number');
+            const hechizos = items.filter(i => i.nivel && typeof i.nivel === 'number');
+            let cardsHTML  = trucos.map(item => renderPlannerCard(item, section.key)).join('');
+            if (hechizos.length > 0) {
+                initSpellSlotsForChar(p.id);
+                const byLevel = {};
+                hechizos.forEach(sp => { if (!byLevel[sp.nivel]) byLevel[sp.nivel] = []; byLevel[sp.nivel].push(sp); });
+                const hechizosCards = Object.keys(byLevel).sort((a, b) => a - b).map(lv => {
+                    const slotName = `Nv${lv}`;
+                    const slotDef = charData?.ranuras?.find(s => s.nombre === slotName);
+                    const remaining = slotDef ? (spellSlotState[p.id]?.[slotName] ?? slotDef.total) : null;
+                    const slotBadge = remaining !== null
+                        ? `<span class="slot-badge${remaining === 0 ? ' slot-empty' : ''}">${remaining}/${slotDef.total} ranuras</span>`
+                        : '';
+                    return `<div class="hechizo-level-group">
+                        <div class="hechizo-level-header">Nv${lv} ${slotBadge}</div>
+                        ${byLevel[lv].map(item => renderPlannerCard(item, section.key)).join('')}
+                    </div>`;
+                }).join('');
+                cardsHTML += `<div class="hechizos-subsection">
+                    <div class="hechizos-subsection-title">✨ Hechizos (gastan ranura)</div>
+                    ${hechizosCards}
+                </div>`;
+            }
+            return `<div class="combat-section">
+                <div class="combat-section-title">${section.icon} ${section.label}</div>
+                <div class="combat-action-list">${cardsHTML}</div>
             </div>`;
         }).join('');
+
+        // Smite/modifier section — always visible in player mode
+        const smiteSectionHTML = modificadorItems.length ? `<div class="combat-section">
+            <div class="combat-section-title">✨ Divine Smite</div>
+            <div class="combat-section-subtitle">Complemento del ataque — activa si impactas</div>
+            <div class="combat-chips">${renderModifierChips(modificadorItems)}</div>
+        </div>` : '';
+
         slotSections = `
         <div class="turn-planner">
             <div class="turn-planner-slots">${plannerSlotsHTML}</div>
@@ -494,7 +579,8 @@ function renderActivePanel(targetEl, forcePIdx) {
                 ${hasDice ? diceRows : '<div class="planner-dice-empty">Selecciona acciones abajo</div>'}
             </div>
         </div>
-        <div class="combat-actions-chips-section">${chipSections}${modifierSectionHTML}</div>`;
+        ${combatSlotsHTML}
+        <div class="combat-actions-cards-section">${cardSections}${smiteSectionHTML}</div>`;
     } else {
         slotSections = SLOTS.map(slot => {
             const isSlotUsed = (currentEntry?.slots?.[slot.key]) ||
