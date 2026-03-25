@@ -402,7 +402,19 @@ async function initPlayerCharactersFromDB() {
         if (!data.success || !window.characterData) return;
         data.characters.forEach(c => {
             if (window.characterData[c.charId]) {
-                Object.assign(window.characterData[c.charId], c.data);
+                const fresh = window.characterData[c.charId];
+                // Preserve game-mechanic fields from characters.js (source of truth)
+                // Only let MongoDB override user-editable display fields
+                const gameFields = {
+                    conjuros:     fresh.conjuros,
+                    combateExtra: fresh.combateExtra,
+                    ranuras:      fresh.ranuras,
+                    stats:        fresh.stats,
+                    resumen:      fresh.resumen,
+                    rasgos:       fresh.rasgos,
+                };
+                Object.assign(fresh, c.data);
+                Object.assign(fresh, gameFields);
             }
         });
         renderCharacterSelectionMenu();
