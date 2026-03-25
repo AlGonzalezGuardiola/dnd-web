@@ -628,8 +628,18 @@ function renderCombatTab(data) {
             <div class="combat-section-title">${section.icon} ${section.label}</div>
             <div class="combat-action-list">${cardsHTML}</div>
         </div>`;
-    }).join('') + (groups.modificador.length ? `<div class="combat-section">
-        <div class="combat-section-title">✨ Modificadores de Ataque</div>
+    }).join('');
+
+    // Show modifiers (Divine Smite) only when a weapon attack is planned
+    const allCharItems = [...(data.combateExtra || []), ...(data.conjuros || [])];
+    const hasWeaponPlanned = Object.values(planner).some(sel => {
+        if (!sel) return false;
+        const item = allCharItems.find(x => x.nombre === sel.nombre);
+        return !!(item?.atk);
+    });
+    const modifierSectionHTML = (groups.modificador.length && hasWeaponPlanned) ? `<div class="combat-section">
+        <div class="combat-section-title">✨ Divine Smite</div>
+        <div class="combat-section-subtitle">Complemento del ataque — activa si impactas</div>
         <div class="combat-action-list">
             ${groups.modificador.map(item => {
                 const diceStr = item.dado && item.dado !== '—' ? `DMG ${item.dado}` : '';
@@ -642,7 +652,8 @@ function renderCombatTab(data) {
                 </div>`;
             }).join('')}
         </div>
-    </div>` : '');
+    </div>` : '';
+    const actionListHTML_full = actionListHTML + modifierSectionHTML;
 
     return `<div class="turn-planner">
         <div class="turn-planner-title">⚡ Planificador de Turno</div>
@@ -650,7 +661,7 @@ function renderCombatTab(data) {
         ${diceHTML}
     </div>
     ${slotsHTML}
-    ${actionListHTML}`;
+    ${actionListHTML_full}`;
 }
 
 function selectCombatAction(charId, tipo, nombre) {

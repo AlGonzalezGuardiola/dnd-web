@@ -375,8 +375,26 @@ function renderActivePanel(targetEl, forcePIdx) {
         </div>`;
     }).join('');
 
-    const modifierSectionHTML = modificadorItems.length ? `<div class="combat-slot-section smite-section">
-        <div class="combat-slot-header"><span>✨ Modificador de Ataque</span><small style="color:var(--text-muted);font-size:11px">por ataque independiente</small></div>
+    // Show smite/modifier section only when a weapon attack is active this phase
+    const hasWeaponAttackActive = (() => {
+        if (isExtraAttack) return true;
+        if (playerMode) {
+            return ['accion_plan', 'adicional_plan'].some(key => {
+                const plan = currentEntry?.slots?.[key];
+                if (!plan) return false;
+                const item = allItems.find(x => x.nombre === plan.nombre);
+                return !!(item?.atk);
+            });
+        }
+        return currentEntry?.actions.some(a => {
+            if (a.isModifier) return false;
+            const item = allItems.find(x => x.nombre === a.nombre);
+            return !!(item?.atk);
+        }) || false;
+    })();
+
+    const modifierSectionHTML = (modificadorItems.length && hasWeaponAttackActive) ? `<div class="combat-slot-section smite-section">
+        <div class="combat-slot-header"><span>✨ Divine Smite</span><small style="color:var(--text-muted);font-size:11px">complemento del ataque</small></div>
         <div class="combat-chips">${renderModifierChips(modificadorItems)}</div>
     </div>` : '';
 
