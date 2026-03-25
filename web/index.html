@@ -256,6 +256,7 @@
         <!-- Footer -->
         <div class="combat-setup-footer">
             <span id="combatSetupCount" class="combat-setup-count">0 participantes</span>
+            <button class="btn-combat-secondary" onclick="saveCombatTemplate()">💾 Guardar plantilla</button>
             <button class="btn-combat-primary" onclick="beginCombatFromSetup()">⚔️ ¡Iniciar Combate!</button>
         </div>
     </section>
@@ -526,6 +527,10 @@
                 <input id="encNewName" class="npc-input" type="text" placeholder="Nombre del encuentro…" autocomplete="off" maxlength="80" required>
                 <button class="btn-combat-primary" type="submit">+ Nuevo</button>
             </form>
+            <div class="combat-templates-section" id="combatTemplatesSection" style="display:none;">
+                <h3 class="templates-section-title">🎯 Plantillas de Combate</h3>
+                <div id="combatTemplatesContainer"></div>
+            </div>
             <div class="encounter-list" id="encList">
                 <div class="enc-empty" id="encListEmpty">Sin encuentros guardados. ¡Crea el primero!</div>
             </div>

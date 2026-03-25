@@ -850,3 +850,94 @@ function buildSirvienteCharData(ac) {
         conjuros: []
     };
 }
+
+// ── Combat Templates (saved encounter presets) ──────────────────────────────
+const COMBAT_TEMPLATES_KEY = 'dnd_combat_templates';
+
+function _tplLoad() {
+    try { return JSON.parse(localStorage.getItem(COMBAT_TEMPLATES_KEY)) || []; }
+    catch { return []; }
+}
+function _tplSave(list) {
+    localStorage.setItem(COMBAT_TEMPLATES_KEY, JSON.stringify(list));
+}
+
+window.saveCombatTemplate = function () {
+    const total = combatState.selectedIds.length + setupNpcs.length;
+    if (total < 1) {
+        showNotification('Selecciona al menos 1 participante para guardar', 2500);
+        return;
+    }
+    const name = prompt('Nombre de la plantilla de combate:');
+    if (!name?.trim()) return;
+
+    const list = _tplLoad();
+    list.unshift({
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
+        name: name.trim(),
+        createdAt: new Date().toISOString(),
+        selectedIds: [...combatState.selectedIds],
+        npcs: setupNpcs.map(n => {
+            const { charData, ...rest } = n;
+            // Preserve charData only for non-window.characterData entries (custom NPCs)
+            const isKnown = charData && window.characterData[n.id];
+            return isKnown ? rest : { ...rest, charData: charData ? { ...charData } : null };
+        }),
+        initiatives: { ...setupInitiatives },
+    });
+    _tplSave(list);
+    showNotification('💾 Plantilla guardada en Encuentros', 2000);
+};
+
+window.loadCombatTemplate = function (id) {
+    const tpl = _tplLoad().find(t => t.id === id);
+    if (!tpl) return;
+
+    // Restore setup state from template
+    combatState.selectedIds = [...tpl.selectedIds];
+    setupInitiatives = { ...tpl.initiatives };
+    setupNpcs = tpl.npcs.map(n => ({
+        ...n,
+        charData: n.charData || window.characterData[n.id] || { combateExtra: [], conjuros: [] },
+    }));
+
+    // Navigate to setup screen without resetting state
+    combatModeActive = true;
+    setView('combatSetup');
+    switchCombatSetupTab('jugadores');
+    renderCombatSetup();
+    loadSavedTemplates('aliado');
+    loadSavedTemplates('enemigo');
+    showNotification(`📋 Plantilla "${tpl.name}" cargada`, 2000);
+};
+
+window.deleteCombatTemplate = function (id) {
+    const list = _tplLoad().filter(t => t.id !== id);
+    _tplSave(list);
+    window.renderCombatTemplatesList();
+};
+
+window.renderCombatTemplatesList = function () {
+    const section = document.getElementById('combatTemplatesSection');
+    const container = document.getElementById('combatTemplatesContainer');
+    if (!section || !container) return;
+
+    const list = _tplLoad();
+    section.style.display = list.length ? 'block' : 'none';
+    if (!list.length) return;
+
+    container.innerHTML = list.map(tpl => {
+        const date = new Date(tpl.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+        const count = tpl.selectedIds.length + tpl.npcs.length;
+        return `<div class="combat-template-item">
+            <div class="tpl-info">
+                <span class="tpl-name">${tpl.name}</span>
+                <span class="tpl-meta">${count} participantes · ${date}</span>
+            </div>
+            <div class="tpl-actions">
+                <button class="btn-combat-primary" style="padding:6px 14px;font-size:13px" onclick="loadCombatTemplate('${tpl.id}')">▶ Jugar</button>
+                <button class="btn-danger" style="padding:6px 10px;font-size:13px" onclick="deleteCombatTemplate('${tpl.id}')">🗑</button>
+            </div>
+        </div>`;
+    }).join('');
+};

@@ -7080,3 +7080,50 @@ select:focus-visible {
         animation: none !important;
     }
 }
+
+/* ── Combat Templates in Encuentros ────────────────────────── */
+.combat-templates-section {
+    margin-bottom: 24px;
+}
+.templates-section-title {
+    font-family: var(--font-heading);
+    font-size: 14px;
+    letter-spacing: 1px;
+    color: var(--accent-gold, #d4af37);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+.combat-template-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    gap: 12px;
+}
+.tpl-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+.tpl-name {
+    font-size: 15px;
+    color: var(--text-primary, #e8d5b7);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.tpl-meta {
+    font-size: 12px;
+    color: var(--text-secondary, #a89070);
+}
+.tpl-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}

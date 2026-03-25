@@ -56,6 +56,7 @@
         document.getElementById('encDetailView').style.display = 'none';
         currentEncId = null;
         renderList();
+        if (typeof renderCombatTemplatesList === 'function') renderCombatTemplatesList();
     };
 
     function renderList() {
