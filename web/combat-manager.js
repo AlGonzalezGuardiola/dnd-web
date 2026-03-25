@@ -48,8 +48,15 @@ function _renderPlayerCombatLayout(view) {
 
     view.style.display = 'flex';
 
-    const p = combatState.participants[0];
-    if (!p) return;
+    const currentP = combatState.participants[combatState.currentIndex];
+    if (!currentP) return;
+
+    // Determine if this player can control the current participant
+    const isMyCharTurn = gameRole.characterId && currentP.id === gameRole.characterId;
+    const isMyAllyTurn = (
+        currentP.ownerCharId === gameRole.characterId ||
+        (currentP._isSirvienteInvisible && gameRole.characterId === 'Vel')
+    );
 
     const isSegundaAccion = combatState.segundaAccionTurn;
     const roundLabel = isSegundaAccion
@@ -68,7 +75,14 @@ function _renderPlayerCombatLayout(view) {
             <button class="btn-combat-primary" onclick="nextCombatTurn()">Siguiente Turno →</button>
         </div>`;
 
-    renderActivePanel(document.getElementById('playerCombatPanel'), 0);
+    const panelEl = document.getElementById('playerCombatPanel');
+    if (isMyCharTurn || isMyAllyTurn) {
+        // My turn or my summon/servant's turn: show that participant in planner mode
+        renderActivePanel(panelEl, combatState.currentIndex);
+    } else {
+        // Someone else's turn: role gates apply → shows waiting state
+        renderActivePanel(panelEl);
+    }
 }
 
 function renderTurnQueue() {
@@ -756,7 +770,7 @@ function selectPlannerAction(participantId, nombre, atk, dado, tipoDano) {
             entry.actions.push({ nombre, dice: atk ? `${atk}${dado ? '/' + dado : ''}` : dado });
     }
     saveCombatState();
-    renderActivePanel(document.getElementById('playerCombatPanel'), 0);
+    renderActivePanel(document.getElementById('playerCombatPanel'), combatState.currentIndex);
     renderCombatLog();
 }
 
@@ -769,7 +783,7 @@ function removePlannerSlot(participantId, slotKey) {
         entry.slots[slotKey + '_plan'] = null;
     }
     saveCombatState();
-    renderActivePanel(document.getElementById('playerCombatPanel'), 0);
+    renderActivePanel(document.getElementById('playerCombatPanel'), combatState.currentIndex);
     renderCombatLog();
 }
 
