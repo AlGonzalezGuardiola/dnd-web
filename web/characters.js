@@ -275,6 +275,11 @@ window.characterData = {
                 "desc": "1 hora o hasta atacar."
             },
             {
+                "nombre": "Bola de Fuego",
+                "nivel": 3,
+                "desc": "Esfera 20ft radio, rango 150ft. 8d6 fuego (DEX CD 15 mitad)."
+            },
+            {
                 "nombre": "Susurros del Olvido",
                 "nivel": "Esp",
                 "desc": "3d6 psíquico + Huir (SAB)."
@@ -466,11 +471,6 @@ window.characterData = {
         ],
         "conjuros": [
             {
-                "nombre": "Divine Smite (Class)",
-                "nivel": "Especial",
-                "desc": "2d8 Radiante + 1d8/nivel extra al impactar. Gratuitos = Mitad de slots."
-            },
-            {
                 "nombre": "Bendecir",
                 "nivel": 1,
                 "desc": "+1d4 ataques/saves (3 objetivos)."
@@ -574,6 +574,21 @@ window.characterData = {
                 "dado": "1d10",
                 "tipo_dano": "fuerza",
                 "desc": "Bonus. Toque, STR Save o Inmovilizado en piedra + 1d10 fuerza."
+            },
+            {
+                "nombre": "Divine Smite",
+                "tipo": "modificador",
+                "esSmite": true,
+                "dado": "2d8",
+                "tipo_dano": "radiante",
+                "desc": "Al impactar: gasta una ranura. Nv1: 2d8 radiante. +1d8 por nivel extra de slot gastado. Se puede usar en cada ataque de forma independiente."
+            },
+            {
+                "nombre": "💥 Ataque Enano",
+                "tipo": "accion",
+                "dado": "1d10+2d6",
+                "tipo_dano": "fuerza",
+                "desc": "1/día. Área 5ft. STR Save. Fallo: Empuje 10ft + 1d10 fuerza. Choca contra pared: +2d6 y aturdido 1 turno."
             }
         ]
     },

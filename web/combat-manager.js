@@ -352,6 +352,34 @@ function renderActivePanel(targetEl, forcePIdx) {
     const customItems = (p.customActions || []).map(a => ({ ...a, _custom: true }));
     const allItems = [...baseItems, ...customItems];
 
+    // Separate modifier (smite) items — they have their own section and don't consume slots
+    const modificadorItems = allItems.filter(a => inferActionType(a) === 'modificador');
+    const regularItems     = allItems.filter(a => inferActionType(a) !== 'modificador');
+
+    // Phase key for per-attack smite tracking
+    const currentPhase = isExtraAttack ? 'extra' : (isSegundaAccion ? 'segunda' : 'main');
+
+    const renderModifierChips = (items) => items.map(a => {
+        const dado = a.dado && a.dado !== '—' ? a.dado : '';
+        const safeName    = a.nombre.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        const safeDado    = dado.replace(/'/g, "\\'");
+        const safeTipo    = (a.tipo_dano || '').replace(/'/g, "\\'");
+        const safeDesc    = (a.desc || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' ');
+        const isUsed = currentEntry?.actions.some(x => x.nombre === a.nombre && x.smitePhase === currentPhase) || false;
+        return `<div class="combat-chip-wrapper">
+            <button class="combat-chip smite-chip${isUsed ? ' used' : ''}"
+                    onclick="toggleSmiteModifier('${p.id}','${safeName}','${safeDado}','${safeTipo}','${currentPhase}')">
+                ✨ ${a.nombre}${dado ? `<small>${dado}</small>` : ''}
+            </button>
+            ${a.desc ? `<button class="chip-info-btn" onclick="showActionDetail('${safeName}','','${safeDado}','${safeDesc}')" title="Ver descripción">ℹ️</button>` : ''}
+        </div>`;
+    }).join('');
+
+    const modifierSectionHTML = modificadorItems.length ? `<div class="combat-slot-section smite-section">
+        <div class="combat-slot-header"><span>✨ Modificador de Ataque</span><small style="color:var(--text-muted);font-size:11px">por ataque independiente</small></div>
+        <div class="combat-chips">${renderModifierChips(modificadorItems)}</div>
+    </div>` : '';
+
     // Helper to render action chips
     const renderChips = (items) => items.map(a => {
         const atk = a.atk || '';
@@ -387,20 +415,21 @@ function renderActivePanel(targetEl, forcePIdx) {
     // Render slot sections or mini-turn-only views
     let slotSections;
     if (isExtraAttack) {
-        // Feature 4: weapon-only filter (actions with atk field, no spells)
-        const weaponItems = allItems.filter(a =>
+        const weaponItems = regularItems.filter(a =>
             inferActionType(a) === 'accion' && a.atk && a.atk !== '—' && a.atk !== ''
         );
         slotSections = `<div class="combat-slot-section">
             <div class="combat-slot-header"><span>⚔️ Ataque Extra (solo armas)</span></div>
             ${weaponItems.length ? `<div class="combat-chips">${renderChips(weaponItems)}</div>` : `<div style="font-size:12px;color:var(--text-muted);padding:4px 0">Sin ataques disponibles</div>`}
-        </div>`;
+        </div>
+        ${modifierSectionHTML}`;
     } else if (isSegundaAccion) {
-        const accionItems = allItems.filter(a => inferActionType(a) === 'accion');
+        const accionItems = regularItems.filter(a => inferActionType(a) === 'accion');
         slotSections = `<div class="combat-slot-section">
             <div class="combat-slot-header"><span>⚔️ Acción (Segunda Acción)</span></div>
             ${accionItems.length ? `<div class="combat-chips">${renderChips(accionItems)}</div>` : `<div style="font-size:12px;color:var(--text-muted);padding:4px 0">Sin acciones disponibles</div>`}
-        </div>`;
+        </div>
+        ${modifierSectionHTML}`;
     } else if (playerMode) {
         // ── PLANIFICADOR DE TURNO (player mode) ──────────────────────────────
         const PSLOTS = [
@@ -432,7 +461,7 @@ function renderActivePanel(targetEl, forcePIdx) {
         }).filter(Boolean).join('');
         const hasDice = PSLOTS.some(s => currentEntry?.slots?.[s.key + '_plan']);
         const chipSections = SLOTS.map(slot => {
-            const items = allItems.filter(a => inferActionType(a) === slot.tipo);
+            const items = regularItems.filter(a => inferActionType(a) === slot.tipo);
             if (!items.length) return '';
             return `<div class="combat-slot-section">
                 <div class="combat-slot-header"><span>${slot.icon} ${slot.label}</span></div>
@@ -447,12 +476,12 @@ function renderActivePanel(targetEl, forcePIdx) {
                 ${hasDice ? diceRows : '<div class="planner-dice-empty">Selecciona acciones abajo</div>'}
             </div>
         </div>
-        <div class="combat-actions-chips-section">${chipSections}</div>`;
+        <div class="combat-actions-chips-section">${chipSections}${modifierSectionHTML}</div>`;
     } else {
         slotSections = SLOTS.map(slot => {
             const isSlotUsed = (currentEntry?.slots?.[slot.key]) ||
                 currentEntry?.actions.some(a => inferActionType(a) === slot.tipo) || false;
-            const items = allItems.filter(a => inferActionType(a) === slot.tipo);
+            const items = regularItems.filter(a => inferActionType(a) === slot.tipo);
             const chips = renderChips(items);
             const slotUsedClass = isSlotUsed ? ' used' : '';
             const btnClass = isSlotUsed ? 'used' : 'libre';
@@ -464,7 +493,7 @@ function renderActivePanel(targetEl, forcePIdx) {
                 </div>
                 ${items.length ? `<div class="combat-chips">${chips}</div>` : `<div style="font-size:12px;color:var(--text-muted);padding:4px 0">Sin acciones disponibles</div>`}
             </div>`;
-        }).join('');
+        }).join('') + modifierSectionHTML;
     }
 
     // Form to add persistent custom actions (not shown in mini-turn modes)
@@ -787,6 +816,21 @@ function removePlannerSlot(participantId, slotKey) {
     }
     saveCombatState();
     renderActivePanel(document.getElementById('playerCombatPanel'), combatState.currentIndex);
+    renderCombatLog();
+}
+
+function toggleSmiteModifier(participantId, nombre, dado, tipoDano, phase) {
+    const entry = getCurrentLogEntry();
+    if (!entry) return;
+    const existingIdx = entry.actions.findIndex(x => x.nombre === nombre && x.smitePhase === phase);
+    if (existingIdx >= 0) {
+        entry.actions.splice(existingIdx, 1);
+    } else {
+        entry.actions.push({ nombre, dice: dado, isModifier: true, smitePhase: phase });
+    }
+    saveCombatState();
+    const panelEl = document.getElementById('combatActivePanel') || document.getElementById('playerCombatPanel');
+    renderActivePanel(panelEl, combatState.currentIndex);
     renderCombatLog();
 }
 

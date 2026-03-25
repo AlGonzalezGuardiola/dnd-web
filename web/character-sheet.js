@@ -491,10 +491,11 @@ function renderCombatTab(data) {
     ];
 
     // Group by type
-    const groups = { accion: [], adicional: [], reaccion: [] };
+    const groups = { accion: [], adicional: [], reaccion: [], modificador: [] };
     allItems.forEach(item => {
         const tipo = inferActionType(item);
-        groups[tipo].push(item);
+        if (groups[tipo] !== undefined) groups[tipo].push(item);
+        else groups.accion.push(item);
     });
 
     // Spell slots
@@ -573,7 +574,6 @@ function renderCombatTab(data) {
         const cardsHTML = items.map(item => {
             const sel = planner[section.key];
             const isSelected = sel && sel.nombre === item.nombre;
-            // Dice badge: explicit fields first, then extracted from desc
             const diceStr = item.atk
                 ? `ATK ${item.atk}${item.dado && item.dado !== '—' ? ` | DMG ${item.dado}` : ''}`
                 : (item.dado && item.dado !== '—' ? `DMG ${item.dado}`
@@ -592,7 +592,21 @@ function renderCombatTab(data) {
             <div class="combat-section-title">${section.icon} ${section.label}</div>
             <div class="combat-action-list">${cardsHTML}</div>
         </div>`;
-    }).join('');
+    }).join('') + (groups.modificador.length ? `<div class="combat-section">
+        <div class="combat-section-title">✨ Modificadores de Ataque</div>
+        <div class="combat-action-list">
+            ${groups.modificador.map(item => {
+                const diceStr = item.dado && item.dado !== '—' ? `DMG ${item.dado}` : '';
+                return `<div class="combat-action-card modifier-card">
+                    <div class="combat-action-header">
+                        <span class="combat-action-name">✨ ${item.nombre}</span>
+                        ${diceStr ? `<span class="combat-action-dice">${diceStr}</span>` : ''}
+                    </div>
+                    <div class="combat-action-desc">${item.desc}</div>
+                </div>`;
+            }).join('')}
+        </div>
+    </div>` : '');
 
     return `<div class="turn-planner">
         <div class="turn-planner-title">⚡ Planificador de Turno</div>

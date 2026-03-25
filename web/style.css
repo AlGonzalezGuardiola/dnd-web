@@ -3424,6 +3424,30 @@ body.view-map .hud {
 }
 .combat-chip.used small { color: rgba(212,175,55,0.7); }
 
+/* Smite / modifier chips — amber-gold accent */
+.smite-chip {
+    border-color: rgba(251, 191, 36, 0.35);
+    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.07);
+}
+.smite-chip:hover { border-color: #fbbf24; background: rgba(251, 191, 36, 0.15); }
+.smite-chip.used {
+    border-color: #fbbf24;
+    background: rgba(251, 191, 36, 0.22);
+    color: #fde68a;
+    box-shadow: 0 0 8px rgba(251, 191, 36, 0.3);
+}
+.smite-chip.used small { color: rgba(253, 230, 138, 0.7); }
+.smite-section {
+    border-left-color: #fbbf24 !important;
+    background: rgba(251, 191, 36, 0.04);
+}
+/* Modifier card in char-sheet planner */
+.modifier-card {
+    border-left: 3px solid #fbbf24;
+    background: rgba(251, 191, 36, 0.06);
+}
+
 .combat-custom-row {
     display: flex;
     gap: 6px;
