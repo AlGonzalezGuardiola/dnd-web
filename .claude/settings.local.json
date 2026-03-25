@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "defaultMode": "bypassPermissions",
+    "allow": [
+      "Bash(python3 \"C:\\\\Users\\\\Alvaro\\\\.claude\\\\plugins\\\\cache\\\\ui-ux-pro-max-skill\\\\ui-ux-pro-max\\\\2.0.1\\\\.claude\\\\skills\\\\ui-ux-pro-max\\\\scripts\\\\search.py\" \"dnd tabletop combat manager dark fantasy gaming tool\" --design-system -p \"DnD Combat Manager\" -f markdown)",
+      "Bash(python3 \"C:\\\\Users\\\\Alvaro\\\\.claude\\\\plugins\\\\cache\\\\ui-ux-pro-max-skill\\\\ui-ux-pro-max\\\\2.0.1\\\\cli\\\\assets\\\\scripts\\\\search.py\" \"dnd tabletop combat manager dark fantasy gaming tool\" --design-system -p \"DnD Combat Manager\" -f markdown)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(npx skills:*)"
+    ]
+  }
+}
