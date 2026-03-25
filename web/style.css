@@ -5000,6 +5000,12 @@ body.role-jugador .master-only { display: none !important; }
     font-size: 15px;
     padding: 12px 32px;
 }
+.player-waiting-hint {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-style: italic;
+    align-self: center;
+}
 
 /* ============================================
    FEATURE 18 — Master: Unified Tabbed Setup

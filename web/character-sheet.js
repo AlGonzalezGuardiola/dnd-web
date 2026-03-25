@@ -685,13 +685,20 @@ function renderCombatTab(data) {
     ${actionListHTML_full}`;
 }
 
+// Finds a slot definition by spell level, supporting both "Nv3" and warlock-style "Pacto (Nv3)"
+function _findSlotDef(ranuras, nivel) {
+    if (!ranuras || nivel == null) return null;
+    const exact = `Nv${nivel}`;
+    return ranuras.find(s => s.nombre === exact || s.nombre.includes(`(${exact})`));
+}
+
 function _restoreSpellSlot(charId, item, data) {
     if (!item?.nivel || typeof item.nivel !== 'number') return;
-    const slotName = `Nv${item.nivel}`;
     initSpellSlotsForChar(charId);
-    const slotDef = data.ranuras?.find(s => s.nombre === slotName);
+    const slotDef = _findSlotDef(data.ranuras, item.nivel);
     if (slotDef) {
-        spellSlotState[charId][slotName] = Math.min(slotDef.total, (spellSlotState[charId][slotName] ?? slotDef.total) + 1);
+        const key = slotDef.nombre;
+        spellSlotState[charId][key] = Math.min(slotDef.total, (spellSlotState[charId][key] ?? slotDef.total) + 1);
         saveStateToStorage();
     }
 }
@@ -716,24 +723,24 @@ function selectCombatAction(charId, tipo, nombre) {
 
     // Auto spell slot deduction for leveled spells
     if (item.nivel && typeof item.nivel === 'number') {
-        const slotName = `Nv${item.nivel}`;
         initSpellSlotsForChar(charId);
-        const slotDef = data.ranuras?.find(s => s.nombre === slotName);
+        const slotDef = _findSlotDef(data.ranuras, item.nivel);
         if (slotDef) {
+            const key = slotDef.nombre;
             if (wasSelected) {
-                spellSlotState[charId][slotName] = Math.min(slotDef.total, (spellSlotState[charId][slotName] ?? slotDef.total) + 1);
-                showNotification(`🔄 Ranura ${slotName} restaurada`, 1500);
+                spellSlotState[charId][key] = Math.min(slotDef.total, (spellSlotState[charId][key] ?? slotDef.total) + 1);
+                showNotification(`🔄 Ranura ${slotDef.nombre} restaurada`, 1500);
                 saveStateToStorage();
             } else {
-                const cur = spellSlotState[charId][slotName] ?? slotDef.total;
+                const cur = spellSlotState[charId][key] ?? slotDef.total;
                 if (cur <= 0) {
-                    showNotification(`❌ Sin ranuras ${slotName} disponibles`, 2000);
+                    showNotification(`❌ Sin ranuras ${slotDef.nombre} disponibles`, 2000);
                     planner[tipo] = null;
                     refreshCombatSections(data);
                     return;
                 }
-                spellSlotState[charId][slotName] = cur - 1;
-                showNotification(`✨ Ranura ${slotName} gastada`, 1500);
+                spellSlotState[charId][key] = cur - 1;
+                showNotification(`✨ Ranura ${slotDef.nombre} gastada`, 1500);
                 saveStateToStorage();
             }
         }
