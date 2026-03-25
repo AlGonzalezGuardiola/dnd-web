@@ -531,11 +531,7 @@ function renderActivePanel(targetEl, forcePIdx) {
             if (!items.length) return '';
             const trucos   = items.filter(i => !i.nivel || typeof i.nivel !== 'number');
             const hechizos = items.filter(i => i.nivel && typeof i.nivel === 'number');
-            let cardsHTML = '';
-            if (trucos.length > 0) {
-                const trucosLabel = hechizos.length > 0 ? `<div class="hechizos-subsection-title">⚔️ Acciones base</div>` : '';
-                cardsHTML = `${trucosLabel}${trucos.map(item => renderPlannerCard(item, section.key)).join('')}`;
-            }
+            let cardsHTML = trucos.map(item => renderPlannerCard(item, section.key)).join('');
             if (hechizos.length > 0) {
                 initSpellSlotsForChar(p.id);
                 const byLevel = {};
@@ -552,10 +548,7 @@ function renderActivePanel(targetEl, forcePIdx) {
                         ${byLevel[lv].map(item => renderPlannerCard(item, section.key)).join('')}
                     </div>`;
                 }).join('');
-                cardsHTML += `<div class="hechizos-subsection">
-                    <div class="hechizos-subsection-title">✨ Hechizos (gastan ranura)</div>
-                    ${hechizosCards}
-                </div>`;
+                cardsHTML += hechizosCards;
             }
             return `<div class="combat-section">
                 <div class="combat-section-title">${section.icon} ${section.label}</div>
@@ -613,11 +606,7 @@ function renderActivePanel(targetEl, forcePIdx) {
             if (!items.length) return '';
             const trucos   = items.filter(i => !i.nivel || typeof i.nivel !== 'number');
             const hechizos = items.filter(i => i.nivel && typeof i.nivel === 'number');
-            let cardsHTML = '';
-            if (trucos.length > 0) {
-                const trucosLabel = hechizos.length > 0 ? `<div class="hechizos-subsection-title">⚔️ Acciones base</div>` : '';
-                cardsHTML = `${trucosLabel}${trucos.map(item => renderMasterCard(item, section.key)).join('')}`;
-            }
+            let cardsHTML = trucos.map(item => renderMasterCard(item, section.key)).join('');
             if (hechizos.length > 0) {
                 initSpellSlotsForChar(p.id);
                 const byLevel = {};
@@ -634,10 +623,7 @@ function renderActivePanel(targetEl, forcePIdx) {
                         ${byLevel[lv].map(item => renderMasterCard(item, section.key)).join('')}
                     </div>`;
                 }).join('');
-                cardsHTML += `<div class="hechizos-subsection">
-                    <div class="hechizos-subsection-title">✨ Hechizos (gastan ranura)</div>
-                    ${hechizosCards}
-                </div>`;
+                cardsHTML += hechizosCards;
             }
             const slotUsedClass = isSlotUsed ? ' used' : '';
             const btnClass = isSlotUsed ? 'used' : 'libre';
