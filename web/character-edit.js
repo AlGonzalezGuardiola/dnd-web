@@ -97,33 +97,44 @@ function renderCharacterSheet(charId) {
 
     // HP Bar (replaces HP pill)
     const combatVitals = document.getElementById('sheetCombatVitals');
+    const v = (vital, value) => isCharacterEditing
+        ? `<input class="pill-edit-input" data-vital="${vital}" value="${value}" type="text">`
+        : `<div class="pill-value">${value}</div>`;
     combatVitals.innerHTML = renderHpSection(charId) + `
+        ${isCharacterEditing ? `
+        <div class="combat-pill" style="border-left-color: #ff6666">
+            <span class="pill-icon">❤️</span>
+            <div>
+                <div class="pill-label">HP Máx</div>
+                <input class="pill-edit-input" data-vital="HP" value="${data.resumen.HP}" type="number" min="1">
+            </div>
+        </div>` : ''}
         <div class="combat-pill" id="pillCA" style="border-left-color: #4488ff">
             <span class="pill-icon">🛡️</span>
             <div>
                 <div class="pill-label">CA</div>
-                <div class="pill-value">${data.resumen.CA}</div>
+                ${v('CA', data.resumen.CA)}
             </div>
         </div>
         <div class="combat-pill" style="border-left-color: #44ff88">
             <span class="pill-icon">⚡</span>
             <div>
                 <div class="pill-label">Iniciativa</div>
-                <div class="pill-value">${data.resumen.Iniciativa}</div>
+                ${v('Iniciativa', data.resumen.Iniciativa)}
             </div>
         </div>
         <div class="combat-pill" id="pillSpeed" style="border-left-color: #ffcc44">
             <span class="pill-icon">🏃</span>
             <div>
                 <div class="pill-label">Velocidad</div>
-                <div class="pill-value">${data.resumen.Velocidad}</div>
+                ${v('Velocidad', data.resumen.Velocidad)}
             </div>
         </div>
         <div class="combat-pill" style="border-left-color: #aa88ff">
             <span class="pill-icon">⚔️</span>
             <div>
                 <div class="pill-label">Competencia</div>
-                <div class="pill-value">${data.resumen.Competencia || '+2'}</div>
+                ${v('Competencia', data.resumen.Competencia || '+2')}
             </div>
         </div>
     `;
@@ -286,9 +297,15 @@ function renderCharacterSheet(charId) {
 }
 
 function setupCharacterSheetListeners() {
-    // Buttons
+    // Buttons — edit only available to master
     const editBtn = document.getElementById('editCharBtn');
-    if (editBtn) editBtn.addEventListener('click', toggleCharacterEditMode);
+    if (editBtn) {
+        if (!isMaster()) {
+            editBtn.style.display = 'none';
+        } else {
+            editBtn.addEventListener('click', toggleCharacterEditMode);
+        }
+    }
 
     const saveBtn = document.getElementById('saveCharBtn');
     if (saveBtn) saveBtn.addEventListener('click', saveCharacterChanges);
@@ -629,6 +646,16 @@ function saveCharacterChanges() {
     document.querySelectorAll('[data-vital]').forEach(input => {
         char.resumen[input.dataset.vital] = input.value;
     });
+
+    // Sync hpState.max if HP max changed
+    const newMaxHp = parseInt(char.resumen.HP);
+    if (hpState[currentCharacterId] && newMaxHp > 0) {
+        hpState[currentCharacterId].max = newMaxHp;
+        if (hpState[currentCharacterId].current > newMaxHp) {
+            hpState[currentCharacterId].current = newMaxHp;
+        }
+        saveStateToStorage();
+    }
 
     // Inventory is updated in real-time via updateInventoryItem, no need to gather here
     // unless we change the strategy, but for consistency with traits/spells:
