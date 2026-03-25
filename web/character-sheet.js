@@ -279,6 +279,9 @@ function renderDemonicSection(charId) {
 }
 
 function showEntitySheet(tipo, invId) {
+    document.getElementById('editCharBtn')?.style.setProperty('display', 'none');
+    document.getElementById('saveCharBtn')?.style.setProperty('display', 'none');
+
     let overlay = document.getElementById('entitySheetOverlay');
     if (!overlay) {
         overlay = document.createElement('div');
@@ -358,6 +361,8 @@ function showEntitySheet(tipo, invId) {
 
 function closeEntitySheet() {
     document.getElementById('entitySheetOverlay')?.remove();
+    const editBtn = document.getElementById('editCharBtn');
+    if (editBtn) editBtn.style.removeProperty('display');
 }
 
 function toggleDemonicForm(charId) {

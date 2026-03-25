@@ -293,9 +293,6 @@ function setupCharacterSheetListeners() {
     const saveBtn = document.getElementById('saveCharBtn');
     if (saveBtn) saveBtn.addEventListener('click', saveCharacterChanges);
 
-    const exportBtn = document.getElementById('exportCharBtn');
-    if (exportBtn) exportBtn.addEventListener('click', exportCharacters);
-
     // Close Button
     document.getElementById('closeSheetBtn').addEventListener('click', () => {
         document.getElementById('characterSheetContainer').style.display = 'none';
