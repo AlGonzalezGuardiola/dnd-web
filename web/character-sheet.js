@@ -255,27 +255,34 @@ function toggleCondition(charId, condId) {
 }
 
 function renderDemonicSection(charId) {
+    // Conditions bar stays in sheetResources
     const section = document.getElementById('sheetResources');
     if (!section) return;
     section.style.display = 'flex';
-    let html = renderConditionsBar(charId);
+    section.innerHTML = renderConditionsBar(charId);
+
+    // Special action buttons go above the turn planner
+    const btnSection = document.getElementById('sheetCharButtons');
+    if (!btnSection) return;
+    let btns = '';
     if (charId === 'Vel') {
         const ds = demonicFormState[charId] || { active: false, turnsLeft: 0 };
         const btnCls = 'btn-demonic' + (ds.active ? ' active' : '');
         const label  = ds.active ? `😈 Demoníaca — ${ds.turnsLeft}🔥` : '😈 Forma Demoníaca';
-        html += `<button class="${btnCls}" onclick="toggleDemonicForm('Vel')">${label}</button>`;
+        btns += `<button class="${btnCls}" onclick="toggleDemonicForm('Vel')">${label}</button>`;
         if (ds.active) {
-            html += `<button class="btn-demonic-turn" onclick="advanceDemonicTurn('Vel')">⏭️ Siguiente turno</button>`;
+            btns += `<button class="btn-demonic-turn" onclick="advanceDemonicTurn('Vel')">⏭️ Siguiente turno</button>`;
         }
-        html += `<button class="btn-entity-sheet" onclick="showEntitySheet('sirviente')">👻 Sirviente Invisible</button>`;
+        btns += `<button class="btn-entity-sheet" onclick="showEntitySheet('sirviente')">👻 Sirviente Invisible</button>`;
     }
     if (charId === 'Zero') {
         const invs = window.characterData['Zero']?.invocaciones || [];
         invs.forEach(inv => {
-            html += `<button class="btn-entity-sheet" onclick="showEntitySheet('invocacion','${inv.id}')">${inv.emoji} ${inv.nombre}</button>`;
+            btns += `<button class="btn-entity-sheet" onclick="showEntitySheet('invocacion','${inv.id}')">${inv.emoji} ${inv.nombre}</button>`;
         });
     }
-    section.innerHTML = html;
+    btnSection.innerHTML = btns;
+    btnSection.style.display = btns ? 'flex' : 'none';
 }
 
 function showEntitySheet(tipo, invId) {

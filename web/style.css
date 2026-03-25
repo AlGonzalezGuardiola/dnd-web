@@ -1232,6 +1232,13 @@ button, .card, .pin, .tab-btn, .hud-btn, .die-btn,
     margin-bottom: 16px;
 }
 
+.sheet-char-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
 .btn-demonic {
     display: flex;
     align-items: center;
