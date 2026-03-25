@@ -2310,7 +2310,10 @@ body.view-map .hud {
 
 .entity-sheet-overlay {
     position: absolute;
-    inset: 0;
+    top: 68px;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background: var(--bg-primary, #1a1a2e);
     z-index: 20;
     flex-direction: column;

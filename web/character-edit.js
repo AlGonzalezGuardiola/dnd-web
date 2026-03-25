@@ -265,7 +265,8 @@ function renderCharacterSheet(charId) {
     const defaultContent = document.getElementById(defaultId);
     if (defaultContent) defaultContent.classList.add('active');
 
-    // Show Container
+    // Show Container (remove any leftover entity overlay from previous character)
+    document.getElementById('entitySheetOverlay')?.remove();
     document.getElementById('characterSheetContainer').style.display = 'flex';
 
     // Update HUD breadcrumbs based on navigation context
