@@ -349,11 +349,130 @@ function getDiceBadges(action) {
 }
 
 function renderCombatInline(data) {
-    const html = renderCombatTab(data);
+    const html = renderCombatTab(data) + renderSummonCombatTab(data.id);
     const inline = document.getElementById('combatInline');
     if (inline) inline.innerHTML = html;
     const tab = document.getElementById('tabCombat');
     if (tab) tab.innerHTML = html;
+}
+
+// Renders the combat planner for a character's active summon/servant (if any).
+function renderSummonCombatTab(charId) {
+    if (typeof combatState === 'undefined' || !combatState?.isActive) return '';
+    const summon = combatState.participants.find(p =>
+        p.ownerCharId === charId ||
+        (p._isSirvienteInvisible && charId === 'Vel')
+    );
+    if (!summon?.charData) return '';
+
+    const summonId = summon.id;
+    if (!turnPlannerState[summonId]) {
+        turnPlannerState[summonId] = { accion: null, adicional: null, reaccion: null };
+    }
+    const planner = turnPlannerState[summonId];
+
+    const allItems = [
+        ...(summon.charData.combateExtra || []),
+        ...(summon.charData.conjuros || [])
+    ];
+    const groups = { accion: [], adicional: [], reaccion: [] };
+    allItems.forEach(item => { groups[inferActionType(item)].push(item); });
+
+    const plannerSlotsHTML = [
+        { key: 'accion', icon: '🎯', label: 'Acción' },
+        { key: 'adicional', icon: '⚡', label: 'Adicional' },
+        { key: 'reaccion', icon: '↩️', label: 'Reacción' }
+    ].map(s => {
+        const sel = planner[s.key];
+        if (sel) {
+            return `<div class="planner-slot filled">
+                <span class="planner-slot-icon">${s.icon}</span>
+                <span class="planner-slot-label">${s.label}:</span>
+                <span class="planner-slot-value">${sel.nombre}</span>
+                <button class="planner-slot-clear" onclick="clearSummonPlannerSlot('${summonId}','${s.key}','${charId}')">×</button>
+            </div>`;
+        }
+        return `<div class="planner-slot empty">
+            <span class="planner-slot-icon">${s.icon}</span>
+            <span class="planner-slot-label">${s.label}:</span>
+            <span class="planner-slot-empty">— selecciona abajo</span>
+        </div>`;
+    }).join('');
+
+    const selectedActions = [planner.accion, planner.adicional, planner.reaccion].filter(Boolean);
+    let diceHTML = '';
+    if (selectedActions.length > 0) {
+        const rows = selectedActions.map(action => {
+            const badges = getDiceBadges(action);
+            return `<div class="dice-row">
+                <span class="dice-name">${action.nombre}</span>
+                <div class="dice-values">${badges || '<span class="dice-utility">Sin tirada</span>'}</div>
+            </div>`;
+        }).join('');
+        diceHTML = `<div class="dice-panel-combat"><div class="dice-panel-title">🎲 Dados del Turno</div>${rows}</div>`;
+    }
+
+    const actionListHTML = [
+        { key: 'accion', icon: '🎯', label: 'Acciones' },
+        { key: 'adicional', icon: '⚡', label: 'Adicionales' },
+        { key: 'reaccion', icon: '↩️', label: 'Reacciones' }
+    ].map(section => {
+        const items = groups[section.key];
+        if (items.length === 0) return '';
+        const cardsHTML = items.map(item => {
+            const sel = planner[section.key];
+            const isSelected = sel && sel.nombre === item.nombre;
+            const diceStr = item.atk
+                ? `ATK ${item.atk}${item.dado && item.dado !== '—' ? ` | DMG ${item.dado}` : ''}`
+                : (item.dado && item.dado !== '—' ? `DMG ${item.dado}` : (extractDiceFromDesc(item.desc) || ''));
+            const safeName = item.nombre.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            return `<div class="combat-action-card${isSelected ? ' selected' : ''}"
+                     onclick="selectSummonAction('${summonId}','${section.key}','${safeName}','${charId}')">
+                <div class="combat-action-header">
+                    <span class="combat-action-name">${item.nombre}</span>
+                    ${diceStr ? `<span class="combat-action-dice">${diceStr}</span>` : ''}
+                </div>
+                <div class="combat-action-desc">${item.desc}</div>
+            </div>`;
+        }).join('');
+        return `<div class="combat-section">
+            <div class="combat-section-title">${section.icon} ${section.label}</div>
+            <div class="combat-action-list">${cardsHTML}</div>
+        </div>`;
+    }).join('');
+
+    return `<div class="summon-planner-section">
+        <div class="summon-planner-header">
+            <span>✨ ${summon.name}</span>
+            <span class="summon-planner-hp">❤️ ${summon.hp.current}/${summon.hp.max} · CA ${summon.ac}</span>
+        </div>
+        <div class="turn-planner">
+            <div class="turn-planner-title">⚡ Planificador — ${summon.name}</div>
+            <div class="planner-slots">${plannerSlotsHTML}</div>
+            ${diceHTML}
+        </div>
+        ${actionListHTML}
+    </div>`;
+}
+
+function selectSummonAction(summonId, tipo, nombre, ownerCharId) {
+    const summon = combatState?.participants?.find(p => p.id === summonId);
+    if (!summon) return;
+    const allItems = [...(summon.charData?.combateExtra || []), ...(summon.charData?.conjuros || [])];
+    const item = allItems.find(i => i.nombre === nombre);
+    if (!item) return;
+    if (!turnPlannerState[summonId]) turnPlannerState[summonId] = { accion: null, adicional: null, reaccion: null };
+    const planner = turnPlannerState[summonId];
+    planner[tipo] = (planner[tipo] && planner[tipo].nombre === nombre) ? null : item;
+    const ownerData = window.characterData[ownerCharId];
+    if (ownerData) refreshCombatSections(ownerData);
+}
+
+function clearSummonPlannerSlot(summonId, tipo, ownerCharId) {
+    if (!turnPlannerState[summonId]) return;
+    turnPlannerState[summonId][tipo] = null;
+    const ownerData = window.characterData[ownerCharId];
+    if (ownerData) refreshCombatSections(ownerData);
 }
 
 function inferActionType(item) {
@@ -518,7 +637,7 @@ function clearPlannerSlot(charId, tipo) {
 }
 
 function refreshCombatSections(data) {
-    const html = renderCombatTab(data);
+    const html = renderCombatTab(data) + renderSummonCombatTab(data.id);
     const inline = document.getElementById('combatInline');
     if (inline) inline.innerHTML = html;
     const tab = document.getElementById('tabCombat');
