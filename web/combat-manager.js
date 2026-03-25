@@ -359,44 +359,21 @@ function renderActivePanel(targetEl, forcePIdx) {
     // Phase key for per-attack smite tracking
     const currentPhase = isExtraAttack ? 'extra' : (isSegundaAccion ? 'segunda' : 'main');
 
-    const renderModifierChips = (items) => items.map(a => {
+    // Smite/modifier toggles — rendered as permanent toggle buttons like demonic form
+    const smiteToggleHTML = modificadorItems.map(a => {
         const dado = a.dado && a.dado !== '—' ? a.dado : '';
-        const safeName    = a.nombre.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-        const safeDado    = dado.replace(/'/g, "\\'");
-        const safeTipo    = (a.tipo_dano || '').replace(/'/g, "\\'");
-        const safeDesc    = (a.desc || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' ');
+        const safeName = a.nombre.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        const safeDado = dado.replace(/'/g, "\\'");
+        const safeTipo = (a.tipo_dano || '').replace(/'/g, "\\'");
         const isUsed = currentEntry?.actions.some(x => x.nombre === a.nombre && x.smitePhase === currentPhase) || false;
-        return `<div class="combat-chip-wrapper">
-            <button class="combat-chip smite-chip${isUsed ? ' used' : ''}"
-                    onclick="toggleSmiteModifier('${p.id}','${safeName}','${safeDado}','${safeTipo}','${currentPhase}')">
-                ✨ ${a.nombre}${dado ? `<small>${dado}</small>` : ''}
-            </button>
-            ${a.desc ? `<button class="chip-info-btn" onclick="showActionDetail('${safeName}','','${safeDado}','${safeDesc}')" title="Ver descripción">ℹ️</button>` : ''}
-        </div>`;
+        return `<button class="combat-demonic-toggle${isUsed ? ' active' : ''}"
+                onclick="toggleSmiteModifier('${p.id}','${safeName}','${safeDado}','${safeTipo}','${currentPhase}')">
+            ✨ ${a.nombre}
+            ${isUsed
+                ? `<span class="demonic-badge">ACTIVO${dado ? ' · ' + dado : ''}${a.tipo_dano ? ' ' + a.tipo_dano : ''}</span>`
+                : '<span style="color:var(--text-muted);font-size:12px">Inactivo — complementa el ataque</span>'}
+        </button>`;
     }).join('');
-
-    // Show smite/modifier section only when a weapon attack is active this phase
-    const hasWeaponAttackActive = (() => {
-        if (isExtraAttack) return true;
-        if (playerMode) {
-            return ['accion_plan', 'adicional_plan'].some(key => {
-                const plan = currentEntry?.slots?.[key];
-                if (!plan) return false;
-                const item = allItems.find(x => x.nombre === plan.nombre);
-                return !!(item?.atk);
-            });
-        }
-        return currentEntry?.actions.some(a => {
-            if (a.isModifier) return false;
-            const item = allItems.find(x => x.nombre === a.nombre);
-            return !!(item?.atk);
-        }) || false;
-    })();
-
-    const modifierSectionHTML = (modificadorItems.length && hasWeaponAttackActive) ? `<div class="combat-slot-section smite-section">
-        <div class="combat-slot-header"><span>✨ Divine Smite</span><small style="color:var(--text-muted);font-size:11px">complemento del ataque</small></div>
-        <div class="combat-chips">${renderModifierChips(modificadorItems)}</div>
-    </div>` : '';
 
     // Helper to render action chips
     const renderChips = (items) => items.map(a => {
@@ -467,8 +444,7 @@ function renderActivePanel(targetEl, forcePIdx) {
         slotSections = `<div class="combat-section">
             <div class="combat-section-title">🗡️ Ataque Extra (solo armas)</div>
             <div class="combat-action-list">${weaponCards || '<div style="font-size:12px;color:var(--text-muted);padding:4px 0">Sin ataques disponibles</div>'}</div>
-        </div>
-        ${modifierSectionHTML}`;
+        </div>`;
     } else if (isSegundaAccion) {
         const accionItems = regularItems.filter(a => inferActionType(a) === 'accion');
         const accionCards = accionItems.map(item => renderCard(
@@ -479,8 +455,7 @@ function renderActivePanel(targetEl, forcePIdx) {
         slotSections = `<div class="combat-section">
             <div class="combat-section-title">⚔️ Acción (Segunda Acción)</div>
             <div class="combat-action-list">${accionCards || '<div style="font-size:12px;color:var(--text-muted);padding:4px 0">Sin acciones disponibles</div>'}</div>
-        </div>
-        ${modifierSectionHTML}`;
+        </div>`;
     } else if (playerMode) {
         // ── PLANIFICADOR DE TURNO (player mode) ──────────────────────────────
         const PSLOTS = [
@@ -597,13 +572,6 @@ function renderActivePanel(targetEl, forcePIdx) {
             </div>`;
         }).join('');
 
-        // Smite/modifier section — always visible in player mode
-        const smiteSectionHTML = modificadorItems.length ? `<div class="combat-section">
-            <div class="combat-section-title">✨ Divine Smite</div>
-            <div class="combat-section-subtitle">Complemento del ataque — activa si impactas</div>
-            <div class="combat-chips">${renderModifierChips(modificadorItems)}</div>
-        </div>` : '';
-
         slotSections = `
         <div class="turn-planner">
             <div class="turn-planner-slots">${plannerSlotsHTML}</div>
@@ -613,7 +581,7 @@ function renderActivePanel(targetEl, forcePIdx) {
             </div>
         </div>
         ${combatSlotsHTML}
-        <div class="combat-actions-cards-section">${cardSections}${smiteSectionHTML}</div>`;
+        <div class="combat-actions-cards-section">${cardSections}</div>`;
     } else {
         // Master mode — card-based layout matching character sheet
         const masterCharData = p.charData;
@@ -709,13 +677,7 @@ function renderActivePanel(targetEl, forcePIdx) {
             </div>`;
         }).join('');
 
-        const masterSmiteHTML = modificadorItems.length ? `<div class="combat-section">
-            <div class="combat-section-title">✨ Divine Smite</div>
-            <div class="combat-section-subtitle">Complemento del ataque — activa si impactas</div>
-            <div class="combat-chips">${renderModifierChips(modificadorItems)}</div>
-        </div>` : '';
-
-        slotSections = `${masterSlotsHTML}<div class="combat-actions-cards-section">${masterCardSections}${masterSmiteHTML}</div>`;
+        slotSections = `${masterSlotsHTML}<div class="combat-actions-cards-section">${masterCardSections}</div>`;
     }
 
     // Form to add persistent custom actions (not shown in mini-turn modes)
@@ -879,6 +841,7 @@ function renderActivePanel(targetEl, forcePIdx) {
         ${(isSegundaAccion || isExtraAttack) ? '' : concentrationBanner}
         ${(isSegundaAccion || isExtraAttack) ? '' : demonicToggleHTML}
         ${(isSegundaAccion || isExtraAttack) ? '' : sirvienteToggleHTML}
+        ${smiteToggleHTML}
         ${(isSegundaAccion || isExtraAttack) ? '' : `<div class="combat-conds-bar">${condHTML}</div>`}
         ${actionChipsHTML}
         ${attackTargetPanelHTML}
