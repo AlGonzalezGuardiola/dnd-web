@@ -114,12 +114,6 @@ function setupEventListeners() {
         }
     });
 
-    // Zoom controls
-    const btnZoomIn = document.getElementById('btnZoomIn');
-    const btnZoomOut = document.getElementById('btnZoomOut');
-    if (btnZoomIn) btnZoomIn.addEventListener('click', () => adjustZoom(0.2));
-    if (btnZoomOut) btnZoomOut.addEventListener('click', () => adjustZoom(-0.2));
-
     // Editor controls
     document.getElementById('toggleEdit').addEventListener('click', toggleEditMode);
     document.getElementById('addMapBtn').addEventListener('click', showAddMapModal);
@@ -427,6 +421,23 @@ function setView(viewName) {
 }
 
 // currentView() is defined in globals.js — do not redefine here
+
+// ============================================
+// Fullscreen
+// ============================================
+function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+    } else {
+        document.exitFullscreen().catch(() => {});
+    }
+}
+
+document.addEventListener('fullscreenchange', () => {
+    const isFs = !!document.fullscreenElement;
+    document.getElementById('fsIconEnter')?.style.setProperty('display', isFs ? 'none' : '');
+    document.getElementById('fsIconExit')?.style.setProperty('display', isFs ? '' : 'none');
+});
 
 // ============================================
 // Start Application
