@@ -664,6 +664,17 @@ function renderCombatTab(data) {
     ${actionListHTML_full}`;
 }
 
+function _restoreSpellSlot(charId, item, data) {
+    if (!item?.nivel || typeof item.nivel !== 'number') return;
+    const slotName = `Nv${item.nivel}`;
+    initSpellSlotsForChar(charId);
+    const slotDef = data.ranuras?.find(s => s.nombre === slotName);
+    if (slotDef) {
+        spellSlotState[charId][slotName] = Math.min(slotDef.total, (spellSlotState[charId][slotName] ?? slotDef.total) + 1);
+        saveStateToStorage();
+    }
+}
+
 function selectCombatAction(charId, tipo, nombre) {
     const data = window.characterData[charId];
     if (!data) return;
@@ -673,6 +684,13 @@ function selectCombatAction(charId, tipo, nombre) {
     if (!turnPlannerState[charId]) turnPlannerState[charId] = { accion: null, adicional: null, reaccion: null };
     const planner = turnPlannerState[charId];
     const wasSelected = planner[tipo] && planner[tipo].nombre === nombre;
+    const prevItem = planner[tipo];
+
+    // Restore slot of the PREVIOUS item in this slot (if switching spells)
+    if (!wasSelected && prevItem && prevItem.nombre !== nombre) {
+        _restoreSpellSlot(charId, prevItem, data);
+    }
+
     planner[tipo] = wasSelected ? null : item;
 
     // Auto spell slot deduction for leveled spells
@@ -684,6 +702,7 @@ function selectCombatAction(charId, tipo, nombre) {
             if (wasSelected) {
                 spellSlotState[charId][slotName] = Math.min(slotDef.total, (spellSlotState[charId][slotName] ?? slotDef.total) + 1);
                 showNotification(`🔄 Ranura ${slotName} restaurada`, 1500);
+                saveStateToStorage();
             } else {
                 const cur = spellSlotState[charId][slotName] ?? slotDef.total;
                 if (cur <= 0) {
@@ -694,8 +713,8 @@ function selectCombatAction(charId, tipo, nombre) {
                 }
                 spellSlotState[charId][slotName] = cur - 1;
                 showNotification(`✨ Ranura ${slotName} gastada`, 1500);
+                saveStateToStorage();
             }
-            saveStateToStorage();
         }
     }
 
@@ -704,8 +723,9 @@ function selectCombatAction(charId, tipo, nombre) {
 
 function clearPlannerSlot(charId, tipo) {
     if (!turnPlannerState[charId]) return;
-    turnPlannerState[charId][tipo] = null;
     const data = window.characterData[charId];
+    _restoreSpellSlot(charId, turnPlannerState[charId][tipo], data);
+    turnPlannerState[charId][tipo] = null;
     if (data) refreshCombatSections(data);
 }
 

@@ -852,6 +852,21 @@ function selectPlannerAction(participantId, nombre, atk, dado, tipoDano) {
             }
         }
     } else {
+        // Restore old slot if switching from a different leveled spell in the same plan slot
+        const prevPlan = entry.slots?.[planKey];
+        if (prevPlan && prevPlan.nombre !== nombre) {
+            const prevObj = allItems.find(a => a.nombre === prevPlan.nombre);
+            if (prevObj?.nivel && typeof prevObj.nivel === 'number') {
+                const prevSlotName = `Nv${prevObj.nivel}`;
+                initSpellSlotsForChar(participantId);
+                const prevSlotDef = p.charData?.ranuras?.find(s => s.nombre === prevSlotName);
+                if (prevSlotDef) {
+                    spellSlotState[participantId][prevSlotName] = Math.min(prevSlotDef.total, (spellSlotState[participantId][prevSlotName] ?? prevSlotDef.total) + 1);
+                    saveStateToStorage();
+                }
+                entry.actions = entry.actions.filter(a => a.nombre !== prevPlan.nombre);
+            }
+        }
         // Check slot availability for leveled spells
         if (actionObj?.nivel && typeof actionObj.nivel === 'number') {
             const slotName = `Nv${actionObj.nivel}`;
@@ -883,6 +898,21 @@ function removePlannerSlot(participantId, slotKey) {
     const plan = entry.slots?.[slotKey + '_plan'];
     if (plan) {
         entry.actions = entry.actions.filter(a => a.nombre !== plan.nombre);
+        // Restore spell slot if the removed plan was a leveled spell
+        const p = combatState.participants.find(x => x.id === participantId);
+        if (p?.charData) {
+            const allItems = [...(p.charData.combateExtra || []), ...(p.charData.conjuros || [])];
+            const actionObj = allItems.find(x => x.nombre === plan.nombre);
+            if (actionObj?.nivel && typeof actionObj.nivel === 'number') {
+                const slotName = `Nv${actionObj.nivel}`;
+                initSpellSlotsForChar(participantId);
+                const slotDef = p.charData.ranuras?.find(s => s.nombre === slotName);
+                if (slotDef) {
+                    spellSlotState[participantId][slotName] = Math.min(slotDef.total, (spellSlotState[participantId][slotName] ?? slotDef.total) + 1);
+                    saveStateToStorage();
+                }
+            }
+        }
         entry.slots[slotKey + '_plan'] = null;
     }
     saveCombatState();
