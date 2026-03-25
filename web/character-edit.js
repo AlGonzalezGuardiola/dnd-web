@@ -466,6 +466,7 @@ function renderPersonajesTemplatesList(tipo) {
                 </div>
                 <div style="display:flex;gap:4px;">
                     <button class="template-edit-btn" onclick="editCharTemplate('${t._id}','${tipo}')">✎</button>
+                    <button class="template-faction-btn" title="${tipo === 'aliado' ? 'Mover a Enemigos' : 'Mover a Aliados'}" onclick="changeTemplateType('${t._id}','${tipo}')">${tipo === 'aliado' ? '💀' : '💙'}</button>
                     <button class="npc-remove-btn"    onclick="deletePersonajesTemplate('${t._id}','${tipo}')">🗑</button>
                 </div>
             </div>`;
@@ -523,6 +524,22 @@ async function deletePersonajesTemplate(templateId, tipo) {
         await loadPersonajesTemplates(tipo);
     } catch (e) {
         showNotification('⚠️ Error al eliminar', 2000);
+    }
+}
+
+async function changeTemplateType(templateId, currentTipo) {
+    const newTipo   = currentTipo === 'aliado' ? 'enemigo' : 'aliado';
+    const newApiType = newTipo === 'aliado' ? 'ALLY' : 'ENEMY';
+    try {
+        await fetch(`${API_BASE}/api/entity-templates/${templateId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: newApiType }),
+        });
+        await Promise.all([loadPersonajesTemplates('aliado'), loadPersonajesTemplates('enemigo')]);
+        showNotification(`${newTipo === 'aliado' ? '💙' : '💀'} Movido a ${newTipo}s`, 1500);
+    } catch (e) {
+        showNotification('⚠️ Error al cambiar facción', 2000);
     }
 }
 

@@ -495,30 +495,9 @@ function renderActivePanel(targetEl, forcePIdx) {
         }).filter(Boolean).join('');
         const hasDice = PSLOTS.some(s => currentEntry?.slots?.[s.key + '_plan']);
 
-        // Spell slot tracker (same as character sheet)
+        // Spell slot tracker (shared renderSlotTracker from character-sheet.js)
         const charData = liveData;
-        let combatSlotsHTML = '';
-        if (charData?.ranuras?.length > 0) {
-            initSpellSlotsForChar(p.id);
-            combatSlotsHTML = `<div class="slot-tracker combat-slots">
-                <div class="slot-tracker-header">
-                    <span class="slot-tracker-title">✨ Ranuras</span>
-                    <button class="slot-reset-btn" onclick="resetSpellSlots('${p.id}')" title="Descanso largo">🌙</button>
-                </div>
-                ${charData.ranuras.map(slot => {
-                    const remaining = spellSlotState[p.id]?.[slot.nombre] ?? slot.total;
-                    const pips = Array.from({ length: slot.total }, (_, i) =>
-                        `<button class="slot-pip${i >= remaining ? ' used' : ''}"
-                            onclick="toggleSpellSlot('${p.id}','${slot.nombre}',${i})"></button>`
-                    ).join('');
-                    return `<div class="slot-row">
-                        <span class="slot-name">${slot.nombre}</span>
-                        <div class="slot-track" data-slot="${slot.nombre}">${pips}</div>
-                        <span class="slot-count" data-slot="${slot.nombre}">${remaining}/${slot.total}</span>
-                    </div>`;
-                }).join('')}
-            </div>`;
-        }
+        const combatSlotsHTML = renderSlotTracker(p.id, liveData, 'combat-slots');
 
         // Card renderer — same style as character sheet, calls selectPlannerAction
         const renderPlannerCard = (item, sectionKey) => {
@@ -552,7 +531,11 @@ function renderActivePanel(targetEl, forcePIdx) {
             if (!items.length) return '';
             const trucos   = items.filter(i => !i.nivel || typeof i.nivel !== 'number');
             const hechizos = items.filter(i => i.nivel && typeof i.nivel === 'number');
-            let cardsHTML  = trucos.map(item => renderPlannerCard(item, section.key)).join('');
+            let cardsHTML = '';
+            if (trucos.length > 0) {
+                const trucosLabel = hechizos.length > 0 ? `<div class="hechizos-subsection-title">⚔️ Acciones base</div>` : '';
+                cardsHTML = `${trucosLabel}${trucos.map(item => renderPlannerCard(item, section.key)).join('')}`;
+            }
             if (hechizos.length > 0) {
                 initSpellSlotsForChar(p.id);
                 const byLevel = {};
@@ -562,7 +545,7 @@ function renderActivePanel(targetEl, forcePIdx) {
                     const slotDef = charData?.ranuras?.find(s => s.nombre === slotName);
                     const remaining = slotDef ? (spellSlotState[p.id]?.[slotName] ?? slotDef.total) : null;
                     const slotBadge = remaining !== null
-                        ? `<span class="slot-badge${remaining === 0 ? ' slot-empty' : ''}">${remaining}/${slotDef.total} ranuras</span>`
+                        ? `<span class="slot-badge${remaining === 0 ? ' slot-empty' : ''}" data-slot="${slotName}">${remaining}/${slotDef.total} ranuras</span>`
                         : '';
                     return `<div class="hechizo-level-group">
                         <div class="hechizo-level-header">Nv${lv} ${slotBadge}</div>
@@ -593,28 +576,7 @@ function renderActivePanel(targetEl, forcePIdx) {
     } else {
         // Master mode — card-based layout matching character sheet
         const masterCharData = liveData;
-        let masterSlotsHTML = '';
-        if (masterCharData?.ranuras?.length > 0) {
-            initSpellSlotsForChar(p.id);
-            masterSlotsHTML = `<div class="slot-tracker combat-slots">
-                <div class="slot-tracker-header">
-                    <span class="slot-tracker-title">✨ Ranuras</span>
-                    <button class="slot-reset-btn" onclick="resetSpellSlots('${p.id}')" title="Descanso largo">🌙</button>
-                </div>
-                ${masterCharData.ranuras.map(slot => {
-                    const remaining = spellSlotState[p.id]?.[slot.nombre] ?? slot.total;
-                    const pips = Array.from({ length: slot.total }, (_, i) =>
-                        `<button class="slot-pip${i >= remaining ? ' used' : ''}"
-                            onclick="toggleSpellSlot('${p.id}','${slot.nombre}',${i})"></button>`
-                    ).join('');
-                    return `<div class="slot-row">
-                        <span class="slot-name">${slot.nombre}</span>
-                        <div class="slot-track" data-slot="${slot.nombre}">${pips}</div>
-                        <span class="slot-count" data-slot="${slot.nombre}">${remaining}/${slot.total}</span>
-                    </div>`;
-                }).join('')}
-            </div>`;
-        }
+        const masterSlotsHTML = renderSlotTracker(p.id, liveData, 'combat-slots');
 
         const renderMasterCard = (item, sectionKey) => {
             const isUsed = currentEntry?.actions.some(x => x.nombre === item.nombre) || false;
@@ -651,7 +613,11 @@ function renderActivePanel(targetEl, forcePIdx) {
             if (!items.length) return '';
             const trucos   = items.filter(i => !i.nivel || typeof i.nivel !== 'number');
             const hechizos = items.filter(i => i.nivel && typeof i.nivel === 'number');
-            let cardsHTML  = trucos.map(item => renderMasterCard(item, section.key)).join('');
+            let cardsHTML = '';
+            if (trucos.length > 0) {
+                const trucosLabel = hechizos.length > 0 ? `<div class="hechizos-subsection-title">⚔️ Acciones base</div>` : '';
+                cardsHTML = `${trucosLabel}${trucos.map(item => renderMasterCard(item, section.key)).join('')}`;
+            }
             if (hechizos.length > 0) {
                 initSpellSlotsForChar(p.id);
                 const byLevel = {};
@@ -661,7 +627,7 @@ function renderActivePanel(targetEl, forcePIdx) {
                     const slotDef = masterCharData?.ranuras?.find(s => s.nombre === slotName);
                     const remaining = slotDef ? (spellSlotState[p.id]?.[slotName] ?? slotDef.total) : null;
                     const slotBadge = remaining !== null
-                        ? `<span class="slot-badge${remaining === 0 ? ' slot-empty' : ''}">${remaining}/${slotDef.total} ranuras</span>`
+                        ? `<span class="slot-badge${remaining === 0 ? ' slot-empty' : ''}" data-slot="${slotName}">${remaining}/${slotDef.total} ranuras</span>`
                         : '';
                     return `<div class="hechizo-level-group">
                         <div class="hechizo-level-header">Nv${lv} ${slotBadge}</div>

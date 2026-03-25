@@ -121,10 +121,83 @@ function toggleSpellSlot(charId, slotName, index) {
 function resetSpellSlots(charId) {
     const data = window.characterData[charId];
     if (!data?.ranuras) return;
+    initSpellSlotsForChar(charId);
     data.ranuras.forEach(s => { spellSlotState[charId][s.nombre] = s.total; });
+    data.ranuras.forEach(s => _refreshSlotDisplay(charId, s.nombre, s.total));
     renderSpellsWithFilters(data);
+    renderCombatInline(data);
     saveStateToStorage();
     showNotification('🌙 Descanso largo: slots restaurados', 2500);
+}
+
+function spendSpellSlot(charId, slotName) {
+    initSpellSlotsForChar(charId);
+    const slotDef = window.characterData[charId]?.ranuras?.find(s => s.nombre === slotName);
+    if (!slotDef) return;
+    const cur = spellSlotState[charId][slotName] ?? slotDef.total;
+    if (cur <= 0) { showNotification(`❌ Sin ranuras ${slotName}`, 1500); return; }
+    spellSlotState[charId][slotName] = cur - 1;
+    saveStateToStorage();
+    _refreshSlotDisplay(charId, slotName, slotDef.total);
+}
+
+function recoverSpellSlot(charId, slotName) {
+    initSpellSlotsForChar(charId);
+    const slotDef = window.characterData[charId]?.ranuras?.find(s => s.nombre === slotName);
+    if (!slotDef) return;
+    const cur = spellSlotState[charId][slotName] ?? slotDef.total;
+    if (cur >= slotDef.total) return;
+    spellSlotState[charId][slotName] = cur + 1;
+    saveStateToStorage();
+    _refreshSlotDisplay(charId, slotName, slotDef.total);
+}
+
+function _refreshSlotDisplay(charId, slotName, total) {
+    const remaining = spellSlotState[charId]?.[slotName] ?? total;
+    const isEmpty = remaining === 0;
+    document.querySelectorAll(`.slot-count[data-slot="${slotName}"]`).forEach(el => {
+        el.textContent = `${remaining}/${total}`;
+        el.classList.toggle('slot-empty', isEmpty);
+    });
+    document.querySelectorAll(`.slot-badge[data-slot="${slotName}"]`).forEach(el => {
+        el.textContent = `${remaining}/${total} ranuras`;
+        el.classList.toggle('slot-empty', isEmpty);
+    });
+    document.querySelectorAll(`.slot-btn-minus[data-slot="${slotName}"]`).forEach(btn => {
+        btn.disabled = isEmpty;
+    });
+    document.querySelectorAll(`.slot-btn-plus[data-slot="${slotName}"]`).forEach(btn => {
+        btn.disabled = remaining >= total;
+    });
+}
+
+// Shared slot tracker renderer — +/- buttons, used in character sheet and combat panel
+function renderSlotTracker(charId, data, extraClass) {
+    if (!data?.ranuras?.length) return '';
+    initSpellSlotsForChar(charId);
+    const cls = extraClass ? ` ${extraClass}` : '';
+    return `<div class="slot-tracker${cls}">
+        <div class="slot-tracker-header">
+            <span class="slot-tracker-title">✨ Ranuras</span>
+            <button class="slot-reset-btn" onclick="resetSpellSlots('${charId}')" title="Descanso largo">🌙</button>
+        </div>
+        ${data.ranuras.map(slot => {
+            const remaining = spellSlotState[charId]?.[slot.nombre] ?? slot.total;
+            const isEmpty = remaining === 0;
+            return `<div class="slot-row">
+                <span class="slot-name">${slot.nombre}</span>
+                <div class="slot-controls">
+                    <button class="slot-btn slot-btn-minus" data-slot="${slot.nombre}"
+                            onclick="spendSpellSlot('${charId}','${slot.nombre}')"
+                            title="Gastar ranura"${isEmpty ? ' disabled' : ''}>−</button>
+                    <span class="slot-count${isEmpty ? ' slot-empty' : ''}" data-slot="${slot.nombre}">${remaining}/${slot.total}</span>
+                    <button class="slot-btn slot-btn-plus" data-slot="${slot.nombre}"
+                            onclick="recoverSpellSlot('${charId}','${slot.nombre}')"
+                            title="Recuperar ranura"${remaining >= slot.total ? ' disabled' : ''}>+</button>
+                </div>
+            </div>`;
+        }).join('')}
+    </div>`;
 }
 
 function renderSpellsWithFilters(data) {
@@ -147,30 +220,8 @@ function renderSpellsWithFilters(data) {
         `<button class="spell-filter-btn${i === 0 ? ' active' : ''}" data-level="${lv}">${lv}</button>`
     ).join('');
 
-    // Slot tracker
-    let slotHTML = '';
     const charId = currentCharacterId;
-    if (charId && data.ranuras && data.ranuras.length > 0) {
-        initSpellSlotsForChar(charId);
-        slotHTML = `<div class="slot-tracker">
-            <div class="slot-tracker-header">
-                <span class="slot-tracker-title">✨ Ranuras de Conjuro</span>
-                <button class="slot-reset-btn" onclick="resetSpellSlots('${charId}')" title="Descanso largo">🌙 Descanso</button>
-            </div>
-            ${data.ranuras.map(slot => {
-                const remaining = spellSlotState[charId]?.[slot.nombre] ?? slot.total;
-                const pips = Array.from({ length: slot.total }, (_, i) =>
-                    `<button class="slot-pip${i >= remaining ? ' used' : ''}"
-                        onclick="toggleSpellSlot('${charId}','${slot.nombre}',${i})"></button>`
-                ).join('');
-                return `<div class="slot-row">
-                    <span class="slot-name">${slot.nombre}</span>
-                    <div class="slot-track" data-slot="${slot.nombre}">${pips}</div>
-                    <span class="slot-count" data-slot="${slot.nombre}">${remaining}/${slot.total}</span>
-                </div>`;
-            }).join('')}
-        </div>`;
-    }
+    const slotHTML = charId ? renderSlotTracker(charId, data) : '';
 
     let html = `
         ${slotHTML}
@@ -499,28 +550,7 @@ function renderCombatTab(data) {
     });
 
     // Spell slots
-    let slotsHTML = '';
-    if (data.ranuras && data.ranuras.length > 0) {
-        initSpellSlotsForChar(charId);
-        slotsHTML = `<div class="slot-tracker combat-slots">
-            <div class="slot-tracker-header">
-                <span class="slot-tracker-title">✨ Ranuras</span>
-                <button class="slot-reset-btn" onclick="resetSpellSlots('${charId}')" title="Descanso largo">🌙</button>
-            </div>
-            ${data.ranuras.map(slot => {
-                const remaining = spellSlotState[charId]?.[slot.nombre] ?? slot.total;
-                const pips = Array.from({ length: slot.total }, (_, i) =>
-                    `<button class="slot-pip${i >= remaining ? ' used' : ''}"
-                        onclick="toggleSpellSlot('${charId}','${slot.nombre}',${i})"></button>`
-                ).join('');
-                return `<div class="slot-row">
-                    <span class="slot-name">${slot.nombre}</span>
-                    <div class="slot-track" data-slot="${slot.nombre}">${pips}</div>
-                    <span class="slot-count" data-slot="${slot.nombre}">${remaining}/${slot.total}</span>
-                </div>`;
-            }).join('')}
-        </div>`;
-    }
+    const slotsHTML = renderSlotTracker(charId, data, 'combat-slots');
 
     // Turn planner
     const plannerSlots = [
@@ -595,7 +625,13 @@ function renderCombatTab(data) {
         const trucos = items.filter(i => !i.nivel || typeof i.nivel !== 'number');
         const hechizos = items.filter(i => i.nivel && typeof i.nivel === 'number');
 
-        let cardsHTML = trucos.map(item => renderActionCard(item, section.key)).join('');
+        let cardsHTML = '';
+        if (trucos.length > 0) {
+            const trucosLabel = hechizos.length > 0
+                ? `<div class="hechizos-subsection-title">⚔️ Acciones base</div>`
+                : '';
+            cardsHTML = `${trucosLabel}${trucos.map(item => renderActionCard(item, section.key)).join('')}`;
+        }
 
         if (hechizos.length > 0) {
             initSpellSlotsForChar(charId);
@@ -611,7 +647,7 @@ function renderCombatTab(data) {
                 const slotDef = data.ranuras?.find(s => s.nombre === slotName);
                 const remaining = slotDef ? (spellSlotState[charId]?.[slotName] ?? slotDef.total) : null;
                 const slotBadge = remaining !== null
-                    ? `<span class="slot-badge${remaining === 0 ? ' slot-empty' : ''}">${remaining}/${slotDef.total} ranuras</span>`
+                    ? `<span class="slot-badge${remaining === 0 ? ' slot-empty' : ''}" data-slot="${slotName}">${remaining}/${slotDef.total} ranuras</span>`
                     : '';
                 return `<div class="hechizo-level-group">
                     <div class="hechizo-level-header">Nv${lv} ${slotBadge}</div>
