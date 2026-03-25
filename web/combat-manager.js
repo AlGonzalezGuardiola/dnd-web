@@ -301,7 +301,6 @@ function renderActivePanel(targetEl, forcePIdx) {
         panel.innerHTML = `<div class="waiting-panel">
             <span>${icon} ${label}</span>
             <small>${note}</small>
-            <button class="btn-combat-secondary waiting-pass-btn" onclick="nextCombatTurn()">⏭ Pasar turno</button>
         </div>`;
         return;
     }
@@ -842,7 +841,14 @@ function toggleParticipantCondition(id, condId) {
 
 function nextCombatTurn() {
     if (!isMaster()) {
-        // Jugador personal turn manager — always advance freely, no warnings
+        // Jugador: solo puede avanzar si es su turno o el turno de su invocación/aliado
+        const p = combatState.participants[combatState.currentIndex];
+        const isMyCharTurn = gameRole.characterId && p.id === gameRole.characterId;
+        const isMyAllyTurn = (
+            p.ownerCharId === gameRole.characterId ||
+            (p._isSirvienteInvisible && gameRole.characterId === 'Vel')
+        );
+        if (!isMyCharTurn && !isMyAllyTurn) return;
         _doNextTurn();
         return;
     }
