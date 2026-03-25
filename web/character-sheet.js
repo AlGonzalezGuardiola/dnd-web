@@ -12,12 +12,12 @@ function setHp(value) {
     hp.current = Math.max(0, Math.min(hp.max, value));
 
     const pct = hp.max > 0 ? (hp.current / hp.max) * 100 : 0;
-    const currentEl = document.getElementById('hpCurrent');
+    const currentEl = document.getElementById('hpCurrentInput');
     const sliderEl  = document.getElementById('hpSlider');
     const sectionEl = document.querySelector('.hp-bar-section');
     const deathEl   = document.getElementById('deathSavesSection');
 
-    if (currentEl) currentEl.textContent = hp.current;
+    if (currentEl) currentEl.value = hp.current;
     if (sliderEl)  { sliderEl.value = hp.current; sliderEl.style.background = getSliderGradient(pct); }
     if (sectionEl) {
         sectionEl.classList.toggle('unconscious', hp.current === 0);
@@ -54,7 +54,11 @@ function renderHpSection(charId) {
                 <div class="hp-info">
                     <div class="pill-label">❤️ Puntos de Golpe</div>
                     <div class="hp-display">
-                        <span id="hpCurrent">${hp.current}</span><span class="hp-max"> / ${hp.max}</span>
+                        <input type="number" id="hpCurrentInput" class="hp-number-input"
+                               min="0" max="${hp.max}" value="${hp.current}"
+                               onchange="setHp(parseInt(this.value)||0)"
+                               inputmode="numeric" aria-label="HP actual">
+                        <span class="hp-max"> / ${hp.max}</span>
                     </div>
                 </div>
                 <button class="inspiration-btn${hasInspiration ? ' active' : ''}"

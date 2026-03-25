@@ -608,7 +608,10 @@ function renderActivePanel(targetEl, forcePIdx) {
             <div class="combat-vital-block ${hpClass}" id="activeHpBlock">
                 <div class="combat-vital-label">❤️ Puntos de Golpe</div>
                 <div class="combat-vital-value">
-                    <span id="activeHpDisplay">${p.hp.current}</span>
+                    <input type="number" id="activeHpInput" class="hp-number-input"
+                           min="0" max="${p.hp.max}" value="${p.hp.current}"
+                           onchange="setParticipantHp('${p.id}', parseInt(this.value)||0)"
+                           inputmode="numeric" aria-label="HP actual">
                     <span style="font-size:16px;color:var(--text-muted)"> / ${p.hp.max}</span>
                 </div>
                 <input type="range" class="combat-hp-slider"
@@ -829,9 +832,9 @@ function setParticipantHp(id, value) {
         showNotification(`🧠 Concentración: ¡Tirada de CON CD ${cd}!`, 4000);
     }
     saveCombatState();
-    // Lightweight DOM update — don't rebuild panel (would kill slider focus)
-    const hpDisplay = document.getElementById('activeHpDisplay');
-    if (hpDisplay) hpDisplay.textContent = p.hp.current;
+    // Lightweight DOM update — don't rebuild panel (would kill slider/input focus)
+    const hpDisplay = document.getElementById('activeHpInput');
+    if (hpDisplay) hpDisplay.value = p.hp.current;
     const hpBlock = document.getElementById('activeHpBlock');
     if (hpBlock) {
         const pct = p.hp.max > 0 ? (p.hp.current / p.hp.max) * 100 : 0;

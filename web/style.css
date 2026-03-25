@@ -1809,6 +1809,31 @@ button, .card, .pin, .tab-btn, .hud-btn, .die-btn,
     color: var(--text-secondary);
 }
 
+/* Editable HP number input (char sheet + combat) */
+.hp-number-input {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.15);
+    color: inherit;
+    font-family: var(--font-heading);
+    font-size: inherit;
+    width: 4ch;
+    min-width: 2rem;
+    text-align: center;
+    padding: 0;
+    outline: none;
+    -moz-appearance: textfield;
+    cursor: text;
+}
+.hp-number-input::-webkit-inner-spin-button,
+.hp-number-input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+.hp-number-input:focus {
+    border-bottom-color: var(--accent-gold, #d4af37);
+}
+
 .hp-slider {
     -webkit-appearance: none;
     appearance: none;
