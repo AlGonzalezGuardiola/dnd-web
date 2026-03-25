@@ -89,6 +89,7 @@ window.characterData = {
             },
             {
                 "nombre": "Sirviente Invisible",
+                "tipo": "invocacion",
                 "nivel": "Esp",
                 "desc": "1/día gratis. 1 hora. Invisible → ventaja en ataques. 1 PG.<br>Atq acción: 1d8 divino +CAR (+7). Atq bonus: 1d4 + ventaja al sig. atacante."
             },

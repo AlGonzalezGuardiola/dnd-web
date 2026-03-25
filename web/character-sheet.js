@@ -543,8 +543,8 @@ function renderCombatTab(data) {
         ...(data.conjuros || [])
     ];
 
-    // Group by type
-    const groups = { accion: [], adicional: [], reaccion: [], modificador: [] };
+    // Group by type (invocacion items are handled by separate buttons, skip them here)
+    const groups = { accion: [], adicional: [], reaccion: [], modificador: [], invocacion: [] };
     allItems.forEach(item => {
         const tipo = inferActionType(item);
         if (groups[tipo] !== undefined) groups[tipo].push(item);
@@ -657,47 +657,60 @@ function renderCombatTab(data) {
         </div>`;
     }
 
-    const sectionHTMLs = sections.map(section => {
-        const items = groups[section.key];
-        if (items.length === 0) return '';
+    // Helper: render leveled spells block for a section key
+    function renderHechizosBlock(hechizos, sectionKey) {
+        if (!hechizos.length) return '';
+        initSpellSlotsForChar(charId);
+        const byLevel = {};
+        hechizos.forEach(sp => { const lv = sp.nivel; if (!byLevel[lv]) byLevel[lv] = []; byLevel[lv].push(sp); });
+        return Object.keys(byLevel).sort((a, b) => a - b).map(lv => {
+            const slotDef = _findSlotDef(data.ranuras, parseInt(lv));
+            const slotName = slotDef?.nombre || `Nv${lv}`;
+            const remaining = slotDef ? (spellSlotState[charId]?.[slotName] ?? slotDef.total) : null;
+            const slotBadge = remaining !== null
+                ? `<span class="slot-badge${remaining === 0 ? ' slot-empty' : ''}" data-slot="${slotName}">${remaining}/${slotDef.total} ranuras</span>`
+                : '';
+            return `<div class="hechizo-level-group">
+                <div class="hechizo-level-header">Nv${lv} ${slotBadge}</div>
+                ${byLevel[lv].map(item => renderActionCard(item, sectionKey)).join('')}
+            </div>`;
+        }).join('');
+    }
 
-        // Split into trucos/especiales (no slot) vs leveled spells (consume slot)
-        const trucos = items.filter(i => !i.nivel || typeof i.nivel !== 'number');
+    const sectionHTMLs = [];
+    sections.forEach(section => {
+        const items = groups[section.key];
+        const trucos  = items.filter(i => !i.nivel || typeof i.nivel !== 'number');
         const hechizos = items.filter(i => i.nivel && typeof i.nivel === 'number');
 
-        let cardsHTML = trucos.map(item => renderActionCard(item, section.key)).join('');
-
-        if (hechizos.length > 0) {
-            initSpellSlotsForChar(charId);
-            const byLevel = {};
-            hechizos.forEach(sp => {
-                const lv = sp.nivel;
-                if (!byLevel[lv]) byLevel[lv] = [];
-                byLevel[lv].push(sp);
-            });
-            const hechizosCards = Object.keys(byLevel).sort((a, b) => a - b).map(lv => {
-                const slotDef = _findSlotDef(data.ranuras, parseInt(lv));
-                const slotName = slotDef?.nombre || `Nv${lv}`;
-                const remaining = slotDef ? (spellSlotState[charId]?.[slotName] ?? slotDef.total) : null;
-                const slotBadge = remaining !== null
-                    ? `<span class="slot-badge${remaining === 0 ? ' slot-empty' : ''}" data-slot="${slotName}">${remaining}/${slotDef.total} ranuras</span>`
-                    : '';
-                return `<div class="hechizo-level-group">
-                    <div class="hechizo-level-header">Nv${lv} ${slotBadge}</div>
-                    ${byLevel[lv].map(item => renderActionCard(item, section.key)).join('')}
-                </div>`;
-            }).join('');
-            cardsHTML += hechizosCards;
+        // For acciones: render attacks → modifiers → spells (each as own block)
+        if (section.key === 'accion') {
+            if (trucos.length > 0) {
+                sectionHTMLs.push(`<div class="combat-section">
+                    <div class="combat-section-title">${section.icon} ${section.label}</div>
+                    <div class="combat-action-list">${trucos.map(item => renderActionCard(item, section.key)).join('')}</div>
+                </div>`);
+            }
+            if (modifierSectionHTML) sectionHTMLs.push(modifierSectionHTML);
+            const hechizosHTML = renderHechizosBlock(hechizos, section.key);
+            if (hechizosHTML) {
+                sectionHTMLs.push(`<div class="combat-section">
+                    <div class="combat-section-title">✨ Hechizos</div>
+                    <div class="combat-action-list">${hechizosHTML}</div>
+                </div>`);
+            }
+            return;
         }
 
-        return `<div class="combat-section">
+        // Adicionales / Reacciones
+        if (items.length === 0) return;
+        let cardsHTML = trucos.map(item => renderActionCard(item, section.key)).join('');
+        cardsHTML += renderHechizosBlock(hechizos, section.key);
+        sectionHTMLs.push(`<div class="combat-section">
             <div class="combat-section-title">${section.icon} ${section.label}</div>
             <div class="combat-action-list">${cardsHTML}</div>
-        </div>`;
+        </div>`);
     });
-
-    // Insert modifier section after acciones (index 0)
-    sectionHTMLs.splice(1, 0, modifierSectionHTML);
 
     return `<div class="turn-planner">
         <div class="turn-planner-title">⚡ Planificador de Turno</div>
