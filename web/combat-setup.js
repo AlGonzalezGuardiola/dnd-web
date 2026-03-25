@@ -851,18 +851,9 @@ function buildSirvienteCharData(ac) {
     };
 }
 
-// ── Combat Templates (saved encounter presets) ──────────────────────────────
-const COMBAT_TEMPLATES_KEY = 'dnd_combat_templates';
+// ── Combat Templates (saved encounter presets, persisted in DB) ──────────────
 
-function _tplLoad() {
-    try { return JSON.parse(localStorage.getItem(COMBAT_TEMPLATES_KEY)) || []; }
-    catch { return []; }
-}
-function _tplSave(list) {
-    localStorage.setItem(COMBAT_TEMPLATES_KEY, JSON.stringify(list));
-}
-
-window.saveCombatTemplate = function () {
+window.saveCombatTemplate = async function () {
     const total = combatState.selectedIds.length + setupNpcs.length;
     if (total < 1) {
         showNotification('Selecciona al menos 1 participante para guardar', 2500);
@@ -871,73 +862,90 @@ window.saveCombatTemplate = function () {
     const name = prompt('Nombre de la plantilla de combate:');
     if (!name?.trim()) return;
 
-    const list = _tplLoad();
-    list.unshift({
-        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5),
-        name: name.trim(),
-        createdAt: new Date().toISOString(),
-        selectedIds: [...combatState.selectedIds],
-        npcs: setupNpcs.map(n => {
-            const { charData, ...rest } = n;
-            // Preserve charData only for non-window.characterData entries (custom NPCs)
-            const isKnown = charData && window.characterData[n.id];
-            return isKnown ? rest : { ...rest, charData: charData ? { ...charData } : null };
-        }),
-        initiatives: { ...setupInitiatives },
-    });
-    _tplSave(list);
-    showNotification('💾 Plantilla guardada en Encuentros', 2000);
+    try {
+        const res = await fetch(`${API_BASE}/api/combat-templates`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: name.trim(),
+                selectedIds: [...combatState.selectedIds],
+                npcs: setupNpcs.map(n => {
+                    const { charData, ...rest } = n;
+                    const isKnown = charData && window.characterData[n.id];
+                    return isKnown ? rest : { ...rest, charData: charData ? { ...charData } : null };
+                }),
+                initiatives: { ...setupInitiatives },
+            }),
+        });
+        if (!res.ok) throw new Error((await res.json()).error);
+        showNotification('💾 Plantilla guardada en Encuentros', 2000);
+    } catch (err) {
+        showNotification('Error al guardar plantilla: ' + err.message, 3000);
+    }
 };
 
-window.loadCombatTemplate = function (id) {
-    const tpl = _tplLoad().find(t => t.id === id);
-    if (!tpl) return;
+window.loadCombatTemplate = async function (id) {
+    try {
+        const res = await fetch(`${API_BASE}/api/combat-templates/${id}`);
+        if (!res.ok) throw new Error('Plantilla no encontrada');
+        const { template: tpl } = await res.json();
 
-    // Restore setup state from template
-    combatState.selectedIds = [...tpl.selectedIds];
-    setupInitiatives = { ...tpl.initiatives };
-    setupNpcs = tpl.npcs.map(n => ({
-        ...n,
-        charData: n.charData || window.characterData[n.id] || { combateExtra: [], conjuros: [] },
-    }));
+        combatState.selectedIds = [...(tpl.selectedIds || [])];
+        setupInitiatives = { ...(tpl.initiatives || {}) };
+        setupNpcs = (tpl.npcs || []).map(n => ({
+            ...n,
+            charData: n.charData || window.characterData[n.id] || { combateExtra: [], conjuros: [] },
+        }));
 
-    // Navigate to setup screen without resetting state
-    combatModeActive = true;
-    setView('combatSetup');
-    switchCombatSetupTab('jugadores');
-    renderCombatSetup();
-    loadSavedTemplates('aliado');
-    loadSavedTemplates('enemigo');
-    showNotification(`📋 Plantilla "${tpl.name}" cargada`, 2000);
+        combatModeActive = true;
+        setView('combatSetup');
+        switchCombatSetupTab('jugadores');
+        renderCombatSetup();
+        loadSavedTemplates('aliado');
+        loadSavedTemplates('enemigo');
+        showNotification(`📋 Plantilla "${tpl.name}" cargada`, 2000);
+    } catch (err) {
+        showNotification('Error al cargar plantilla: ' + err.message, 3000);
+    }
 };
 
-window.deleteCombatTemplate = function (id) {
-    const list = _tplLoad().filter(t => t.id !== id);
-    _tplSave(list);
-    window.renderCombatTemplatesList();
+window.deleteCombatTemplate = async function (id) {
+    try {
+        const res = await fetch(`${API_BASE}/api/combat-templates/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error((await res.json()).error);
+        window.renderCombatTemplatesList();
+    } catch (err) {
+        showNotification('Error al eliminar plantilla: ' + err.message, 3000);
+    }
 };
 
-window.renderCombatTemplatesList = function () {
+window.renderCombatTemplatesList = async function () {
     const section = document.getElementById('combatTemplatesSection');
     const container = document.getElementById('combatTemplatesContainer');
     if (!section || !container) return;
 
-    const list = _tplLoad();
-    section.style.display = list.length ? 'block' : 'none';
-    if (!list.length) return;
+    try {
+        const res = await fetch(`${API_BASE}/api/combat-templates`);
+        const { templates } = await res.json();
 
-    container.innerHTML = list.map(tpl => {
-        const date = new Date(tpl.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
-        const count = tpl.selectedIds.length + tpl.npcs.length;
-        return `<div class="combat-template-item">
-            <div class="tpl-info">
-                <span class="tpl-name">${tpl.name}</span>
-                <span class="tpl-meta">${count} participantes · ${date}</span>
-            </div>
-            <div class="tpl-actions">
-                <button class="btn-combat-primary" style="padding:6px 14px;font-size:13px" onclick="loadCombatTemplate('${tpl.id}')">▶ Jugar</button>
-                <button class="btn-danger" style="padding:6px 10px;font-size:13px" onclick="deleteCombatTemplate('${tpl.id}')">🗑</button>
-            </div>
-        </div>`;
-    }).join('');
+        section.style.display = templates.length ? 'block' : 'none';
+        if (!templates.length) return;
+
+        container.innerHTML = templates.map(tpl => {
+            const date = new Date(tpl.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+            const count = (tpl.selectedIds?.length || 0) + (tpl.npcs?.length || 0);
+            return `<div class="combat-template-item">
+                <div class="tpl-info">
+                    <span class="tpl-name">${tpl.name}</span>
+                    <span class="tpl-meta">${count} participantes · ${date}</span>
+                </div>
+                <div class="tpl-actions">
+                    <button class="btn-combat-primary" style="padding:6px 14px;font-size:13px" onclick="loadCombatTemplate('${tpl._id}')">▶ Jugar</button>
+                    <button class="btn-danger" style="padding:6px 10px;font-size:13px" onclick="deleteCombatTemplate('${tpl._id}')">🗑</button>
+                </div>
+            </div>`;
+        }).join('');
+    } catch {
+        section.style.display = 'none';
+    }
 };
