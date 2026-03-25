@@ -430,22 +430,55 @@ function renderActivePanel(targetEl, forcePIdx) {
         </div>`;
     }).join('');
 
+    // Helper: render a single action as a card (used in all modes)
+    const renderCard = (item, onclickFn, isUsedFn) => {
+        const isUsed = isUsedFn(item);
+        const diceStr = item.atk
+            ? `ATK ${item.atk}${item.dado && item.dado !== '—' ? ` | DMG ${item.dado}` : ''}`
+            : (item.dado && item.dado !== '—' ? `DMG ${item.dado}` : (extractDiceFromDesc(item.desc) || ''));
+        const atk      = item.atk || '';
+        const dado     = item.dado && item.dado !== '—' ? item.dado : (extractDiceFromDesc(item.desc) || '');
+        const diceDisp = atk ? `${atk}${dado ? ' / ' + dado : ''}` : dado;
+        const safeName = item.nombre.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        const removeBtn = item._custom
+            ? `<button class="chip-remove-btn" onclick="removePermanentCustomAction('${p.id}','${safeName}')" title="Eliminar">✕</button>` : '';
+        return `<div class="combat-action-card${isUsed ? ' selected' : ''}${item._custom ? ' custom-action' : ''}"
+                 onclick="${onclickFn(item, safeName, diceDisp)}">
+            <div class="combat-action-header">
+                <span class="combat-action-name">${item.nombre}</span>
+                ${diceStr ? `<span class="combat-action-dice">${diceStr}</span>` : ''}
+                ${removeBtn}
+            </div>
+            <div class="combat-action-desc">${item.desc || ''}</div>
+        </div>`;
+    };
+
     // Render slot sections or mini-turn-only views
     let slotSections;
     if (isExtraAttack) {
         const weaponItems = regularItems.filter(a =>
             inferActionType(a) === 'accion' && a.atk && a.atk !== '—' && a.atk !== ''
         );
-        slotSections = `<div class="combat-slot-section">
-            <div class="combat-slot-header"><span>⚔️ Ataque Extra (solo armas)</span></div>
-            ${weaponItems.length ? `<div class="combat-chips">${renderChips(weaponItems)}</div>` : `<div style="font-size:12px;color:var(--text-muted);padding:4px 0">Sin ataques disponibles</div>`}
+        const weaponCards = weaponItems.map(item => renderCard(
+            item,
+            (item, safeName, diceDisp) => `toggleCombatAction('${p.id}','${safeName}','${diceDisp.replace(/'/g, "\\'")}')`,
+            item => currentEntry?.actions.some(x => x.nombre === item.nombre) || false
+        )).join('');
+        slotSections = `<div class="combat-section">
+            <div class="combat-section-title">🗡️ Ataque Extra (solo armas)</div>
+            <div class="combat-action-list">${weaponCards || '<div style="font-size:12px;color:var(--text-muted);padding:4px 0">Sin ataques disponibles</div>'}</div>
         </div>
         ${modifierSectionHTML}`;
     } else if (isSegundaAccion) {
         const accionItems = regularItems.filter(a => inferActionType(a) === 'accion');
-        slotSections = `<div class="combat-slot-section">
-            <div class="combat-slot-header"><span>⚔️ Acción (Segunda Acción)</span></div>
-            ${accionItems.length ? `<div class="combat-chips">${renderChips(accionItems)}</div>` : `<div style="font-size:12px;color:var(--text-muted);padding:4px 0">Sin acciones disponibles</div>`}
+        const accionCards = accionItems.map(item => renderCard(
+            item,
+            (item, safeName, diceDisp) => `toggleCombatAction('${p.id}','${safeName}','${diceDisp.replace(/'/g, "\\'")}')`,
+            item => currentEntry?.actions.some(x => x.nombre === item.nombre) || false
+        )).join('');
+        slotSections = `<div class="combat-section">
+            <div class="combat-section-title">⚔️ Acción (Segunda Acción)</div>
+            <div class="combat-action-list">${accionCards || '<div style="font-size:12px;color:var(--text-muted);padding:4px 0">Sin acciones disponibles</div>'}</div>
         </div>
         ${modifierSectionHTML}`;
     } else if (playerMode) {
