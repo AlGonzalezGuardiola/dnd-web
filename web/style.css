@@ -3559,10 +3559,59 @@ body.view-map .hud {
     border-left-color: #fbbf24 !important;
     background: rgba(251, 191, 36, 0.04);
 }
-/* Modifier card in char-sheet planner */
-.modifier-card {
-    border-left: 3px solid #fbbf24;
+/* Modifier cards in char-sheet planner */
+.modifier-section .combat-section-title {
+    color: #fbbf24;
+    border-left-color: #fbbf24;
     background: rgba(251, 191, 36, 0.06);
+}
+
+.modifier-card {
+    border-left: 3px solid rgba(251, 191, 36, 0.4);
+    background: rgba(251, 191, 36, 0.04);
+    cursor: pointer;
+}
+
+.modifier-card:hover {
+    border-left-color: #fbbf24;
+    background: rgba(251, 191, 36, 0.09);
+}
+
+.modifier-card.selected {
+    border-left-color: #fbbf24;
+    background: rgba(251, 191, 36, 0.18);
+    box-shadow: 0 0 12px rgba(251, 191, 36, 0.25), inset 0 0 0 1px rgba(251, 191, 36, 0.3);
+}
+
+.modifier-card.depleted {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.modifier-depleted-badge {
+    font-size: 10px;
+    color: #fde68a;
+    background: rgba(251, 191, 36, 0.12);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    border-radius: 10px;
+    padding: 1px 8px;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
+/* Modifier row in dice panel */
+.dice-row-modifier .dice-name {
+    color: #fbbf24;
+}
+
+.modifier-active-badge {
+    background: rgba(251, 191, 36, 0.15);
+    color: #fde68a;
+    border: 1px solid rgba(251, 191, 36, 0.35);
+    border-radius: 10px;
+    padding: 2px 10px;
+    font-size: 11px;
+    font-weight: 600;
 }
 
 /* Hechizos subsection in combat planner */

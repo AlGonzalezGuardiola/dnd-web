@@ -26,6 +26,8 @@ const notesState = {};
 const diceHistory = [];
 const demonicFormState = {};
 const turnPlannerState = {};
+const modifierState = {};      // { charId: { nombre: bool } } — active modifiers
+const modifierUsedState = {};  // { charId: { nombre: bool } } — 1/rest used
 
 // API / SSE
 const API_BASE = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')

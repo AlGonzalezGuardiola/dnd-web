@@ -146,6 +146,13 @@ window.characterData = {
                 "dado": "1d10+1d4+5",
                 "tipo_dano": "cortante/necrótico",
                 "desc": "Cort/Necr. +1d8 necrótico en Forma Demoníaca. Aura Necrótica activa dobla dados necróticos."
+            },
+            {
+                "nombre": "Aura Necrótica",
+                "tipo": "modificador",
+                "descansoLargo": true,
+                "dado": null,
+                "desc": "<strong>1/Largo · Concentración 1 min.</strong><br>Al activar: TS CAR (CD 8+comp+CAR) o <em>Asustado</em> (radio 30ft).<br>Campo necrótico móvil 30ft: terreno difícil · TS CON al salir o 1d8 necrótico · 1d12 necrótico al inicio del turno enemigo dentro.<br>Todos los dados de daño necrótico en el área se duplican (excepto los de esta habilidad)."
             }
         ]
     },

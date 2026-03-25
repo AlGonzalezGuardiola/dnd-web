@@ -124,10 +124,12 @@ function resetSpellSlots(charId) {
     initSpellSlotsForChar(charId);
     data.ranuras.forEach(s => { spellSlotState[charId][s.nombre] = s.total; });
     data.ranuras.forEach(s => _refreshSlotDisplay(charId, s.nombre, s.total));
+    // Reset 1/long-rest modifiers
+    if (modifierUsedState[charId]) modifierUsedState[charId] = {};
     renderSpellsWithFilters(data);
     renderCombatInline(data);
     saveStateToStorage();
-    showNotification('🌙 Descanso largo: slots restaurados', 2500);
+    showNotification('🌙 Descanso largo: slots y habilidades restaurados', 2500);
 }
 
 function spendSpellSlot(charId, slotName) {
@@ -575,22 +577,60 @@ function renderCombatTab(data) {
         </div>`;
     }).join('');
 
-    // Dice panel — uses getDiceBadges for consistent display incl. extracted dice
+    // Init modifier state
+    if (!modifierState[charId]) modifierState[charId] = {};
+    if (!modifierUsedState[charId]) modifierUsedState[charId] = {};
+
+    // Active modifiers for dice panel
+    const activeModifiers = groups.modificador.filter(m => modifierState[charId][m.nombre] === true);
+
+    // Dice panel — includes selected planner actions + active modifiers
     const selectedActions = [planner.accion, planner.adicional, planner.reaccion].filter(Boolean);
     let diceHTML = '';
-    if (selectedActions.length > 0) {
-        const rows = selectedActions.map(action => {
+    if (selectedActions.length > 0 || activeModifiers.length > 0) {
+        const actionRows = selectedActions.map(action => {
             const badges = getDiceBadges(action);
             return `<div class="dice-row">
                 <span class="dice-name">${action.nombre}</span>
                 <div class="dice-values">${badges || '<span class="dice-utility">Sin tirada</span>'}</div>
             </div>`;
         }).join('');
+        const modRows = activeModifiers.map(mod => {
+            const badges = getDiceBadges(mod);
+            return `<div class="dice-row dice-row-modifier">
+                <span class="dice-name">✦ ${mod.nombre}</span>
+                <div class="dice-values">${badges || '<span class="dice-utility modifier-active-badge">Activo</span>'}</div>
+            </div>`;
+        }).join('');
         diceHTML = `<div class="dice-panel-combat">
             <div class="dice-panel-title">🎲 Dados del Turno</div>
-            ${rows}
+            ${actionRows}${modRows}
         </div>`;
     }
+
+    // Modifier section (interactive, placed after acciones)
+    const modifierSectionHTML = groups.modificador.length ? (() => {
+        const cards = groups.modificador.map(item => {
+            const isActive  = modifierState[charId][item.nombre] === true;
+            const isUsed    = modifierUsedState[charId][item.nombre] === true;
+            const isDepleted = item.descansoLargo && isUsed && !isActive;
+            const diceStr   = item.dado && item.dado !== '—' ? `DMG ${item.dado}` : '';
+            const safeName  = item.nombre.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            return `<div class="combat-action-card modifier-card${isActive ? ' selected' : ''}${isDepleted ? ' depleted' : ''}"
+                     onclick="selectModifier('${charId}','${safeName}')">
+                <div class="combat-action-header">
+                    <span class="combat-action-name">${item.nombre}</span>
+                    ${diceStr ? `<span class="combat-action-dice">${diceStr}</span>` : ''}
+                    ${isDepleted ? '<span class="modifier-depleted-badge">Gastado · 🌙</span>' : ''}
+                </div>
+                <div class="combat-action-desc">${item.desc}</div>
+            </div>`;
+        }).join('');
+        return `<div class="combat-section modifier-section">
+            <div class="combat-section-title">✦ Modificadores</div>
+            <div class="combat-action-list">${cards}</div>
+        </div>`;
+    })() : '';
 
     // Action lists
     const sections = [
@@ -617,7 +657,7 @@ function renderCombatTab(data) {
         </div>`;
     }
 
-    const actionListHTML = sections.map(section => {
+    const sectionHTMLs = sections.map(section => {
         const items = groups[section.key];
         if (items.length === 0) return '';
 
@@ -629,7 +669,6 @@ function renderCombatTab(data) {
 
         if (hechizos.length > 0) {
             initSpellSlotsForChar(charId);
-            // Group by level
             const byLevel = {};
             hechizos.forEach(sp => {
                 const lv = sp.nivel;
@@ -637,8 +676,8 @@ function renderCombatTab(data) {
                 byLevel[lv].push(sp);
             });
             const hechizosCards = Object.keys(byLevel).sort((a, b) => a - b).map(lv => {
-                const slotName = `Nv${lv}`;
-                const slotDef = data.ranuras?.find(s => s.nombre === slotName);
+                const slotDef = _findSlotDef(data.ranuras, parseInt(lv));
+                const slotName = slotDef?.nombre || `Nv${lv}`;
                 const remaining = slotDef ? (spellSlotState[charId]?.[slotName] ?? slotDef.total) : null;
                 const slotBadge = remaining !== null
                     ? `<span class="slot-badge${remaining === 0 ? ' slot-empty' : ''}" data-slot="${slotName}">${remaining}/${slotDef.total} ranuras</span>`
@@ -655,26 +694,10 @@ function renderCombatTab(data) {
             <div class="combat-section-title">${section.icon} ${section.label}</div>
             <div class="combat-action-list">${cardsHTML}</div>
         </div>`;
-    }).join('');
+    });
 
-    // Always show modifiers (Divine Smite) in the character sheet view
-    const modifierSectionHTML = groups.modificador.length ? `<div class="combat-section">
-        <div class="combat-section-title">✨ Divine Smite</div>
-        <div class="combat-section-subtitle">Complemento del ataque — activa si impactas</div>
-        <div class="combat-action-list">
-            ${groups.modificador.map(item => {
-                const diceStr = item.dado && item.dado !== '—' ? `DMG ${item.dado}` : '';
-                return `<div class="combat-action-card modifier-card">
-                    <div class="combat-action-header">
-                        <span class="combat-action-name">✨ ${item.nombre}</span>
-                        ${diceStr ? `<span class="combat-action-dice">${diceStr}</span>` : ''}
-                    </div>
-                    <div class="combat-action-desc">${item.desc}</div>
-                </div>`;
-            }).join('')}
-        </div>
-    </div>` : '';
-    const actionListHTML_full = actionListHTML + modifierSectionHTML;
+    // Insert modifier section after acciones (index 0)
+    sectionHTMLs.splice(1, 0, modifierSectionHTML);
 
     return `<div class="turn-planner">
         <div class="turn-planner-title">⚡ Planificador de Turno</div>
@@ -682,7 +705,39 @@ function renderCombatTab(data) {
         ${diceHTML}
     </div>
     ${slotsHTML}
-    ${actionListHTML_full}`;
+    ${sectionHTMLs.join('')}`;
+}
+
+// Toggle a modifier (Divine Smite, Aura Necrótica, etc.)
+function selectModifier(charId, nombre) {
+    const data = window.characterData[charId];
+    if (!data) return;
+    if (!modifierState[charId]) modifierState[charId] = {};
+    if (!modifierUsedState[charId]) modifierUsedState[charId] = {};
+
+    const allItems = [...(data.combateExtra || []), ...(data.conjuros || [])];
+    const item = allItems.find(i => i.nombre === nombre);
+    if (!item) return;
+
+    const isActive = modifierState[charId][nombre] === true;
+    const isUsed   = modifierUsedState[charId][nombre] === true;
+
+    // If 1/rest, already used, and currently inactive → can't re-activate
+    if (item.descansoLargo && isUsed && !isActive) {
+        showNotification('⚠️ Ya gastado. Requiere descanso largo (🌙).', 2500);
+        return;
+    }
+
+    // Toggle active state
+    modifierState[charId][nombre] = !isActive;
+
+    // Mark as used when first activated (1/rest items)
+    if (item.descansoLargo && !isActive) {
+        modifierUsedState[charId][nombre] = true;
+    }
+
+    saveStateToStorage();
+    renderCombatInline(data);
 }
 
 // Finds a slot definition by spell level, supporting both "Nv3" and warlock-style "Pacto (Nv3)"

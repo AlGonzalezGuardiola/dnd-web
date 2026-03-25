@@ -12,6 +12,8 @@ function saveStateToStorage() {
         localStorage.setItem('dnd_deathsaves', JSON.stringify(deathSaveState));
         localStorage.setItem('dnd_demonic',    JSON.stringify(demonicFormState));
         localStorage.setItem('dnd_notes',      JSON.stringify(notesState));
+        localStorage.setItem('dnd_modifiers',  JSON.stringify(modifierState));
+        localStorage.setItem('dnd_mod_used',   JSON.stringify(modifierUsedState));
     } catch(e) {}
 }
 
@@ -22,8 +24,10 @@ function loadStateFromStorage() {
         const ins  = localStorage.getItem('dnd_inspiration');if (ins)  Object.assign(inspirationState, JSON.parse(ins));
         const cond = localStorage.getItem('dnd_conditions'); if (cond) Object.assign(conditionsState,  JSON.parse(cond));
         const ds   = localStorage.getItem('dnd_deathsaves'); if (ds)   Object.assign(deathSaveState,   JSON.parse(ds));
-        const dem  = localStorage.getItem('dnd_demonic');    if (dem)  Object.assign(demonicFormState, JSON.parse(dem));
-        const nt   = localStorage.getItem('dnd_notes');      if (nt)   Object.assign(notesState,       JSON.parse(nt));
+        const dem  = localStorage.getItem('dnd_demonic');    if (dem)  Object.assign(demonicFormState,  JSON.parse(dem));
+        const nt   = localStorage.getItem('dnd_notes');      if (nt)   Object.assign(notesState,        JSON.parse(nt));
+        const mods = localStorage.getItem('dnd_modifiers');  if (mods) Object.assign(modifierState,     JSON.parse(mods));
+        const modu = localStorage.getItem('dnd_mod_used');   if (modu) Object.assign(modifierUsedState, JSON.parse(modu));
     } catch(e) {}
 }
 
