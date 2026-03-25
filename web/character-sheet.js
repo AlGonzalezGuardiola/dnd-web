@@ -630,14 +630,8 @@ function renderCombatTab(data) {
         </div>`;
     }).join('');
 
-    // Show modifiers (Divine Smite) only when a weapon attack is planned
-    const allCharItems = [...(data.combateExtra || []), ...(data.conjuros || [])];
-    const hasWeaponPlanned = Object.values(planner).some(sel => {
-        if (!sel) return false;
-        const item = allCharItems.find(x => x.nombre === sel.nombre);
-        return !!(item?.atk);
-    });
-    const modifierSectionHTML = (groups.modificador.length && hasWeaponPlanned) ? `<div class="combat-section">
+    // Always show modifiers (Divine Smite) in the character sheet view
+    const modifierSectionHTML = groups.modificador.length ? `<div class="combat-section">
         <div class="combat-section-title">✨ Divine Smite</div>
         <div class="combat-section-subtitle">Complemento del ataque — activa si impactas</div>
         <div class="combat-action-list">

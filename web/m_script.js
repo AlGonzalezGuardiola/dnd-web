@@ -264,14 +264,55 @@ function updateMobileTabs(data) {
     const tabInventory = document.getElementById('m_tabInventory');
     const tabSpells = document.getElementById('m_tabSpells');
 
-    // 1. Tab Combat
-    let combatHTML = '<div class="feature-grid">';
-    data.rasgos.forEach((trait, index) => {
-        if (trait.nombre.includes("🗡️") || trait.nombre.includes("⚔️") || trait.nombre.includes("Aura") || trait.nombre.includes("Combate")) {
-            combatHTML += renderMobileTraitItem(trait, index);
-        }
+    // 1. Tab Combat — combateExtra (acciones/adicionales/reacciones/modificadores) + rasgos de combate
+    const actionTypeLabel = { accion: 'Acción', adicional: 'Acción Adicional', reaccion: 'Reacción', modificador: 'Modificador' };
+    const actionTypeColor = { accion: '#d4af37', adicional: '#44bbff', reaccion: '#ff9944', modificador: '#bb88ff' };
+
+    let combatHTML = '';
+
+    // combateExtra items grouped by tipo
+    const extraItems = data.combateExtra || [];
+    const groups = { accion: [], adicional: [], reaccion: [], modificador: [] };
+    extraItems.forEach(item => {
+        const t = item.tipo || 'accion';
+        if (groups[t]) groups[t].push(item);
     });
-    combatHTML += '</div>';
+
+    const orderedTypes = ['accion', 'adicional', 'reaccion', 'modificador'];
+    orderedTypes.forEach(tipo => {
+        if (groups[tipo].length === 0) return;
+        const label = actionTypeLabel[tipo];
+        const color = actionTypeColor[tipo];
+        combatHTML += `<h3 style="color:${color}; font-family:'Cinzel', serif; font-size:13px; margin:14px 0 8px 0; text-transform:uppercase; letter-spacing:1px;">${label}</h3>`;
+        combatHTML += '<div class="feature-grid">';
+        groups[tipo].forEach((item, index) => {
+            const diceStr = item.dado && item.dado !== '—' ? ` · ${item.dado} ${item.tipo_dano || ''}` : '';
+            const atkStr = item.atk ? ` · ATK ${item.atk}` : '';
+            combatHTML += `
+                <div class="feature-item" style="padding:15px !important; border-left: 3px solid ${color}40;">
+                    <div class="feature-header" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center;">
+                        <h3 style="margin:0; font-size:15px !important;">${item.nombre}</h3>
+                        <span style="font-size:10px; color:${color}; opacity:0.8;">${diceStr}${atkStr}</span>
+                    </div>
+                    <div class="item-desc collapsible">${item.desc || ''}</div>
+                </div>
+            `;
+        });
+        combatHTML += '</div>';
+    });
+
+    // rasgos with combat tags
+    const combatRasgos = (data.rasgos || []).filter(r =>
+        r.nombre.includes("🗡️") || r.nombre.includes("⚔️") || r.nombre.includes("Aura") || r.nombre.includes("Combate")
+    );
+    if (combatRasgos.length > 0) {
+        combatHTML += `<h3 style="color:#888; font-family:'Cinzel', serif; font-size:13px; margin:14px 0 8px 0; text-transform:uppercase; letter-spacing:1px;">Rasgos</h3>`;
+        combatHTML += '<div class="feature-grid">';
+        combatRasgos.forEach((trait, index) => { combatHTML += renderMobileTraitItem(trait, index); });
+        combatHTML += '</div>';
+    }
+
+    if (combatHTML === '') combatHTML = '<div style="color:#666; font-size:12px; text-align:center; padding:20px;">Sin acciones de combate.</div>';
     if (tabCombat) tabCombat.innerHTML = combatHTML;
 
     // 2. Tab Features (Social/Narrative)
