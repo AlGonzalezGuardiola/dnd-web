@@ -2031,7 +2031,8 @@ button, .card, .pin, .tab-btn, .hud-btn, .die-btn,
     touch-action: manipulation;
 }
 .slot-reset-btn:hover { background: rgba(212,175,55,0.18); }
-.slot-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.slot-row { display: flex; align-items: center; gap: 10px; }
+.slot-row + .slot-row { margin-top: 8px; }
 .slot-name { font-size: 12px; color: var(--text-secondary); width: 90px; flex-shrink: 0; }
 .slot-track { display: flex; gap: 6px; flex: 1; }
 .slot-pip {
@@ -3469,7 +3470,9 @@ body.view-map .hud {
     margin-bottom: 6px;
 }
 .hechizo-level-group {
-    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
 }
 .hechizo-level-header {
     display: flex;
@@ -3478,7 +3481,6 @@ body.view-map .hud {
     font-size: 0.7rem;
     font-weight: 600;
     color: var(--text-secondary);
-    margin-bottom: 4px;
 }
 .slot-badge {
     background: rgba(139, 92, 246, 0.2);
@@ -3499,7 +3501,6 @@ body.view-map .hud {
     display: flex;
     align-items: center;
     gap: 6px;
-    margin: 6px 0;
     padding: 4px 8px;
     background: rgba(139, 92, 246, 0.08);
     border: 1px solid rgba(139, 92, 246, 0.2);
