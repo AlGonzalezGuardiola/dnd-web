@@ -118,7 +118,8 @@
     // ── Public entry point ────────────────────────────────────
     window.openNpcGenerator = function () {
         loadSaved();
-        setView('npcGenerator');
+        setView('characters');
+        switchPersonajesTab('npcgen');
         // If no NPC generated yet, generate one immediately
         if (!currentNpc.nombre) npcGenerate();
         renderSaved();

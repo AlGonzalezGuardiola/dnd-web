@@ -70,10 +70,6 @@
                 <div class="card-title">⚔️ Encuentros</div>
                 <p>Gestiona encuentros de combate con iniciativa, turnos, PV y condiciones por criatura.</p>
             </div>
-            <div class="card card-npc" id="cardNpcGen" onclick="openNpcGenerator()">
-                <div class="card-title">🎭 Generador PNJ</div>
-                <p>Genera personajes no jugadores al instante con nombre, raza, rol, personalidad y aspecto.</p>
-            </div>
             <div class="card card-notes" id="cardNotes" onclick="openSessionNotes()">
                 <div class="card-title">📝 Notas de Sesión</div>
                 <p>Apunta ideas, secretos y eventos de la partida. Búsqueda y filtrado por etiquetas.</p>
@@ -135,6 +131,7 @@
             <button class="char-tab-btn active" data-char-tab="principales" onclick="switchPersonajesTab('principales')">⚔️ Principales</button>
             <button class="char-tab-btn" data-char-tab="aliados" onclick="switchPersonajesTab('aliados')">💙 Aliados</button>
             <button class="char-tab-btn" data-char-tab="enemigos" onclick="switchPersonajesTab('enemigos')">💀 Enemigos</button>
+            <button class="char-tab-btn" data-char-tab="npcgen" onclick="switchPersonajesTab('npcgen')">🎭 PNJ</button>
         </div>
 
         <!-- Tab: Principales -->
@@ -210,6 +207,55 @@
                     </div>
                 </div>
                 <button class="btn-combat-primary npc-builder-add-btn" onclick="createCharTemplate('enemigo')">💀 Guardar Enemigo</button>
+            </div>
+        </div>
+
+        <!-- Tab: PNJ Generator -->
+        <div id="charTabNpcgen" class="char-tab-panel" style="display:none;">
+            <div class="npc-gen-card">
+                <h2>🎭 Generador de PNJ</h2>
+                <div id="npcFields">
+                    <div class="npc-field-row">
+                        <span class="npc-field-label">Nombre</span>
+                        <span class="npc-field-value" id="npcFieldNombre">—</span>
+                        <button class="npc-reroll-btn" onclick="npcReroll('nombre')" title="Regenerar nombre" aria-label="Regenerar nombre">⟳</button>
+                    </div>
+                    <div class="npc-field-row">
+                        <span class="npc-field-label">Raza</span>
+                        <span class="npc-field-value" id="npcFieldRaza">—</span>
+                        <button class="npc-reroll-btn" onclick="npcReroll('raza')" title="Regenerar raza" aria-label="Regenerar raza">⟳</button>
+                    </div>
+                    <div class="npc-field-row">
+                        <span class="npc-field-label">Rol</span>
+                        <span class="npc-field-value" id="npcFieldRol">—</span>
+                        <button class="npc-reroll-btn" onclick="npcReroll('rol')" title="Regenerar rol" aria-label="Regenerar rol">⟳</button>
+                    </div>
+                    <div class="npc-field-row">
+                        <span class="npc-field-label">Personalidad</span>
+                        <span class="npc-field-value" id="npcFieldPersonalidad">—</span>
+                        <button class="npc-reroll-btn" onclick="npcReroll('personalidad')" title="Regenerar personalidad" aria-label="Regenerar personalidad">⟳</button>
+                    </div>
+                    <div class="npc-field-row">
+                        <span class="npc-field-label">Aspecto</span>
+                        <span class="npc-field-value" id="npcFieldAspecto">—</span>
+                        <button class="npc-reroll-btn" onclick="npcReroll('aspecto')" title="Regenerar aspecto" aria-label="Regenerar aspecto">⟳</button>
+                    </div>
+                    <div class="npc-field-row">
+                        <span class="npc-field-label">Motivación</span>
+                        <span class="npc-field-value" id="npcFieldMotivacion">—</span>
+                        <button class="npc-reroll-btn" onclick="npcReroll('motivacion')" title="Regenerar motivación" aria-label="Regenerar motivación">⟳</button>
+                    </div>
+                </div>
+                <div class="npc-gen-actions">
+                    <button class="btn-combat-primary" onclick="npcGenerate()">🎲 Generar PNJ</button>
+                    <button class="btn-combat-secondary" onclick="npcSaveCurrent()">⭐ Guardar</button>
+                </div>
+            </div>
+            <div class="npc-saved-header">
+                <h3>⭐ PNJ Guardados</h3>
+            </div>
+            <div class="npc-saved-list" id="npcSavedList">
+                <p style="color:var(--text-muted);font-size:14px;text-align:center;padding:16px 0;">Ningún PNJ guardado todavía.</p>
             </div>
         </div>
     </section>
@@ -568,56 +614,6 @@
         </div>
     </section>
 
-    <!-- ===== GENERADOR PNJ ===== -->
-    <section id="npcGenSection" class="npc-gen-section" style="display:none;" aria-label="Generador de PNJ">
-        <div class="npc-gen-card">
-            <h2>🎭 Generador de PNJ</h2>
-            <div id="npcFields">
-                <div class="npc-field-row">
-                    <span class="npc-field-label">Nombre</span>
-                    <span class="npc-field-value" id="npcFieldNombre">—</span>
-                    <button class="npc-reroll-btn" onclick="npcReroll('nombre')" title="Regenerar nombre" aria-label="Regenerar nombre">⟳</button>
-                </div>
-                <div class="npc-field-row">
-                    <span class="npc-field-label">Raza</span>
-                    <span class="npc-field-value" id="npcFieldRaza">—</span>
-                    <button class="npc-reroll-btn" onclick="npcReroll('raza')" title="Regenerar raza" aria-label="Regenerar raza">⟳</button>
-                </div>
-                <div class="npc-field-row">
-                    <span class="npc-field-label">Rol</span>
-                    <span class="npc-field-value" id="npcFieldRol">—</span>
-                    <button class="npc-reroll-btn" onclick="npcReroll('rol')" title="Regenerar rol" aria-label="Regenerar rol">⟳</button>
-                </div>
-                <div class="npc-field-row">
-                    <span class="npc-field-label">Personalidad</span>
-                    <span class="npc-field-value" id="npcFieldPersonalidad">—</span>
-                    <button class="npc-reroll-btn" onclick="npcReroll('personalidad')" title="Regenerar personalidad" aria-label="Regenerar personalidad">⟳</button>
-                </div>
-                <div class="npc-field-row">
-                    <span class="npc-field-label">Aspecto</span>
-                    <span class="npc-field-value" id="npcFieldAspecto">—</span>
-                    <button class="npc-reroll-btn" onclick="npcReroll('aspecto')" title="Regenerar aspecto" aria-label="Regenerar aspecto">⟳</button>
-                </div>
-                <div class="npc-field-row">
-                    <span class="npc-field-label">Motivación</span>
-                    <span class="npc-field-value" id="npcFieldMotivacion">—</span>
-                    <button class="npc-reroll-btn" onclick="npcReroll('motivacion')" title="Regenerar motivación" aria-label="Regenerar motivación">⟳</button>
-                </div>
-            </div>
-            <div class="npc-gen-actions">
-                <button class="btn-combat-primary" onclick="npcGenerate()">🎲 Generar PNJ</button>
-                <button class="btn-combat-secondary" onclick="npcSaveCurrent()">⭐ Guardar</button>
-            </div>
-        </div>
-        <!-- Saved NPCs -->
-        <div class="npc-saved-header">
-            <h3>⭐ PNJ Guardados</h3>
-        </div>
-        <div class="npc-saved-list" id="npcSavedList">
-            <p style="color:var(--text-muted);font-size:14px;text-align:center;padding:16px 0;">Ningún PNJ guardado todavía.</p>
-        </div>
-    </section>
-
     <!-- ===== NOTAS DE SESIÓN ===== -->
     <section id="sessionNotesSection" class="notes-section" style="display:none;" aria-label="Notas de Sesión">
         <div class="encounters-header">
@@ -665,14 +661,14 @@
     <script src="map.js?v=20260324a"></script>
     <script src="map-editor.js?v=20260324a"></script>
     <script src="character-sheet.js?v=20260325i"></script>
-    <script src="character-edit.js?v=20260325b"></script>
+    <script src="character-edit.js?v=20260325c"></script>
     <script src="combat-setup.js?v=20260324a"></script>
     <script src="combat-manager.js?v=20260325l"></script>
     <script src="combat-log.js?v=20260324a"></script>
-    <script src="view.js?v=20260324a"></script>
+    <script src="view.js?v=20260325a"></script>
     <script src="encounters.js?v=20260325a"></script>
-    <script src="npc-generator.js?v=20260318a"></script>
-    <script src="session-notes.js?v=20260318a"></script>
+    <script src="npc-generator.js?v=20260325a"></script>
+    <script src="session-notes.js?v=20260325a"></script>
 </body>
 
 </html>

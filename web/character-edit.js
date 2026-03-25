@@ -357,7 +357,7 @@ function openPersonajesSection() {
 }
 
 function switchPersonajesTab(tab) {
-    ['principales', 'aliados', 'enemigos'].forEach(t => {
+    ['principales', 'aliados', 'enemigos', 'npcgen'].forEach(t => {
         const panel = document.getElementById(`charTab${t.charAt(0).toUpperCase() + t.slice(1)}`);
         if (panel) panel.style.display = t === tab ? 'block' : 'none';
         const btn = document.querySelector(`.char-tab-btn[data-char-tab="${t}"]`);

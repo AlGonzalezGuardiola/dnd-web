@@ -1,30 +1,73 @@
 // ============================================================
 // session-notes.js — Panel de Notas de Sesión
 // ============================================================
-// localStorage key: 'dnd_session_notes'
-// Note shape: { id, title, tag, content, createdAt, updatedAt }
+// Persisted in MongoDB via /api/session-notes
+// Local shape: { id, title, tag, content, createdAt, updatedAt }
 
 (function () {
     'use strict';
 
-    const STORAGE_KEY = 'dnd_session_notes';
+    const STORAGE_KEY = 'dnd_session_notes'; // fallback cache
 
     let notes = [];
     let currentNoteId = null;
     let activeTagFilter = '';
     let autoSaveTimer = null;
 
-    // ── Persistence ───────────────────────────────────────────
-    function load() {
+    // ── API helpers ───────────────────────────────────────────
+    function apiBase() { return API_BASE + '/api/session-notes'; }
+
+    async function apiLoad() {
         try {
-            notes = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+            const res = await fetch(apiBase());
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            notes = (data.notes || []).map(n => ({
+                id: n.clientId,
+                title: n.title,
+                tag: n.tag,
+                content: n.content,
+                createdAt: n.createdAt,
+                updatedAt: n.updatedAt,
+            }));
+            // Sync to localStorage as cache
+            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(notes)); } catch (_) {}
         } catch (e) {
-            notes = [];
+            // Fallback to localStorage cache
+            try { notes = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch (_) { notes = []; }
         }
     }
 
-    function save() {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+    async function apiSave(note) {
+        try {
+            const res = await fetch(apiBase(), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    clientId: note.id,
+                    title: note.title,
+                    tag: note.tag,
+                    content: note.content,
+                    createdAt: note.createdAt,
+                    updatedAt: note.updatedAt,
+                }),
+            });
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+        } catch (e) {
+            console.warn('[session-notes] save failed, using localStorage only:', e.message);
+        }
+        // Always update localStorage cache
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(notes)); } catch (_) {}
+    }
+
+    async function apiDelete(id) {
+        try {
+            const res = await fetch(apiBase() + '/' + id, { method: 'DELETE' });
+            if (!res.ok && res.status !== 404) throw new Error('HTTP ' + res.status);
+        } catch (e) {
+            console.warn('[session-notes] delete failed:', e.message);
+        }
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(notes)); } catch (_) {}
     }
 
     function uid() {
@@ -39,33 +82,35 @@
 
     // ── Public entry point ────────────────────────────────────
     window.openSessionNotes = function () {
-        load();
         setView('sessionNotes');
         currentNoteId = null;
         activeTagFilter = '';
         notesRenderTagFilters();
         notesRenderList();
         showEmptyEditor();
+        // Load from API and refresh
+        apiLoad().then(() => {
+            notesRenderTagFilters();
+            notesRenderList();
+        });
     };
 
     // ── New note ──────────────────────────────────────────────
     window.notesNewNote = function () {
-        load();
         const note = {
             id: uid(),
             title: '',
             tag: '',
             content: '',
             createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+            updatedAt: new Date().toISOString(),
         };
         notes.unshift(note);
-        save();
+        apiSave(note);
         currentNoteId = note.id;
         notesRenderTagFilters();
         notesRenderList();
         openEditor(note);
-        // Focus title
         setTimeout(() => {
             const titleEl = document.getElementById('noteTitleInput');
             if (titleEl) titleEl.focus();
@@ -77,7 +122,7 @@
         const note = notes.find(n => n.id === id);
         if (!note) return;
         currentNoteId = id;
-        notesRenderList(); // update active state
+        notesRenderList();
         openEditor(note);
     };
 
@@ -114,9 +159,8 @@
         note.tag = document.getElementById('noteTagInput').value.trim();
         note.content = document.getElementById('noteContentInput').value;
         note.updatedAt = new Date().toISOString();
-        // Move updated note to top
         notes = [note, ...notes.filter(n => n.id !== note.id)];
-        save();
+        apiSave(note);
         document.getElementById('noteDateDisplay').textContent = `Actualizado: ${fmtDate(note.updatedAt)}`;
         notesRenderTagFilters();
         notesRenderList();
@@ -125,8 +169,9 @@
     // ── Delete current note ───────────────────────────────────
     window.notesDeleteCurrent = function () {
         if (!currentNoteId) return;
-        notes = notes.filter(n => n.id !== currentNoteId);
-        save();
+        const id = currentNoteId;
+        notes = notes.filter(n => n.id !== id);
+        apiDelete(id);
         currentNoteId = null;
         notesRenderTagFilters();
         notesRenderList();
@@ -159,7 +204,6 @@
         const container = document.getElementById('notesTagFilters');
         if (!container) return;
         const tags = [...new Set(notes.map(n => n.tag).filter(Boolean))].sort();
-        // Keep "Todas" button
         const allBtn = container.querySelector('[data-tag=""]') || (() => {
             const b = document.createElement('button');
             b.className = 'note-tag-filter active';
@@ -169,9 +213,7 @@
             container.appendChild(b);
             return b;
         })();
-        // Remove old tag buttons
         [...container.querySelectorAll('.note-tag-filter:not([data-tag=""])')].forEach(b => b.remove());
-        // Add current tags
         tags.forEach(tag => {
             const b = document.createElement('button');
             b.className = 'note-tag-filter' + (activeTagFilter === tag ? ' active' : '');
@@ -180,12 +222,8 @@
             b.onclick = function () { notesSetTagFilter(this, tag); };
             container.appendChild(b);
         });
-        // Update "Todas" active state
-        if (!activeTagFilter) {
-            allBtn.classList.add('active');
-        } else {
-            allBtn.classList.remove('active');
-        }
+        if (!activeTagFilter) allBtn.classList.add('active');
+        else allBtn.classList.remove('active');
     }
 
     // ── Render list ───────────────────────────────────────────
