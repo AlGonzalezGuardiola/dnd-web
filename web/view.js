@@ -313,6 +313,8 @@ function setView(viewName) {
     if (encountersEl) encountersEl.style.display = 'none';
     const sessionNotesEl = document.getElementById('sessionNotesSection');
     if (sessionNotesEl) sessionNotesEl.style.display = 'none';
+    const narrativeEl = document.getElementById('narrativeSection');
+    if (narrativeEl) narrativeEl.style.display = 'none';
 
     // Also hide the character sheet if it was open
     const sheetContainer = document.getElementById('characterSheetContainer');
@@ -405,6 +407,14 @@ function setView(viewName) {
             if (hud) hud.style.display = 'flex';
             if (diceWidget) diceWidget.style.display = 'none';
             document.getElementById('breadcrumbs').textContent = '📝 Notas de Sesión';
+            document.getElementById('btnBack').style.display = 'flex';
+            break;
+        case 'narrative':
+            document.getElementById('narrativeSection').style.display = 'flex';
+            if (editorToolbar) editorToolbar.style.display = 'none';
+            if (hud) hud.style.display = 'flex';
+            if (diceWidget) diceWidget.style.display = 'none';
+            document.getElementById('breadcrumbs').textContent = '📜 Narrativa';
             document.getElementById('btnBack').style.display = 'flex';
             break;
     }

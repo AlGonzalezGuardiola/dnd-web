@@ -74,6 +74,10 @@
                 <div class="card-title">📝 Notas de Sesión</div>
                 <p>Apunta ideas, secretos y eventos de la partida. Búsqueda y filtrado por etiquetas.</p>
             </div>
+            <div class="card card-narrative" id="cardNarrative" onclick="openNarrativeSection()">
+                <div class="card-title">📜 Narrativa</div>
+                <p>Las crónicas de la campaña, capítulo a capítulo. La historia de tus aventuras, para siempre.</p>
+            </div>
         </div>
     </section>
 
@@ -651,6 +655,29 @@
         </div>
     </section>
 
+    <!-- ===== NARRATIVA ===== -->
+    <section id="narrativeSection" class="narrative-section" style="display:none;" aria-label="Narrativa de Campaña">
+        <div class="narrative-layout">
+
+            <!-- Sidebar: chapter list -->
+            <aside class="narrative-sidebar">
+                <div class="narrative-sidebar-header">
+                    <span class="narrative-sidebar-title">📜 Crónicas</span>
+                    <button class="btn-combat-primary narrative-new-btn" onclick="narrativeNewSession()">+ Capítulo</button>
+                </div>
+                <div class="narrative-session-list" id="narrativeList">
+                    <!-- rendered by narrative.js -->
+                </div>
+            </aside>
+
+            <!-- Main: empty state / view / editor -->
+            <main class="narrative-main" id="narrativeMain">
+                <!-- rendered by narrative.js -->
+            </main>
+
+        </div>
+    </section>
+
     <script src="characters2.js?v=20260325b"></script>
     <script src="data.js?v=20260310o"></script>
     <script src="globals.js?v=20260325a"></script>
@@ -665,10 +692,11 @@
     <script src="combat-setup.js?v=20260324a"></script>
     <script src="combat-manager.js?v=20260325l"></script>
     <script src="combat-log.js?v=20260324a"></script>
-    <script src="view.js?v=20260325a"></script>
+    <script src="view.js?v=20260326a"></script>
     <script src="encounters.js?v=20260325a"></script>
     <script src="npc-generator.js?v=20260325a"></script>
     <script src="session-notes.js?v=20260325a"></script>
+    <script src="narrative.js?v=20260326a"></script>
 </body>
 
 </html>
