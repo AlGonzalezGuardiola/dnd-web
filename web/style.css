@@ -5242,19 +5242,6 @@ body.role-jugador .master-only { display: none !important; }
 .score-name  { flex: 1; font-weight: 600; color: var(--text-primary); font-size: 14px; }
 .score-kills { color: var(--accent-gold); font-weight: 700; font-size: 13px; }
 
-/* Setup footer: sticky */
-.combat-setup-section .combat-setup-footer {
-    position: sticky;
-    bottom: 0;
-    width: 100%;
-    max-width: 860px;
-    background: rgba(10,14,23,0.96);
-    border-top: 1px solid var(--border-color);
-    backdrop-filter: blur(8px);
-    padding: 14px 20px;
-    box-sizing: border-box;
-    margin-top: 8px;
-}
 
 /* Mobile setup */
 @media (max-width: 768px) {
