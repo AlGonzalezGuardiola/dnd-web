@@ -2005,47 +2005,68 @@ button, .card, .pin, .tab-btn, .hud-btn, .die-btn,
    Ranuras de Conjuro
    ============================================ */
 .slot-tracker {
-    background: linear-gradient(135deg, rgba(20,25,40,0.95), rgba(12,16,28,1));
-    border: 1px solid rgba(212,175,55,0.25);
+    background: linear-gradient(135deg, rgba(201,162,39,0.07) 0%, rgba(12,16,28,0.98) 100%);
+    border: 1px solid rgba(201,162,39,0.22);
     border-left: 3px solid var(--accent-gold);
-    border-radius: 10px;
-    padding: 14px 16px;
-    margin-bottom: 16px;
+    border-radius: 14px;
+    padding: 18px 20px;
+    margin-bottom: 20px;
 }
 .slot-tracker-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
+    margin-bottom: 16px;
 }
-.slot-tracker-title { font-size: 12px; letter-spacing: 1px; color: var(--accent-gold); text-transform: uppercase; }
+.slot-tracker-title {
+    font-family: var(--font-heading);
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--accent-gold);
+    text-transform: uppercase;
+}
 .slot-reset-btn {
-    padding: 4px 10px;
-    border-radius: 6px;
-    border: 1px solid rgba(212,175,55,0.3);
-    background: rgba(212,175,55,0.08);
+    padding: 6px 14px;
+    border-radius: 8px;
+    border: 1px solid rgba(201,162,39,0.3);
+    background: rgba(201,162,39,0.08);
     color: var(--accent-gold);
     font-size: 11px;
+    font-family: var(--font-body);
     cursor: pointer;
     transition: all 0.2s;
     touch-action: manipulation;
+    min-height: 32px;
+    letter-spacing: 0.5px;
 }
-.slot-reset-btn:hover { background: rgba(212,175,55,0.18); }
-.slot-row { display: flex; align-items: center; gap: 10px; }
-.slot-row + .slot-row { margin-top: 8px; }
-.slot-name { font-size: 12px; color: var(--text-secondary); width: 90px; flex-shrink: 0; }
-.slot-track { display: flex; gap: 6px; flex: 1; }
+.slot-reset-btn:hover { background: rgba(201,162,39,0.18); }
+.slot-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.slot-row + .slot-row { margin-top: 10px; }
+.slot-name {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent-gold);
+    width: 34px;
+    flex-shrink: 0;
+    letter-spacing: 0.5px;
+    opacity: 0.8;
+}
+.slot-track { display: flex; gap: 7px; flex: 1; flex-wrap: wrap; }
 .slot-pip {
-    width: 20px; height: 20px; border-radius: 50%;
-    border: 2px solid rgba(212,175,55,0.5);
-    background: rgba(212,175,55,0.25);
+    width: 26px; height: 26px; border-radius: 50%;
+    border: 2px solid rgba(201,162,39,0.55);
+    background: rgba(201,162,39,0.28);
     cursor: pointer;
     transition: all 0.15s ease;
     touch-action: manipulation;
 }
-.slot-pip.used { background: transparent; border-color: rgba(255,255,255,0.12); }
-.slot-pip:hover { transform: scale(1.2); }
-.slot-count { font-size: 11px; color: var(--text-secondary); min-width: 28px; text-align: right; }
+.slot-pip.used { background: transparent; border-color: rgba(255,255,255,0.1); }
+.slot-pip:hover { transform: scale(1.15); border-color: var(--accent-gold-bright); background: rgba(201,162,39,0.45); }
+.slot-count { font-size: 11px; color: var(--text-muted); min-width: 28px; text-align: right; }
 
 /* ============================================
    Notas de Sesión
@@ -2471,20 +2492,21 @@ body.view-map .hud {
 }
 
 .turn-planner {
-    background: rgba(212, 175, 55, 0.06);
-    border: 1px solid rgba(212, 175, 55, 0.25);
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 16px;
+    background: linear-gradient(135deg, rgba(201,162,39,0.06) 0%, rgba(10,14,23,0.98) 100%);
+    border: 1px solid rgba(201,162,39,0.22);
+    border-radius: 14px;
+    padding: 18px 16px;
+    margin-bottom: 20px;
 }
 
 .turn-planner-title {
     font-family: var(--font-heading);
-    font-size: 13px;
-    letter-spacing: 1px;
+    font-size: 11px;
+    letter-spacing: 2px;
     color: var(--accent-gold);
     text-transform: uppercase;
-    margin-bottom: 12px;
+    margin-bottom: 14px;
+    opacity: 0.9;
 }
 
 .planner-slots {
@@ -2496,59 +2518,64 @@ body.view-map .hud {
 .planner-slot {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 8px 12px;
-    border-radius: 8px;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: 10px;
     font-size: 13px;
-    min-height: 38px;
+    min-height: 44px;
+    transition: border-color 0.15s, background 0.15s;
 }
 
 .planner-slot.empty {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px dashed rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px dashed rgba(255, 255, 255, 0.1);
 }
 
 .planner-slot.filled {
-    background: rgba(212, 175, 55, 0.12);
-    border: 1px solid rgba(212, 175, 55, 0.4);
+    background: rgba(201, 162, 39, 0.1);
+    border: 1px solid rgba(201, 162, 39, 0.45);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.25), inset 0 1px 0 rgba(201,162,39,0.1);
 }
 
 .planner-slot-icon {
-    font-size: 15px;
-    width: 20px;
+    font-size: 16px;
+    width: 22px;
     flex-shrink: 0;
+    text-align: center;
 }
 
 .planner-slot-label {
-    color: var(--text-secondary);
-    font-size: 11px;
+    color: var(--text-muted);
+    font-size: 10px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    width: 64px;
+    letter-spacing: 0.8px;
+    width: 62px;
     flex-shrink: 0;
 }
 
 .planner-slot-value {
     flex: 1;
     color: var(--text-primary);
-    font-weight: 500;
+    font-weight: 600;
     font-size: 13px;
+    letter-spacing: 0.2px;
 }
 
 .planner-slot-empty {
     flex: 1;
-    color: rgba(148, 163, 184, 0.5);
+    color: rgba(148, 163, 184, 0.35);
     font-style: italic;
     font-size: 12px;
 }
 
 .planner-slot-clear {
-    background: rgba(255, 80, 80, 0.15);
-    border: 1px solid rgba(255, 80, 80, 0.3);
-    color: #ff6666;
+    background: rgba(255, 80, 80, 0.12);
+    border: 1px solid rgba(255, 80, 80, 0.25);
+    color: #ff7777;
     border-radius: 50%;
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -2557,27 +2584,31 @@ body.view-map .hud {
     line-height: 1;
     padding: 0;
     flex-shrink: 0;
+    transition: background 0.15s;
 }
 
 .planner-slot-clear:hover {
-    background: rgba(255, 80, 80, 0.3);
+    background: rgba(255, 80, 80, 0.28);
 }
 
 /* Dice panel */
 .dice-panel-combat {
-    margin-top: 12px;
-    background: rgba(139, 92, 246, 0.1);
-    border: 1px solid rgba(139, 92, 246, 0.3);
-    border-radius: 10px;
-    padding: 12px 14px;
+    margin-top: 14px;
+    background: rgba(124, 58, 237, 0.08);
+    border: 1px solid rgba(124, 58, 237, 0.25);
+    border-left: 3px solid var(--accent-magic);
+    border-radius: 12px;
+    padding: 14px 16px;
 }
 
 .dice-panel-title {
-    font-size: 11px;
+    font-family: var(--font-heading);
+    font-size: 10px;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
     color: var(--accent-magic);
-    margin-bottom: 8px;
+    margin-bottom: 10px;
+    opacity: 0.9;
 }
 
 .dice-row {
@@ -2585,12 +2616,13 @@ body.view-map .hud {
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    padding: 4px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding: 7px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .dice-row:last-child {
     border-bottom: none;
+    padding-bottom: 0;
 }
 
 .dice-name {
@@ -2631,55 +2663,84 @@ body.view-map .hud {
 
 /* Combat slots (compact) */
 .combat-slots {
-    margin-bottom: 16px;
+    margin-bottom: 20px;
 }
 
-/* Combat action sections */
+/* ============================================
+   Combat action sections — redesigned
+   ============================================ */
 .combat-section {
-    margin-bottom: 20px;
+    margin-bottom: 28px;
 }
 
 .combat-section-title {
     font-family: var(--font-heading);
-    font-size: 12px;
-    letter-spacing: 1.5px;
+    font-size: 10px;
+    letter-spacing: 2.5px;
     text-transform: uppercase;
     color: var(--accent-gold);
-    margin-bottom: 10px;
-    padding-bottom: 6px;
-    border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+    margin-bottom: 14px;
+    padding: 6px 12px;
+    background: rgba(201,162,39,0.07);
+    border: 1px solid rgba(201,162,39,0.18);
+    border-left: 3px solid var(--accent-gold);
+    border-radius: 0 8px 8px 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    opacity: 0.95;
 }
 .combat-section-subtitle {
     font-size: 11px;
     color: var(--text-muted);
-    margin-top: -6px;
-    margin-bottom: 8px;
+    margin-top: -10px;
+    margin-bottom: 12px;
+    padding-left: 2px;
 }
 
+/* Responsive grid: 1-col mobile, 2-col tablet+ */
 .combat-action-list {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: 1fr;
     gap: 8px;
+}
+@media (min-width: 600px) {
+    .combat-action-list {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .combat-action-list .hechizo-level-group {
+        grid-column: 1 / -1;
+    }
 }
 
 .combat-action-card {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    border-radius: 10px;
-    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    padding: 13px 15px;
     cursor: pointer;
-    transition: border-color var(--transition-fast), background var(--transition-fast);
+    transition: border-color 150ms ease, background 150ms ease,
+                transform 150ms ease, box-shadow 150ms ease;
+    touch-action: manipulation;
 }
 
 .combat-action-card:hover {
     background: rgba(255, 255, 255, 0.07);
-    border-color: rgba(212, 175, 55, 0.35);
+    border-color: rgba(201, 162, 39, 0.4);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
 }
 
 .combat-action-card.selected {
-    background: rgba(212, 175, 55, 0.12);
-    border-color: rgba(212, 175, 55, 0.6);
-    box-shadow: 0 0 8px rgba(212, 175, 55, 0.15);
+    background: rgba(201, 162, 39, 0.11);
+    border-color: rgba(201, 162, 39, 0.65);
+    box-shadow: 0 0 14px rgba(201, 162, 39, 0.18), inset 0 1px 0 rgba(201,162,39,0.12);
+    transform: none;
+}
+
+.combat-action-card:active {
+    transform: scale(0.98);
+    box-shadow: none;
 }
 
 .combat-action-header {
@@ -2687,7 +2748,7 @@ body.view-map .hud {
     align-items: center;
     justify-content: space-between;
     gap: 8px;
-    margin-bottom: 4px;
+    margin-bottom: 5px;
 }
 
 .combat-action-name {
@@ -2695,22 +2756,25 @@ body.view-map .hud {
     font-size: 13px;
     color: var(--text-primary);
     flex: 1;
+    letter-spacing: 0.2px;
 }
 
 .combat-action-dice {
     font-size: 11px;
     color: var(--accent-gold);
-    background: rgba(212, 175, 55, 0.12);
-    border-radius: 4px;
-    padding: 2px 7px;
+    background: rgba(201, 162, 39, 0.13);
+    border: 1px solid rgba(201,162,39,0.2);
+    border-radius: 6px;
+    padding: 2px 8px;
     white-space: nowrap;
     flex-shrink: 0;
+    font-weight: 600;
 }
 
 .combat-action-desc {
-    font-size: 12px;
+    font-size: 11.5px;
     color: var(--text-secondary);
-    line-height: 1.5;
+    line-height: 1.55;
 }
 
 /* ============================================
@@ -2747,13 +2811,8 @@ body.view-map .hud {
     }
 }
 
-/* Desktop combat layout: 2 columns for action lists */
+/* Desktop combat layout: planner 2-col side-by-side */
 @media (min-width: 1024px) {
-    .combat-inline-section .combat-action-list {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-    }
     .combat-inline-section .turn-planner {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -3473,14 +3532,23 @@ body.view-map .hud {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    padding: 12px;
+    background: rgba(124,58,237,0.05);
+    border: 1px solid rgba(124,58,237,0.15);
+    border-radius: 12px;
 }
 .hechizo-level-header {
     display: flex;
     align-items: center;
-    gap: 6px;
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: var(--text-secondary);
+    gap: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    color: #a78bfa;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(124,58,237,0.2);
+    margin-bottom: 2px;
 }
 .slot-badge {
     background: rgba(139, 92, 246, 0.2);
@@ -3500,46 +3568,49 @@ body.view-map .hud {
 .slot-controls {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 4px 8px;
-    background: rgba(139, 92, 246, 0.08);
-    border: 1px solid rgba(139, 92, 246, 0.2);
-    border-radius: 8px;
+    gap: 8px;
+    padding: 5px 10px;
+    background: rgba(124, 58, 237, 0.08);
+    border: 1px solid rgba(124, 58, 237, 0.2);
+    border-radius: 10px;
 }
 .slot-controls-label {
     flex: 1;
-    font-size: 0.75rem;
-    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 600;
+    color: #a78bfa;
+    letter-spacing: 0.5px;
 }
 .slot-count {
-    font-size: 0.85rem;
-    font-weight: 600;
+    font-size: 13px;
+    font-weight: 700;
     color: #a78bfa;
     min-width: 40px;
     text-align: center;
 }
 .slot-btn {
-    background: rgba(139, 92, 246, 0.2);
-    border: 1px solid rgba(139, 92, 246, 0.4);
-    color: #a78bfa;
-    border-radius: 6px;
-    width: 26px;
-    height: 26px;
+    background: rgba(124, 58, 237, 0.18);
+    border: 1px solid rgba(124, 58, 237, 0.35);
+    color: #c4b5fd;
+    border-radius: 8px;
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
     font-size: 1rem;
     line-height: 1;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.15s;
+    transition: background 0.15s, transform 0.1s;
+    touch-action: manipulation;
 }
 .slot-btn:hover:not(:disabled) {
-    background: rgba(139, 92, 246, 0.4);
+    background: rgba(124, 58, 237, 0.35);
+    transform: scale(1.1);
 }
-.slot-btn:disabled {
-    opacity: 0.3;
-    cursor: not-allowed;
-}
+.slot-btn:active:not(:disabled) { transform: scale(0.95); }
+.slot-btn:disabled { opacity: 0.25; cursor: not-allowed; }
 .slot-btn-minus { }
 .slot-btn-plus  { }
 
