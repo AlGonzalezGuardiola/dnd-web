@@ -3448,6 +3448,46 @@ body.view-map .hud {
     background: rgba(251, 191, 36, 0.06);
 }
 
+/* Hechizos subsection in combat planner */
+.hechizos-subsection {
+    margin-top: 10px;
+    border-top: 1px solid rgba(139, 92, 246, 0.2);
+    padding-top: 8px;
+}
+.hechizos-subsection-title {
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #a78bfa;
+    margin-bottom: 6px;
+}
+.hechizo-level-group {
+    margin-bottom: 8px;
+}
+.hechizo-level-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+.slot-badge {
+    background: rgba(139, 92, 246, 0.2);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    color: #a78bfa;
+    border-radius: 10px;
+    padding: 1px 6px;
+    font-size: 0.65rem;
+}
+.slot-badge.slot-empty {
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.3);
+    color: #f87171;
+}
+
 .combat-custom-row {
     display: flex;
     gap: 6px;

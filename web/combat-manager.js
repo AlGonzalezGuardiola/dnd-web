@@ -678,21 +678,47 @@ function toggleCombatAction(participantId, nombre, dice) {
     if (!entry) return;
     if (!entry.slots) entry.slots = { accion: false, extraAtaque: false, adicional: false, reaccion: false };
     const idx = entry.actions.findIndex(a => a.nombre === nombre);
+    const p = combatState.participants.find(x => x.id === participantId);
+    const allItems = [...(p?.charData?.combateExtra || []), ...(p?.charData?.conjuros || [])];
+    const actionObj = allItems.find(a => a.nombre === nombre);
+
     if (idx >= 0) {
         entry.actions.splice(idx, 1);
+        // Restore spell slot if this was a leveled spell
+        if (actionObj?.nivel && typeof actionObj.nivel === 'number') {
+            const slotName = `Nv${actionObj.nivel}`;
+            initSpellSlotsForChar(participantId);
+            const slotDef = p?.charData?.ranuras?.find(s => s.nombre === slotName);
+            if (slotDef) {
+                spellSlotState[participantId][slotName] = Math.min(slotDef.total, (spellSlotState[participantId][slotName] ?? slotDef.total) + 1);
+                saveStateToStorage();
+                showNotification(`🔄 Ranura ${slotName} restaurada`, 1500);
+            }
+        }
     } else {
+        // Check spell slot availability before adding
+        if (actionObj?.nivel && typeof actionObj.nivel === 'number') {
+            const slotName = `Nv${actionObj.nivel}`;
+            initSpellSlotsForChar(participantId);
+            const slotDef = p?.charData?.ranuras?.find(s => s.nombre === slotName);
+            if (slotDef) {
+                const cur = spellSlotState[participantId][slotName] ?? slotDef.total;
+                if (cur <= 0) {
+                    showNotification(`❌ Sin ranuras ${slotName} disponibles`, 2000);
+                    return;
+                }
+                spellSlotState[participantId][slotName] = cur - 1;
+                saveStateToStorage();
+                showNotification(`✨ Ranura ${slotName} gastada`, 1500);
+            }
+        }
         entry.actions.push({ nombre, dice: dice || '' });
         // Determine action type to mark slot
-        const p = combatState.participants.find(x => x.id === participantId);
-        if (p?.charData) {
-            const allItems = [...(p.charData.combateExtra || []), ...(p.charData.conjuros || [])];
-            const actionObj = allItems.find(a => a.nombre === nombre);
-            if (actionObj) {
-                const tipo = inferActionType(actionObj);
-                if (tipo === 'adicional') entry.slots.adicional = true;
-                else if (tipo === 'reaccion') entry.slots.reaccion = true;
-                else entry.slots.accion = true;
-            }
+        if (actionObj) {
+            const tipo = inferActionType(actionObj);
+            if (tipo === 'adicional') entry.slots.adicional = true;
+            else if (tipo === 'reaccion') entry.slots.reaccion = true;
+            else entry.slots.accion = true;
         }
     }
     saveCombatState();
@@ -796,7 +822,34 @@ function selectPlannerAction(participantId, nombre, atk, dado, tipoDano) {
     if (entry.slots[planKey]?.nombre === nombre) {
         entry.slots[planKey] = null;
         entry.actions = entry.actions.filter(a => a.nombre !== nombre);
+        // Restore spell slot if leveled spell deselected
+        if (actionObj?.nivel && typeof actionObj.nivel === 'number') {
+            const slotName = `Nv${actionObj.nivel}`;
+            initSpellSlotsForChar(participantId);
+            const slotDef = p.charData?.ranuras?.find(s => s.nombre === slotName);
+            if (slotDef) {
+                spellSlotState[participantId][slotName] = Math.min(slotDef.total, (spellSlotState[participantId][slotName] ?? slotDef.total) + 1);
+                saveStateToStorage();
+                showNotification(`🔄 Ranura ${slotName} restaurada`, 1500);
+            }
+        }
     } else {
+        // Check slot availability for leveled spells
+        if (actionObj?.nivel && typeof actionObj.nivel === 'number') {
+            const slotName = `Nv${actionObj.nivel}`;
+            initSpellSlotsForChar(participantId);
+            const slotDef = p.charData?.ranuras?.find(s => s.nombre === slotName);
+            if (slotDef) {
+                const cur = spellSlotState[participantId][slotName] ?? slotDef.total;
+                if (cur <= 0) {
+                    showNotification(`❌ Sin ranuras ${slotName} disponibles`, 2000);
+                    return;
+                }
+                spellSlotState[participantId][slotName] = cur - 1;
+                saveStateToStorage();
+                showNotification(`✨ Ranura ${slotName} gastada`, 1500);
+            }
+        }
         entry.slots[planKey] = { nombre, atk: atk || '', dado: dado || '', tipo_dano: tipoDano || '' };
         if (!entry.actions.some(a => a.nombre === nombre))
             entry.actions.push({ nombre, dice: atk ? `${atk}${dado ? '/' + dado : ''}` : dado });

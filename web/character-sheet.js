@@ -568,26 +568,62 @@ function renderCombatTab(data) {
         { key: 'adicional', icon: '⚡', label: 'Adicionales' },
         { key: 'reaccion', icon: '↩️', label: 'Reacciones' }
     ];
+
+    function renderActionCard(item, sectionKey) {
+        const sel = planner[sectionKey];
+        const isSelected = sel && sel.nombre === item.nombre;
+        const diceStr = item.atk
+            ? `ATK ${item.atk}${item.dado && item.dado !== '—' ? ` | DMG ${item.dado}` : ''}`
+            : (item.dado && item.dado !== '—' ? `DMG ${item.dado}`
+                : (extractDiceFromDesc(item.desc) || ''));
+        const safeName = item.nombre.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        return `<div class="combat-action-card${isSelected ? ' selected' : ''}"
+                 onclick="selectCombatAction('${charId}','${sectionKey}','${safeName}')">
+            <div class="combat-action-header">
+                <span class="combat-action-name">${item.nombre}</span>
+                ${diceStr ? `<span class="combat-action-dice">${diceStr}</span>` : ''}
+            </div>
+            <div class="combat-action-desc">${item.desc}</div>
+        </div>`;
+    }
+
     const actionListHTML = sections.map(section => {
         const items = groups[section.key];
         if (items.length === 0) return '';
-        const cardsHTML = items.map(item => {
-            const sel = planner[section.key];
-            const isSelected = sel && sel.nombre === item.nombre;
-            const diceStr = item.atk
-                ? `ATK ${item.atk}${item.dado && item.dado !== '—' ? ` | DMG ${item.dado}` : ''}`
-                : (item.dado && item.dado !== '—' ? `DMG ${item.dado}`
-                    : (extractDiceFromDesc(item.desc) || ''));
-            const safeName = item.nombre.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-            return `<div class="combat-action-card${isSelected ? ' selected' : ''}"
-                     onclick="selectCombatAction('${charId}','${section.key}','${safeName}')">
-                <div class="combat-action-header">
-                    <span class="combat-action-name">${item.nombre}</span>
-                    ${diceStr ? `<span class="combat-action-dice">${diceStr}</span>` : ''}
-                </div>
-                <div class="combat-action-desc">${item.desc}</div>
+
+        // Split into trucos/especiales (no slot) vs leveled spells (consume slot)
+        const trucos = items.filter(i => !i.nivel || typeof i.nivel !== 'number');
+        const hechizos = items.filter(i => i.nivel && typeof i.nivel === 'number');
+
+        let cardsHTML = trucos.map(item => renderActionCard(item, section.key)).join('');
+
+        if (hechizos.length > 0) {
+            initSpellSlotsForChar(charId);
+            // Group by level
+            const byLevel = {};
+            hechizos.forEach(sp => {
+                const lv = sp.nivel;
+                if (!byLevel[lv]) byLevel[lv] = [];
+                byLevel[lv].push(sp);
+            });
+            const hechizosCards = Object.keys(byLevel).sort((a, b) => a - b).map(lv => {
+                const slotName = `Nv${lv}`;
+                const slotDef = data.ranuras?.find(s => s.nombre === slotName);
+                const remaining = slotDef ? (spellSlotState[charId]?.[slotName] ?? slotDef.total) : null;
+                const slotBadge = remaining !== null
+                    ? `<span class="slot-badge${remaining === 0 ? ' slot-empty' : ''}">${remaining}/${slotDef.total} ranuras</span>`
+                    : '';
+                return `<div class="hechizo-level-group">
+                    <div class="hechizo-level-header">Nv${lv} ${slotBadge}</div>
+                    ${byLevel[lv].map(item => renderActionCard(item, section.key)).join('')}
+                </div>`;
+            }).join('');
+            cardsHTML += `<div class="hechizos-subsection">
+                <div class="hechizos-subsection-title">✨ Hechizos (gastan ranura)</div>
+                ${hechizosCards}
             </div>`;
-        }).join('');
+        }
+
         return `<div class="combat-section">
             <div class="combat-section-title">${section.icon} ${section.label}</div>
             <div class="combat-action-list">${cardsHTML}</div>
@@ -625,7 +661,33 @@ function selectCombatAction(charId, tipo, nombre) {
     if (!item) return;
     if (!turnPlannerState[charId]) turnPlannerState[charId] = { accion: null, adicional: null, reaccion: null };
     const planner = turnPlannerState[charId];
-    planner[tipo] = (planner[tipo] && planner[tipo].nombre === nombre) ? null : item;
+    const wasSelected = planner[tipo] && planner[tipo].nombre === nombre;
+    planner[tipo] = wasSelected ? null : item;
+
+    // Auto spell slot deduction for leveled spells
+    if (item.nivel && typeof item.nivel === 'number') {
+        const slotName = `Nv${item.nivel}`;
+        initSpellSlotsForChar(charId);
+        const slotDef = data.ranuras?.find(s => s.nombre === slotName);
+        if (slotDef) {
+            if (wasSelected) {
+                spellSlotState[charId][slotName] = Math.min(slotDef.total, (spellSlotState[charId][slotName] ?? slotDef.total) + 1);
+                showNotification(`🔄 Ranura ${slotName} restaurada`, 1500);
+            } else {
+                const cur = spellSlotState[charId][slotName] ?? slotDef.total;
+                if (cur <= 0) {
+                    showNotification(`❌ Sin ranuras ${slotName} disponibles`, 2000);
+                    planner[tipo] = null;
+                    refreshCombatSections(data);
+                    return;
+                }
+                spellSlotState[charId][slotName] = cur - 1;
+                showNotification(`✨ Ranura ${slotName} gastada`, 1500);
+            }
+            saveStateToStorage();
+        }
+    }
+
     refreshCombatSections(data);
 }
 
