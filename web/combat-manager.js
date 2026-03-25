@@ -5,6 +5,13 @@
 //   renderCombatShareLink, isMaster, setView
 // ============================================
 
+// Always prefer live window.characterData over stale p.charData stored in MongoDB session
+function getEffectiveCharData(p) {
+    if (!p) return null;
+    const live = window.characterData?.[p.id];
+    return (live && p.tipo !== 'enemigo') ? live : p.charData;
+}
+
 function renderCombatManager() {
     const masterLayout = document.getElementById('combatMasterLayout');
     const playerView   = document.getElementById('playerCombatView');
@@ -347,8 +354,9 @@ function renderActivePanel(targetEl, forcePIdx) {
         { key: 'adicional', icon: '⚡',  label: 'Acción Adicional', tipo: 'adicional' },
         { key: 'reaccion',  icon: '↩️',  label: 'Reacción',         tipo: 'reaccion'  },
     ];
-    // Build all available actions: charData + persistent custom actions
-    const baseItems = [...(p.charData?.combateExtra || []), ...(p.charData?.conjuros || [])];
+    // Build all available actions: use live characterData (not stale p.charData from MongoDB)
+    const liveData = getEffectiveCharData(p);
+    const baseItems = [...(liveData?.combateExtra || []), ...(liveData?.conjuros || [])];
     const customItems = (p.customActions || []).map(a => ({ ...a, _custom: true }));
     const allItems = [...baseItems, ...customItems];
 
@@ -488,7 +496,7 @@ function renderActivePanel(targetEl, forcePIdx) {
         const hasDice = PSLOTS.some(s => currentEntry?.slots?.[s.key + '_plan']);
 
         // Spell slot tracker (same as character sheet)
-        const charData = p.charData;
+        const charData = liveData;
         let combatSlotsHTML = '';
         if (charData?.ranuras?.length > 0) {
             initSpellSlotsForChar(p.id);
@@ -584,7 +592,7 @@ function renderActivePanel(targetEl, forcePIdx) {
         <div class="combat-actions-cards-section">${cardSections}</div>`;
     } else {
         // Master mode — card-based layout matching character sheet
-        const masterCharData = p.charData;
+        const masterCharData = liveData;
         let masterSlotsHTML = '';
         if (masterCharData?.ranuras?.length > 0) {
             initSpellSlotsForChar(p.id);
@@ -698,8 +706,8 @@ function renderActivePanel(targetEl, forcePIdx) {
 
     // Invocaciones section for Zero (not shown in mini-turn modes)
     let invocacionesHTML = '';
-    if (!isSegundaAccion && !isExtraAttack && p.id === 'Zero' && p.charData?.invocaciones) {
-        const invCards = p.charData.invocaciones.map(inv => `
+    if (!isSegundaAccion && !isExtraAttack && p.id === 'Zero' && liveData?.invocaciones) {
+        const invCards = liveData.invocaciones.map(inv => `
             <div class="invocation-card">
                 <div>
                     <div class="invocation-name">${inv.emoji} ${inv.nombre}</div>
@@ -810,11 +818,11 @@ function renderActivePanel(targetEl, forcePIdx) {
         ${segundaAccionHeaderHTML}
         <div class="combat-active-header">
             <div class="combat-active-portrait">
-                ${p.charData?.imagen ? `<img src="${p.charData.imagen}" onerror="this.style.display='none'">` : '<div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,0.05);border:2px solid var(--border-color);"></div>'}
+                ${liveData?.imagen ? `<img src="${liveData.imagen}" onerror="this.style.display='none'">` : '<div style="width:64px;height:64px;border-radius:50%;background:rgba(255,255,255,0.05);border:2px solid var(--border-color);"></div>'}
             </div>
             <div class="combat-active-meta">
                 <div class="combat-active-name">${displayName}</div>
-                ${p.charData ? `<div class="combat-active-class">${p.charData.clase} · Nv ${p.charData.nivel}</div>` : ''}
+                ${liveData ? `<div class="combat-active-class">${liveData.clase} · Nv ${liveData.nivel}</div>` : ''}
             </div>
         </div>
         <div class="combat-active-vitals">
@@ -864,7 +872,8 @@ function toggleCombatAction(participantId, nombre, dice) {
     if (!entry.slots) entry.slots = { accion: false, extraAtaque: false, adicional: false, reaccion: false };
     const idx = entry.actions.findIndex(a => a.nombre === nombre);
     const p = combatState.participants.find(x => x.id === participantId);
-    const allItems = [...(p?.charData?.combateExtra || []), ...(p?.charData?.conjuros || [])];
+    const pData = getEffectiveCharData(p);
+    const allItems = [...(pData?.combateExtra || []), ...(pData?.conjuros || [])];
     const actionObj = allItems.find(a => a.nombre === nombre);
 
     if (idx >= 0) {
@@ -873,7 +882,7 @@ function toggleCombatAction(participantId, nombre, dice) {
         if (actionObj?.nivel && typeof actionObj.nivel === 'number') {
             const slotName = `Nv${actionObj.nivel}`;
             initSpellSlotsForChar(participantId);
-            const slotDef = p?.charData?.ranuras?.find(s => s.nombre === slotName);
+            const slotDef = pData?.ranuras?.find(s => s.nombre === slotName);
             if (slotDef) {
                 spellSlotState[participantId][slotName] = Math.min(slotDef.total, (spellSlotState[participantId][slotName] ?? slotDef.total) + 1);
                 saveStateToStorage();
@@ -885,7 +894,7 @@ function toggleCombatAction(participantId, nombre, dice) {
         if (actionObj?.nivel && typeof actionObj.nivel === 'number') {
             const slotName = `Nv${actionObj.nivel}`;
             initSpellSlotsForChar(participantId);
-            const slotDef = p?.charData?.ranuras?.find(s => s.nombre === slotName);
+            const slotDef = pData?.ranuras?.find(s => s.nombre === slotName);
             if (slotDef) {
                 const cur = spellSlotState[participantId][slotName] ?? slotDef.total;
                 if (cur <= 0) {
@@ -999,7 +1008,8 @@ function selectPlannerAction(participantId, nombre, atk, dado, tipoDano) {
     if (!p) return;
     const entry = getCurrentLogEntry();
     if (!entry) return;
-    const allItems = [...(p.charData?.combateExtra || []), ...(p.charData?.conjuros || []), ...(p.customActions || [])];
+    const pData2 = getEffectiveCharData(p);
+    const allItems = [...(pData2?.combateExtra || []), ...(pData2?.conjuros || []), ...(p.customActions || [])];
     const actionObj = allItems.find(a => a.nombre === nombre);
     const tipo = actionObj ? inferActionType(actionObj) : 'accion';
     const planKey = tipo + '_plan';
@@ -1011,7 +1021,7 @@ function selectPlannerAction(participantId, nombre, atk, dado, tipoDano) {
         if (actionObj?.nivel && typeof actionObj.nivel === 'number') {
             const slotName = `Nv${actionObj.nivel}`;
             initSpellSlotsForChar(participantId);
-            const slotDef = p.charData?.ranuras?.find(s => s.nombre === slotName);
+            const slotDef = pData2?.ranuras?.find(s => s.nombre === slotName);
             if (slotDef) {
                 spellSlotState[participantId][slotName] = Math.min(slotDef.total, (spellSlotState[participantId][slotName] ?? slotDef.total) + 1);
                 saveStateToStorage();
@@ -1026,7 +1036,7 @@ function selectPlannerAction(participantId, nombre, atk, dado, tipoDano) {
             if (prevObj?.nivel && typeof prevObj.nivel === 'number') {
                 const prevSlotName = `Nv${prevObj.nivel}`;
                 initSpellSlotsForChar(participantId);
-                const prevSlotDef = p.charData?.ranuras?.find(s => s.nombre === prevSlotName);
+                const prevSlotDef = pData2?.ranuras?.find(s => s.nombre === prevSlotName);
                 if (prevSlotDef) {
                     spellSlotState[participantId][prevSlotName] = Math.min(prevSlotDef.total, (spellSlotState[participantId][prevSlotName] ?? prevSlotDef.total) + 1);
                     saveStateToStorage();
@@ -1038,7 +1048,7 @@ function selectPlannerAction(participantId, nombre, atk, dado, tipoDano) {
         if (actionObj?.nivel && typeof actionObj.nivel === 'number') {
             const slotName = `Nv${actionObj.nivel}`;
             initSpellSlotsForChar(participantId);
-            const slotDef = p.charData?.ranuras?.find(s => s.nombre === slotName);
+            const slotDef = pData2?.ranuras?.find(s => s.nombre === slotName);
             if (slotDef) {
                 const cur = spellSlotState[participantId][slotName] ?? slotDef.total;
                 if (cur <= 0) {
@@ -1067,13 +1077,14 @@ function removePlannerSlot(participantId, slotKey) {
         entry.actions = entry.actions.filter(a => a.nombre !== plan.nombre);
         // Restore spell slot if the removed plan was a leveled spell
         const p = combatState.participants.find(x => x.id === participantId);
-        if (p?.charData) {
-            const allItems = [...(p.charData.combateExtra || []), ...(p.charData.conjuros || [])];
+        const pData3 = getEffectiveCharData(p);
+        if (pData3) {
+            const allItems = [...(pData3.combateExtra || []), ...(pData3.conjuros || [])];
             const actionObj = allItems.find(x => x.nombre === plan.nombre);
             if (actionObj?.nivel && typeof actionObj.nivel === 'number') {
                 const slotName = `Nv${actionObj.nivel}`;
                 initSpellSlotsForChar(participantId);
-                const slotDef = p.charData.ranuras?.find(s => s.nombre === slotName);
+                const slotDef = pData3.ranuras?.find(s => s.nombre === slotName);
                 if (slotDef) {
                     spellSlotState[participantId][slotName] = Math.min(slotDef.total, (spellSlotState[participantId][slotName] ?? slotDef.total) + 1);
                     saveStateToStorage();
@@ -1243,10 +1254,11 @@ function _doNextTurn() {
     } else {
         // Check if current participant has extraAttack or segundaAccion
         const currP = combatState.participants[combatState.currentIndex];
-        if (currP?.charData?.extraAttack) {
+        const currPData = getEffectiveCharData(currP);
+        if (currPData?.extraAttack) {
             combatState.extraAttackTurn = true;
             // Stay on same currentIndex (same participant, ataque extra mini-turn)
-        } else if (currP?.charData?.segundaAccion) {
+        } else if (currPData?.segundaAccion) {
             combatState.segundaAccionTurn = true;
             // Stay on same currentIndex (same participant, segunda acción mini-turn)
         } else {
