@@ -582,22 +582,107 @@ function renderActivePanel(targetEl, forcePIdx) {
         ${combatSlotsHTML}
         <div class="combat-actions-cards-section">${cardSections}${smiteSectionHTML}</div>`;
     } else {
-        slotSections = SLOTS.map(slot => {
-            const isSlotUsed = (currentEntry?.slots?.[slot.key]) ||
-                currentEntry?.actions.some(a => inferActionType(a) === slot.tipo) || false;
-            const items = regularItems.filter(a => inferActionType(a) === slot.tipo);
-            const chips = renderChips(items);
+        // Master mode — card-based layout matching character sheet
+        const masterCharData = p.charData;
+        let masterSlotsHTML = '';
+        if (masterCharData?.ranuras?.length > 0) {
+            initSpellSlotsForChar(p.id);
+            masterSlotsHTML = `<div class="slot-tracker combat-slots">
+                <div class="slot-tracker-header">
+                    <span class="slot-tracker-title">✨ Ranuras</span>
+                    <button class="slot-reset-btn" onclick="resetSpellSlots('${p.id}')" title="Descanso largo">🌙</button>
+                </div>
+                ${masterCharData.ranuras.map(slot => {
+                    const remaining = spellSlotState[p.id]?.[slot.nombre] ?? slot.total;
+                    const pips = Array.from({ length: slot.total }, (_, i) =>
+                        `<button class="slot-pip${i >= remaining ? ' used' : ''}"
+                            onclick="toggleSpellSlot('${p.id}','${slot.nombre}',${i})"></button>`
+                    ).join('');
+                    return `<div class="slot-row">
+                        <span class="slot-name">${slot.nombre}</span>
+                        <div class="slot-track" data-slot="${slot.nombre}">${pips}</div>
+                        <span class="slot-count" data-slot="${slot.nombre}">${remaining}/${slot.total}</span>
+                    </div>`;
+                }).join('')}
+            </div>`;
+        }
+
+        const renderMasterCard = (item, sectionKey) => {
+            const isUsed = currentEntry?.actions.some(x => x.nombre === item.nombre) || false;
+            const diceStr = item.atk
+                ? `ATK ${item.atk}${item.dado && item.dado !== '—' ? ` | DMG ${item.dado}` : ''}`
+                : (item.dado && item.dado !== '—' ? `DMG ${item.dado}` : (extractDiceFromDesc(item.desc) || ''));
+            const atk  = item.atk || '';
+            const dado = item.dado && item.dado !== '—' ? item.dado : (extractDiceFromDesc(item.desc) || '');
+            const diceDisplay = atk ? `${atk}${dado ? ' / ' + dado : ''}` : dado;
+            const safeName = item.nombre.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            const safeDice = diceDisplay.replace(/'/g, "\\'");
+            const removeBtn = item._custom
+                ? `<button class="chip-remove-btn" onclick="removePermanentCustomAction('${p.id}','${safeName}')" title="Eliminar acción">✕</button>` : '';
+            return `<div class="combat-action-card${isUsed ? ' selected' : ''}${item._custom ? ' custom-action' : ''}"
+                     onclick="toggleCombatAction('${p.id}','${safeName}','${safeDice}')">
+                <div class="combat-action-header">
+                    <span class="combat-action-name">${item.nombre}</span>
+                    ${diceStr ? `<span class="combat-action-dice">${diceStr}</span>` : ''}
+                    ${removeBtn}
+                </div>
+                <div class="combat-action-desc">${item.desc || ''}</div>
+            </div>`;
+        };
+
+        const MASTER_SECTIONS = [
+            { key: 'accion',    icon: '🎯', label: 'Acciones' },
+            { key: 'adicional', icon: '⚡', label: 'Adicionales' },
+            { key: 'reaccion',  icon: '↩️', label: 'Reacciones' },
+        ];
+        const masterCardSections = MASTER_SECTIONS.map(section => {
+            const isSlotUsed = (currentEntry?.slots?.[section.key]) ||
+                currentEntry?.actions.some(a => inferActionType(a) === section.key) || false;
+            const items = regularItems.filter(a => inferActionType(a) === section.key);
+            if (!items.length) return '';
+            const trucos   = items.filter(i => !i.nivel || typeof i.nivel !== 'number');
+            const hechizos = items.filter(i => i.nivel && typeof i.nivel === 'number');
+            let cardsHTML  = trucos.map(item => renderMasterCard(item, section.key)).join('');
+            if (hechizos.length > 0) {
+                initSpellSlotsForChar(p.id);
+                const byLevel = {};
+                hechizos.forEach(sp => { if (!byLevel[sp.nivel]) byLevel[sp.nivel] = []; byLevel[sp.nivel].push(sp); });
+                const hechizosCards = Object.keys(byLevel).sort((a, b) => a - b).map(lv => {
+                    const slotName = `Nv${lv}`;
+                    const slotDef = masterCharData?.ranuras?.find(s => s.nombre === slotName);
+                    const remaining = slotDef ? (spellSlotState[p.id]?.[slotName] ?? slotDef.total) : null;
+                    const slotBadge = remaining !== null
+                        ? `<span class="slot-badge${remaining === 0 ? ' slot-empty' : ''}">${remaining}/${slotDef.total} ranuras</span>`
+                        : '';
+                    return `<div class="hechizo-level-group">
+                        <div class="hechizo-level-header">Nv${lv} ${slotBadge}</div>
+                        ${byLevel[lv].map(item => renderMasterCard(item, section.key)).join('')}
+                    </div>`;
+                }).join('');
+                cardsHTML += `<div class="hechizos-subsection">
+                    <div class="hechizos-subsection-title">✨ Hechizos (gastan ranura)</div>
+                    ${hechizosCards}
+                </div>`;
+            }
             const slotUsedClass = isSlotUsed ? ' used' : '';
             const btnClass = isSlotUsed ? 'used' : 'libre';
             const btnLabel = isSlotUsed ? '✅ Usada' : '☐ Libre';
-            return `<div class="combat-slot-section${slotUsedClass}">
-                <div class="combat-slot-header">
-                    <span>${slot.icon} ${slot.label}</span>
-                    <button class="slot-toggle-btn ${btnClass}" onclick="toggleSlotManual('${p.id}','${slot.key}')">${btnLabel}</button>
+            return `<div class="combat-section${slotUsedClass}">
+                <div class="combat-section-title" style="display:flex;justify-content:space-between;align-items:center;">
+                    <span>${section.icon} ${section.key === 'accion' ? 'Acciones' : section.key === 'adicional' ? 'Adicionales' : 'Reacciones'}</span>
+                    <button class="slot-toggle-btn ${btnClass}" onclick="toggleSlotManual('${p.id}','${section.key}')">${btnLabel}</button>
                 </div>
-                ${items.length ? `<div class="combat-chips">${chips}</div>` : `<div style="font-size:12px;color:var(--text-muted);padding:4px 0">Sin acciones disponibles</div>`}
+                <div class="combat-action-list">${cardsHTML}</div>
             </div>`;
-        }).join('') + modifierSectionHTML;
+        }).join('');
+
+        const masterSmiteHTML = modificadorItems.length ? `<div class="combat-section">
+            <div class="combat-section-title">✨ Divine Smite</div>
+            <div class="combat-section-subtitle">Complemento del ataque — activa si impactas</div>
+            <div class="combat-chips">${renderModifierChips(modificadorItems)}</div>
+        </div>` : '';
+
+        slotSections = `${masterSlotsHTML}<div class="combat-actions-cards-section">${masterCardSections}${masterSmiteHTML}</div>`;
     }
 
     // Form to add persistent custom actions (not shown in mini-turn modes)
