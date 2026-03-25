@@ -6816,6 +6816,15 @@ select:focus-visible {
     padding-top: 16px;
     border-top: 1px solid var(--border-color);
 }
+.enc-launch-online-btn {
+    border-color: rgba(124, 58, 237, 0.45) !important;
+    color: #c4b5fd !important;
+    background: rgba(124, 58, 237, 0.1) !important;
+}
+.enc-launch-online-btn:hover {
+    background: rgba(124, 58, 237, 0.22) !important;
+    border-color: rgba(124, 58, 237, 0.65) !important;
+}
 
 /* ============================================
    NPC GENERATOR — Generador de PNJ

@@ -308,4 +308,61 @@
         showNotification('Encuentro eliminado', 1500);
     };
 
+    // ── Launch as online combat ───────────────────────────────
+    window.encLaunchOnline = function () {
+        const enc = getEncounter(currentEncId);
+        if (!enc) return;
+        if (enc.creatures.length === 0) {
+            showNotification('⚠️ Añade criaturas antes de iniciar', 2500);
+            return;
+        }
+        const missingInit = enc.creatures.filter(c => c.initiative === null || c.initiative === undefined);
+        if (missingInit.length > 0) {
+            showNotification(`⚠️ Faltan iniciativas: ${missingInit.map(c => c.name).join(', ')}`, 3000);
+            return;
+        }
+
+        const typeMap = { player: 'jugador', ally: 'aliado', enemy: 'enemigo' };
+        const participants = enc.creatures.map(c => {
+            // Match player characters by name to link with characterData
+            let id = c.id;
+            if (c.type === 'player' && window.characterData) {
+                const entry = Object.entries(window.characterData)
+                    .find(([, ch]) => ch.nombre?.toLowerCase() === c.name.toLowerCase());
+                if (entry) id = entry[0];
+            }
+            return {
+                id,
+                name:       c.name,
+                tipo:       typeMap[c.type] || 'enemigo',
+                initiative: c.initiative || 0,
+                hp:         { current: c.hp, max: c.maxHp },
+                ac:         '—',
+                speed:      '30 ft',
+                conditions: c.conditions || [],
+                note:       c.notes || '',
+                charData:   null,
+            };
+        });
+
+        // Configure global combat state
+        combatState.participants      = participants;
+        combatState.currentIndex      = 0;
+        combatState.round             = 1;
+        combatState.isActive          = false;
+        combatState.log               = [];
+        combatState.nextLogId         = 1;
+        combatState.segundaAccionTurn = false;
+        combatState.extraAttackTurn   = false;
+
+        // Set master role for online session
+        isOnlineCombat = true;
+        gameRole = { type: 'master', characterId: null };
+        localStorage.setItem('dnd_role', JSON.stringify(gameRole));
+        if (typeof updateRoleIndicator === 'function') updateRoleIndicator();
+
+        // Create session → shows waiting room with join code
+        startCombatSession();
+    };
+
 }());
