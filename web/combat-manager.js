@@ -841,7 +841,7 @@ function setParticipantHp(id, value) {
         hpBlock.className = 'combat-vital-block ' +
             (pct <= 0 ? 'hp-dead' : pct <= 25 ? 'hp-critical' : pct <= 50 ? 'hp-low' : '');
         const slider = hpBlock.querySelector('.combat-hp-slider');
-        if (slider) slider.style.setProperty('--fill-pct', pct + '%');
+        if (slider) { slider.value = p.hp.current; slider.style.setProperty('--fill-pct', pct + '%'); }
     }
     renderTurnQueue();
 }
