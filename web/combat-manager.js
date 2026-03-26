@@ -45,6 +45,57 @@ function renderCombatManager() {
     renderKillScoreboard();
 }
 
+// ---- Attack target selection state ----
+let _currentAttackTargets = new Set(); // IDs of targets currently selected for damage
+
+function toggleAttackTarget(actorId, targetId) {
+    if (_currentAttackTargets.has(targetId)) {
+        _currentAttackTargets.delete(targetId);
+    } else {
+        _currentAttackTargets.add(targetId);
+        const actor = combatState.participants.find(p => p.id === actorId);
+        offerAttackTargetReactions(actorId, actor?.name ?? 'ataque', targetId);
+    }
+    _refreshAttackPanel(actorId);
+}
+
+function _refreshAttackPanel(actorId) {
+    const panel = document.getElementById('attackTargetPanel');
+    if (!panel) return;
+    const actor = combatState.participants.find(p => p.id === actorId);
+    if (!actor) return;
+    const attackerIsAlly = (actor.tipo === 'jugador' || actor.tipo === 'aliado');
+    const targets = combatState.participants.filter(t => {
+        if (t.id === actorId) return false;
+        return attackerIsAlly !== (t.tipo === 'jugador' || t.tipo === 'aliado');
+    });
+    panel.innerHTML = _buildAttackPanelInnerHTML(actorId, targets);
+}
+
+function _buildAttackPanelInnerHTML(actorId, targets) {
+    if (!targets.length) return '<div style="font-size:12px;color:var(--text-muted);padding:8px 0">Sin objetivos disponibles</div>';
+    const rows = targets.map(t => {
+        const isSelected = _currentAttackTargets.has(t.id);
+        const hpPct   = t.hp.max > 0 ? Math.round(t.hp.current / t.hp.max * 100) : 0;
+        const hpColor = hpPct <= 0 ? '#555' : hpPct <= 25 ? '#ff4444' : hpPct <= 50 ? '#ffaa00' : '#4caf50';
+        const tipoIcon = t.tipo === 'enemigo' ? '💀' : t.tipo === 'aliado' ? '💙' : '🎮';
+        return `<div class="attack-target-row${isSelected ? ' target-selected' : ''}">
+            <button class="attack-target-select-btn${isSelected ? ' selected' : ''}"
+                    onclick="toggleAttackTarget('${actorId}','${t.id}')">
+                <span>${tipoIcon} ${t.name.split(' ')[0]}</span>
+                <span class="attack-target-hp" style="color:${hpColor}">${t.hp.current}/${t.hp.max} ❤️</span>
+                <span class="attack-target-check">${isSelected ? '✓' : '+'}</span>
+            </button>
+            ${isSelected ? `<input type="number" class="attack-dmg-input" id="dmg_${t.id}"
+                   placeholder="daño" min="0" inputmode="numeric">` : ''}
+        </div>`;
+    }).join('');
+    const hasSelected = _currentAttackTargets.size > 0;
+    return `<div class="attack-target-title">⚔️ ${hasSelected ? 'Objetivos seleccionados — introduce el daño' : 'Selecciona objetivos'}</div>
+        <div class="attack-target-list">${rows}</div>
+        ${hasSelected ? `<button class="btn-apply-damage" onclick="applyAttackDamage('${actorId}')">💥 Aplicar Daño</button>` : ''}`;
+}
+
 // ---- Player Combat Layout (role=jugador) — fully independent turn manager ----
 let _lastPlayerTurnNotified = '';
 
@@ -811,35 +862,17 @@ function renderActivePanel(targetEl, forcePIdx) {
                 : '<span style="color:var(--text-muted);font-size:12px">Inactivo</span>'}
         </button>` : '';
 
-    // Attack target panel (master or controlling player)
+    // Attack target panel (master or controlling player during current turn only)
     let attackTargetPanelHTML = '';
     if (canControl && forcePIdx === undefined) {
-        // Team filtering: jugador/aliado attack enemies; enemigo attacks jugadores/aliados
         const attackerIsAlly = (p.tipo === 'jugador' || p.tipo === 'aliado');
         const targets = combatState.participants.filter((t, i) => {
-            if (i === idx) return false; // exclude self
-            const targetIsAlly = (t.tipo === 'jugador' || t.tipo === 'aliado');
-            return attackerIsAlly !== targetIsAlly; // only opposing team
+            if (i === idx) return false;
+            return attackerIsAlly !== (t.tipo === 'jugador' || t.tipo === 'aliado');
         });
         if (targets.length > 0) {
-            const targetRows = targets.map(t => {
-                const hpPct = t.hp.max > 0 ? Math.round(t.hp.current / t.hp.max * 100) : 0;
-                const hpColor = hpPct <= 0 ? '#555' : hpPct <= 25 ? '#ff4444' : hpPct <= 50 ? '#ffaa00' : '#4caf50';
-                const tipoIcon = t.tipo === 'enemigo' ? '💀' : t.tipo === 'aliado' ? '💙' : '🎮';
-                return `<div class="attack-target-row">
-                    <div class="attack-target-info">
-                        <span class="attack-target-icon">${tipoIcon}</span>
-                        <span class="attack-target-name">${t.name.split(' ')[0]}</span>
-                        <span class="attack-target-hp" style="color:${hpColor}">${t.hp.current}/${t.hp.max} ❤️</span>
-                    </div>
-                    <input type="number" class="attack-dmg-input" id="dmg_${t.id}"
-                           placeholder="0 dmg" min="0" inputmode="numeric">
-                </div>`;
-            }).join('');
-            attackTargetPanelHTML = `<div class="attack-target-panel">
-                <div class="attack-target-title">⚔️ Aplicar daño</div>
-                <div class="attack-target-list">${targetRows}</div>
-                <button class="btn-apply-damage" onclick="applyAttackDamage('${p.id}')">💥 Aplicar Daño</button>
+            attackTargetPanelHTML = `<div class="attack-target-panel" id="attackTargetPanel">
+                ${_buildAttackPanelInnerHTML(p.id, targets)}
             </div>`;
         }
     }
@@ -1066,7 +1099,6 @@ function applyAttackDamage(attackerId) {
                         }
                     }
                     log.push(`${target.name.split(' ')[0]} −${damage} PG`);
-                    offerDamageReactions(targetId, prevHp);
                 }
 
                 applied++;
@@ -1075,6 +1107,7 @@ function applyAttackDamage(attackerId) {
         }
     });
     if (applied > 0) {
+        _currentAttackTargets.clear();
         saveCombatState();
         renderTurnQueue();
         renderActivePanel();
@@ -1379,6 +1412,8 @@ function _doNextTurn() {
             break;
         }
     }
+
+    _currentAttackTargets.clear();
 
     // Restore reaction for the participant whose turn is now starting
     const _nextTurnP = combatState.participants[combatState.currentIndex];

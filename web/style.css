@@ -5835,10 +5835,55 @@ body.role-jugador .master-only { display: none !important; }
     display: flex;
     align-items: center;
     gap: 8px;
+    border-radius: 8px;
+    transition: background 0.15s;
+}
+
+.attack-target-row.target-selected {
+    background: rgba(255,80,80,0.08);
+    border-radius: 8px;
+    padding: 4px 0;
+}
+
+/* Button that selects/deselects the target */
+.attack-target-select-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
     padding: 7px 10px;
     background: rgba(255,255,255,0.03);
-    border-radius: 8px;
     border: 1px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 600;
+    transition: background 0.15s, border-color 0.15s;
+    min-width: 0;
+}
+
+.attack-target-select-btn:hover {
+    background: rgba(255,80,80,0.1);
+    border-color: rgba(255,80,80,0.4);
+}
+
+.attack-target-select-btn.selected {
+    background: rgba(255,80,80,0.15);
+    border-color: rgba(255,100,100,0.55);
+}
+
+.attack-target-check {
+    margin-left: auto;
+    font-size: 14px;
+    font-weight: 700;
+    color: #ff8080;
+    flex-shrink: 0;
+}
+
+.attack-target-select-btn.selected .attack-target-check {
+    color: #ff4444;
 }
 
 .attack-target-info {

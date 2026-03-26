@@ -57,6 +57,8 @@ function _getApplicableReactions(p, triggerType) {
             if (rt === triggerType) return true;
             // Velo / generic attack reactions also fire on spells
             if (triggerType === 'hechizo' && rt === 'ataque') return true;
+            // Damage reactions (Represión Infernal) also fire when targeted by attack
+            if (triggerType === 'ataque' && rt === 'daño') return true;
             return false;
         });
 }
@@ -138,6 +140,27 @@ function offerDamageReactions(damagedId, prevHp) {
     if (_isMyParticipant(damagedP)) {
         _lastShownReactionTriggerId = triggerId;
         _showReactionPopup(trigger, [damagedP]);
+    } else if (isOnlineCombat) {
+        combatState.pendingReactionTrigger = trigger;
+        saveToApiNow();
+    }
+}
+
+// Called when an attacker selects a specific target — offers reactions to that target only.
+function offerAttackTargetReactions(actorId, actionName, targetId) {
+    if (!combatState.isActive) return;
+    const target = combatState.participants.find(p => p.id === targetId);
+    if (!target || !canParticipantReact(targetId)) return;
+
+    const applicable = _getApplicableReactions(target, 'ataque');
+    if (!applicable.length) return;
+
+    const triggerId = Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    const trigger = { id: triggerId, actorId, actionName, actionType: 'ataque' };
+
+    if (_isMyParticipant(target)) {
+        _lastShownReactionTriggerId = triggerId;
+        _showReactionPopup(trigger, [target]);
     } else if (isOnlineCombat) {
         combatState.pendingReactionTrigger = trigger;
         saveToApiNow();
