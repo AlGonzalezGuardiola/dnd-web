@@ -1,0 +1,142 @@
+/* ============================================
+   NPC GENERATOR — Generador de PNJ
+   ============================================ */
+.npc-gen-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: clamp(80px, 12vw, 120px) clamp(16px, 5vw, 40px) 40px;
+    width: 100%;
+    box-sizing: border-box;
+    gap: 24px;
+}
+
+.npc-gen-card {
+    width: 100%;
+    max-width: 700px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: clamp(20px, 4vw, 32px);
+    box-sizing: border-box;
+}
+
+.npc-gen-card h2 {
+    font-family: var(--font-heading);
+    color: var(--accent-gold);
+    font-size: clamp(18px, 2.5vw, 24px);
+    margin: 0 0 20px 0;
+}
+
+.npc-field-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    gap: 12px;
+}
+
+.npc-field-row:last-child { border-bottom: none; }
+
+.npc-field-label {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    min-width: 100px;
+    flex-shrink: 0;
+}
+
+.npc-field-value {
+    color: var(--text-primary);
+    font-size: 15px;
+    flex: 1;
+    line-height: 1.4;
+}
+
+.npc-reroll-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    color: var(--text-muted);
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+    min-width: 30px;
+    min-height: 30px;
+}
+
+.npc-reroll-btn:hover {
+    border-color: var(--accent-gold);
+    color: var(--accent-gold);
+    background: rgba(201, 162, 39, 0.08);
+}
+
+.npc-gen-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+/* Saved NPCs list */
+.npc-saved-list {
+    width: 100%;
+    max-width: 700px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.npc-saved-item {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 14px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    transition: border-color var(--transition-fast);
+}
+
+.npc-saved-item:hover { border-color: rgba(201,162,39,0.4); }
+
+.npc-saved-info { flex: 1; }
+
+.npc-saved-name {
+    font-family: var(--font-heading);
+    font-size: 15px;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+}
+
+.npc-saved-meta {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
+.npc-saved-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 700px;
+    margin-bottom: 0;
+}
+
+.npc-saved-header h3 {
+    font-family: var(--font-heading);
+    color: var(--text-secondary);
+    font-size: 16px;
+    margin: 0;
+}
+

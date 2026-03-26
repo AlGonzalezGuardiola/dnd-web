@@ -1,0 +1,257 @@
+// ============================================
+// Combat Templates — entity templates, combat presets, buildSirvienteCharData
+// Depends on: globals.js, utils.js, storage.js, combat-setup.js
+// ============================================
+
+// ---- Saved Templates (DB) ----
+
+async function loadSavedTemplates(tipo) {
+    const apiType = tipo === 'aliado' ? 'ALLY' : 'ENEMY';
+    try {
+        const res = await fetch(`${API_BASE}/api/entity-templates?type=${apiType}`);
+        const data = await res.json();
+        if (data.success) {
+            savedTemplates[apiType] = data.templates;
+            renderSavedTemplatesSection(tipo);
+        }
+    } catch (e) {
+        console.warn('[entity-templates] load failed:', e.message);
+    }
+}
+
+function renderNpcTemplateRow(t, tipo) {
+    return _renderTemplateCard(t, tipo);
+}
+
+function _renderTemplateCard(t, tipo) {
+    const badges = [
+        t.isGroup && t.groupSize >= 2 ? `👥 ×${t.groupSize}` : '',
+        t.isSummon ? `✨ ${t.summoner}` : '',
+    ].filter(Boolean).join(' · ');
+    const actStr = [t.actionsText?.acciones, t.actionsText?.adicionales, t.actionsText?.reacciones]
+        .filter(Boolean).join(' | ');
+    return `<div class="template-card">
+        <div class="template-card-info">
+            <span class="template-card-name">${t.name}</span>
+            <span class="template-card-stats">❤️ ${t.stats.hp} · 🛡️ ${t.stats.ac}${badges ? ' · ' + badges : ''}</span>
+            ${actStr ? `<span class="template-card-acts">⚔️ ${actStr}</span>` : ''}
+        </div>
+        <div class="template-card-controls">
+            <input type="number" class="setup-init-input" placeholder="Init" id="tInit_${t._id}" min="-5" max="30">
+            <button class="template-add-btn" onclick="addTemplateToSetup('${t._id}','${tipo}')">＋</button>
+            <button class="template-delete-btn" onclick="deleteEntityTemplate('${t._id}','${tipo}')">🗑</button>
+        </div>
+    </div>`;
+}
+
+function renderSavedTemplatesSection(tipo) {
+    const container = document.getElementById(`${tipo}SavedTemplates`);
+    if (!container) return;
+    const apiType = tipo === 'aliado' ? 'ALLY' : 'ENEMY';
+    const templates = savedTemplates[apiType];
+    if (!templates.length) {
+        container.innerHTML = '';
+        return;
+    }
+    container.innerHTML = `
+        <div class="saved-templates-header">${tipo === 'aliado' ? '💙' : '💀'} Plantillas guardadas</div>
+        <div class="saved-templates-grid">
+            ${templates.map(t => _renderTemplateCard(t, tipo)).join('')}
+        </div>`;
+}
+
+function addTemplateToSetup(templateId, tipo) {
+    const apiType = tipo === 'aliado' ? 'ALLY' : 'ENEMY';
+    const t = savedTemplates[apiType].find(x => x._id === templateId);
+    if (!t) return;
+    const initEl = document.getElementById(`tInit_${templateId}`);
+    const initiative = parseInt(initEl?.value) || 0;
+    setupNpcs.push({
+        tipo,
+        nombre:      t.name,
+        pg:          t.stats.hp,
+        ca:          t.stats.ac,
+        initiative,
+        acciones:    t.actionsText?.acciones    || '',
+        adicionales: t.actionsText?.adicionales || '',
+        reacciones:  t.actionsText?.reacciones  || '',
+        isGroup:   !!t.isGroup,
+        groupSize: t.groupSize || 1,
+        isSummon:  !!t.isSummon,
+        summoner:  t.summoner || '',
+        summonedBeforeCombat: !!t.isSummon,
+    });
+    renderSetupNpcList(tipo);
+    _updateSetupCount();
+    showNotification(`${tipo === 'aliado' ? '💙' : '💀'} ${t.name} añadido`, 1500);
+}
+
+async function deleteEntityTemplate(templateId, tipo) {
+    try {
+        await fetch(`${API_BASE}/api/entity-templates/${templateId}`, { method: 'DELETE' });
+        await loadSavedTemplates(tipo);
+    } catch (e) {
+        showNotification('⚠️ Error al eliminar plantilla', 2000);
+    }
+}
+
+function toggleSetupGroupFields(tipo) {
+    const checked = document.getElementById(`${tipo}EsGrupo`)?.checked;
+    const fields  = document.getElementById(`${tipo}GroupFields`);
+    if (fields) fields.style.display = checked ? 'flex' : 'none';
+}
+
+function toggleSetupSummonFields(tipo) {
+    const checked = document.getElementById(`${tipo}EsInvocacion`)?.checked;
+    const fields  = document.getElementById(`${tipo}SummonFields`);
+    if (fields) fields.style.display = checked ? 'block' : 'none';
+}
+
+// ── Entity Template: save to backend catalog (fire-and-forget) ───────────────
+function _saveEntityTemplate({ name, type, stats, actions, isGroup, groupSize, isSummon, summoner, actionsText }) {
+    fetch(`${API_BASE}/api/entity-templates`, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, type, stats, actions, isGroup, groupSize, isSummon, summoner, actionsText }),
+    }).catch(e => console.warn('[entity-templates] save failed:', e.message));
+}
+
+function buildSirvienteCharData(ac) {
+    return {
+        nombre: 'Sirviente Invisible',
+        clase: 'Familiar',
+        nivel: 1,
+        tipo: 'aliado',
+        imagen: null,
+        combateExtra: [
+            {
+                nombre: 'Hacha de mano',
+                tipo: 'accion',
+                atk: '+7',
+                dado: '1d8+5',
+                desc: 'Daño divino. Siempre ataca con ventaja (invisible).'
+            },
+            {
+                nombre: 'Hacha de mano',
+                tipo: 'adicional',
+                atk: '+5',
+                dado: '1d8+5',
+                desc: 'Acción adicional. Daño divino.'
+            },
+            {
+                nombre: 'Daga',
+                tipo: 'accion',
+                atk: '+7',
+                dado: '1d4',
+                desc: 'El próximo aliado ataca con ventaja contra ese objetivo.'
+            },
+            {
+                nombre: 'Ventaja / Desventaja',
+                tipo: 'accion',
+                atk: '',
+                dado: '',
+                desc: 'Genera ventaja o desventaja en un objetivo (sin tirada).'
+            }
+        ],
+        conjuros: []
+    };
+}
+
+// ── Combat Templates (saved encounter presets, persisted in DB) ──────────────
+
+window.saveCombatTemplate = async function () {
+    const total = combatState.selectedIds.length + setupNpcs.length;
+    if (total < 1) {
+        showNotification('Selecciona al menos 1 participante para guardar', 2500);
+        return;
+    }
+    const name = prompt('Nombre de la plantilla de combate:');
+    if (!name?.trim()) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/api/combat-templates`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: name.trim(),
+                selectedIds: [...combatState.selectedIds],
+                npcs: setupNpcs.map(n => {
+                    const { charData, ...rest } = n;
+                    const isKnown = charData && window.characterData[n.id];
+                    return isKnown ? rest : { ...rest, charData: charData ? { ...charData } : null };
+                }),
+                initiatives: { ...setupInitiatives },
+            }),
+        });
+        if (!res.ok) throw new Error((await res.json()).error);
+        showNotification('💾 Plantilla guardada en Encuentros', 2000);
+    } catch (err) {
+        showNotification('Error al guardar plantilla: ' + err.message, 3000);
+    }
+};
+
+window.loadCombatTemplate = async function (id) {
+    try {
+        const res = await fetch(`${API_BASE}/api/combat-templates/${id}`);
+        if (!res.ok) throw new Error('Plantilla no encontrada');
+        const { template: tpl } = await res.json();
+
+        combatState.selectedIds = [...(tpl.selectedIds || [])];
+        setupInitiatives = { ...(tpl.initiatives || {}) };
+        setupNpcs = (tpl.npcs || []).map(n => ({
+            ...n,
+            charData: n.charData || window.characterData[n.id] || { combateExtra: [], conjuros: [] },
+        }));
+
+        combatModeActive = true;
+        setView('combatSetup');
+        switchCombatSetupTab('jugadores');
+        renderCombatSetup();
+        loadSavedTemplates('aliado');
+        loadSavedTemplates('enemigo');
+        showNotification(`📋 Plantilla "${tpl.name}" cargada`, 2000);
+    } catch (err) {
+        showNotification('Error al cargar plantilla: ' + err.message, 3000);
+    }
+};
+
+window.deleteCombatTemplate = async function (id) {
+    try {
+        const res = await fetch(`${API_BASE}/api/combat-templates/${id}`, { method: 'DELETE' });
+        if (!res.ok) throw new Error((await res.json()).error);
+        window.renderCombatTemplatesList();
+    } catch (err) {
+        showNotification('Error al eliminar plantilla: ' + err.message, 3000);
+    }
+};
+
+window.renderCombatTemplatesList = async function () {
+    const section = document.getElementById('combatTemplatesSection');
+    const container = document.getElementById('combatTemplatesContainer');
+    if (!section || !container) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/api/combat-templates`);
+        const { templates } = await res.json();
+
+        section.style.display = templates.length ? 'block' : 'none';
+        if (!templates.length) return;
+
+        container.innerHTML = templates.map(tpl => {
+            const date = new Date(tpl.createdAt).toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+            const count = (tpl.selectedIds?.length || 0) + (tpl.npcs?.length || 0);
+            return `<div class="combat-template-item">
+                <div class="tpl-info">
+                    <span class="tpl-name">${tpl.name}</span>
+                    <span class="tpl-meta">${count} participantes · ${date}</span>
+                </div>
+                <div class="tpl-actions">
+                    <button class="btn-combat-primary" style="padding:6px 14px;font-size:13px" onclick="loadCombatTemplate('${tpl._id}')">▶ Jugar</button>
+                    <button class="btn-danger" style="padding:6px 10px;font-size:13px" onclick="deleteCombatTemplate('${tpl._id}')">🗑</button>
+                </div>
+            </div>`;
+        }).join('');
+    } catch {
+        section.style.display = 'none';
+    }
+};

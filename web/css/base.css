@@ -1,0 +1,407 @@
+/* ============================================
+   Base & Reset
+   ============================================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: var(--font-body);
+    background:
+        radial-gradient(ellipse at 20% 50%, rgba(139, 26, 26, 0.06) 0%, transparent 60%),
+        radial-gradient(ellipse at 80% 20%, rgba(124, 58, 237, 0.05) 0%, transparent 50%),
+        linear-gradient(160deg, #05080f 0%, #0d1120 50%, #060a14 100%);
+    background-attachment: fixed;
+    color: var(--text-primary);
+    min-height: 100vh;
+    position: relative;
+}
+
+/* Only lock scroll when the interactive map is visible */
+body.view-map {
+    overflow: hidden;
+    height: 100vh;
+}
+
+/* Animated background stars */
+body::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image:
+        radial-gradient(2px 2px at 20% 30%, white, transparent),
+        radial-gradient(2px 2px at 60% 70%, white, transparent),
+        radial-gradient(1px 1px at 50% 50%, white, transparent),
+        radial-gradient(1px 1px at 80% 10%, white, transparent);
+    background-size: 200% 200%;
+    animation: twinkle 8s ease-in-out infinite;
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+@keyframes twinkle {
+
+    0%,
+    100% {
+        opacity: 0.3;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* ============================================
+   Buttons
+   ============================================ */
+.btn-primary,
+.btn-secondary {
+    flex: 1;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all var(--transition-smooth);
+    border: 2px solid;
+}
+
+.btn-primary {
+    background: var(--accent-gold);
+    border-color: var(--accent-gold);
+    color: var(--bg-primary);
+}
+
+.btn-primary:hover {
+    background: transparent;
+    color: var(--accent-gold);
+    box-shadow: var(--shadow-glow);
+}
+
+.btn-secondary {
+    background: transparent;
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+    border-color: var(--accent-gold);
+    background: rgba(212, 175, 55, 0.1);
+}
+
+/* ============================================
+   Notification Banner
+   ============================================ */
+.notification {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    z-index: 3000;
+    background: var(--bg-glass);
+    border: 2px solid var(--accent-gold);
+    border-radius: 12px;
+    padding: 16px 24px;
+    backdrop-filter: blur(var(--blur-glass));
+    box-shadow: var(--shadow-elevated), var(--shadow-glow);
+    color: var(--text-primary);
+    font-weight: 500;
+    font-size: 14px;
+    max-width: 90%;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: all var(--transition-smooth);
+}
+
+.notification.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+/* ============================================
+   Edit Mode Cursor
+   ============================================ */
+.map-container.edit-mode {
+    cursor: crosshair !important;
+}
+
+.map-container.edit-mode .pin.editing:hover {
+    transform: translate(-50%, -50%) scale(1.05);
+    cursor: move;
+}
+
+/* ============================================
+   Skeleton Loading
+   ============================================ */
+.skeleton {
+    background: linear-gradient(
+        90deg,
+        rgba(255,255,255,0.04) 25%,
+        rgba(255,255,255,0.09) 50%,
+        rgba(255,255,255,0.04) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.6s infinite;
+    border-radius: 4px;
+    color: transparent !important;
+    pointer-events: none;
+}
+
+@keyframes shimmer {
+    0%   { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* ============================================
+   GLOBAL FOCUS STYLES — Keyboard Navigation
+   ============================================ */
+
+/* Remove browser default and replace with branded ring */
+*:focus {
+    outline: none;
+}
+
+*:focus-visible {
+    outline: 2px solid var(--accent-gold);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+/* Tighter focus ring for circular elements */
+.dice-toggle-btn:focus-visible,
+.btn-close-sheet:focus-visible,
+.ds-pip:focus-visible,
+.slot-pip:focus-visible,
+.inspiration-btn:focus-visible {
+    outline-offset: 2px;
+    border-radius: 50%;
+}
+
+/* Inputs use box-shadow ring instead of outline (non-overridable inset) */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+    border-color: var(--accent-gold) !important;
+}
+
+/* ============================================
+   GLOBAL BUTTON ACTIVE (PRESS) STATES
+   ============================================ */
+
+.hud-btn:active {
+    transform: scale(0.93) !important;
+    transition: transform 80ms ease;
+}
+
+.btn-primary:active,
+.btn-secondary:active {
+    transform: scale(0.97);
+    transition: transform 80ms ease;
+}
+
+.btn-editor:active {
+    transform: scale(0.96);
+    transition: transform 80ms ease;
+}
+
+.tab-btn:active {
+    transform: scale(0.95);
+    transition: transform 80ms ease;
+}
+
+.spell-filter-btn:active,
+.condition-btn:active,
+.combat-chip:active,
+.combat-cond-btn:active {
+    transform: scale(0.94);
+    transition: transform 80ms ease;
+}
+
+.role-card:active,
+.player-picker-card:active,
+.combat-select-card:active {
+    transform: scale(0.97);
+    transition: transform 80ms ease;
+}
+
+.online-lobby-card:active {
+    transform: scale(0.98);
+    transition: transform 80ms ease;
+}
+
+.clv-back-btn:active {
+    transform: scale(0.97);
+}
+
+.combat-setup-tab-btn:active {
+    transform: scale(0.96);
+}
+
+.slot-reset-btn:active,
+.npc-remove-btn:active,
+.chip-roll-btn:active,
+.chip-info-btn:active,
+.qe-action-remove-btn:active {
+    transform: scale(0.92);
+    transition: transform 80ms ease;
+}
+
+/* ============================================
+   CARD VISUAL POLISH
+   ============================================ */
+
+/* Landing page cards — golden shimmer border on hover */
+.card {
+    position: relative;
+    overflow: hidden;
+}
+
+.card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    background: linear-gradient(135deg, rgba(212,175,55,0.06) 0%, transparent 60%);
+    opacity: 0;
+    transition: opacity var(--transition-smooth);
+    pointer-events: none;
+}
+
+.card:hover::after {
+    opacity: 1;
+}
+
+/* ============================================
+   IMPROVED NOTIFICATION STATES
+   ============================================ */
+
+.notification.success {
+    border-color: #4caf50;
+    box-shadow: 0 8px 32px rgba(76, 175, 80, 0.3);
+}
+
+.notification.error {
+    border-color: #f44336;
+    box-shadow: 0 8px 32px rgba(244, 67, 54, 0.3);
+}
+
+/* ============================================
+   MIN-HEIGHT MOBILE FIX (100dvh)
+   ============================================ */
+
+@supports (height: 100dvh) {
+    .landing-page,
+    .character-section,
+    .combat-init-section {
+        min-height: 100dvh;
+    }
+
+    body.view-map {
+        height: 100dvh;
+    }
+
+    @media (max-width: 768px) {
+        .hud {
+            /* Ensures HUD stays within safe viewport area */
+            top: env(safe-area-inset-top, 0);
+        }
+    }
+}
+
+/* ============================================
+   PREFERS-REDUCED-MOTION
+   Disable / simplify all animations for users
+   who have enabled "Reduce Motion" in their OS
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    /* Keep skeleton shimmer functional but slower */
+    .skeleton {
+        animation: shimmer 3s infinite !important;
+    }
+
+    /* Keep pulse animations off — they're distracting */
+    .btn-demonic.active,
+    .inspiration-btn.active,
+    .hp-bar-section.critical .hp-slider,
+    .player-waiting-icon,
+    .dice-result-value.rolling {
+        animation: none !important;
+    }
+
+    /* Disable background star twinkle */
+    body::before {
+        animation: none !important;
+        opacity: 0.2 !important;
+    }
+
+    /* Dice roll animation — show result immediately */
+    .dice-result-value {
+        animation: none !important;
+    }
+}
+
+/* ── Combat Templates in Encuentros ────────────────────────── */
+.combat-templates-section {
+    margin-bottom: 24px;
+}
+.templates-section-title {
+    font-family: var(--font-heading);
+    font-size: 14px;
+    letter-spacing: 1px;
+    color: var(--accent-gold, #d4af37);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+}
+.combat-template-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.09);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    gap: 12px;
+}
+.tpl-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    min-width: 0;
+}
+.tpl-name {
+    font-size: 15px;
+    color: var(--text-primary, #e8d5b7);
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.tpl-meta {
+    font-size: 12px;
+    color: var(--text-secondary, #a89070);
+}
+.tpl-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}

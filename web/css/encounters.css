@@ -1,0 +1,374 @@
+/* ============================================
+   ENCOUNTERS — Gestor de Encuentros
+   ============================================ */
+.encounters-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: clamp(80px, 12vw, 120px) clamp(16px, 5vw, 40px) 40px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.encounters-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 900px;
+    margin-bottom: 28px;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.encounters-header h2 {
+    font-family: var(--font-heading);
+    color: var(--accent-gold);
+    font-size: clamp(20px, 3vw, 28px);
+    margin: 0;
+}
+
+.encounter-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    max-width: 900px;
+}
+
+.encounter-list-item {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.encounter-list-item:hover {
+    border-color: var(--accent-gold);
+    background: rgba(201, 162, 39, 0.06);
+}
+
+.encounter-list-item .enc-name {
+    font-family: var(--font-heading);
+    font-size: 16px;
+    color: var(--text-primary);
+    flex: 1;
+}
+
+.encounter-list-item .enc-meta {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.encounter-list-item .enc-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.enc-empty {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 48px 0;
+    font-size: 15px;
+}
+
+/* Encounter create form */
+.encounter-create-form {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    max-width: 900px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.encounter-create-form input {
+    flex: 1;
+    min-width: 160px;
+    padding: 10px 14px;
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 14px;
+    transition: border-color var(--transition-fast);
+}
+
+.encounter-create-form input:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+}
+
+/* Encounter detail */
+.encounter-detail {
+    width: 100%;
+    max-width: 900px;
+}
+
+.encounter-detail-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.encounter-detail-header h2 {
+    font-family: var(--font-heading);
+    color: var(--accent-gold);
+    font-size: clamp(18px, 2.5vw, 24px);
+    margin: 0;
+    flex: 1;
+}
+
+.enc-turn-badge {
+    background: var(--accent-gold);
+    color: var(--bg-primary);
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-family: var(--font-heading);
+    letter-spacing: 0.05em;
+}
+
+.enc-round-counter {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+.creature-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.creature-card {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 14px 16px;
+    transition: all var(--transition-fast);
+}
+
+.creature-card.current-turn {
+    border-color: var(--accent-gold);
+    background: rgba(201, 162, 39, 0.08);
+    box-shadow: 0 0 16px rgba(201, 162, 39, 0.15);
+}
+
+.creature-card.type-ally {
+    border-left: 3px solid #4caf50;
+}
+
+.creature-card.type-enemy {
+    border-left: 3px solid var(--accent-blood);
+}
+
+.creature-card.type-player {
+    border-left: 3px solid var(--accent-magic);
+}
+
+.creature-card-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.creature-initiative {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-heading);
+    font-size: 15px;
+    color: var(--accent-gold);
+    flex-shrink: 0;
+}
+
+.creature-name {
+    font-weight: 600;
+    color: var(--text-primary);
+    flex: 1;
+    font-size: 15px;
+}
+
+.creature-type-badge {
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.creature-type-badge.ally { background: rgba(76,175,80,0.2); color: #4caf50; }
+.creature-type-badge.enemy { background: rgba(139,26,26,0.25); color: #e57373; }
+.creature-type-badge.player { background: rgba(124,58,237,0.2); color: #a78bfa; }
+
+.creature-hp-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.hp-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    min-width: 28px;
+}
+
+.hp-display {
+    font-family: var(--font-heading);
+    font-size: 15px;
+    color: var(--text-primary);
+    min-width: 70px;
+}
+
+.hp-display.low { color: #ef4444; }
+.hp-display.mid { color: #f59e0b; }
+
+.hp-btn {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    min-width: 30px;
+    min-height: 30px;
+}
+
+.hp-btn:hover { background: var(--accent-gold); color: var(--bg-primary); border-color: var(--accent-gold); }
+
+.hp-input-delta {
+    width: 50px;
+    padding: 4px 8px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 14px;
+    text-align: center;
+}
+
+.creature-conditions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.condition-tag {
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    user-select: none;
+}
+
+.condition-tag.active {
+    background: rgba(201, 162, 39, 0.2);
+    border-color: var(--accent-gold);
+    color: var(--accent-gold);
+}
+
+.creature-notes-row {
+    margin-top: 10px;
+}
+
+.creature-notes-input {
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 13px;
+    resize: none;
+    box-sizing: border-box;
+    transition: border-color var(--transition-fast);
+}
+
+.creature-notes-input:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+}
+
+.enc-add-creature-form {
+    background: var(--bg-glass);
+    border: 1px dashed var(--border-color);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    margin-bottom: 20px;
+}
+
+.enc-add-creature-form input,
+.enc-add-creature-form select {
+    padding: 8px 12px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 13px;
+    transition: border-color var(--transition-fast);
+}
+
+.enc-add-creature-form input:focus,
+.enc-add-creature-form select:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+}
+
+.enc-add-creature-form .enc-input-name { flex: 2; min-width: 120px; }
+.enc-add-creature-form .enc-input-sm { width: 70px; flex-shrink: 0; }
+
+.enc-combat-footer {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-color);
+}
+.enc-launch-online-btn {
+    border-color: rgba(124, 58, 237, 0.45) !important;
+    color: #c4b5fd !important;
+    background: rgba(124, 58, 237, 0.1) !important;
+}
+.enc-launch-online-btn:hover {
+    background: rgba(124, 58, 237, 0.22) !important;
+    border-color: rgba(124, 58, 237, 0.65) !important;
+}
+

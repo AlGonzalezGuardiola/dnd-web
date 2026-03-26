@@ -24,3 +24,45 @@ function getSliderGradient(pct) {
     else color = '#44cc66';
     return `linear-gradient(to right, ${color} ${pct}%, rgba(255,255,255,0.08) ${pct}%)`;
 }
+
+// ---- Shared combat/sheet utilities ----
+
+function getModifier(value) {
+    return Math.floor((value - 10) / 2);
+}
+
+function extractDiceFromDesc(desc) {
+    if (!desc) return null;
+    const plain = desc.replace(/<[^>]+>/g, ' '); // strip HTML tags
+    const matches = plain.match(/\d+d\d+(?:[+-]\d+)?/gi);
+    if (!matches || matches.length === 0) return null;
+    return matches.join(' + ');
+}
+
+function getDiceBadges(action) {
+    let parts = [];
+    if (action.atk) parts.push(`<span class="dice-atk">ATK ${action.atk}</span>`);
+    if (action.dado && action.dado !== '—') {
+        parts.push(`<span class="dice-dmg">DMG ${action.dado}</span>`);
+    } else if (!action.atk) {
+        const extracted = extractDiceFromDesc(action.desc);
+        if (extracted) parts.push(`<span class="dice-dmg">${extracted}</span>`);
+    }
+    return parts.join('');
+}
+
+function inferActionType(item) {
+    if (item.tipo) return item.tipo;
+    const nivel = String(item.nivel ?? '');
+    const nombre = item.nombre || '';
+    const desc = item.desc || '';
+    // Reaction
+    if (nivel === 'Reac' || /\(Reacci[oó]n\)/i.test(nombre) || /\(Reacci[oó]n\)/i.test(desc)) {
+        return 'reaccion';
+    }
+    // Bonus action
+    if (/\(Bonus\)/i.test(nombre) || /\bBonus\b/.test(desc)) {
+        return 'adicional';
+    }
+    return 'accion';
+}

@@ -1,0 +1,267 @@
+/* ============================================
+   SESSION NOTES — Panel de Notas de Sesión
+   ============================================ */
+.notes-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: clamp(80px, 12vw, 120px) clamp(16px, 5vw, 40px) 40px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.notes-layout {
+    display: flex;
+    gap: 20px;
+    width: 100%;
+    max-width: 1000px;
+    align-items: flex-start;
+}
+
+.notes-sidebar {
+    width: 280px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.notes-search {
+    width: 100%;
+    padding: 10px 14px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 14px;
+    box-sizing: border-box;
+    transition: border-color var(--transition-fast);
+}
+
+.notes-search:focus { outline: none; border-color: var(--accent-gold); }
+
+.notes-tag-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.note-tag-filter {
+    padding: 4px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.note-tag-filter.active,
+.note-tag-filter:hover {
+    border-color: var(--accent-gold);
+    color: var(--accent-gold);
+    background: rgba(201,162,39,0.08);
+}
+
+.notes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    overflow-y: auto;
+    max-height: calc(100vh - 280px);
+}
+
+.note-list-item {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.note-list-item:hover,
+.note-list-item.active {
+    border-color: var(--accent-gold);
+    background: rgba(201,162,39,0.06);
+}
+
+.note-list-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.note-list-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.note-list-tag {
+    padding: 1px 7px;
+    border-radius: 8px;
+    background: rgba(201,162,39,0.15);
+    color: var(--accent-gold);
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.notes-editor {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 0;
+}
+
+.note-editor-header {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.note-title-input {
+    flex: 1;
+    min-width: 180px;
+    padding: 10px 14px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: var(--font-heading);
+    font-size: 16px;
+    transition: border-color var(--transition-fast);
+}
+
+.note-title-input:focus { outline: none; border-color: var(--accent-gold); }
+
+.note-tag-input {
+    width: 140px;
+    padding: 10px 14px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 13px;
+    transition: border-color var(--transition-fast);
+}
+
+.note-tag-input:focus { outline: none; border-color: var(--accent-gold); }
+
+.note-content-textarea {
+    width: 100%;
+    min-height: 340px;
+    padding: 14px 16px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.7;
+    resize: vertical;
+    box-sizing: border-box;
+    transition: border-color var(--transition-fast);
+}
+
+.note-content-textarea:focus { outline: none; border-color: var(--accent-gold); }
+
+.note-editor-footer {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.note-date-display {
+    font-size: 12px;
+    color: var(--text-muted);
+    flex: 1;
+}
+
+.notes-empty-editor {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
+    color: var(--text-muted);
+    text-align: center;
+    padding: 60px 20px;
+    background: var(--bg-glass);
+    border: 1px dashed var(--border-color);
+    border-radius: 12px;
+}
+
+.notes-empty-editor p { font-size: 15px; }
+
+/* Mobile: notes layout stacks */
+@media (max-width: 768px) {
+    .notes-layout {
+        flex-direction: column;
+    }
+
+    .notes-sidebar {
+        width: 100%;
+    }
+
+    .notes-list {
+        max-height: 240px;
+    }
+}
+
+/* Landing card variants for new features */
+.card.card-encounters {
+    border-color: rgba(201, 162, 39, 0.35);
+    background: linear-gradient(145deg, rgba(18, 14, 5, 0.94), rgba(10, 8, 2, 0.97));
+}
+
+.card.card-encounters:hover {
+    border-color: rgba(201, 162, 39, 0.7);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.7), 0 0 28px rgba(201,162,39,0.18);
+}
+
+.card.card-npc {
+    border-color: rgba(124, 58, 237, 0.35);
+    background: linear-gradient(145deg, rgba(12, 8, 22, 0.94), rgba(7, 4, 15, 0.97));
+}
+
+.card.card-npc:hover {
+    border-color: rgba(124, 58, 237, 0.7);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.7), 0 0 28px rgba(124,58,237,0.18);
+}
+
+.card.card-notes {
+    border-color: rgba(45, 140, 180, 0.35);
+    background: linear-gradient(145deg, rgba(5, 12, 20, 0.94), rgba(3, 7, 14, 0.97));
+}
+
+.card.card-notes:hover {
+    border-color: rgba(45, 140, 180, 0.7);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.7), 0 0 28px rgba(45,140,180,0.18);
+}
+
+.card.card-narrative {
+    border-color: rgba(160, 100, 30, 0.4);
+    background: linear-gradient(145deg, rgba(16, 10, 3, 0.95), rgba(10, 6, 1, 0.97));
+    cursor: pointer;
+}
+.card.card-narrative:hover {
+    border-color: rgba(180, 120, 40, 0.75);
+    box-shadow: 0 16px 48px rgba(0,0,0,0.7), 0 0 32px rgba(160,100,30,0.22);
+}
+

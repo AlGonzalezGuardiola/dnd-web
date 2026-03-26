@@ -1,0 +1,39 @@
+/* ============================================
+   CSS Variables & Design System
+   ============================================ */
+:root {
+    /* Colors - Deep Dungeon Theme */
+    --bg-primary: #05080f;
+    --bg-secondary: #0d1120;
+    --bg-dark: #020408;
+    --bg-panel: #0f1627;
+    --bg-glass: rgba(8, 12, 24, 0.88);
+    --accent-gold: #c9a227;
+    --accent-gold-bright: #f0c040;
+    --accent-magic: #7c3aed;
+    --accent-blood: #8b1a1a;
+    --accent-ally: #1a4a8b;
+    --text-primary: #e8dcc8;
+    --text-secondary: #9ba3b5;
+    --text-muted: #5a6478;
+    --border-color: rgba(201, 162, 39, 0.28);
+    --border-strong: rgba(201, 162, 39, 0.55);
+
+    /* Shadows & Effects */
+    --shadow-elevated: 0 24px 60px rgba(0, 0, 0, 0.85);
+    --shadow-glow: 0 0 24px rgba(201, 162, 39, 0.35);
+    --shadow-blood: 0 0 20px rgba(139, 26, 26, 0.4);
+    --blur-glass: 12px;
+
+    /* Typography */
+    --font-heading: 'Cinzel', serif;
+    --font-body: 'Inter', sans-serif;
+
+    /* Transitions */
+    --transition-fast: 150ms ease;
+    --transition-smooth: 300ms ease;
+
+    /* Focus ring */
+    --focus-ring: 0 0 0 3px rgba(201, 162, 39, 0.45);
+}
+

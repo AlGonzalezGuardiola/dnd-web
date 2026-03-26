@@ -1,0 +1,643 @@
+/* ============================================
+   Map Container
+   ============================================ */
+.map-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    cursor: grab;
+}
+
+.map-container.grabbing {
+    cursor: grabbing;
+}
+
+.map-canvas {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-origin: center center;
+    transition: transform var(--transition-smooth);
+}
+
+.map-image {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+.pins-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+}
+
+/* ============================================
+   Pins
+   ============================================ */
+.pin {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    pointer-events: all;
+    cursor: pointer;
+    padding: 8px 16px;
+    background: var(--bg-glass);
+    border: 2px solid var(--accent-gold);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 14px;
+    backdrop-filter: blur(var(--blur-glass));
+    box-shadow: var(--shadow-elevated);
+    transition: all var(--transition-smooth);
+    z-index: 10;
+}
+
+.pin:hover {
+    transform: translate(-50%, -50%) scale(1.1);
+    box-shadow: var(--shadow-glow), var(--shadow-elevated);
+    border-color: var(--accent-magic);
+    background: rgba(139, 92, 246, 0.2);
+}
+
+.pin.editing {
+    cursor: move;
+    border-style: dashed;
+    padding-right: 32px;
+    /* Make room for delete button */
+}
+
+.pin::before {
+    content: '📍';
+    margin-right: 6px;
+}
+
+.pin-delete {
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 24px;
+    height: 24px;
+    background: rgba(220, 38, 38, 0.9);
+    border: none;
+    border-radius: 4px;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all var(--transition-fast);
+    line-height: 1;
+    padding: 0;
+}
+
+.pin-delete:hover {
+    background: rgb(220, 38, 38);
+    box-shadow: 0 0 10px rgba(220, 38, 38, 0.5);
+    transform: translateY(-50%) scale(1.1);
+}
+
+/* ============================================
+   HUD Overlay
+   ============================================ */
+.hud {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    right: 20px;
+    z-index: 1000;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    pointer-events: none;
+}
+
+.hud>* {
+    pointer-events: all;
+}
+
+.hud-top {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.btn-back {
+    background: var(--bg-glass);
+    border: 2px solid var(--accent-gold);
+    color: var(--text-primary);
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    backdrop-filter: blur(var(--blur-glass));
+    transition: all var(--transition-smooth);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-back:hover {
+    background: rgba(212, 175, 55, 0.2);
+    box-shadow: var(--shadow-glow);
+    transform: translateX(-5px);
+}
+
+.arrow {
+    font-size: 18px;
+}
+
+.breadcrumbs {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    padding: 10px 20px;
+    border-radius: 8px;
+    backdrop-filter: blur(var(--blur-glass));
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    font-family: var(--font-heading);
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.hud-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* HUD Buttons (Shared Styles) */
+.hud-btn {
+    min-width: 44px;
+    min-height: 44px;
+    background: var(--bg-glass);
+    border: 2px solid var(--accent-gold);
+    color: var(--text-primary);
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    cursor: pointer;
+    backdrop-filter: blur(var(--blur-glass));
+    transition: all var(--transition-fast);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.hud-btn:hover {
+    background: rgba(212, 175, 55, 0.2);
+    box-shadow: var(--shadow-glow);
+    transform: translateY(-2px);
+}
+
+.hud-btn:active {
+    transform: scale(0.95);
+}
+
+/* Home button specific */
+.btn-home {
+    width: auto;
+    padding: 0 14px;
+    gap: 8px;
+}
+
+.btn-home::after {
+    content: 'INICIO';
+    font-family: var(--font-heading);
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+.btn-back-nav {
+    width: auto;
+    padding: 0 14px;
+    gap: 8px;
+}
+
+.btn-back-nav::after {
+    content: 'VOLVER';
+    font-family: var(--font-heading);
+    font-size: 13px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}
+
+/* SVG icons inside hud buttons */
+.hud-btn svg {
+    flex-shrink: 0;
+}
+
+.btn-zoom {
+    width: 45px;
+    height: 45px;
+    background: var(--bg-glass);
+    border: 2px solid var(--accent-gold);
+    color: var(--text-primary);
+    font-size: 18px;
+    font-weight: bold;
+    border-radius: 10px;
+    cursor: pointer;
+    backdrop-filter: blur(var(--blur-glass));
+    transition: all var(--transition-fast);
+}
+
+/* ============================================
+   Editor Toolbar
+   ============================================ */
+.editor-toolbar {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+    display: flex;
+    gap: 12px;
+    background: var(--bg-glass);
+    padding: 12px 20px;
+    border-radius: 12px;
+    border: 2px solid var(--border-color);
+    backdrop-filter: blur(var(--blur-glass));
+    box-shadow: var(--shadow-elevated);
+}
+
+.btn-editor {
+    background: var(--bg-secondary);
+    border: 2px solid var(--accent-gold);
+    color: var(--text-primary);
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all var(--transition-smooth);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-editor:hover {
+    background: var(--accent-gold);
+    color: var(--bg-primary);
+    box-shadow: var(--shadow-glow);
+}
+
+.btn-editor.active {
+    background: var(--accent-magic);
+    border-color: var(--accent-magic);
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+}
+
+.icon {
+    font-size: 16px;
+}
+
+/* ============================================
+   Welcome Screen
+   ============================================ */
+.welcome-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    background: var(--bg-primary);
+}
+
+.welcome-content {
+    text-align: center;
+    max-width: 500px;
+    padding: 40px;
+    background: var(--bg-glass);
+    border: 2px solid var(--accent-gold);
+    border-radius: 16px;
+    backdrop-filter: blur(var(--blur-glass));
+    box-shadow: var(--shadow-elevated);
+}
+
+.welcome-content h1 {
+    font-family: var(--font-heading);
+    font-size: 48px;
+    margin-bottom: 20px;
+    color: var(--accent-gold);
+}
+
+.welcome-content p {
+    color: var(--text-secondary);
+    margin-bottom: 30px;
+    line-height: 1.6;
+}
+
+/* ============================================
+   Modals
+   ============================================ */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(5px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    animation: fadeIn var(--transition-smooth);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.modal-content {
+    background: var(--bg-secondary);
+    border: 2px solid var(--accent-gold);
+    border-radius: 16px;
+    padding: 30px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: var(--shadow-elevated);
+    animation: slideUp var(--transition-smooth);
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(50px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-content h2 {
+    font-family: var(--font-heading);
+    color: var(--accent-gold);
+    margin-bottom: 20px;
+    font-size: 24px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    padding: 12px;
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 14px;
+    transition: all var(--transition-fast);
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+    box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+/* Range Input Styling */
+.form-group input[type="range"] {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    border: none;
+    padding: 10px 0;
+}
+
+.form-group input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 20px;
+    width: 20px;
+    border-radius: 50%;
+    background: var(--accent-gold);
+    cursor: pointer;
+    margin-top: -8px;
+    box-shadow: var(--shadow-glow);
+    transition: all var(--transition-fast);
+}
+
+.form-group input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 15px rgba(212, 175, 55, 0.6);
+}
+
+.form-group input[type="range"]::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 4px;
+    cursor: pointer;
+    background: var(--border-color);
+    border-radius: 2px;
+}
+
+.form-group small {
+    display: block;
+    margin-top: 6px;
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 30px;
+}
+
+/* ============================================
+   Landing Page
+   ============================================ */
+.landing-page {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    padding: 20px;
+    animation: fadeIn var(--transition-smooth);
+}
+
+.landing-title {
+    font-family: var(--font-heading);
+    font-size: clamp(24px, 5vw, 48px);
+    color: var(--accent-gold);
+    text-shadow: 0 0 30px rgba(201, 162, 39, 0.6), 0 2px 8px rgba(0,0,0,0.8);
+    margin-bottom: clamp(30px, 5vh, 60px);
+    text-align: center;
+    padding: 0 16px;
+    letter-spacing: 0.03em;
+}
+
+.landing-cards {
+    display: flex;
+    gap: clamp(20px, 4vw, 40px);
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 0 16px;
+}
+
+.card {
+    background: linear-gradient(145deg, rgba(10, 14, 28, 0.92), rgba(5, 8, 16, 0.96));
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: clamp(24px, 5vw, 40px);
+    width: clamp(200px, 38vw, 300px);
+    min-height: 200px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    cursor: pointer;
+    touch-action: manipulation;
+    backdrop-filter: blur(var(--blur-glass));
+    transition: all var(--transition-smooth);
+    box-shadow: var(--shadow-elevated), inset 0 1px 0 rgba(201, 162, 39, 0.08);
+}
+
+.card:hover {
+    transform: translateY(-6px);
+    border-color: var(--border-strong);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7), 0 0 32px rgba(201, 162, 39, 0.22);
+    background: linear-gradient(145deg, rgba(15, 20, 38, 0.96), rgba(8, 12, 22, 0.98));
+}
+
+.card:active {
+    transform: translateY(-2px) scale(0.98);
+    transition: transform 80ms ease;
+}
+
+.card-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    transition: transform var(--transition-smooth);
+}
+
+.card:hover .card-icon {
+    transform: scale(1.2);
+}
+
+.card-title {
+    font-family: var(--font-heading);
+    font-size: clamp(20px, 3vw, 28px);
+    color: var(--text-primary);
+    margin-bottom: 16px;
+}
+
+.card p {
+    color: var(--text-secondary);
+    font-size: 16px;
+    line-height: 1.5;
+}
+
+/* ============================================
+   HUD - Fix for map view
+   ============================================ */
+body.view-map .hud {
+    position: absolute;
+}
+
+/* ============================================
+   LANDING HAMBURGER MENU
+   ============================================ */
+.landing-menu-wrap {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 10;
+}
+
+.landing-hamburger {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 20px;
+    padding: 6px 12px;
+    cursor: pointer;
+    transition: all 0.15s;
+    line-height: 1;
+}
+
+.landing-hamburger:hover {
+    background: rgba(255,255,255,0.12);
+    color: var(--text-primary);
+    border-color: var(--accent-gold);
+}
+
+.landing-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    min-width: 200px;
+    background: var(--bg-card, #1a2035);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 6px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+
+.landing-dropdown-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 10px 14px;
+    background: none;
+    border: none;
+    color: var(--text-primary);
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.15s;
+}
+
+.landing-dropdown-item:hover {
+    background: rgba(212,175,55,0.12);
+    color: var(--accent-gold);
+}
+
