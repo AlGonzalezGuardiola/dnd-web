@@ -8,15 +8,17 @@
 
 function _buildSaveBody() {
     return {
-        participants:      combatState.participants.map(p => ({ ...p, charData: null })),
-        currentIndex:      combatState.currentIndex,
-        round:             combatState.round,
-        isActive:          combatState.isActive,
-        segundaAccionTurn: combatState.segundaAccionTurn,
-        extraAttackTurn:   combatState.extraAttackTurn,
-        nextLogId:         combatState.nextLogId,
-        log:               combatState.log,
-        _clientId:         CLIENT_ID,
+        participants:           combatState.participants.map(p => ({ ...p, charData: null })),
+        currentIndex:           combatState.currentIndex,
+        round:                  combatState.round,
+        isActive:               combatState.isActive,
+        segundaAccionTurn:      combatState.segundaAccionTurn,
+        extraAttackTurn:        combatState.extraAttackTurn,
+        nextLogId:              combatState.nextLogId,
+        log:                    combatState.log,
+        reactionsUsed:          combatState.reactionsUsed          || {},
+        pendingReactionTrigger: combatState.pendingReactionTrigger || null,
+        _clientId:              CLIENT_ID,
     };
 }
 
@@ -93,8 +95,12 @@ function applyRemoteState(data) {
         extraAttackTurn:   data.extraAttackTurn   ?? false,
         nextLogId:         data.nextLogId         ?? combatState.nextLogId,
         log:               data.log               || combatState.log,
+        reactionsUsed:     data.reactionsUsed     || {},
     });
     if (combatModeActive) renderCombatManager();
+    if (data.pendingReactionTrigger) {
+        handleIncomingReactionTrigger(data.pendingReactionTrigger);
+    }
 }
 
 function connectToSSE(id) {

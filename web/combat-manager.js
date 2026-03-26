@@ -888,17 +888,31 @@ function toggleCombatAction(participantId, nombre, dice) {
                 saveCombatState();
                 renderActivePanel();
                 renderCombatLog();
+                // Offer reactions after spell is cast (tipo is always 'accion' but trigger type is 'hechizo')
+                if (actionObj && inferActionType(actionObj) !== 'reaccion' && inferActionType(actionObj) !== 'modificador') {
+                    offerReactions(participantId, nombre, 'hechizo');
+                }
             });
             return; // wait for modal
         }
         entry.actions.push({ nombre, dice: dice || '' });
         // Determine action type to mark slot
+        let _addedTipo = null;
         if (actionObj) {
             const tipo = inferActionType(actionObj);
             if (tipo === 'adicional') entry.slots.adicional = true;
             else if (tipo === 'reaccion') entry.slots.reaccion = true;
             else entry.slots.accion = true;
+            _addedTipo = tipo;
         }
+        saveCombatState();
+        renderActivePanel();
+        renderCombatLog();
+        // Offer reactions for non-leveled actions (but not for reactions or modifiers)
+        if (_addedTipo && _addedTipo !== 'reaccion' && _addedTipo !== 'modificador') {
+            offerReactions(participantId, nombre, _addedTipo);
+        }
+        return;
     }
     saveCombatState();
     renderActivePanel();
@@ -999,6 +1013,7 @@ function selectPlannerAction(participantId, nombre, atk, dado, tipoDano) {
     const tipo = actionObj ? inferActionType(actionObj) : 'accion';
     const planKey = tipo + '_plan';
     if (!entry.slots) entry.slots = {};
+    let _plannerActionAdded = false;
     if (entry.slots[planKey]?.nombre === nombre) {
         entry.slots[planKey] = null;
         entry.actions = entry.actions.filter(a => a.nombre !== nombre);
@@ -1048,10 +1063,18 @@ function selectPlannerAction(participantId, nombre, atk, dado, tipoDano) {
         entry.slots[planKey] = { nombre, atk: atk || '', dado: dado || '', tipo_dano: tipoDano || '' };
         if (!entry.actions.some(a => a.nombre === nombre))
             entry.actions.push({ nombre, dice: atk ? `${atk}${dado ? '/' + dado : ''}` : dado });
+        _plannerActionAdded = true;
     }
     saveCombatState();
     renderActivePanel(document.getElementById('playerCombatPanel'), combatState.currentIndex);
     renderCombatLog();
+    if (_plannerActionAdded && actionObj) {
+        const _tipo = inferActionType(actionObj);
+        if (_tipo !== 'reaccion' && _tipo !== 'modificador') {
+            const _triggerType = (actionObj.nivel && typeof actionObj.nivel === 'number') ? 'hechizo' : _tipo;
+            offerReactions(participantId, nombre, _triggerType);
+        }
+    }
 }
 
 function removePlannerSlot(participantId, slotKey) {
@@ -1271,6 +1294,10 @@ function _doNextTurn() {
             break;
         }
     }
+
+    // Restore reaction for the participant whose turn is now starting
+    const _nextTurnP = combatState.participants[combatState.currentIndex];
+    if (_nextTurnP) clearReactionForParticipant(_nextTurnP.id);
 
     createCurrentTurnEntry();
     saveCombatState();

@@ -7926,3 +7926,150 @@ select:focus-visible {
     gap: 8px;
     flex-shrink: 0;
 }
+
+/* ============================================
+   REACTION MODAL
+   ============================================ */
+.reaction-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    padding: 16px;
+}
+
+.reaction-modal {
+    background: var(--bg-panel, #0f1627);
+    border: 1px solid var(--accent-gold, #c9a227);
+    border-radius: 14px;
+    padding: 22px 20px 18px;
+    max-width: 420px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.7);
+}
+
+.reaction-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.reaction-modal-icon {
+    font-size: 26px;
+    line-height: 1;
+}
+
+.reaction-modal-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--accent-gold, #c9a227);
+    letter-spacing: 0.03em;
+}
+
+.reaction-modal-context {
+    font-size: 13px;
+    color: var(--text-muted, #5a6478);
+    line-height: 1.55;
+}
+
+.reaction-modal-context strong {
+    color: var(--text-primary, #e8dcc8);
+}
+
+.reaction-modal-items {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-height: 55vh;
+    overflow-y: auto;
+}
+
+.reaction-participant-block {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.reaction-participant-name {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent-gold, #c9a227);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+}
+
+.reaction-btns-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.reaction-use-btn {
+    background: rgba(201, 162, 39, 0.1);
+    border: 1px solid rgba(201, 162, 39, 0.3);
+    border-radius: 8px;
+    padding: 9px 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    transition: background 0.15s, border-color 0.15s;
+    text-align: left;
+    width: 100%;
+}
+
+.reaction-use-btn:hover,
+.reaction-use-btn:focus {
+    background: rgba(201, 162, 39, 0.22);
+    border-color: var(--accent-gold, #c9a227);
+    outline: none;
+}
+
+.reaction-btn-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary, #e8dcc8);
+}
+
+.reaction-btn-meta {
+    font-size: 11px;
+    color: var(--text-muted, #5a6478);
+    white-space: nowrap;
+}
+
+.reaction-skip-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    padding: 9px;
+    cursor: pointer;
+    color: var(--text-muted, #5a6478);
+    font-size: 13px;
+    transition: background 0.15s;
+    width: 100%;
+}
+
+.reaction-skip-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+@media (max-width: 768px) {
+    .reaction-modal {
+        max-width: 100%;
+    }
+
+    .reaction-modal-items {
+        max-height: 45vh;
+    }
+}

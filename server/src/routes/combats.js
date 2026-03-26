@@ -236,7 +236,11 @@ router.put('/:id', async (req, res) => {
 
         if (!combat) return res.status(404).json({ error: 'Combate no encontrado' });
 
-        broadcast(req.params.id, { ...combat, _clientId: body._clientId });
+        broadcast(req.params.id, {
+            ...combat,
+            pendingReactionTrigger: body.pendingReactionTrigger || null,
+            _clientId: body._clientId,
+        });
         res.json(combat);
     } catch (err) {
         console.error('[PUT /api/combats/:id]', err);

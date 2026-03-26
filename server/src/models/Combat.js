@@ -101,6 +101,9 @@ const CombatSchema = new mongoose.Schema({
     // Combat log
     log: { type: [LogEntrySchema], default: [] },
 
+    // Reaction tracking: { participantId: true } — used reaction this round
+    reactionsUsed: { type: mongoose.Schema.Types.Mixed, default: {} },
+
     // Metadata
     name:      { type: String, default: '' },
     createdBy: { type: String, default: '' },

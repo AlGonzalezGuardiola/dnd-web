@@ -57,6 +57,8 @@ const combatState = {
     nextLogId: 0,
     segundaAccionTurn: false,
     extraAttackTurn: false,
+    reactionsUsed: {},           // { participantId: true } — used reaction this round
+    pendingReactionTrigger: null, // transient broadcast: { id, actorId, actionName, actionType }
 };
 
 let combatModeActive = false;
