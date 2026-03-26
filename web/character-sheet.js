@@ -491,7 +491,7 @@ function openSpellLevelModal(charId, spellName, baseLevel, onConfirm) {
     initSpellSlotsForChar(charId);
 
     const available = (data.ranuras || []).filter(s => {
-        const lvNum = parseInt(s.nombre.replace('Nv', ''));
+        const lvNum = parseInt(s.nombre.match(/Nv(\d+)/)?.[1]);
         if (isNaN(lvNum) || lvNum < baseLevel) return false;
         const remaining = spellSlotState[charId]?.[s.nombre] ?? s.total;
         return remaining > 0;
@@ -505,7 +505,7 @@ function openSpellLevelModal(charId, spellName, baseLevel, onConfirm) {
     document.getElementById('spellLevelModal')?.remove();
 
     const optionsHTML = available.map(s => {
-        const lvNum    = parseInt(s.nombre.replace('Nv', ''));
+        const lvNum    = parseInt(s.nombre.match(/Nv(\d+)/)?.[1]);
         const rem      = spellSlotState[charId]?.[s.nombre] ?? s.total;
         const upcast   = lvNum > baseLevel ? '<span class="slo-upcast">↑ Pot.</span>' : '';
         const safeSlot = s.nombre.replace(/'/g, "\\'");
