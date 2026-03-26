@@ -183,7 +183,7 @@ function navigateBack() {
             showCombatSetup();
         } else if (view === 'combatSetup') {
             combatModeActive = false;
-            setView('landing');
+            setView('onlineLobby');
         }
         return;
     }
@@ -201,10 +201,13 @@ function navigateBack() {
         setView('landing');
         return;
     }
-    if (view === 'onlineLobby' || view === 'onlineWaiting') { setView('landing'); return; }
-    if (view === 'encounters') { setView('landing'); return; }
+    if (view === 'onlineLobby') { setView('landing'); return; }
+    if (view === 'onlineWaiting') { setView('onlineLobby'); return; }
+    if (view === 'encounters') { setView('onlineLobby'); return; }
     if (view === 'npcGenerator') { setView('landing'); return; }
     if (view === 'sessionNotes') { setView('landing'); return; }
+    if (view === 'narrativaHub') { setView('landing'); return; }
+    if (view === 'narrative') { setView('narrativaHub'); return; }
 
     // Map navigation back
     if (state.history.length === 0) return;

@@ -5807,160 +5807,155 @@ body.role-jugador .master-only { display: none !important; }
 /* ============================================
    MASTER ATTACK DAMAGE PANEL
    ============================================ */
-.attack-target-panel {
-    background: rgba(255,60,60,0.05);
-    border: 1px solid rgba(255,80,80,0.25);
-    border-radius: 12px;
-    padding: 14px;
-    margin: 10px 0;
+/* ── Damage Apply Panel ──────────────────────────────────────────────────── */
+.damage-apply-panel {
+    background: linear-gradient(145deg, rgba(180,30,30,0.13), rgba(120,15,15,0.08));
+    border: 1.5px solid rgba(229,57,53,0.32);
+    border-radius: 14px;
+    padding: 16px;
+    margin: 14px 0 4px;
 }
 
-.attack-target-title {
+.damage-panel-header {
     font-size: 12px;
-    font-weight: 700;
-    color: #ff9999;
+    font-weight: 800;
+    color: #ef9a9a;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin-bottom: 10px;
-}
-
-.attack-target-list {
-    display: flex;
-    flex-direction: column;
-    gap: 7px;
+    letter-spacing: 0.1em;
     margin-bottom: 12px;
 }
 
-.attack-target-row {
+.damage-targets-list {
     display: flex;
-    align-items: center;
+    flex-direction: column;
     gap: 8px;
-    border-radius: 8px;
-    transition: background 0.15s;
+    margin-bottom: 12px;
 }
 
-.attack-target-row.target-selected {
-    background: rgba(255,80,80,0.08);
-    border-radius: 8px;
-    padding: 4px 0;
-}
-
-/* Button that selects/deselects the target */
-.attack-target-select-btn {
+.dmg-target-row {
     display: flex;
     align-items: center;
-    gap: 8px;
-    flex: 1;
-    padding: 7px 10px;
+    gap: 10px;
+    padding: 8px 10px;
     background: rgba(255,255,255,0.03);
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    cursor: pointer;
-    text-align: left;
-    color: var(--text-primary);
-    font-size: 13px;
-    font-weight: 600;
-    transition: background 0.15s, border-color 0.15s;
-    min-width: 0;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px;
+    transition: border-color 0.15s, background 0.15s;
 }
 
-.attack-target-select-btn:hover {
-    background: rgba(255,80,80,0.1);
-    border-color: rgba(255,80,80,0.4);
+.dmg-target-row:focus-within {
+    border-color: rgba(229,57,53,0.5);
+    background: rgba(229,57,53,0.06);
 }
 
-.attack-target-select-btn.selected {
-    background: rgba(255,80,80,0.15);
-    border-color: rgba(255,100,100,0.55);
+.dmg-target-row.dmg-dead {
+    opacity: 0.4;
 }
 
-.attack-target-check {
-    margin-left: auto;
-    font-size: 14px;
-    font-weight: 700;
-    color: #ff8080;
-    flex-shrink: 0;
-}
-
-.attack-target-select-btn.selected .attack-target-check {
-    color: #ff4444;
-}
-
-.attack-target-info {
+.dmg-target-info {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 7px;
     flex: 1;
     min-width: 0;
-    overflow: hidden;
 }
 
-.attack-target-icon {
-    font-size: 14px;
-    flex-shrink: 0;
-}
+.dmg-target-icon { font-size: 14px; flex-shrink: 0; }
 
-.attack-target-name {
+.dmg-target-name {
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--text-primary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    flex: 1;
+    flex-shrink: 0;
+    min-width: 44px;
 }
 
-.attack-target-hp {
+.dmg-hp-bar-wrap {
+    flex: 1;
+    height: 6px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.dmg-hp-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+.dmg-hp-text {
     font-size: 11px;
     font-family: var(--font-mono, monospace);
+    font-weight: 600;
     flex-shrink: 0;
+    min-width: 52px;
+    text-align: right;
 }
 
-.attack-dmg-input {
-    width: 72px;
+/* shared class: applyAttackDamage() scans .attack-dmg-input */
+.attack-dmg-input,
+.dmg-number-input {
+    width: 68px;
     flex-shrink: 0;
-    padding: 5px 8px;
-    background: rgba(255,255,255,0.06);
-    border: 1px solid rgba(255,80,80,0.4);
-    border-radius: 6px;
-    color: #ff9999;
-    font-size: 14px;
-    font-weight: 600;
+    padding: 6px 8px;
+    background: rgba(255,255,255,0.05);
+    border: 1.5px solid rgba(229,57,53,0.35);
+    border-radius: 8px;
+    color: #ef9a9a;
+    font-size: 15px;
+    font-weight: 700;
     text-align: center;
     font-family: var(--font-mono, monospace);
+    transition: border-color 0.15s, background 0.15s;
 }
 
-.attack-dmg-input:focus {
+.attack-dmg-input:focus,
+.dmg-number-input:focus {
     outline: none;
-    border-color: #ff6666;
-    background: rgba(255,80,80,0.1);
+    border-color: #e53935;
+    background: rgba(229,57,53,0.12);
+    color: #ffcdd2;
 }
 
-.attack-dmg-input::placeholder {
-    color: rgba(255,100,100,0.4);
+.attack-dmg-input::placeholder,
+.dmg-number-input::placeholder {
+    color: rgba(239,154,154,0.35);
     font-size: 11px;
     font-weight: 400;
 }
 
-.btn-apply-damage {
-    width: 100%;
-    padding: 10px;
-    background: rgba(255,60,60,0.15);
-    border: 1px solid rgba(255,80,80,0.4);
-    border-radius: 8px;
-    color: #ff9999;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.15s;
-    letter-spacing: 0.03em;
+.dmg-number-input:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
 }
 
-.btn-apply-damage:hover {
-    background: rgba(255,60,60,0.28);
-    border-color: #ff6666;
-    color: #ffcccc;
+.btn-apply-damage-full {
+    width: 100%;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, rgba(229,57,53,0.22), rgba(183,28,28,0.18));
+    border: 1.5px solid rgba(229,57,53,0.5);
+    border-radius: 10px;
+    color: #ffcdd2;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.15s;
+    letter-spacing: 0.04em;
 }
+
+.btn-apply-damage-full:hover {
+    background: linear-gradient(135deg, rgba(229,57,53,0.38), rgba(183,28,28,0.3));
+    border-color: #e53935;
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(229,57,53,0.22);
+}
+
+.btn-apply-damage-full:active { transform: translateY(0); }
 
 /* --- Real-time sync share link (master combat top bar) --- */
 .combat-share-link {
@@ -8449,124 +8444,7 @@ select:focus-visible {
 /* ============================================
    MASTER TURN PLANNER (BG3-style)
    ============================================ */
-.master-planner-section {
-    background: rgba(201, 162, 39, 0.05);
-    border: 1px solid rgba(201, 162, 39, 0.18);
-    border-radius: 12px;
-    padding: 14px 16px;
-    margin: 10px 0 6px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-}
-
-.master-planner-title {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--accent-gold, #c9a227);
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin-bottom: 2px;
-}
-
-.mplanner-empty-hint {
-    font-size: 12px;
-    color: var(--text-muted, #5a6478);
-    font-style: italic;
-    padding: 4px 0;
-}
-
-/* A single slot row (accion / adicional / reaccion) */
-.mplanner-row {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.mplanner-row.empty {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 6px;
-    opacity: 0.55;
-}
-
-.mplanner-row.filled {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-    border-radius: 8px;
-    padding: 8px 10px;
-}
-
-.mplanner-row-header {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: wrap;
-}
-
-.mplanner-label {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text-muted, #5a6478);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    flex-shrink: 0;
-}
-
-.mplanner-hint {
-    font-size: 12px;
-    color: var(--text-muted, #5a6478);
-    font-style: italic;
-}
-
-.mplanner-action-name {
-    font-size: 14px;
-    font-weight: 700;
-    color: var(--text-primary, #e8dcc8);
-    flex: 1;
-}
-
-.mplanner-dice {
-    font-size: 11px;
-    color: var(--accent-gold, #c9a227);
-    background: rgba(201, 162, 39, 0.1);
-    border-radius: 4px;
-    padding: 2px 6px;
-    font-family: var(--font-mono, monospace);
-}
-
-.mplanner-remove-btn {
-    background: none;
-    border: none;
-    color: var(--text-muted, #5a6478);
-    cursor: pointer;
-    font-size: 13px;
-    padding: 2px 4px;
-    border-radius: 4px;
-    margin-left: auto;
-    transition: color 0.15s;
-    flex-shrink: 0;
-}
-
-.mplanner-remove-btn:hover {
-    color: #ff6666;
-}
-
-/* Target area nested inside a planner row */
-.mplanner-target-area {
-    margin-top: 4px;
-    padding-top: 8px;
-    border-top: 1px solid rgba(255, 255, 255, 0.07);
-}
-
-/* Override attack panel styles inside planner (no extra margin/border) */
-.mplanner-target-area .attack-target-panel {
-    background: none;
-    border: none;
-    padding: 0;
-    margin: 0;
-}
+/* mplanner / master-planner styles removed — replaced by .damage-apply-panel */
 
 @media (max-width: 768px) {
     .master-planner-section {

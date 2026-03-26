@@ -45,117 +45,31 @@ function renderCombatManager() {
     renderKillScoreboard();
 }
 
-// ---- Attack target selection state ----
-let _currentAttackTargets = new Set(); // IDs of targets currently selected for damage
-
-function toggleAttackTarget(actorId, targetId) {
-    if (_currentAttackTargets.has(targetId)) {
-        _currentAttackTargets.delete(targetId);
-    } else {
-        _currentAttackTargets.add(targetId);
-        const actor = combatState.participants.find(p => p.id === actorId);
-        offerAttackTargetReactions(actorId, actor?.name ?? 'ataque', targetId);
-    }
-    _refreshAttackPanel(actorId);
-}
-
-function _refreshAttackPanel(actorId) {
-    const panel = document.getElementById('attackTargetPanel');
-    if (!panel) return;
-    const actor = combatState.participants.find(p => p.id === actorId);
-    if (!actor) return;
-    const attackerIsAlly = (actor.tipo === 'jugador' || actor.tipo === 'aliado');
-    const targets = combatState.participants.filter(t => {
-        if (t.id === actorId) return false;
-        return attackerIsAlly !== (t.tipo === 'jugador' || t.tipo === 'aliado');
-    });
-    panel.innerHTML = _buildAttackPanelInnerHTML(actorId, targets);
-}
-
-function _buildAttackPanelInnerHTML(actorId, targets) {
-    if (!targets.length) return '<div style="font-size:12px;color:var(--text-muted);padding:8px 0">Sin objetivos disponibles</div>';
+// ---- Damage panel (below action cards) ----
+function _buildDamagePanelHTML(actorId, targets) {
+    if (!targets.length) return '';
     const rows = targets.map(t => {
-        const isSelected = _currentAttackTargets.has(t.id);
         const hpPct   = t.hp.max > 0 ? Math.round(t.hp.current / t.hp.max * 100) : 0;
-        const hpColor = hpPct <= 0 ? '#555' : hpPct <= 25 ? '#ff4444' : hpPct <= 50 ? '#ffaa00' : '#4caf50';
+        const hpColor = hpPct <= 0 ? '#555' : hpPct <= 25 ? '#e53935' : hpPct <= 50 ? '#ff9800' : '#4caf50';
         const tipoIcon = t.tipo === 'enemigo' ? '💀' : t.tipo === 'aliado' ? '💙' : '🎮';
-        return `<div class="attack-target-row${isSelected ? ' target-selected' : ''}">
-            <button class="attack-target-select-btn${isSelected ? ' selected' : ''}"
-                    onclick="toggleAttackTarget('${actorId}','${t.id}')">
-                <span>${tipoIcon} ${t.name.split(' ')[0]}</span>
-                <span class="attack-target-hp" style="color:${hpColor}">${t.hp.current}/${t.hp.max} ❤️</span>
-                <span class="attack-target-check">${isSelected ? '✓' : '+'}</span>
-            </button>
-            ${isSelected ? `<input type="number" class="attack-dmg-input" id="dmg_${t.id}"
-                   placeholder="daño" min="0" inputmode="numeric">` : ''}
+        const isDead   = t.hp.current <= 0;
+        return `<div class="dmg-target-row${isDead ? ' dmg-dead' : ''}">
+            <div class="dmg-target-info">
+                <span class="dmg-target-icon">${tipoIcon}</span>
+                <span class="dmg-target-name">${t.name.split(' ')[0]}</span>
+                <div class="dmg-hp-bar-wrap">
+                    <div class="dmg-hp-bar-fill" style="width:${hpPct}%;background:${hpColor}"></div>
+                </div>
+                <span class="dmg-hp-text" style="color:${hpColor}">${t.hp.current}/${t.hp.max}</span>
+            </div>
+            <input type="number" class="attack-dmg-input dmg-number-input" id="dmg_${t.id}"
+                   placeholder="daño" min="0" inputmode="numeric"${isDead ? ' disabled' : ''}>
         </div>`;
     }).join('');
-    const hasSelected = _currentAttackTargets.size > 0;
-    return `<div class="attack-target-title">⚔️ ${hasSelected ? 'Objetivos seleccionados — introduce el daño' : 'Selecciona objetivos'}</div>
-        <div class="attack-target-list">${rows}</div>
-        ${hasSelected ? `<button class="btn-apply-damage" onclick="applyAttackDamage('${actorId}')">💥 Aplicar Daño</button>` : ''}`;
-}
-
-function _buildMasterPlannerHTML(actorId, currentEntry, allItems, opponentTargets) {
-    const actions = currentEntry?.actions || [];
-    if (!actions.length && !opponentTargets.length) return '';
-
-    const SLOT_TYPES = [
-        { key: 'accion',    icon: '⚔️', label: 'Acción' },
-        { key: 'adicional', icon: '⚡', label: 'Adicional' },
-        { key: 'reaccion',  icon: '↩️', label: 'Reacción' },
-    ];
-
-    const getSlotActions = (key) => actions.filter(a => {
-        const obj = allItems.find(x => x.nombre === a.nombre);
-        const tipo = obj ? inferActionType(obj) : 'accion';
-        return tipo === key;
-    });
-
-    let hasAnyAttack = false;
-
-    const slotsHTML = SLOT_TYPES.map(s => {
-        const slotActions = getSlotActions(s.key);
-        if (!slotActions.length) {
-            return `<div class="mplanner-row empty">
-                <span class="mplanner-label">${s.icon} ${s.label}:</span>
-                <span class="mplanner-hint">— selecciona abajo</span>
-            </div>`;
-        }
-        return slotActions.map(a => {
-            const obj = allItems.find(x => x.nombre === a.nombre);
-            const isAttackAction = s.key !== 'reaccion' && obj && (obj.atk || obj.dado);
-            const diceStr = obj?.atk ? `ATK ${obj.atk}` : '';
-            const dmgStr  = obj?.dado && obj.dado !== '—' ? `DMG ${obj.dado}` : '';
-            const safeName = a.nombre.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-
-            let targetHTML = '';
-            if (isAttackAction && opponentTargets.length > 0 && !hasAnyAttack) {
-                hasAnyAttack = true;
-                targetHTML = `<div id="attackTargetPanel" class="mplanner-target-area">
-                    ${_buildAttackPanelInnerHTML(actorId, opponentTargets)}
-                </div>`;
-            }
-
-            return `<div class="mplanner-row filled">
-                <div class="mplanner-row-header">
-                    <span class="mplanner-label">${s.icon} ${s.label}:</span>
-                    <strong class="mplanner-action-name">${a.nombre}</strong>
-                    ${diceStr || dmgStr ? `<span class="mplanner-dice">${[diceStr, dmgStr].filter(Boolean).join(' · ')}</span>` : ''}
-                    <button class="mplanner-remove-btn" onclick="toggleCombatAction('${actorId}','${safeName}','${(a.dice||'').replace(/'/g,"\\'")}')">✕</button>
-                </div>
-                ${targetHTML}
-            </div>`;
-        }).join('');
-    }).join('');
-
-    const isEmpty = !actions.length;
-    return `<div class="master-planner-section">
-        <div class="master-planner-title">📋 Planificador del turno</div>
-        ${isEmpty
-            ? `<div class="mplanner-empty-hint">Selecciona una acción de la lista de abajo para planificar el turno</div>`
-            : slotsHTML
-        }
+    return `<div class="damage-apply-panel">
+        <div class="damage-panel-header">💥 Aplicar Daño</div>
+        <div class="damage-targets-list">${rows}</div>
+        <button class="btn-apply-damage-full" onclick="applyAttackDamage('${actorId}')">💥 Aplicar Daño</button>
     </div>`;
 }
 
@@ -566,6 +480,14 @@ function renderActivePanel(targetEl, forcePIdx) {
     const modificadorItems = allItems.filter(a => inferActionType(a) === 'modificador');
     const regularItems     = allItems.filter(a => inferActionType(a) !== 'modificador');
 
+    // Damage panel targets (opponents of current participant)
+    const _attackerIsAlly = (p.tipo === 'jugador' || p.tipo === 'aliado');
+    const _opponentTargets = combatState.participants.filter(t => {
+        if (t.id === p.id) return false;
+        return _attackerIsAlly !== (t.tipo === 'jugador' || t.tipo === 'aliado');
+    });
+    const _damagePanelHTML = (!isExtraAttack && !isSegundaAccion) ? _buildDamagePanelHTML(p.id, _opponentTargets) : '';
+
     // Phase key for per-attack smite tracking
     const currentPhase = isExtraAttack ? 'extra' : (isSegundaAccion ? 'segunda' : 'main');
 
@@ -772,7 +694,8 @@ function renderActivePanel(targetEl, forcePIdx) {
             </div>
         </div>
         ${combatSlotsHTML}
-        <div class="combat-actions-cards-section">${cardSections}</div>`;
+        <div class="combat-actions-cards-section">${cardSections}</div>
+        ${_damagePanelHTML}`;
     } else {
         // Master mode — card-based layout matching character sheet
         const masterCharData = liveData;
@@ -844,15 +767,7 @@ function renderActivePanel(targetEl, forcePIdx) {
             </div>`;
         }).join('');
 
-        const attackerIsAllyM = (p.tipo === 'jugador' || p.tipo === 'aliado');
-        const opponentTargetsM = combatState.participants.filter(t => {
-            if (t.id === p.id) return false;
-            return attackerIsAllyM !== (t.tipo === 'jugador' || t.tipo === 'aliado');
-        });
-        const masterPlannerHTML = (!isExtraAttack && !isSegundaAccion)
-            ? _buildMasterPlannerHTML(p.id, currentEntry, [...baseItems, ...customItems], opponentTargetsM)
-            : '';
-        slotSections = `${masterSlotsHTML}${masterPlannerHTML}<div class="combat-actions-cards-section">${masterCardSections}</div>`;
+        slotSections = `${masterSlotsHTML}<div class="combat-actions-cards-section">${masterCardSections}</div>${_damagePanelHTML}`;
     }
 
     // Form to add persistent custom actions (not shown in mini-turn modes)
@@ -1059,30 +974,20 @@ function toggleCombatAction(participantId, nombre, dice) {
                 saveCombatState();
                 renderActivePanel();
                 renderCombatLog();
-                // Offer reactions after spell is cast (tipo is always 'accion' but trigger type is 'hechizo')
-                if (actionObj && inferActionType(actionObj) !== 'reaccion' && inferActionType(actionObj) !== 'modificador') {
-                    offerReactions(participantId, nombre, 'hechizo');
-                }
             });
             return; // wait for modal
         }
         entry.actions.push({ nombre, dice: dice || '' });
         // Determine action type to mark slot
-        let _addedTipo = null;
         if (actionObj) {
             const tipo = inferActionType(actionObj);
             if (tipo === 'adicional') entry.slots.adicional = true;
             else if (tipo === 'reaccion') entry.slots.reaccion = true;
             else entry.slots.accion = true;
-            _addedTipo = tipo;
         }
         saveCombatState();
         renderActivePanel();
         renderCombatLog();
-        // Offer reactions for non-leveled actions (but not for reactions or modifiers)
-        if (_addedTipo && _addedTipo !== 'reaccion' && _addedTipo !== 'modificador') {
-            offerReactions(participantId, nombre, _addedTipo);
-        }
         return;
     }
     saveCombatState();
@@ -1162,7 +1067,6 @@ function applyAttackDamage(attackerId) {
         }
     });
     if (applied > 0) {
-        _currentAttackTargets.clear();
         saveCombatState();
         renderTurnQueue();
         renderActivePanel();
@@ -1241,13 +1145,6 @@ function selectPlannerAction(participantId, nombre, atk, dado, tipoDano) {
     const _planPanelEl = document.getElementById('combatActivePanel') || document.getElementById('playerCombatPanel');
     renderActivePanel(_planPanelEl, combatState.currentIndex);
     renderCombatLog();
-    if (_plannerActionAdded && actionObj) {
-        const _tipo = inferActionType(actionObj);
-        if (_tipo !== 'reaccion' && _tipo !== 'modificador') {
-            const _triggerType = (actionObj.nivel && typeof actionObj.nivel === 'number') ? 'hechizo' : _tipo;
-            offerReactions(participantId, nombre, _triggerType);
-        }
-    }
 }
 
 function removePlannerSlot(participantId, slotKey) {
@@ -1335,7 +1232,6 @@ function setParticipantHp(id, value) {
         const cd = Math.max(10, Math.floor(dmgTaken / 2));
         showNotification(`🧠 Concentración: ¡Tirada de CON CD ${cd}!`, 4000);
     }
-    offerDamageReactions(id, prevHp);
     saveCombatState();
     // Lightweight DOM update — don't rebuild panel (would kill slider/input focus)
     const hpDisplay = document.getElementById('activeHpInput');
@@ -1468,12 +1364,6 @@ function _doNextTurn() {
             break;
         }
     }
-
-    _currentAttackTargets.clear();
-
-    // Restore reaction for the participant whose turn is now starting
-    const _nextTurnP = combatState.participants[combatState.currentIndex];
-    if (_nextTurnP) clearReactionForParticipant(_nextTurnP.id);
 
     createCurrentTurnEntry();
     saveCombatState();
