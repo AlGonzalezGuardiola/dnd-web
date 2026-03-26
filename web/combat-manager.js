@@ -46,6 +46,8 @@ function renderCombatManager() {
 }
 
 // ---- Player Combat Layout (role=jugador) — fully independent turn manager ----
+let _lastPlayerTurnNotified = '';
+
 function _renderPlayerCombatLayout(view) {
     if (!view) view = document.getElementById('playerCombatView');
     if (!view) return;
@@ -64,14 +66,14 @@ function _renderPlayerCombatLayout(view) {
         currentP.ownerCharId === gameRole.characterId ||
         (currentP._isSirvienteInvisible && gameRole.characterId === 'Vel')
     );
+    const isMyTurn = isMyCharTurn || isMyAllyTurn;
 
     const isSegundaAccion = combatState.segundaAccionTurn;
     const roundLabel = isSegundaAccion
         ? `Ronda ${combatState.round} · Segunda Acción`
         : `Ronda ${combatState.round}`;
 
-    // Only show "Siguiente Turno" when it's the player's own turn (or their summon's)
-    const nextTurnBtn = (isMyCharTurn || isMyAllyTurn)
+    const nextTurnBtn = isMyTurn
         ? `<button class="btn-combat-primary" onclick="nextCombatTurn()">Siguiente Turno →</button>`
         : `<span class="player-waiting-hint">Esperando a que el Master avance el turno…</span>`;
 
@@ -88,13 +90,89 @@ function _renderPlayerCombatLayout(view) {
         </div>`;
 
     const panelEl = document.getElementById('playerCombatPanel');
-    if (isMyCharTurn || isMyAllyTurn) {
-        // My turn or my summon/servant's turn: show that participant in planner mode
+    if (isMyTurn) {
+        // My turn: show full planner
         renderActivePanel(panelEl, combatState.currentIndex);
+        // Show "¡Es tu turno!" popup once per turn
+        const turnKey = `${combatState.round}-${combatState.currentIndex}`;
+        if (turnKey !== _lastPlayerTurnNotified) {
+            _lastPlayerTurnNotified = turnKey;
+            _showYourTurnPopup(currentP.name);
+        }
     } else {
-        // Someone else's turn: role gates apply → shows waiting state
-        renderActivePanel(panelEl);
+        // Not my turn: always show own character info (no rival's turn screen)
+        const myChar = combatState.participants.find(p => p.id === gameRole.characterId);
+        _renderPlayerOwnCharPanel(panelEl, myChar, currentP);
     }
+}
+
+function _showYourTurnPopup(charName) {
+    document.getElementById('yourTurnOverlay')?.remove();
+    const overlay = document.createElement('div');
+    overlay.id = 'yourTurnOverlay';
+    overlay.className = 'your-turn-overlay';
+    overlay.innerHTML = `
+        <div class="your-turn-modal">
+            <div class="your-turn-icon">⚔️</div>
+            <div class="your-turn-title">¡Es tu turno!</div>
+            <div class="your-turn-name">${charName}</div>
+            <button class="btn-combat-primary your-turn-btn"
+                    onclick="document.getElementById('yourTurnOverlay')?.remove()">¡Vamos!</button>
+        </div>`;
+    document.body.appendChild(overlay);
+    setTimeout(() => document.getElementById('yourTurnOverlay')?.remove(), 5000);
+}
+
+function _renderPlayerOwnCharPanel(panelEl, myChar, currentP) {
+    if (!panelEl) return;
+    if (!myChar) {
+        panelEl.innerHTML = `<div class="player-own-panel"><div class="player-own-waiting">⏳ Esperando tu turno…</div></div>`;
+        return;
+    }
+    const data   = getEffectiveCharData(myChar);
+    const hpCur  = myChar.hp?.current ?? 0;
+    const hpMax  = myChar.hp?.max    ?? 1;
+    const hpPct  = hpMax > 0 ? Math.max(0, Math.min(100, (hpCur / hpMax) * 100)) : 0;
+    const hpColor = hpPct <= 0 ? '#555' : hpPct <= 25 ? '#ff4444' : hpPct <= 50 ? '#ffaa00' : '#4caf50';
+
+    const conditions = (myChar.conditions || []).map(c => {
+        const cond = CONDITIONS.find(x => x.id === c);
+        return cond ? `<span class="player-own-condition">${cond.label} ${cond.title}</span>` : '';
+    }).filter(Boolean).join('');
+
+    // Reactions: show all, indicate if used
+    const allActions = [...(data?.combateExtra || []), ...(data?.conjuros || [])];
+    const reactions  = allActions.filter(a => inferActionType(a) === 'reaccion');
+    const reactionUsed = !!combatState.reactionsUsed?.[myChar.id];
+
+    const reactionsHTML = reactions.length ? `
+        <div class="player-own-reactions">
+            <div class="player-own-section-title">↩️ Reacciones</div>
+            ${reactions.map(r => {
+                const used = reactionUsed;
+                return `<div class="player-own-reaction-row ${used ? 'react-used' : 'react-available'}">
+                    <span class="player-own-reaction-name">${r.nombre}</span>
+                    <span class="player-own-reaction-badge">${used ? 'Usada' : '✓ Disponible'}</span>
+                </div>`;
+            }).join('')}
+        </div>` : '';
+
+    const currentName = currentP?.name?.split(' ')[0] ?? '—';
+    panelEl.innerHTML = `
+        <div class="player-own-panel">
+            <div class="player-own-turn-banner">
+                ⏳ Turno de <strong>${currentName}</strong>
+            </div>
+            <div class="player-own-char-name">${myChar.name}</div>
+            <div class="player-own-hp-wrap">
+                <div class="player-own-hp-bar-bg">
+                    <div class="player-own-hp-bar-fill" style="width:${hpPct}%;background:${hpColor}"></div>
+                </div>
+                <div class="player-own-hp-text">❤️ ${hpCur} / ${hpMax} PG</div>
+            </div>
+            ${conditions ? `<div class="player-own-conditions">${conditions}</div>` : ''}
+            ${reactionsHTML}
+        </div>`;
 }
 
 function renderTurnQueue() {
@@ -983,6 +1061,7 @@ function applyAttackDamage(attackerId) {
                         }
                     }
                     log.push(`${target.name.split(' ')[0]} −${damage} PG`);
+                    offerDamageReactions(targetId, prevHp);
                 }
 
                 applied++;
@@ -1162,6 +1241,7 @@ function setParticipantHp(id, value) {
         const cd = Math.max(10, Math.floor(dmgTaken / 2));
         showNotification(`🧠 Concentración: ¡Tirada de CON CD ${cd}!`, 4000);
     }
+    offerDamageReactions(id, prevHp);
     saveCombatState();
     // Lightweight DOM update — don't rebuild panel (would kill slider/input focus)
     const hpDisplay = document.getElementById('activeHpInput');
