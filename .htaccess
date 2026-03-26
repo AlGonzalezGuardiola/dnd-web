@@ -1,0 +1,14 @@
+Options -MultiViews
+RewriteEngine On
+RewriteBase /dnd-web/
+
+# Pass through actual static files (CSS, JS, images inside web/)
+RewriteCond %{REQUEST_URI} ^/dnd-web/web/ [NC]
+RewriteRule ^ - [L]
+
+# Pass through API requests (proxied separately to Node.js)
+RewriteCond %{REQUEST_URI} ^/api/ [NC]
+RewriteRule ^ - [L]
+
+# SPA fallback: serve the app for all other /dnd-web/* paths
+RewriteRule ^ web/index.html [L]

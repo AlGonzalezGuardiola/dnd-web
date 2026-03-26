@@ -34,7 +34,7 @@ const _PATH_TO_VIEW = Object.fromEntries(
 
 // Detect app base path at runtime (works on any sub-path or localhost root)
 const _APP_BASE = (() => {
-    const m = location.pathname.match(/^(\/.*?\/dnd-web\/web)\//);
+    const m = location.pathname.match(/^(\/(?:[^/]+\/)*dnd-web)\//);
     return m ? m[1] + '/' : '/';
 })();
 
