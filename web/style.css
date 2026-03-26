@@ -5107,6 +5107,20 @@ body.role-jugador .master-only { display: none !important; }
     align-self: center;
 }
 
+.player-waiting-banner {
+    font-size: 13px;
+    color: var(--text-muted, #5a6478);
+    background: rgba(201,162,39,0.07);
+    border-bottom: 1px solid rgba(201,162,39,0.15);
+    padding: 8px 16px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.player-waiting-banner strong {
+    color: var(--accent-gold, #c9a227);
+}
+
 /* ============================================
    FEATURE 18 — Master: Unified Tabbed Setup
    ============================================ */

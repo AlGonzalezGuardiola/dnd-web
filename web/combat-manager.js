@@ -77,11 +77,16 @@ function _renderPlayerCombatLayout(view) {
         ? `<button class="btn-combat-primary" onclick="nextCombatTurn()">Siguiente Turno →</button>`
         : `<span class="player-waiting-hint">Esperando a que el Master avance el turno…</span>`;
 
+    const waitingBanner = !isMyTurn
+        ? `<div class="player-waiting-banner">⏳ Turno de <strong>${currentP.name.split(' ')[0]}</strong> — El Master gestiona este turno</div>`
+        : '';
+
     view.innerHTML = `
         <div class="player-active-header">
             <div class="combat-round-badge">${roundLabel}</div>
             <button class="btn-end-combat" onclick="confirmEndCombat()">✕ Fin</button>
         </div>
+        ${waitingBanner}
         <div class="player-active-body">
             <div id="playerCombatPanel" class="combat-active-panel"></div>
         </div>
@@ -90,19 +95,19 @@ function _renderPlayerCombatLayout(view) {
         </div>`;
 
     const panelEl = document.getElementById('playerCombatPanel');
+
+    // Always show own planner — find own participant index (not current turn index)
+    const myIdx = combatState.participants.findIndex(p => p.id === gameRole.characterId);
+    const renderIdx = (myIdx >= 0) ? myIdx : combatState.currentIndex;
+    renderActivePanel(panelEl, renderIdx);
+
+    // Show "¡Es tu turno!" popup once when turn starts
     if (isMyTurn) {
-        // My turn: show full planner
-        renderActivePanel(panelEl, combatState.currentIndex);
-        // Show "¡Es tu turno!" popup once per turn
         const turnKey = `${combatState.round}-${combatState.currentIndex}`;
         if (turnKey !== _lastPlayerTurnNotified) {
             _lastPlayerTurnNotified = turnKey;
             _showYourTurnPopup(currentP.name);
         }
-    } else {
-        // Not my turn: always show own character info (no rival's turn screen)
-        const myChar = combatState.participants.find(p => p.id === gameRole.characterId);
-        _renderPlayerOwnCharPanel(panelEl, myChar, currentP);
     }
 }
 
