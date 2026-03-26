@@ -288,6 +288,12 @@ window.characterData = {
                 "desc": "Esfera 20ft radio, rango 150ft. 8d6 fuego (DEX CD 15 mitad)."
             },
             {
+                "nombre": "Contrahechizo",
+                "nivel": 3,
+                "tipo": "reaccion",
+                "desc": "Reacción a 60ft. Nv3 o menor: falla automático. Nv4+: tirada INT vs CD 10+nivel. Con ranura Nv4+: anula automáticamente conjuros de nivel ≤ ranura usada."
+            },
+            {
                 "nombre": "Susurros del Olvido",
                 "nivel": "Esp",
                 "desc": "3d6 psíquico + Huir (SAB)."
@@ -323,6 +329,12 @@ window.characterData = {
                 "dado": "2d10",
                 "tipo_dano": "fuego/necrótico",
                 "desc": "Reacción al recibir daño. 2d10 fuego o necrótico al atacante. Recupera slots (Nv1/3 turnos)."
+            },
+            {
+                "nombre": "Contrahechizo",
+                "tipo": "reaccion",
+                "dado": "1d20+7",
+                "desc": "Interrumpe un conjuro visible a 60ft. Nv3 o menor: falla automáticamente. Nv4+: tirada INT (bono lanzamiento) contra CD 10+nivel del conjuro. Con ranura Nv4+: anula automáticamente conjuros de nivel ≤ ranura usada. (Hechizo Nv3, gasta ranura)"
             },
             {
                 "nombre": "Brazalete (Intangible)",
