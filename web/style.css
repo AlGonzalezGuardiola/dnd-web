@@ -8445,3 +8445,134 @@ select:focus-visible {
     text-align: center;
     padding: 24px 0;
 }
+
+/* ============================================
+   MASTER TURN PLANNER (BG3-style)
+   ============================================ */
+.master-planner-section {
+    background: rgba(201, 162, 39, 0.05);
+    border: 1px solid rgba(201, 162, 39, 0.18);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin: 10px 0 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.master-planner-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent-gold, #c9a227);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 2px;
+}
+
+.mplanner-empty-hint {
+    font-size: 12px;
+    color: var(--text-muted, #5a6478);
+    font-style: italic;
+    padding: 4px 0;
+}
+
+/* A single slot row (accion / adicional / reaccion) */
+.mplanner-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.mplanner-row.empty {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    opacity: 0.55;
+}
+
+.mplanner-row.filled {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 8px 10px;
+}
+
+.mplanner-row-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.mplanner-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted, #5a6478);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    flex-shrink: 0;
+}
+
+.mplanner-hint {
+    font-size: 12px;
+    color: var(--text-muted, #5a6478);
+    font-style: italic;
+}
+
+.mplanner-action-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-primary, #e8dcc8);
+    flex: 1;
+}
+
+.mplanner-dice {
+    font-size: 11px;
+    color: var(--accent-gold, #c9a227);
+    background: rgba(201, 162, 39, 0.1);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: var(--font-mono, monospace);
+}
+
+.mplanner-remove-btn {
+    background: none;
+    border: none;
+    color: var(--text-muted, #5a6478);
+    cursor: pointer;
+    font-size: 13px;
+    padding: 2px 4px;
+    border-radius: 4px;
+    margin-left: auto;
+    transition: color 0.15s;
+    flex-shrink: 0;
+}
+
+.mplanner-remove-btn:hover {
+    color: #ff6666;
+}
+
+/* Target area nested inside a planner row */
+.mplanner-target-area {
+    margin-top: 4px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+/* Override attack panel styles inside planner (no extra margin/border) */
+.mplanner-target-area .attack-target-panel {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .master-planner-section {
+        padding: 10px 12px;
+    }
+    .mplanner-action-name {
+        font-size: 13px;
+    }
+}
