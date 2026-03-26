@@ -8073,3 +8073,120 @@ select:focus-visible {
         max-height: 45vh;
     }
 }
+
+/* ============================================
+   QUICK NPC MODAL — TABS & TEMPLATE PICKER
+   ============================================ */
+.qe-tabs {
+    display: flex;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+}
+
+.qe-tab {
+    flex: 1;
+    padding: 8px 10px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text-muted, #5a6478);
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+}
+
+.qe-tab:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary, #e8dcc8);
+}
+
+.qe-tab.qe-tab-active {
+    background: rgba(201, 162, 39, 0.14);
+    color: var(--accent-gold, #c9a227);
+    font-weight: 600;
+}
+
+/* Template list container */
+.qe-tpl-list {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    max-height: 290px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+}
+
+.qe-tpl-loading,
+.qe-tpl-empty {
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted, #5a6478);
+    padding: 24px 0 16px;
+    line-height: 1.7;
+}
+
+/* Individual template card */
+.qe-tpl-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    padding: 9px 11px;
+    transition: border-color 0.15s;
+}
+
+.qe-tpl-card:hover {
+    border-color: rgba(201, 162, 39, 0.3);
+}
+
+.qe-tpl-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex: 1;
+}
+
+.qe-tpl-card-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary, #e8dcc8);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.qe-tpl-card-stats {
+    font-size: 11px;
+    color: var(--text-muted, #5a6478);
+}
+
+.qe-tpl-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.qe-tpl-init {
+    width: 56px !important;
+    padding: 5px 6px !important;
+    text-align: center;
+}
+
+.qe-tpl-add-btn {
+    padding: 6px 10px !important;
+    font-size: 14px !important;
+    line-height: 1;
+}
+
+.qe-cancel-btn {
+    width: 100%;
+    margin-top: 4px;
+}

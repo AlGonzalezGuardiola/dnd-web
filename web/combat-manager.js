@@ -1567,28 +1567,180 @@ function showQuickNpcModal(context, tipo) {
             </div>
         </div>`;
 
+    // Tab switcher only shown in mid-combat context
+    const tabsHTML = context === 'combat' ? `
+        <div class="qe-tabs">
+            <button class="qe-tab qe-tab-active" id="qeTabNew" onclick="switchQeTab('new')">✏️ Crear nuevo</button>
+            <button class="qe-tab" id="qeTabTpl" onclick="switchQeTab('tpl')">📋 Plantillas</button>
+        </div>` : '';
+
+    const tplSectionHTML = context === 'combat' ? `
+        <div id="qeTplContent" style="display:none">
+            <div id="qeTplList" class="qe-tpl-list">
+                <div class="qe-tpl-loading">Cargando plantillas…</div>
+            </div>
+            <button class="btn-combat-secondary qe-cancel-btn"
+                    onclick="document.getElementById('quickEnemyOverlay')?.remove()">Cancelar</button>
+        </div>` : '';
+
     overlay.innerHTML = `
         <div class="quick-enemy-modal">
-            <div class="quick-enemy-title">${icon} ${label} Rápido</div>
-            <input id="qeName" class="quick-enemy-input" placeholder="${placeholder}" autocomplete="off">
-            <input id="qeHp" class="quick-enemy-input" type="number" placeholder="${isEnemy ? 'PG máximos (por miembro si es grupo)' : 'PG máximos'}" min="1">
-            <input id="qeAc" class="quick-enemy-input" type="number" placeholder="Clase de Armadura" min="1">
-            ${context === 'combat' ? `<input id="qeInit" class="quick-enemy-input" type="number" placeholder="Iniciativa (opcional, 0 = al final)">` : ''}
-            ${extraToggle}
-
-            <div class="qe-actions-section">
-                <div class="qe-actions-title">⚔️ Acciones (opcional)</div>
-                <div id="qeActionsList" class="qe-actions-list"></div>
-                <button class="qe-add-action-btn" onclick="addQeAction()">+ Añadir acción</button>
+            <div class="quick-enemy-title">${icon} Añadir ${label}</div>
+            ${tabsHTML}
+            <div id="qeNewContent">
+                <input id="qeName" class="quick-enemy-input" placeholder="${placeholder}" autocomplete="off">
+                <input id="qeHp" class="quick-enemy-input" type="number"
+                       placeholder="${isEnemy ? 'PG máximos (por miembro si es grupo)' : 'PG máximos'}" min="1">
+                <input id="qeAc" class="quick-enemy-input" type="number" placeholder="Clase de Armadura" min="1">
+                ${context === 'combat' ? `<input id="qeInit" class="quick-enemy-input" type="number" placeholder="Iniciativa (opcional, 0 = al final)">` : ''}
+                ${extraToggle}
+                <div class="qe-actions-section">
+                    <div class="qe-actions-title">⚔️ Acciones (opcional)</div>
+                    <div id="qeActionsList" class="qe-actions-list"></div>
+                    <button class="qe-add-action-btn" onclick="addQeAction()">+ Añadir acción</button>
+                </div>
+                <div class="quick-enemy-btns">
+                    <button class="btn-combat-primary" onclick="submitQuickNpc('${context}')">Añadir</button>
+                    <button class="btn-combat-secondary" onclick="document.getElementById('quickEnemyOverlay')?.remove()">Cancelar</button>
+                </div>
             </div>
-
-            <div class="quick-enemy-btns">
-                <button class="btn-combat-primary" onclick="submitQuickNpc('${context}')">Añadir</button>
-                <button class="btn-combat-secondary" onclick="document.getElementById('quickEnemyOverlay')?.remove()">Cancelar</button>
-            </div>
+            ${tplSectionHTML}
         </div>`;
     document.body.appendChild(overlay);
     document.getElementById('qeName')?.focus();
+
+    if (context === 'combat') {
+        _loadAndRenderQeTemplates(tipo);
+    }
+}
+
+function switchQeTab(tab) {
+    const newContent = document.getElementById('qeNewContent');
+    const tplContent = document.getElementById('qeTplContent');
+    const tabNew     = document.getElementById('qeTabNew');
+    const tabTpl     = document.getElementById('qeTabTpl');
+    if (!newContent || !tplContent) return;
+    if (tab === 'new') {
+        newContent.style.display = '';
+        tplContent.style.display = 'none';
+        tabNew?.classList.add('qe-tab-active');
+        tabTpl?.classList.remove('qe-tab-active');
+        document.getElementById('qeName')?.focus();
+    } else {
+        newContent.style.display = 'none';
+        tplContent.style.display = '';
+        tabNew?.classList.remove('qe-tab-active');
+        tabTpl?.classList.add('qe-tab-active');
+    }
+}
+
+async function _loadAndRenderQeTemplates(tipo) {
+    const apiType = tipo === 'aliado' ? 'ALLY' : 'ENEMY';
+    const listEl  = document.getElementById('qeTplList');
+    if (!listEl) return;
+
+    try {
+        const res  = await fetch(`${API_BASE}/api/entity-templates?type=${apiType}`);
+        const data = await res.json();
+        if (data.success) savedTemplates[apiType] = data.templates;
+    } catch (_) { /* use cached */ }
+
+    const templates = savedTemplates[apiType] || [];
+    if (!templates.length) {
+        listEl.innerHTML = `<div class="qe-tpl-empty">Sin plantillas guardadas.<br>
+            Crea un ${tipo} para guardarlo automáticamente.</div>`;
+        return;
+    }
+
+    const icon = tipo === 'enemigo' ? '💀' : '💙';
+    listEl.innerHTML = templates.map(t => {
+        const badges = [
+            t.isGroup && (t.groupSize || 1) >= 2 ? `👥 ×${t.groupSize}` : '',
+            t.isSummon ? `✨ ${t.summoner}` : '',
+        ].filter(Boolean).join(' · ');
+        return `<div class="qe-tpl-card">
+            <div class="qe-tpl-card-info">
+                <span class="qe-tpl-card-name">${t.name}</span>
+                <span class="qe-tpl-card-stats">❤️ ${t.stats?.hp ?? '?'} · 🛡️ ${t.stats?.ac ?? '?'}${badges ? ' · ' + badges : ''}</span>
+            </div>
+            <div class="qe-tpl-card-actions">
+                <input type="number" class="quick-enemy-input qe-tpl-init" id="ctInit_${t._id}"
+                       placeholder="Init" min="-5" max="30">
+                <button class="btn-combat-primary qe-tpl-add-btn"
+                        onclick="addTemplateToActiveCombat('${t._id}','${tipo}')">＋</button>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function addTemplateToActiveCombat(templateId, tipo) {
+    const apiType = tipo === 'aliado' ? 'ALLY' : 'ENEMY';
+    const t = (savedTemplates[apiType] || []).find(x => x._id === templateId);
+    if (!t) return;
+
+    const initiative = parseInt(document.getElementById(`ctInit_${templateId}`)?.value) || 0;
+    const isEnemy    = tipo === 'enemigo';
+    const icon       = isEnemy ? '💀' : '💙';
+
+    // Build combateExtra from structured actions; fall back to actionsText
+    let combateExtra = (t.actions || [])
+        .filter(a => a.name)
+        .map(a => ({ nombre: a.name, tipo: _actionTypeToTipo(a.type), atk: '', dado: '', desc: a.description || '' }));
+
+    if (!combateExtra.length && t.actionsText) {
+        const parse = (text, tipoStr) =>
+            (text || '').split(',').map(s => s.trim()).filter(Boolean)
+                .map(nombre => ({ nombre, tipo: tipoStr, atk: '', dado: '', desc: '' }));
+        combateExtra = [
+            ...parse(t.actionsText.acciones,    'accion'),
+            ...parse(t.actionsText.adicionales, 'adicional'),
+            ...parse(t.actionsText.reacciones,  'reaccion'),
+        ];
+    }
+
+    const hp        = t.stats?.hp || 10;
+    const ac        = t.stats?.ac || 10;
+    const isGroup   = !!t.isGroup && (t.groupSize || 1) >= 2;
+    const groupSize = isGroup ? (t.groupSize || 1) : 1;
+    const isSummon  = !!t.isSummon;
+    const summoner  = t.summoner || '';
+    const totalHp   = hp * groupSize;
+    const displayHp = isGroup ? totalHp : hp;
+
+    const uid = `qe_${Date.now()}`;
+    const charData = {
+        id: uid, tipo, nombre: t.name,
+        clase: isEnemy ? 'Enemigo' : 'Aliado NPC', nivel: '—', imagen: '',
+        resumen: { HP: String(displayHp), CA: String(ac), Velocidad: '30ft' },
+        combateExtra, conjuros: [],
+    };
+    window.characterData[uid] = charData;
+
+    const participant = {
+        id: uid, name: t.name,
+        initiative,
+        hp: { current: displayHp, max: displayHp },
+        ac: String(ac), baseAc: String(ac),
+        speed: '30ft', baseSpeed: '30ft',
+        conditions: [], note: '', charData,
+        demonicForm: false, tipo,
+        customActions: [],
+        isGroup, groupSize,
+        membersRemaining: groupSize,
+        hpPerMember: hp,
+        totalHp,
+        currentMemberHp: hp,
+        isSummon, summoner,
+        summonedBeforeCombat: false,
+    };
+
+    combatState.participants.push(participant);
+    combatState.participants.sort((a, b) => (b.initiative || 0) - (a.initiative || 0));
+
+    document.getElementById('quickEnemyOverlay')?.remove();
+    saveCombatState();
+    renderCombatManager();
+    showNotification(`${icon} ${t.name} añadido al combate`, 2000);
 }
 
 function toggleQeGroupFields() {
