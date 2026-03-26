@@ -299,9 +299,11 @@ function renderCharacterSheet(charId) {
 function setupCharacterSheetListeners() {
     // Buttons — edit only available to master
     const editBtn = document.getElementById('editCharBtn');
+    const controlsBar = document.querySelector('.sheet-controls-bar');
     if (editBtn) {
         if (!isMaster()) {
             editBtn.style.display = 'none';
+            if (controlsBar) controlsBar.style.display = 'none';
         } else {
             editBtn.addEventListener('click', toggleCharacterEditMode);
         }

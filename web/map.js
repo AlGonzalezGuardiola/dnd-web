@@ -190,7 +190,17 @@ function navigateBack() {
 
     // Non-map single-level views
     const view = state.currentView;
-    if (view === 'characters') { setView('landing'); return; }
+    if (view === 'characters') {
+        // If a character sheet is open, close it (back = close sheet, not leave view)
+        const sheetContainer = document.getElementById('characterSheetContainer');
+        if (sheetContainer && sheetContainer.style.display !== 'none') {
+            sheetContainer.style.display = 'none';
+            isCharacterEditing = false;
+            return;
+        }
+        setView('landing');
+        return;
+    }
     if (view === 'onlineLobby' || view === 'onlineWaiting') { setView('landing'); return; }
     if (view === 'encounters') { setView('landing'); return; }
     if (view === 'npcGenerator') { setView('landing'); return; }

@@ -135,6 +135,7 @@ function setupEventListeners() {
     // Modal controls
     setupModalListeners();
     setupCharacterSheetListeners();
+    setupMobileTouchFix();
 }
 
 function setupModalListeners() {
@@ -225,6 +226,35 @@ function rollDie(sides) {
         resultEl.classList.add('fumble');
         showNotification('💀 ¡Pifia! El destino es cruel...', 3000);
     }
+}
+
+// ============================================
+// Mobile Touch Fix — iOS click events inside scrollable fixed containers
+// ============================================
+function setupMobileTouchFix() {
+    if (!('ontouchstart' in window)) return; // desktop-only: skip
+
+    let _tsX = 0, _tsY = 0;
+
+    document.addEventListener('touchstart', function(e) {
+        _tsX = e.touches[0].clientX;
+        _tsY = e.touches[0].clientY;
+    }, { passive: true });
+
+    // Fire click immediately on touchend for action cards (bypasses iOS tap delay
+    // and the position-tracking bug in position:fixed + overflow-y:auto containers).
+    document.addEventListener('touchend', function(e) {
+        const dx = Math.abs(e.changedTouches[0].clientX - _tsX);
+        const dy = Math.abs(e.changedTouches[0].clientY - _tsY);
+        if (dx > 10 || dy > 10) return; // user was scrolling, not tapping
+
+        const card = e.target.closest('.combat-action-card, .modifier-card');
+        if (!card) return;
+        if (e.target.closest('button, input, select, textarea, a')) return;
+
+        e.preventDefault(); // block synthesized click so we don't double-fire
+        card.click();
+    }, { passive: false });
 }
 
 // ============================================

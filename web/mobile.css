@@ -35,15 +35,31 @@
     #toggleEdit,
     #exportBtn,
     #addMapBtn,
-    .sheet-controls-bar,
     .portrait-edit-overlay,
     .btn-add-item,
     .btn-delete-item,
     .pin-delete,
-    #editCharBtn,
-    #saveCharBtn,
     #exportCharBtn {
         display: none;
+    }
+
+    /* ── Sheet edit bar: reposition to bottom strip on mobile ── */
+    .sheet-controls-bar {
+        position: fixed;
+        bottom: 20px;
+        left: 14px;
+        right: 14px;
+        top: auto;
+        z-index: 5012;
+        gap: 8px;
+        justify-content: center;
+    }
+
+    .sheet-controls-bar .btn-sheet-action {
+        flex: 1;
+        max-width: 200px;
+        padding: 10px 16px;
+        font-size: 14px;
     }
 
     /* ── HUD: fixed top bar ── */
