@@ -62,39 +62,37 @@
         </div>
         <h1 class="landing-title">Crónicas de Dungeons & Dragons</h1>
         <div class="landing-cards">
-            <div class="card" id="cardWorld">
-                <div class="card-title">🗺️ Mundo</div>
-                <p>Explora el mapa del mundo, ciudades y mazmorras.</p>
+            <div class="card card-narrative" id="cardNarrative" onclick="openNarrativeSection()">
+                <div class="card-title">📜 Narrativa</div>
+                <p>El mundo, las crónicas de la campaña y la historia de tus aventuras.</p>
             </div>
             <div class="card" id="cardCharacters">
                 <div class="card-title">👥 Personajes</div>
                 <p>Gestiona las hojas de personaje y estadísticas.</p>
             </div>
             <div class="card card-online" id="cardOnlineCombat" onclick="showOnlineLobby()">
-                <div class="card-title">🌐 Combate en Línea</div>
-                <p>Partida sincronizada en tiempo real. Juega desde varios dispositivos a la vez.</p>
-            </div>
-            <div class="card card-encounters" id="cardEncounters" onclick="openEncounters()">
-                <div class="card-title">⚔️ Encuentros</div>
-                <p>Gestiona encuentros de combate con iniciativa, turnos, PV y condiciones por criatura.</p>
+                <div class="card-title">⚔️ Combate</div>
+                <p>Gestiona encuentros y partidas sincronizadas en tiempo real desde varios dispositivos.</p>
             </div>
             <div class="card card-notes" id="cardNotes" onclick="openSessionNotes()">
-                <div class="card-title">📝 Notas de Sesión</div>
+                <div class="card-title">📝 Notas</div>
                 <p>Apunta ideas, secretos y eventos de la partida. Búsqueda y filtrado por etiquetas.</p>
-            </div>
-            <div class="card card-narrative" id="cardNarrative" onclick="openNarrativeSection()">
-                <div class="card-title">📜 Narrativa</div>
-                <p>Las crónicas de la campaña, capítulo a capítulo. La historia de tus aventuras, para siempre.</p>
             </div>
         </div>
     </section>
 
-    <!-- Online Combat Lobby -->
+    <!-- Combat Hub -->
     <section id="onlineLobbyView" class="character-section" style="display:none;">
-        <h1 class="landing-title">🌐 Combate en Línea</h1>
+        <h1 class="landing-title">⚔️ Combate</h1>
         <div class="online-lobby">
+            <div class="online-lobby-card" onclick="openEncounters()" role="button" tabindex="0" aria-label="Encuentros">
+                <div class="online-lobby-icon">🗡️</div>
+                <div class="online-lobby-title">Encuentros</div>
+                <div class="online-lobby-desc">Gestiona encuentros locales: iniciativa, turnos, PV y condiciones por criatura.</div>
+                <button class="btn-combat-primary" style="margin-top:16px">Abrir encuentros</button>
+            </div>
             <div class="online-lobby-card" onclick="startOnlineCombatSetup()" role="button" tabindex="0" aria-label="Crear partida en línea">
-                <div class="online-lobby-icon">⚔️</div>
+                <div class="online-lobby-icon">🌐</div>
                 <div class="online-lobby-title">Crear partida</div>
                 <div class="online-lobby-desc">Configura el combate y obtén un código para compartir con los demás jugadores.</div>
                 <button class="btn-combat-primary" style="margin-top:16px">Crear sala</button>
@@ -663,6 +661,25 @@
         </div>
     </section>
 
+    <!-- ===== NARRATIVA HUB ===== -->
+    <section id="narrativaHubView" class="character-section" style="display:none;">
+        <h1 class="landing-title">📜 Narrativa</h1>
+        <div class="online-lobby">
+            <div class="online-lobby-card" onclick="openWorldMap()" role="button" tabindex="0" aria-label="Mundo">
+                <div class="online-lobby-icon">🗺️</div>
+                <div class="online-lobby-title">Mundo</div>
+                <div class="online-lobby-desc">Explora el mapa interactivo del mundo, regiones y puntos de interés.</div>
+                <button class="btn-combat-primary" style="margin-top:16px">Abrir mapa</button>
+            </div>
+            <div class="online-lobby-card" onclick="openCronicas()" role="button" tabindex="0" aria-label="Crónicas">
+                <div class="online-lobby-icon">📜</div>
+                <div class="online-lobby-title">Crónicas</div>
+                <div class="online-lobby-desc">Las crónicas de la campaña, capítulos y la historia de vuestras aventuras.</div>
+                <button class="btn-combat-primary" style="margin-top:16px">Abrir crónicas</button>
+            </div>
+        </div>
+    </section>
+
     <!-- ===== NARRATIVA ===== -->
     <section id="narrativeSection" class="narrative-section" style="display:none;" aria-label="Narrativa de Campaña">
         <div class="narrative-layout">
@@ -703,11 +720,11 @@
     <script src="combat-manager.js?v=20260326d"></script>
     <script src="reactions.js?v=20260326c"></script>
     <script src="combat-log.js?v=20260324a"></script>
-    <script src="view.js?v=20260326a"></script>
+    <script src="view.js?v=20260326b"></script>
     <script src="encounters.js?v=20260325a"></script>
     <script src="npc-generator.js?v=20260325a"></script>
     <script src="session-notes.js?v=20260325a"></script>
-    <script src="narrative.js?v=20260326a"></script>
+    <script src="narrative.js?v=20260326b"></script>
 </body>
 
 </html>

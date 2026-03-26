@@ -88,15 +88,7 @@ function setupEventListeners() {
     const btnBack = document.getElementById('btnBack');
     if (btnBack) btnBack.addEventListener('click', navigateBack);
 
-    // Landing Page
-    document.getElementById('cardWorld').addEventListener('click', () => {
-        if (state.currentMap) {
-            renderMap();
-            setView('map');
-        } else {
-            showNotification('No hay mapa inicial configurado', 3000);
-        }
-    });
+    // Landing Page — cardWorld removed; map access via Narrativa hub
 
     document.getElementById('cardCharacters').addEventListener('click', () => {
         combatModeActive = false;
@@ -343,6 +335,8 @@ function setView(viewName) {
     if (encountersEl) encountersEl.style.display = 'none';
     const sessionNotesEl = document.getElementById('sessionNotesSection');
     if (sessionNotesEl) sessionNotesEl.style.display = 'none';
+    const narrativaHubEl = document.getElementById('narrativaHubView');
+    if (narrativaHubEl) narrativaHubEl.style.display = 'none';
     const narrativeEl = document.getElementById('narrativeSection');
     if (narrativeEl) narrativeEl.style.display = 'none';
 
@@ -439,18 +433,40 @@ function setView(viewName) {
             document.getElementById('breadcrumbs').textContent = '📝 Notas de Sesión';
             document.getElementById('btnBack').style.display = 'flex';
             break;
-        case 'narrative':
-            document.getElementById('narrativeSection').style.display = 'flex';
+        case 'narrativaHub':
+            document.getElementById('narrativaHubView').style.display = 'flex';
             if (editorToolbar) editorToolbar.style.display = 'none';
             if (hud) hud.style.display = 'flex';
             if (diceWidget) diceWidget.style.display = 'none';
             document.getElementById('breadcrumbs').textContent = '📜 Narrativa';
             document.getElementById('btnBack').style.display = 'flex';
             break;
+        case 'narrative':
+            document.getElementById('narrativeSection').style.display = 'flex';
+            if (editorToolbar) editorToolbar.style.display = 'none';
+            if (hud) hud.style.display = 'flex';
+            if (diceWidget) diceWidget.style.display = 'none';
+            document.getElementById('breadcrumbs').textContent = '📜 Narrativa › Crónicas';
+            document.getElementById('btnBack').style.display = 'flex';
+            break;
     }
 }
 
 // currentView() is defined in globals.js — do not redefine here
+
+// ============================================
+// Narrativa Hub helpers
+// ============================================
+function openWorldMap() {
+    if (state.currentMap) {
+        renderMap();
+        setView('map');
+    } else {
+        showNotification('No hay mapa inicial configurado', 3000);
+    }
+}
+
+// openCronicas() defined in narrative.js
 
 // ============================================
 // Fullscreen

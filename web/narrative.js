@@ -123,6 +123,10 @@
 
     // ── Entry point ────────────────────────────────────────────
     window.openNarrativeSection = function () {
+        setView('narrativaHub');
+    };
+
+    window.openCronicas = function () {
         setView('narrative');
         currentId  = null;
         isEditMode = false;
