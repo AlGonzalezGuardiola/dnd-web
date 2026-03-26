@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Git Workflow
+
+After completing any change (feature, fix, refactor), always commit and push to GitHub automatically — no need to ask the user.
+
 ## Project Overview
 
 A D&D 5e combat management web application (Spanish-language UI) with interactive map navigation, character sheet management, and multi-device collaborative combat sessions.
