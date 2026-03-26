@@ -203,6 +203,13 @@ window.loadCombatTemplate = async function (id) {
             charData: n.charData || window.characterData[n.id] || { combateExtra: [], conjuros: [] },
         }));
 
+        // Always start a fresh online session when launching from a saved template
+        clearOnlineSession();
+        isOnlineCombat = true;
+        gameRole = { type: 'master', characterId: null };
+        localStorage.setItem(ROLE_KEY, JSON.stringify(gameRole));
+        updateRoleIndicator();
+
         combatModeActive = true;
         setView('combatSetup');
         switchCombatSetupTab('jugadores');

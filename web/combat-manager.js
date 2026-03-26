@@ -430,6 +430,12 @@ function renderActivePanel(targetEl, forcePIdx) {
         const dado     = item.dado && item.dado !== '—' ? item.dado : (extractDiceFromDesc(item.desc) || '');
         const diceDisp = atk ? `${atk}${dado ? ' / ' + dado : ''}` : dado;
         const safeName = item.nombre.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        const safeAtk  = atk.replace(/'/g, "\\'");
+        const safeDadoItem = dado.replace(/'/g, "\\'");
+        const safeDesc = (item.desc || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' ');
+        const infoBtn  = item.desc
+            ? `<button class="chip-info-btn" onclick="event.stopPropagation();showActionDetail('${safeName}','${safeAtk}','${safeDadoItem}','${safeDesc}')" title="Ver descripción">ℹ️</button>`
+            : '';
         const removeBtn = item._custom
             ? `<button class="chip-remove-btn" onclick="removePermanentCustomAction('${p.id}','${safeName}')" title="Eliminar">✕</button>` : '';
         return `<div class="combat-action-card${isUsed ? ' selected' : ''}${item._custom ? ' custom-action' : ''}"
@@ -437,9 +443,8 @@ function renderActivePanel(targetEl, forcePIdx) {
             <div class="combat-action-header">
                 <span class="combat-action-name">${item.nombre}</span>
                 ${diceStr ? `<span class="combat-action-dice">${diceStr}</span>` : ''}
-                ${removeBtn}
+                ${infoBtn}${removeBtn}
             </div>
-            <div class="combat-action-desc">${item.desc || ''}</div>
         </div>`;
     };
 
@@ -835,6 +840,18 @@ function toggleCombatAction(participantId, nombre, dice) {
 
     if (idx >= 0) {
         entry.actions.splice(idx, 1);
+        // Restore action slot if no remaining actions of the same type
+        if (actionObj) {
+            const tipo = inferActionType(actionObj);
+            const slotKey = tipo === 'adicional' ? 'adicional' : tipo === 'reaccion' ? 'reaccion' : 'accion';
+            const stillUsed = entry.actions.some(a => {
+                const aObj = allItems.find(x => x.nombre === a.nombre);
+                if (!aObj) return false;
+                const aTipo = inferActionType(aObj);
+                return (aTipo === 'adicional' ? 'adicional' : aTipo === 'reaccion' ? 'reaccion' : 'accion') === slotKey;
+            });
+            if (!stillUsed) entry.slots[slotKey] = false;
+        }
         // Restore spell slot if this was a leveled spell
         if (actionObj?.nivel && typeof actionObj.nivel === 'number') {
             initSpellSlotsForChar(participantId);

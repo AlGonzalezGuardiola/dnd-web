@@ -97,14 +97,18 @@ function renderCombatTab(data) {
             const isDepleted = item.descansoLargo && isUsed && !isActive;
             const diceStr   = item.dado && item.dado !== '—' ? `DMG ${item.dado}` : '';
             const safeName  = item.nombre.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            const safeDescMod = (item.desc || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' ');
+            const infoBtnMod  = item.desc
+                ? `<button class="chip-info-btn" onclick="event.stopPropagation();showActionDetail('${safeName}','','','${safeDescMod}')" title="Ver descripción">ℹ️</button>`
+                : '';
             return `<div class="combat-action-card modifier-card${isActive ? ' selected' : ''}${isDepleted ? ' depleted' : ''}"
                      onclick="selectModifier('${charId}','${safeName}')">
                 <div class="combat-action-header">
                     <span class="combat-action-name">${item.nombre}</span>
                     ${diceStr ? `<span class="combat-action-dice">${diceStr}</span>` : ''}
+                    ${infoBtnMod}
                     ${isDepleted ? '<span class="modifier-depleted-badge">Gastado · 🌙</span>' : ''}
                 </div>
-                <div class="combat-action-desc">${item.desc}</div>
             </div>`;
         }).join('');
         return `<div class="combat-section modifier-section">
@@ -127,14 +131,20 @@ function renderCombatTab(data) {
             ? `ATK ${item.atk}${item.dado && item.dado !== '—' ? ` | DMG ${item.dado}` : ''}`
             : (item.dado && item.dado !== '—' ? `DMG ${item.dado}`
                 : (extractDiceFromDesc(item.desc) || ''));
-        const safeName = item.nombre.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        const safeName    = item.nombre.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        const safeAtk     = (item.atk || '').replace(/'/g, "\\'");
+        const safeDadoItem = (item.dado && item.dado !== '—' ? item.dado : '').replace(/'/g, "\\'");
+        const safeDesc    = (item.desc || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' ');
+        const infoBtn     = item.desc
+            ? `<button class="chip-info-btn" onclick="event.stopPropagation();showActionDetail('${safeName}','${safeAtk}','${safeDadoItem}','${safeDesc}')" title="Ver descripción">ℹ️</button>`
+            : '';
         return `<div class="combat-action-card${isSelected ? ' selected' : ''}"
                  onclick="selectCombatAction('${charId}','${sectionKey}','${safeName}')">
             <div class="combat-action-header">
                 <span class="combat-action-name">${item.nombre}</span>
                 ${diceStr ? `<span class="combat-action-dice">${diceStr}</span>` : ''}
+                ${infoBtn}
             </div>
-            <div class="combat-action-desc">${item.desc}</div>
         </div>`;
     }
 
