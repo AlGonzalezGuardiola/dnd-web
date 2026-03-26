@@ -480,3 +480,56 @@ function saveNote(charId, text) {
     notesState[charId] = text;
     saveStateToStorage();
 }
+
+// ── Spell Level Picker Modal ──────────────────────────────────────────────────
+// Opens a modal to choose the slot level for a leveled spell.
+// Calls onConfirm(slotName) with the chosen slot, or nothing if cancelled.
+function openSpellLevelModal(charId, spellName, baseLevel, onConfirm) {
+    const data = window.characterData[charId];
+    if (!data?.ranuras) { onConfirm(null); return; }
+
+    initSpellSlotsForChar(charId);
+
+    const available = (data.ranuras || []).filter(s => {
+        const lvNum = parseInt(s.nombre.replace('Nv', ''));
+        if (isNaN(lvNum) || lvNum < baseLevel) return false;
+        const remaining = spellSlotState[charId]?.[s.nombre] ?? s.total;
+        return remaining > 0;
+    });
+
+    if (available.length === 0) {
+        showNotification(`❌ Sin ranuras disponibles para "${spellName}"`, 2500);
+        return;
+    }
+
+    document.getElementById('spellLevelModal')?.remove();
+
+    const optionsHTML = available.map(s => {
+        const lvNum    = parseInt(s.nombre.replace('Nv', ''));
+        const rem      = spellSlotState[charId]?.[s.nombre] ?? s.total;
+        const upcast   = lvNum > baseLevel ? '<span class="slo-upcast">↑ Pot.</span>' : '';
+        const safeSlot = s.nombre.replace(/'/g, "\\'");
+        return `<button class="spell-level-btn" onclick="window._confirmSpellLevel('${safeSlot}')">
+            <span class="slo-level">Nv${lvNum} ${upcast}</span>
+            <span class="slo-slots">${rem}/${s.total} ranuras</span>
+        </button>`;
+    }).join('');
+
+    const modal = document.createElement('div');
+    modal.id = 'spellLevelModal';
+    modal.className = 'spell-level-modal-overlay';
+    modal.innerHTML = `
+        <div class="spell-level-modal">
+            <div class="spell-level-title">✨ ${spellName}</div>
+            <div class="spell-level-subtitle">Elige nivel de ranura a gastar:</div>
+            <div class="spell-level-options">${optionsHTML}</div>
+            <button class="spell-level-cancel" onclick="document.getElementById('spellLevelModal').remove()">Cancelar</button>
+        </div>`;
+    document.body.appendChild(modal);
+
+    window._confirmSpellLevel = function(slotName) {
+        document.getElementById('spellLevelModal')?.remove();
+        window._confirmSpellLevel = null;
+        onConfirm(slotName);
+    };
+}

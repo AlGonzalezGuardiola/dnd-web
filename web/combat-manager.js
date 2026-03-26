@@ -839,6 +839,7 @@ function toggleCombatAction(participantId, nombre, dice) {
     const actionObj = allItems.find(a => a.nombre === nombre);
 
     if (idx >= 0) {
+        const removedAction = entry.actions[idx]; // save before splice
         entry.actions.splice(idx, 1);
         // Restore action slot if no remaining actions of the same type
         if (actionObj) {
@@ -852,33 +853,43 @@ function toggleCombatAction(participantId, nombre, dice) {
             });
             if (!stillUsed) entry.slots[slotKey] = false;
         }
-        // Restore spell slot if this was a leveled spell
+        // Restore spell slot using the level that was actually spent
         if (actionObj?.nivel && typeof actionObj.nivel === 'number') {
             initSpellSlotsForChar(participantId);
-            const slotDef = _findSlotDef(pData?.ranuras, actionObj.nivel);
-            if (slotDef) {
-                const key = slotDef.nombre;
-                spellSlotState[participantId][key] = Math.min(slotDef.total, (spellSlotState[participantId][key] ?? slotDef.total) + 1);
-                saveStateToStorage();
-                showNotification(`🔄 Ranura ${slotDef.nombre} restaurada`, 1500);
+            const usedSlot = removedAction._usedSlot || _findSlotDef(pData?.ranuras, actionObj.nivel)?.nombre;
+            if (usedSlot) {
+                const slotDef = pData?.ranuras?.find(s => s.nombre === usedSlot);
+                if (slotDef) {
+                    spellSlotState[participantId][usedSlot] = Math.min(slotDef.total, (spellSlotState[participantId][usedSlot] ?? slotDef.total) + 1);
+                    saveStateToStorage();
+                    showNotification(`🔄 Ranura ${usedSlot} restaurada`, 1500);
+                }
             }
         }
     } else {
-        // Check spell slot availability before adding
+        // Leveled spell: open level picker modal
         if (actionObj?.nivel && typeof actionObj.nivel === 'number') {
-            initSpellSlotsForChar(participantId);
-            const slotDef = _findSlotDef(pData?.ranuras, actionObj.nivel);
-            if (slotDef) {
-                const key = slotDef.nombre;
-                const cur = spellSlotState[participantId][key] ?? slotDef.total;
-                if (cur <= 0) {
-                    showNotification(`❌ Sin ranuras ${slotDef.nombre} disponibles`, 2000);
-                    return;
+            openSpellLevelModal(participantId, nombre, actionObj.nivel, (slotName) => {
+                if (!slotName) return; // cancelled
+                initSpellSlotsForChar(participantId);
+                const slotDef = pData?.ranuras?.find(s => s.nombre === slotName);
+                if (slotDef) {
+                    spellSlotState[participantId][slotName] = Math.max(0, (spellSlotState[participantId][slotName] ?? slotDef.total) - 1);
+                    saveStateToStorage();
+                    showNotification(`✨ Ranura ${slotName} gastada`, 1500);
                 }
-                spellSlotState[participantId][key] = cur - 1;
-                saveStateToStorage();
-                showNotification(`✨ Ranura ${slotDef.nombre} gastada`, 1500);
-            }
+                entry.actions.push({ nombre, dice: dice || '', _usedSlot: slotName });
+                if (actionObj) {
+                    const tipo = inferActionType(actionObj);
+                    if (tipo === 'adicional') entry.slots.adicional = true;
+                    else if (tipo === 'reaccion') entry.slots.reaccion = true;
+                    else entry.slots.accion = true;
+                }
+                saveCombatState();
+                renderActivePanel();
+                renderCombatLog();
+            });
+            return; // wait for modal
         }
         entry.actions.push({ nombre, dice: dice || '' });
         // Determine action type to mark slot

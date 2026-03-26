@@ -1672,3 +1672,107 @@ button, .card, .pin, .tab-btn, .hud-btn, .die-btn,
     width: 100%;
 }
 
+
+/* ============================================
+   Spell Level Picker Modal
+   ============================================ */
+.spell-level-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: 16px;
+}
+
+.spell-level-modal {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-strong);
+    border-radius: 12px;
+    padding: 24px 20px 20px;
+    min-width: 260px;
+    max-width: 340px;
+    width: 100%;
+    box-shadow: var(--shadow-elevated);
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.spell-level-title {
+    font-family: var(--font-heading);
+    font-size: 16px;
+    color: var(--accent-gold-bright);
+    text-align: center;
+    font-weight: 600;
+}
+
+.spell-level-subtitle {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+.spell-level-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.spell-level-btn {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(124, 58, 237, 0.12);
+    border: 1px solid rgba(124, 58, 237, 0.35);
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background 150ms ease, border-color 150ms ease;
+    font-size: 13px;
+}
+
+.spell-level-btn:hover {
+    background: rgba(124, 58, 237, 0.25);
+    border-color: rgba(124, 58, 237, 0.6);
+}
+
+.slo-level {
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.slo-upcast {
+    font-size: 11px;
+    background: rgba(201, 162, 39, 0.2);
+    color: var(--accent-gold);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-weight: 500;
+}
+
+.slo-slots {
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.spell-level-cancel {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-muted);
+    padding: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: color 150ms ease, border-color 150ms ease;
+}
+
+.spell-level-cancel:hover {
+    color: var(--text-secondary);
+    border-color: var(--border-strong);
+}
