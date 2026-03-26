@@ -1,0 +1,13 @@
+Options -MultiViews
+RewriteEngine On
+RewriteBase /dnd-web/web/
+
+# Serve existing files and directories normally
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Exclude API calls (shouldn't reach this server, but just in case)
+RewriteCond %{REQUEST_URI} !^/api/
+
+# SPA fallback: serve index.html for all other routes
+RewriteRule . index.html [L]

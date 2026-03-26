@@ -2,6 +2,16 @@
 <html lang="es">
 
 <head>
+    <!-- Dynamic base href: production = /dnd-web/web/, localhost = / -->
+    <base id="appBase" href="/dnd-web/web/">
+    <script>
+    (function(){
+        var h = location.hostname;
+        if (h === 'localhost' || h === '127.0.0.1' || h === '') {
+            document.getElementById('appBase').href = '/';
+        }
+    })();
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
@@ -720,7 +730,7 @@
     <script src="combat-manager.js?v=20260326e"></script>
     <script src="reactions.js?v=20260326c"></script>
     <script src="combat-log.js?v=20260324a"></script>
-    <script src="view.js?v=20260326c"></script>
+    <script src="view.js?v=20260326d"></script>
     <script src="encounters.js?v=20260325a"></script>
     <script src="npc-generator.js?v=20260325a"></script>
     <script src="session-notes.js?v=20260325a"></script>

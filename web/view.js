@@ -6,6 +6,85 @@
 // ============================================
 
 // ============================================
+// Client-side Router
+// ============================================
+
+// Map: viewName → URL path segment (relative to app base)
+const _ROUTES = {
+    landing:       '',
+    characters:    'personajes',
+    onlineLobby:   'combate',
+    encounters:    'combate/encuentros',
+    combatSetup:   'combate/nueva-partida',
+    combatInit:    'combate/inicio',
+    onlineWaiting: 'combate/sala-espera',
+    combatManager: 'combate/activo',
+    combatLogView: 'combate/registro',
+    narrativaHub:  'narrativa',
+    narrative:     'narrativa/cronicas',
+    sessionNotes:  'notas',
+    map:           'mapa',
+    npcGenerator:  'generador-npc',
+};
+
+// Reverse map: path segment → viewName
+const _PATH_TO_VIEW = Object.fromEntries(
+    Object.entries(_ROUTES).map(([k, v]) => [v, k])
+);
+
+// Detect app base path at runtime (works on any sub-path or localhost root)
+const _APP_BASE = (() => {
+    const m = location.pathname.match(/^(\/.*?\/dnd-web\/web)\//);
+    return m ? m[1] + '/' : '/';
+})();
+
+let _skipPushState = false;
+
+// Push a new history entry for a view
+function _pushRoute(viewName) {
+    if (_skipPushState) return;
+    const seg = _ROUTES[viewName];
+    if (seg === undefined) return;
+    const path = _APP_BASE + seg;
+    if (location.pathname !== path) {
+        history.pushState({ view: viewName }, '', path);
+    } else if (!history.state?.view) {
+        history.replaceState({ view: viewName }, '', path);
+    }
+}
+
+// Derive view name from current URL path
+function _viewFromPath(pathname) {
+    const stripped = pathname.startsWith(_APP_BASE)
+        ? pathname.slice(_APP_BASE.length)
+        : pathname.replace(/^\//, '');
+    const seg = stripped.replace(/\/$/, '');
+    return _PATH_TO_VIEW[seg] ?? 'landing';
+}
+
+// Init routing: navigate to URL-indicated view on page load and handle popstate
+function _initRouting() {
+    window.addEventListener('popstate', function(e) {
+        const viewName = e.state?.view || _viewFromPath(location.pathname);
+        _skipPushState = true;
+        setView(viewName);
+        _skipPushState = false;
+    });
+
+    const initialView = _viewFromPath(location.pathname);
+    // Guard: stateful views need active combat — fallback to parent
+    const _needsCombat = ['combatManager', 'combatInit', 'combatLogView'];
+    const _safeView = _needsCombat.includes(initialView) && !combatState?.isActive
+        ? 'onlineLobby'
+        : initialView;
+
+    history.replaceState({ view: _safeView }, '', location.pathname);
+    _skipPushState = true;
+    setView(_safeView);
+    _skipPushState = false;
+}
+
+// ============================================
 // Initialization
 // ============================================
 async function init() {
@@ -30,7 +109,7 @@ async function init() {
         initPlayerCharactersFromDB();
         setupDiceRoller();
         setupCombatOptionsMenu();
-        setView('landing');
+        _initRouting();
         updateTaskMd('Initialize');
         initRole();
         loadSavedCombatIfAny();
@@ -310,6 +389,7 @@ function toggleMobileLog() {
 // ============================================
 function setView(viewName) {
     state.currentView = viewName;
+    _pushRoute(viewName);
 
     // Manage body scroll class
     document.body.classList.remove('view-map');
