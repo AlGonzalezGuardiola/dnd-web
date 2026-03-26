@@ -96,6 +96,69 @@ function _buildAttackPanelInnerHTML(actorId, targets) {
         ${hasSelected ? `<button class="btn-apply-damage" onclick="applyAttackDamage('${actorId}')">💥 Aplicar Daño</button>` : ''}`;
 }
 
+function _buildMasterPlannerHTML(actorId, currentEntry, allItems, opponentTargets) {
+    const actions = currentEntry?.actions || [];
+    if (!actions.length && !opponentTargets.length) return '';
+
+    const SLOT_TYPES = [
+        { key: 'accion',    icon: '⚔️', label: 'Acción' },
+        { key: 'adicional', icon: '⚡', label: 'Adicional' },
+        { key: 'reaccion',  icon: '↩️', label: 'Reacción' },
+    ];
+
+    const getSlotActions = (key) => actions.filter(a => {
+        const obj = allItems.find(x => x.nombre === a.nombre);
+        const tipo = obj ? inferActionType(obj) : 'accion';
+        return tipo === key;
+    });
+
+    let hasAnyAttack = false;
+
+    const slotsHTML = SLOT_TYPES.map(s => {
+        const slotActions = getSlotActions(s.key);
+        if (!slotActions.length) {
+            return `<div class="mplanner-row empty">
+                <span class="mplanner-label">${s.icon} ${s.label}:</span>
+                <span class="mplanner-hint">— selecciona abajo</span>
+            </div>`;
+        }
+        return slotActions.map(a => {
+            const obj = allItems.find(x => x.nombre === a.nombre);
+            const isAttackAction = s.key !== 'reaccion' && obj && (obj.atk || obj.dado);
+            const diceStr = obj?.atk ? `ATK ${obj.atk}` : '';
+            const dmgStr  = obj?.dado && obj.dado !== '—' ? `DMG ${obj.dado}` : '';
+            const safeName = a.nombre.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+
+            let targetHTML = '';
+            if (isAttackAction && opponentTargets.length > 0 && !hasAnyAttack) {
+                hasAnyAttack = true;
+                targetHTML = `<div id="attackTargetPanel" class="mplanner-target-area">
+                    ${_buildAttackPanelInnerHTML(actorId, opponentTargets)}
+                </div>`;
+            }
+
+            return `<div class="mplanner-row filled">
+                <div class="mplanner-row-header">
+                    <span class="mplanner-label">${s.icon} ${s.label}:</span>
+                    <strong class="mplanner-action-name">${a.nombre}</strong>
+                    ${diceStr || dmgStr ? `<span class="mplanner-dice">${[diceStr, dmgStr].filter(Boolean).join(' · ')}</span>` : ''}
+                    <button class="mplanner-remove-btn" onclick="toggleCombatAction('${actorId}','${safeName}','${(a.dice||'').replace(/'/g,"\\'")}')">✕</button>
+                </div>
+                ${targetHTML}
+            </div>`;
+        }).join('');
+    }).join('');
+
+    const isEmpty = !actions.length;
+    return `<div class="master-planner-section">
+        <div class="master-planner-title">📋 Planificador del turno</div>
+        ${isEmpty
+            ? `<div class="mplanner-empty-hint">Selecciona una acción de la lista de abajo para planificar el turno</div>`
+            : slotsHTML
+        }
+    </div>`;
+}
+
 // ---- Player Combat Layout (role=jugador) — fully independent turn manager ----
 let _lastPlayerTurnNotified = '';
 
@@ -781,7 +844,15 @@ function renderActivePanel(targetEl, forcePIdx) {
             </div>`;
         }).join('');
 
-        slotSections = `${masterSlotsHTML}<div class="combat-actions-cards-section">${masterCardSections}</div>`;
+        const attackerIsAllyM = (p.tipo === 'jugador' || p.tipo === 'aliado');
+        const opponentTargetsM = combatState.participants.filter(t => {
+            if (t.id === p.id) return false;
+            return attackerIsAllyM !== (t.tipo === 'jugador' || t.tipo === 'aliado');
+        });
+        const masterPlannerHTML = (!isExtraAttack && !isSegundaAccion)
+            ? _buildMasterPlannerHTML(p.id, currentEntry, [...baseItems, ...customItems], opponentTargetsM)
+            : '';
+        slotSections = `${masterSlotsHTML}${masterPlannerHTML}<div class="combat-actions-cards-section">${masterCardSections}</div>`;
     }
 
     // Form to add persistent custom actions (not shown in mini-turn modes)
@@ -862,21 +933,6 @@ function renderActivePanel(targetEl, forcePIdx) {
                 : '<span style="color:var(--text-muted);font-size:12px">Inactivo</span>'}
         </button>` : '';
 
-    // Attack target panel (master or controlling player during current turn only)
-    let attackTargetPanelHTML = '';
-    if (canControl && forcePIdx === undefined) {
-        const attackerIsAlly = (p.tipo === 'jugador' || p.tipo === 'aliado');
-        const targets = combatState.participants.filter((t, i) => {
-            if (i === idx) return false;
-            return attackerIsAlly !== (t.tipo === 'jugador' || t.tipo === 'aliado');
-        });
-        if (targets.length > 0) {
-            attackTargetPanelHTML = `<div class="attack-target-panel" id="attackTargetPanel">
-                ${_buildAttackPanelInnerHTML(p.id, targets)}
-            </div>`;
-        }
-    }
-
     // HP slider fill percentage
     const sliderFillPct = p.hp.max > 0 ? Math.max(0, (p.hp.current / p.hp.max) * 100) : 0;
 
@@ -930,7 +986,6 @@ function renderActivePanel(targetEl, forcePIdx) {
         ${smiteToggleHTML}
         ${(isSegundaAccion || isExtraAttack) ? '' : `<div class="combat-conds-bar">${condHTML}</div>`}
         ${actionChipsHTML}
-        ${attackTargetPanelHTML}
         ${isExtraAttack ? `<button class="skip-extra-btn" onclick="skipExtraAttack()">⏭ Saltar Ataque Extra</button>` : ''}
         ${isSegundaAccion ? `<button class="skip-extra-btn" onclick="skipSegundaAccion()">⏭ Saltar Segunda Acción</button>` : ''}
         <div class="combat-recorded-section">
@@ -1183,7 +1238,8 @@ function selectPlannerAction(participantId, nombre, atk, dado, tipoDano) {
         _plannerActionAdded = true;
     }
     saveCombatState();
-    renderActivePanel(document.getElementById('playerCombatPanel'), combatState.currentIndex);
+    const _planPanelEl = document.getElementById('combatActivePanel') || document.getElementById('playerCombatPanel');
+    renderActivePanel(_planPanelEl, combatState.currentIndex);
     renderCombatLog();
     if (_plannerActionAdded && actionObj) {
         const _tipo = inferActionType(actionObj);
