@@ -269,8 +269,6 @@ async function joinOnlineSession() {
         isOnlineCombat = true;
         activeJoinCode = data.joinCode;
         activeCombatId = String(data.combatId);
-        gameRole = { type: 'master', characterId: null };
-        localStorage.setItem(ROLE_KEY, JSON.stringify(gameRole));
         localStorage.setItem(COMBAT_ID_KEY, activeCombatId);
         updateRoleIndicator();
 
