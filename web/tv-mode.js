@@ -37,6 +37,15 @@ function initTvMode() {
     _buildTvGrid();
     _setupTvMapInteraction();
     refreshTvMode();
+
+    // Rebuild grid when window is resized (TV resolution change, etc.)
+    window.removeEventListener('resize', _onTvResize);
+    window.addEventListener('resize', _onTvResize);
+}
+
+function _onTvResize() {
+    if (state.currentView !== 'tvMode') return;
+    _buildTvGrid();
 }
 
 // Called externally after any combat state change
@@ -135,35 +144,36 @@ function _ensureLandscape(img) {
     return { src: oc.toDataURL('image/jpeg', 0.92), w: nh, h: nw };
 }
 
-// No map: show default placeholder grid
+// No map: fill entire map area with grid at zoom=1
 function _buildTvGridEmpty(canvas) {
-    const cs = tvState.cellSize;
-    const w  = tvState.gridCols * cs;
-    const h  = tvState.gridRows * cs;
-
-    canvas.style.width  = w + 'px';
-    canvas.style.height = h + 'px';
-
-    // Show CSS grid lines
-    _setGridLinesVisible(canvas, true, w, h, cs);
-
-    // Remove map image if present
-    const mapImg = canvas.querySelector('.tv-map-image');
-    if (mapImg) mapImg.style.display = 'none';
-
-    _ensureTokensLayer(canvas, w, h);
-    _ensureDistanceRingsSvg(canvas, w, h);
-
-    // Center
     const mapArea = document.getElementById('tvMapArea');
-    if (mapArea) {
-        const areaW = mapArea.offsetWidth;
-        const areaH = mapArea.offsetHeight;
+    if (!mapArea) return;
+
+    requestAnimationFrame(() => {
+        const cs = tvState.cellSize;
+        const w  = mapArea.offsetWidth  || tvState.gridCols * cs;
+        const h  = mapArea.offsetHeight || tvState.gridRows * cs;
+
+        tvState.gridCols = Math.ceil(w / cs);
+        tvState.gridRows = Math.ceil(h / cs);
+
+        canvas.style.width  = w + 'px';
+        canvas.style.height = h + 'px';
+
+        // Remove map image if present
+        const mapImg = canvas.querySelector('.tv-map-image');
+        if (mapImg) mapImg.style.display = 'none';
+
+        _setGridLinesVisible(canvas, true, w, h, cs);
+        _ensureTokensLayer(canvas, w, h);
+        _ensureDistanceRingsSvg(canvas, w, h);
+
+        // No pan offset — grid fills area exactly at zoom=1
         tvState.zoom  = 1;
-        tvState.pan.x = Math.max(0, (areaW - w) / 2);
-        tvState.pan.y = Math.max(0, (areaH - h) / 2);
+        tvState.pan.x = 0;
+        tvState.pan.y = 0;
         _applyTvTransform();
-    }
+    });
 }
 
 function _setGridLinesVisible(canvas, visible, w, h, cs) {
