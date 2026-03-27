@@ -167,22 +167,119 @@ function _buildTvGridEmpty(canvas) {
 }
 
 function _setGridLinesVisible(canvas, visible, w, h, cs) {
-    ['tv-grid-bg', 'tv-grid-major'].forEach((cls, i) => {
-        let el = canvas.querySelector('.' + cls);
-        if (visible) {
-            if (!el) {
-                el = document.createElement('div');
-                el.className = cls;
-                canvas.insertBefore(el, canvas.firstChild);
-            }
-            el.style.display = 'block';
-            el.style.width   = w + 'px';
-            el.style.height  = h + 'px';
-            el.style.setProperty('--tv-cell-size', cs + 'px');
-        } else if (el) {
-            el.style.display = 'none';
+    let gc = canvas.querySelector('.tv-grid-canvas');
+    if (!visible) {
+        if (gc) gc.style.display = 'none';
+        return;
+    }
+
+    if (!gc) {
+        gc = document.createElement('canvas');
+        gc.className = 'tv-grid-canvas';
+        gc.style.cssText = 'position:absolute;top:0;left:0;z-index:4;pointer-events:none;';
+        // Insert after map image (or at start)
+        const mapImg = canvas.querySelector('.tv-map-image');
+        if (mapImg && mapImg.nextSibling) {
+            canvas.insertBefore(gc, mapImg.nextSibling);
+        } else {
+            canvas.insertBefore(gc, canvas.firstChild);
         }
-    });
+    }
+
+    gc.width  = w;
+    gc.height = h;
+    gc.style.width  = w + 'px';
+    gc.style.height = h + 'px';
+    gc.style.display = 'block';
+
+    const ctx = gc.getContext('2d');
+    ctx.clearRect(0, 0, w, h);
+
+    const cols = Math.ceil(w / cs);
+    const rows = Math.ceil(h / cs);
+
+    // Draw minor grid lines (every cell)
+    ctx.beginPath();
+    for (let c = 0; c <= cols; c++) {
+        const x = c * cs;
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+    }
+    for (let r = 0; r <= rows; r++) {
+        const y = r * cs;
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+    }
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Draw shadow under minor lines for dark-map contrast
+    ctx.beginPath();
+    for (let c = 0; c <= cols; c++) {
+        const x = c * cs;
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+    }
+    for (let r = 0; r <= rows; r++) {
+        const y = r * cs;
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+    }
+    ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Redraw minor on top
+    ctx.beginPath();
+    for (let c = 0; c <= cols; c++) {
+        const x = c * cs;
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+    }
+    for (let r = 0; r <= rows; r++) {
+        const y = r * cs;
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+    }
+    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Draw major grid lines (every 5 cells) — brighter
+    ctx.beginPath();
+    for (let c = 0; c <= cols; c++) {
+        if (c % 5 !== 0) continue;
+        const x = c * cs;
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+    }
+    for (let r = 0; r <= rows; r++) {
+        if (r % 5 !== 0) continue;
+        const y = r * cs;
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+    }
+    ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.beginPath();
+    for (let c = 0; c <= cols; c++) {
+        if (c % 5 !== 0) continue;
+        const x = c * cs;
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+    }
+    for (let r = 0; r <= rows; r++) {
+        if (r % 5 !== 0) continue;
+        const y = r * cs;
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+    }
+    ctx.strokeStyle = 'rgba(255,255,255,0.65)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
 }
 
 function _ensureTokensLayer(canvas, w, h) {

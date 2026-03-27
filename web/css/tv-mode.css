@@ -408,31 +408,12 @@
     /* width & height set by JS */
 }
 
-/* Grid overlay — always on top of map image, below tokens */
-.tv-grid-bg {
+/* Grid overlay canvas — drawn via HTML5 Canvas 2D API in tv-mode.js */
+.tv-grid-canvas {
     position: absolute;
     top: 0;
     left: 0;
-    z-index: 2;
-    /* width/height set by JS */
-    background-image:
-        linear-gradient(rgba(0, 0, 0, 0.18) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 0, 0, 0.18) 1px, transparent 1px);
-    background-size: var(--tv-cell-size, 60px) var(--tv-cell-size, 60px);
-    pointer-events: none;
-}
-
-/* Thicker accent lines every 5 cells */
-.tv-grid-major {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 3;
-    /* width/height set by JS */
-    background-image:
-        linear-gradient(rgba(0, 0, 0, 0.35) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(0, 0, 0, 0.35) 1px, transparent 1px);
-    background-size: calc(var(--tv-cell-size, 60px) * 5) calc(var(--tv-cell-size, 60px) * 5);
+    z-index: 4;
     pointer-events: none;
 }
 
