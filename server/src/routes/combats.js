@@ -55,6 +55,7 @@ router.post('/', async (req, res) => {
                     log:               body.log               ?? [],
                     name:              body.name              ?? '',
                     createdBy:         body.createdBy         ?? '',
+                    combatMap:         body.combatMap         ?? { id: null, name: '' },
                 });
             } catch (e) {
                 if (e.code !== 11000) throw e; // solo reintentar en colisión de índice único

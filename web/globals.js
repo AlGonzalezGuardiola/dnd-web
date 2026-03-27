@@ -59,6 +59,7 @@ const combatState = {
     extraAttackTurn: false,
     reactionsUsed: {},           // { participantId: true } — used reaction this round
     pendingReactionTrigger: null, // transient broadcast: { id, actorId, actionName, actionType }
+    combatMap: { id: null, name: '' }, // mapa seleccionado para Modo TV
 };
 
 let combatModeActive = false;

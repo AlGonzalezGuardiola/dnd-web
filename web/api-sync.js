@@ -18,6 +18,7 @@ function _buildSaveBody() {
         log:                    combatState.log,
         reactionsUsed:          combatState.reactionsUsed          || {},
         pendingReactionTrigger: combatState.pendingReactionTrigger || null,
+        combatMap:              combatState.combatMap              || { id: null, name: '' },
         _clientId:              CLIENT_ID,
     };
 }
@@ -72,6 +73,7 @@ function applyRemoteState(data) {
             extraAttackTurn:   data.extraAttackTurn   ?? false,
             nextLogId:         data.nextLogId         ?? 0,
             log:               data.log               || [],
+            combatMap:         data.combatMap         || { id: null, name: '' },
         });
         combatModeActive = true;
         setView('combatManager');
@@ -96,6 +98,7 @@ function applyRemoteState(data) {
         nextLogId:         data.nextLogId         ?? combatState.nextLogId,
         log:               data.log               || combatState.log,
         reactionsUsed:     data.reactionsUsed     || {},
+        combatMap:         data.combatMap         || combatState.combatMap || { id: null, name: '' },
     });
     if (combatModeActive) renderCombatManager();
     if (data.pendingReactionTrigger) {
@@ -123,6 +126,7 @@ async function startCombatSession() {
             extraAttackTurn:   false,
             nextLogId:         combatState.nextLogId,
             log:               combatState.log,
+            combatMap:         combatState.combatMap || { id: null, name: '' },
             deviceId:          CLIENT_ID,
         };
         const res = await fetch(`${API_BASE}/api/combats`, {

@@ -81,6 +81,25 @@ function _buildTvGrid() {
     major.style.height = h + 'px';
     major.style.setProperty('--tv-cell-size', cs + 'px');
 
+    // Map image background
+    let mapImg = canvas.querySelector('.tv-map-image');
+    if (!mapImg) {
+        mapImg = document.createElement('img');
+        mapImg.className = 'tv-map-image';
+        mapImg.alt = 'Mapa de combate';
+        canvas.insertBefore(mapImg, canvas.querySelector('.tv-tokens-layer') || null);
+    }
+    const selectedMapId = combatState.combatMap?.id;
+    const mapData = selectedMapId && state.data?.mapas?.[selectedMapId];
+    if (mapData?.imagen) {
+        mapImg.src = mapData.imagen;
+        mapImg.style.display = 'block';
+        mapImg.style.width = w + 'px';
+        mapImg.style.height = h + 'px';
+    } else {
+        mapImg.style.display = 'none';
+    }
+
     // Tokens layer
     let layer = document.getElementById('tvTokensLayer');
     if (!layer) {

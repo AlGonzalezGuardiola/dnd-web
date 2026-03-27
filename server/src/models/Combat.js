@@ -108,6 +108,12 @@ const CombatSchema = new mongoose.Schema({
     name:      { type: String, default: '' },
     createdBy: { type: String, default: '' },
 
+    // Mapa de combate (para Modo TV)
+    combatMap: {
+        id:   { type: String, default: null },
+        name: { type: String, default: '' },
+    },
+
     // References to CombatEntity documents created during this combat
     entities: [{ type: mongoose.Schema.Types.ObjectId, ref: 'CombatEntity' }],
 }, {

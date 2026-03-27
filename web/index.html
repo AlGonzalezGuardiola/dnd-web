@@ -290,6 +290,7 @@
             <button class="combat-setup-tab-btn active" data-setup-tab="jugadores" onclick="switchCombatSetupTab('jugadores')">👥 Jugadores</button>
             <button class="combat-setup-tab-btn" data-setup-tab="aliados" onclick="switchCombatSetupTab('aliados')">💙 Aliados</button>
             <button class="combat-setup-tab-btn" data-setup-tab="enemigos" onclick="switchCombatSetupTab('enemigos')">💀 Enemigos</button>
+            <button class="combat-setup-tab-btn" data-setup-tab="mapa" onclick="switchCombatSetupTab('mapa')">🗺️ Mapa TV</button>
         </div>
 
         <!-- Tab: Jugadores -->
@@ -317,6 +318,20 @@
             <div id="enemigoSavedTemplates"></div>
             <div id="enemigoList" class="npc-builder-list">
                 <div class="npc-list-empty">Ningún enemigo añadido todavía</div>
+            </div>
+        </div>
+
+        <!-- Tab: Mapa TV -->
+        <div id="setupTabMapa" class="combat-setup-tab-panel" style="display:none;">
+            <div class="setup-map-header">
+                <label class="setup-map-name-label">Nombre del mapa de combate</label>
+                <input id="setupMapNameInput" class="setup-map-name-input"
+                       type="text" maxlength="60" placeholder="Ej: Taberna del Jabalí Gris"
+                       oninput="updateSetupMapName(this.value)">
+                <span class="setup-map-hint">Opcional · se guardará junto al combate en la base de datos</span>
+            </div>
+            <div id="setupMapGrid" class="setup-map-grid">
+                <!-- Rendered by renderMapSetupTab() -->
             </div>
         </div>
 

@@ -14,6 +14,7 @@ function showCombatSetup() {
     setupNpcs = [];
     setupInitiatives = {};
     combatState.selectedIds = [];
+    combatState.combatMap = { id: null, name: '' };
     setView('combatSetup');
     switchCombatSetupTab('jugadores');
     renderCombatSetup();
@@ -218,6 +219,12 @@ function beginCombatFromSetup() {
 
     // Reposition pre-combat summons right after their summoner
     _insertPreCombatSummons(participants);
+
+    // Capture final map name from input (user may have typed it after selecting)
+    const mapNameInput = document.getElementById('setupMapNameInput');
+    if (mapNameInput && mapNameInput.value.trim()) {
+        combatState.combatMap = { ...combatState.combatMap, name: mapNameInput.value.trim() };
+    }
 
     // Start combat
     Object.assign(combatState, {
@@ -561,10 +568,82 @@ function switchCombatSetupTab(tabName) {
         jugadores: document.getElementById('setupTabJugadores'),
         aliados:   document.getElementById('setupTabAliados'),
         enemigos:  document.getElementById('setupTabEnemigos'),
+        mapa:      document.getElementById('setupTabMapa'),
     };
     Object.entries(panels).forEach(([key, el]) => {
         if (el) el.style.display = key === tabName ? 'block' : 'none';
     });
+    if (tabName === 'mapa') renderMapSetupTab();
+}
+
+// ── Map selection tab ────────────────────────────────────────────────────────
+
+function renderMapSetupTab() {
+    const grid = document.getElementById('setupMapGrid');
+    if (!grid) return;
+
+    const mapas = state.data?.mapas || {};
+    const mapIds = Object.keys(mapas);
+
+    if (!mapIds.length) {
+        grid.innerHTML = '<div style="color:var(--text-muted);padding:20px;font-size:13px;">No hay mapas disponibles en los datos del juego.</div>';
+        return;
+    }
+
+    // "Sin mapa" option
+    const noMapSelected = !combatState.combatMap?.id;
+    let html = `<div class="setup-map-card no-map${noMapSelected ? ' selected' : ''}"
+                     onclick="selectSetupMap(null)">
+        ${noMapSelected ? '✓ ' : ''}Sin mapa
+    </div>`;
+
+    html += mapIds.map(id => {
+        const mapa = mapas[id];
+        const displayName = mapa.nombre || _capitalizeMapKey(id);
+        const isSelected = combatState.combatMap?.id === id;
+        const imgSrc = mapa.imagen || '';
+        const thumb = imgSrc
+            ? `<img class="setup-map-thumb" src="${imgSrc}" alt="${displayName}" onerror="this.parentElement.innerHTML='<div class=\\'setup-map-thumb-placeholder\\'>🗺️</div>'">`
+            : `<div class="setup-map-thumb-placeholder">🗺️</div>`;
+
+        return `<div class="setup-map-card${isSelected ? ' selected' : ''}"
+                     onclick="selectSetupMap('${id}')">
+            ${isSelected ? '<span class="setup-map-selected-badge">✓ SELECCIONADO</span>' : ''}
+            ${thumb}
+            <div class="setup-map-info">
+                <div class="setup-map-name">${displayName}</div>
+                <div class="setup-map-key">${id}</div>
+            </div>
+        </div>`;
+    }).join('');
+
+    grid.innerHTML = html;
+}
+
+function selectSetupMap(mapId) {
+    const mapas = state.data?.mapas || {};
+    if (mapId && mapas[mapId]) {
+        const displayName = mapas[mapId].nombre || _capitalizeMapKey(mapId);
+        combatState.combatMap = { id: mapId, name: displayName };
+        // Pre-fill name input if empty
+        const nameInput = document.getElementById('setupMapNameInput');
+        if (nameInput && !nameInput.value.trim()) {
+            nameInput.value = displayName;
+        }
+    } else {
+        combatState.combatMap = { id: null, name: '' };
+        const nameInput = document.getElementById('setupMapNameInput');
+        if (nameInput) nameInput.value = '';
+    }
+    renderMapSetupTab();
+}
+
+function updateSetupMapName(value) {
+    combatState.combatMap = { ...combatState.combatMap, name: value.trim() };
+}
+
+function _capitalizeMapKey(key) {
+    return key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ' ');
 }
 
 function _updateSetupCount() {
