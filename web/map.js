@@ -179,6 +179,9 @@ function navigateBack() {
         if (view === 'combatManager') {
             // In active combat: back does nothing (use "Fin" button)
             return;
+        } else if (view === 'tvMode') {
+            setView('combatManager');
+            return;
         } else if (view === 'combatInit') {
             showCombatSetup();
         } else if (view === 'combatSetup') {
@@ -205,6 +208,7 @@ function navigateBack() {
     if (view === 'onlineWaiting') { setView('onlineLobby'); return; }
     if (view === 'encounters') { setView('onlineLobby'); return; }
     if (view === 'npcGenerator') { setView('landing'); return; }
+    if (view === 'tvMode') { setView(combatState.isActive ? 'combatManager' : 'landing'); return; }
     if (view === 'sessionNotes') { setView('landing'); return; }
     if (view === 'narrativaHub') { setView('landing'); return; }
     if (view === 'narrative') { setView('narrativaHub'); return; }

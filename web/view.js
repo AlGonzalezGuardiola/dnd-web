@@ -535,9 +535,10 @@ function setView(viewName) {
         case 'tvMode':
             document.getElementById('tvModeSection').style.display = 'flex';
             if (editorToolbar) editorToolbar.style.display = 'none';
-            if (hud) hud.style.display = 'none';
+            if (hud) hud.style.display = 'flex';
             if (diceWidget) diceWidget.style.display = 'none';
-            // Init TV mode on first open
+            document.getElementById('breadcrumbs').textContent = '⚔️ Combate › Modo TV';
+            document.getElementById('btnBack').style.display = 'flex';
             if (typeof initTvMode === 'function') initTvMode();
             break;
     }
