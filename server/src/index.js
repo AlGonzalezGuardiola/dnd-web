@@ -10,6 +10,7 @@ const playerCharactersRouter  = require('./routes/playerCharacters');
 const combatTemplatesRouter   = require('./routes/combatTemplates');
 const sessionNotesRouter      = require('./routes/sessionNotes');
 const narrativeSessionsRouter = require('./routes/narrativeSessions');
+const mapsRouter              = require('./routes/maps');
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
@@ -31,6 +32,7 @@ app.use('/api/player-characters',   playerCharactersRouter);
 app.use('/api/combat-templates',    combatTemplatesRouter);
 app.use('/api/session-notes',       sessionNotesRouter);
 app.use('/api/narrative-sessions',  narrativeSessionsRouter);
+app.use('/api/maps',                mapsRouter);
 
 // ── 404 ───────────────────────────────────────────────────────────────────────
 app.use((_req, res) => res.status(404).json({ error: 'Ruta no encontrada' }));

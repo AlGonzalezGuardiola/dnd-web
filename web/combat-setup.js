@@ -14,7 +14,8 @@ function showCombatSetup() {
     setupNpcs = [];
     setupInitiatives = {};
     combatState.selectedIds = [];
-    combatState.combatMap = { id: null, name: '' };
+    combatState.combatMap = { id: null, name: '', url: '' };
+    _cachedServerMaps = null; // force re-fetch on next map tab visit
     setView('combatSetup');
     switchCombatSetupTab('jugadores');
     renderCombatSetup();
@@ -578,62 +579,66 @@ function switchCombatSetupTab(tabName) {
 
 // ── Map selection tab ────────────────────────────────────────────────────────
 
-function renderMapSetupTab() {
+// Cache para no repetir el fetch en cada visita al tab
+let _cachedServerMaps = null;
+
+async function renderMapSetupTab() {
     const grid = document.getElementById('setupMapGrid');
     if (!grid) return;
 
-    const mapas = state.data?.mapas || {};
-    const mapIds = Object.keys(mapas);
+    grid.innerHTML = '<div class="setup-map-loading">🔄 Cargando mapas…</div>';
 
-    if (!mapIds.length) {
-        grid.innerHTML = '<div style="color:var(--text-muted);padding:20px;font-size:13px;">No hay mapas disponibles en los datos del juego.</div>';
-        return;
+    // Fetch server maps (cached after first load)
+    if (!_cachedServerMaps) {
+        try {
+            const res = await fetch(`${API_BASE}/api/maps`);
+            _cachedServerMaps = res.ok ? await res.json() : [];
+        } catch (_) {
+            _cachedServerMaps = [];
+        }
     }
 
-    // "Sin mapa" option
+    const serverMaps = _cachedServerMaps;
     const noMapSelected = !combatState.combatMap?.id;
+
     let html = `<div class="setup-map-card no-map${noMapSelected ? ' selected' : ''}"
-                     onclick="selectSetupMap(null)">
+                     onclick="selectSetupMap(null, null, null)">
         ${noMapSelected ? '✓ ' : ''}Sin mapa
     </div>`;
 
-    html += mapIds.map(id => {
-        const mapa = mapas[id];
-        const displayName = mapa.nombre || _capitalizeMapKey(id);
-        const isSelected = combatState.combatMap?.id === id;
-        const imgSrc = mapa.imagen || '';
-        const thumb = imgSrc
-            ? `<img class="setup-map-thumb" src="${imgSrc}" alt="${displayName}" onerror="this.parentElement.innerHTML='<div class=\\'setup-map-thumb-placeholder\\'>🗺️</div>'">`
-            : `<div class="setup-map-thumb-placeholder">🗺️</div>`;
-
-        return `<div class="setup-map-card${isSelected ? ' selected' : ''}"
-                     onclick="selectSetupMap('${id}')">
-            ${isSelected ? '<span class="setup-map-selected-badge">✓ SELECCIONADO</span>' : ''}
-            ${thumb}
-            <div class="setup-map-info">
-                <div class="setup-map-name">${displayName}</div>
-                <div class="setup-map-key">${id}</div>
-            </div>
+    if (!serverMaps.length) {
+        html += `<div class="setup-map-empty-hint">
+            No hay mapas en <code>assets/mapas/</code>. Añade imágenes JPG o PNG a esa carpeta y reinicia el servidor.
         </div>`;
-    }).join('');
+    } else {
+        html += serverMaps.map(m => {
+            const isSelected = combatState.combatMap?.id === m.filename;
+            return `<div class="setup-map-card${isSelected ? ' selected' : ''}"
+                         onclick="selectSetupMap('${m.filename}', '${m.name}', '${m.url}')">
+                ${isSelected ? '<span class="setup-map-selected-badge">✓ SELECCIONADO</span>' : ''}
+                <img class="setup-map-thumb" src="${m.url}" alt="${m.name}"
+                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                <div class="setup-map-thumb-placeholder" style="display:none">🗺️</div>
+                <div class="setup-map-info">
+                    <div class="setup-map-name">${m.name}</div>
+                    <div class="setup-map-key">${m.filename}</div>
+                </div>
+            </div>`;
+        }).join('');
+    }
 
     grid.innerHTML = html;
 }
 
-function selectSetupMap(mapId) {
-    const mapas = state.data?.mapas || {};
-    if (mapId && mapas[mapId]) {
-        const displayName = mapas[mapId].nombre || _capitalizeMapKey(mapId);
-        combatState.combatMap = { id: mapId, name: displayName };
-        // Pre-fill name input if empty
-        const nameInput = document.getElementById('setupMapNameInput');
-        if (nameInput && !nameInput.value.trim()) {
-            nameInput.value = displayName;
-        }
-    } else {
-        combatState.combatMap = { id: null, name: '' };
+function selectSetupMap(id, defaultName, url) {
+    if (!id) {
+        combatState.combatMap = { id: null, name: '', url: '' };
         const nameInput = document.getElementById('setupMapNameInput');
         if (nameInput) nameInput.value = '';
+    } else {
+        combatState.combatMap = { id, name: defaultName || id, url: url || '' };
+        const nameInput = document.getElementById('setupMapNameInput');
+        if (nameInput && !nameInput.value.trim()) nameInput.value = defaultName || id;
     }
     renderMapSetupTab();
 }

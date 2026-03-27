@@ -112,6 +112,7 @@ const CombatSchema = new mongoose.Schema({
     combatMap: {
         id:   { type: String, default: null },
         name: { type: String, default: '' },
+        url:  { type: String, default: '' },
     },
 
     // References to CombatEntity documents created during this combat

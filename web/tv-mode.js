@@ -22,6 +22,7 @@ const tvState = {
     panStart: { x: 0, y: 0 },
     panOrigin: { x: 0, y: 0 },
     activePopupId: null,
+    activeRingsPid: null, // token with distance rings shown
     cellHighlight: null,  // { col, row } — used during drag
 };
 
@@ -46,80 +47,154 @@ function refreshTvMode() {
     _updateTvEmptyState();
 }
 
-// ─── Grid setup ──────────────────────────────────
+// ─── Grid / Map setup ────────────────────────────
 
 function _buildTvGrid() {
-    const cs = tvState.cellSize;
-    const w = tvState.gridCols * cs;
-    const h = tvState.gridRows * cs;
-
     const canvas = document.getElementById('tvMapCanvas');
     if (!canvas) return;
-    canvas.style.width = w + 'px';
-    canvas.style.height = h + 'px';
-    canvas.style.setProperty('--tv-cell-size', cs + 'px');
 
-    // Grid lines (minor)
-    let bg = canvas.querySelector('.tv-grid-bg');
-    if (!bg) {
-        bg = document.createElement('div');
-        bg.className = 'tv-grid-bg';
-        canvas.insertBefore(bg, canvas.firstChild);
-    }
-    bg.style.width = w + 'px';
-    bg.style.height = h + 'px';
-    bg.style.setProperty('--tv-cell-size', cs + 'px');
+    const mapUrl = combatState.combatMap?.url || '';
+    const hasMap = !!mapUrl;
 
-    // Grid lines (major — every 5 cells)
-    let major = canvas.querySelector('.tv-grid-major');
-    if (!major) {
-        major = document.createElement('div');
-        major.className = 'tv-grid-major';
-        canvas.insertBefore(major, bg.nextSibling);
-    }
-    major.style.width = w + 'px';
-    major.style.height = h + 'px';
-    major.style.setProperty('--tv-cell-size', cs + 'px');
-
-    // Map image background
-    let mapImg = canvas.querySelector('.tv-map-image');
-    if (!mapImg) {
-        mapImg = document.createElement('img');
-        mapImg.className = 'tv-map-image';
-        mapImg.alt = 'Mapa de combate';
-        canvas.insertBefore(mapImg, canvas.querySelector('.tv-tokens-layer') || null);
-    }
-    const selectedMapId = combatState.combatMap?.id;
-    const mapData = selectedMapId && state.data?.mapas?.[selectedMapId];
-    if (mapData?.imagen) {
-        mapImg.src = mapData.imagen;
-        mapImg.style.display = 'block';
-        mapImg.style.width = w + 'px';
-        mapImg.style.height = h + 'px';
+    if (hasMap) {
+        _buildTvGridWithMap(canvas, mapUrl);
     } else {
-        mapImg.style.display = 'none';
+        _buildTvGridEmpty(canvas);
     }
+}
 
-    // Tokens layer
-    let layer = document.getElementById('tvTokensLayer');
-    if (!layer) {
-        layer = document.createElement('div');
-        layer.id = 'tvTokensLayer';
-        layer.className = 'tv-tokens-layer';
-        canvas.appendChild(layer);
-    }
-    layer.style.width = w + 'px';
-    layer.style.height = h + 'px';
+// Map image loaded: size canvas to image, fit zoom, hide grid lines
+function _buildTvGridWithMap(canvas, mapUrl) {
+    const img = new Image();
+    img.onload = () => {
+        const natW = img.naturalWidth;
+        const natH = img.naturalHeight;
 
-    // Center the grid initially
+        // Size canvas to natural image dimensions
+        canvas.style.width  = natW + 'px';
+        canvas.style.height = natH + 'px';
+
+        // Adjust grid dimensions so token snap grid covers the image
+        tvState.gridCols = Math.ceil(natW / tvState.cellSize);
+        tvState.gridRows = Math.ceil(natH / tvState.cellSize);
+
+        // Hide CSS grid lines (map already has its own grid)
+        _setGridLinesVisible(canvas, false);
+
+        // Set image as background (full canvas size)
+        let mapImg = canvas.querySelector('.tv-map-image');
+        if (!mapImg) {
+            mapImg = document.createElement('img');
+            mapImg.className = 'tv-map-image';
+            mapImg.alt = 'Mapa de combate';
+            canvas.insertBefore(mapImg, canvas.firstChild);
+        }
+        mapImg.src = mapUrl;
+        mapImg.style.display  = 'block';
+        mapImg.style.position = 'absolute';
+        mapImg.style.top      = '0';
+        mapImg.style.left     = '0';
+        mapImg.style.width    = natW + 'px';
+        mapImg.style.height   = natH + 'px';
+
+        // Tokens layer
+        _ensureTokensLayer(canvas, natW, natH);
+
+        // Auto-fit: zoom so the map fills the available area
+        _autoFitMap(natW, natH);
+
+        // Distance rings SVG
+        _ensureDistanceRingsSvg(canvas, natW, natH);
+    };
+    img.onerror = () => {
+        console.warn('[TV] No se pudo cargar el mapa:', mapUrl);
+        _buildTvGridEmpty(canvas);
+    };
+    img.src = mapUrl;
+}
+
+// No map: show default placeholder grid
+function _buildTvGridEmpty(canvas) {
+    const cs = tvState.cellSize;
+    const w  = tvState.gridCols * cs;
+    const h  = tvState.gridRows * cs;
+
+    canvas.style.width  = w + 'px';
+    canvas.style.height = h + 'px';
+
+    // Show CSS grid lines
+    _setGridLinesVisible(canvas, true, w, h, cs);
+
+    // Remove map image if present
+    const mapImg = canvas.querySelector('.tv-map-image');
+    if (mapImg) mapImg.style.display = 'none';
+
+    _ensureTokensLayer(canvas, w, h);
+    _ensureDistanceRingsSvg(canvas, w, h);
+
+    // Center
     const mapArea = document.getElementById('tvMapArea');
     if (mapArea) {
         const areaW = mapArea.offsetWidth;
         const areaH = mapArea.offsetHeight;
+        tvState.zoom  = 1;
         tvState.pan.x = Math.max(0, (areaW - w) / 2);
         tvState.pan.y = Math.max(0, (areaH - h) / 2);
+        _applyTvTransform();
     }
-    _applyTvTransform();
+}
+
+function _setGridLinesVisible(canvas, visible, w, h, cs) {
+    ['tv-grid-bg', 'tv-grid-major'].forEach((cls, i) => {
+        let el = canvas.querySelector('.' + cls);
+        if (visible) {
+            if (!el) {
+                el = document.createElement('div');
+                el.className = cls;
+                canvas.insertBefore(el, canvas.firstChild);
+            }
+            el.style.display = 'block';
+            el.style.width   = w + 'px';
+            el.style.height  = h + 'px';
+            el.style.setProperty('--tv-cell-size', cs + 'px');
+        } else if (el) {
+            el.style.display = 'none';
+        }
+    });
+}
+
+function _ensureTokensLayer(canvas, w, h) {
+    let layer = document.getElementById('tvTokensLayer');
+    if (!layer) {
+        layer = document.createElement('div');
+        layer.id        = 'tvTokensLayer';
+        layer.className = 'tv-tokens-layer';
+        canvas.appendChild(layer);
+    }
+    layer.style.width  = w + 'px';
+    layer.style.height = h + 'px';
+}
+
+// Auto-fit: zoom to show the full map in the available area
+function _autoFitMap(imgW, imgH) {
+    const mapArea = document.getElementById('tvMapArea');
+    if (!mapArea) return;
+
+    // Wait one tick for the area to have correct dimensions
+    requestAnimationFrame(() => {
+        const areaW = mapArea.offsetWidth;
+        const areaH = mapArea.offsetHeight;
+
+        const scaleX = areaW / imgW;
+        const scaleY = areaH / imgH;
+        tvState.zoom  = Math.min(scaleX, scaleY);
+
+        // Center the image
+        tvState.pan.x = (areaW - imgW * tvState.zoom) / 2;
+        tvState.pan.y = (areaH - imgH * tvState.zoom) / 2;
+
+        _applyTvTransform();
+    });
 }
 
 // ─── Initiative Sidebar ───────────────────────────
@@ -263,12 +338,85 @@ function _pixelToCell(px, py) {
     };
 }
 
+// ─── Distance Rings SVG ───────────────────────────
+
+function _ensureDistanceRingsSvg(canvas, w, h) {
+    let svg = document.getElementById('tvDistanceRings');
+    if (!svg) {
+        svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+        svg.id = 'tvDistanceRings';
+        svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+        svg.style.position   = 'absolute';
+        svg.style.top        = '0';
+        svg.style.left       = '0';
+        svg.style.pointerEvents = 'none';
+        svg.style.display    = 'none';
+        svg.style.overflow   = 'visible';
+        canvas.appendChild(svg);
+    }
+    svg.setAttribute('width',  w);
+    svg.setAttribute('height', h);
+    svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+    return svg;
+}
+
+const TV_RINGS = [
+    { cells: 1, feet: 5,  color: '#4caf50', opacity: 0.7 },
+    { cells: 2, feet: 10, color: '#ffaa00', opacity: 0.65 },
+    { cells: 3, feet: 15, color: '#ef5350', opacity: 0.6 },
+];
+
+function showDistanceRings(pid) {
+    const pos = tvState.tokenPositions[pid];
+    if (!pos) return;
+
+    const svg = document.getElementById('tvDistanceRings');
+    if (!svg) return;
+
+    const cs = tvState.cellSize;
+    const { px: cx, py: cy } = _cellToPixel(pos.col, pos.row);
+
+    svg.style.display = 'block';
+    svg.innerHTML = TV_RINGS.map(ring => {
+        const r = ring.cells * cs;
+        return `<g>
+            <circle cx="${cx}" cy="${cy}" r="${r}"
+                fill="none"
+                stroke="${ring.color}"
+                stroke-width="2.5"
+                stroke-dasharray="10 6"
+                stroke-opacity="${ring.opacity}"/>
+            <text x="${cx}" y="${cy - r - 6}"
+                fill="${ring.color}"
+                font-size="${Math.round(cs * 0.22)}px"
+                font-family="Cinzel, serif"
+                text-anchor="middle"
+                fill-opacity="${ring.opacity + 0.1}">${ring.feet} pies</text>
+        </g>`;
+    }).join('');
+
+    tvState.activeRingsPid = pid;
+}
+
+function hideDistanceRings() {
+    const svg = document.getElementById('tvDistanceRings');
+    if (svg) { svg.style.display = 'none'; svg.innerHTML = ''; }
+    tvState.activeRingsPid = null;
+}
+
 // ─── Token Click / Focus ──────────────────────────
 
 function _tvTokenClick(e) {
     e.stopPropagation();
     const pid = e.currentTarget.dataset.pid;
-    tvOpenTokenPopup(pid, e.clientX, e.clientY);
+
+    // Toggle rings: show if different token or rings hidden, hide if same
+    if (tvState.activeRingsPid === pid) {
+        hideDistanceRings();
+    } else {
+        showDistanceRings(pid);
+        tvOpenTokenPopup(pid, e.clientX, e.clientY);
+    }
 }
 
 function tvFocusToken(pid) {
@@ -343,8 +491,11 @@ function _tvTokenMouseDown(e) {
         tvState.tokenPositions[_tvDrag.pid] = { col: clampedCol, row: clampedRow };
         _tvDrag.tokenEl.classList.remove('dragging');
         hl.style.display = 'none';
+        const movedPid = _tvDrag.pid;
         _tvDrag = null;
         renderTvTokens();
+        // Refresh rings if the moved token had them
+        if (tvState.activeRingsPid === movedPid) showDistanceRings(movedPid);
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
     }
@@ -549,10 +700,11 @@ function _setupTvMapInteraction() {
         }
     });
 
-    // Click on map background → close popup
+    // Click on map background → close popup and rings
     mapArea.addEventListener('click', (e) => {
-        if (!e.target.closest('.tv-token')) {
+        if (!e.target.closest('.tv-token') && !e.target.closest('#tvTokenPopup')) {
             tvCloseTokenPopup();
+            hideDistanceRings();
         }
     });
 
