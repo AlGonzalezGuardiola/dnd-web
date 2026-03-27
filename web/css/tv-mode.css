@@ -408,14 +408,6 @@
     /* width & height set by JS */
 }
 
-/* Grid overlay canvas — drawn via HTML5 Canvas 2D API in tv-mode.js */
-.tv-grid-canvas {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 4;
-    pointer-events: none;
-}
 
 /* Map image — below grid (z-index 1) and tokens (z-index 10) */
 .tv-map-image {

@@ -38,14 +38,6 @@ function initTvMode() {
     _setupTvMapInteraction();
     refreshTvMode();
 
-    // Rebuild grid when window is resized (TV resolution change, etc.)
-    window.removeEventListener('resize', _onTvResize);
-    window.addEventListener('resize', _onTvResize);
-}
-
-function _onTvResize() {
-    if (state.currentView !== 'tvMode') return;
-    _buildTvGrid();
 }
 
 // Called externally after any combat state change
@@ -104,10 +96,7 @@ function _buildTvGridWithMap(canvas, mapUrl) {
         mapImg.style.width      = effW + 'px';
         mapImg.style.height     = effH + 'px';
 
-        // ── 4. Grid overlay (always on — user maps have no pre-drawn grid) ───
-        _setGridLinesVisible(canvas, true, effW, effH, tvState.cellSize);
-
-        // ── 5. Tokens & rings layers ─────────────────────────────────────────
+        // ── 4. Tokens & rings layers ─────────────────────────────────────────
         _ensureTokensLayer(canvas, effW, effH);
         _ensureDistanceRingsSvg(canvas, effW, effH);
 
@@ -144,7 +133,7 @@ function _ensureLandscape(img) {
     return { src: oc.toDataURL('image/jpeg', 0.92), w: nh, h: nw };
 }
 
-// No map: fill entire map area with grid at zoom=1
+// No map selected: size canvas to map area and center
 function _buildTvGridEmpty(canvas) {
     const mapArea = document.getElementById('tvMapArea');
     if (!mapArea) return;
@@ -154,142 +143,20 @@ function _buildTvGridEmpty(canvas) {
         const w  = mapArea.offsetWidth  || tvState.gridCols * cs;
         const h  = mapArea.offsetHeight || tvState.gridRows * cs;
 
-        tvState.gridCols = Math.ceil(w / cs);
-        tvState.gridRows = Math.ceil(h / cs);
-
         canvas.style.width  = w + 'px';
         canvas.style.height = h + 'px';
 
-        // Remove map image if present
         const mapImg = canvas.querySelector('.tv-map-image');
         if (mapImg) mapImg.style.display = 'none';
 
-        _setGridLinesVisible(canvas, true, w, h, cs);
         _ensureTokensLayer(canvas, w, h);
         _ensureDistanceRingsSvg(canvas, w, h);
 
-        // No pan offset — grid fills area exactly at zoom=1
         tvState.zoom  = 1;
         tvState.pan.x = 0;
         tvState.pan.y = 0;
         _applyTvTransform();
     });
-}
-
-function _setGridLinesVisible(canvas, visible, w, h, cs) {
-    let gc = canvas.querySelector('.tv-grid-canvas');
-    if (!visible) {
-        if (gc) gc.style.display = 'none';
-        return;
-    }
-
-    if (!gc) {
-        gc = document.createElement('canvas');
-        gc.className = 'tv-grid-canvas';
-        gc.style.cssText = 'position:absolute;top:0;left:0;z-index:4;pointer-events:none;';
-        // Insert after map image (or at start)
-        const mapImg = canvas.querySelector('.tv-map-image');
-        if (mapImg && mapImg.nextSibling) {
-            canvas.insertBefore(gc, mapImg.nextSibling);
-        } else {
-            canvas.insertBefore(gc, canvas.firstChild);
-        }
-    }
-
-    gc.width  = w;
-    gc.height = h;
-    gc.style.width  = w + 'px';
-    gc.style.height = h + 'px';
-    gc.style.display = 'block';
-
-    const ctx = gc.getContext('2d');
-    ctx.clearRect(0, 0, w, h);
-
-    const cols = Math.ceil(w / cs);
-    const rows = Math.ceil(h / cs);
-
-    // Draw minor grid lines (every cell)
-    ctx.beginPath();
-    for (let c = 0; c <= cols; c++) {
-        const x = c * cs;
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, h);
-    }
-    for (let r = 0; r <= rows; r++) {
-        const y = r * cs;
-        ctx.moveTo(0, y);
-        ctx.lineTo(w, y);
-    }
-    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    // Draw shadow under minor lines for dark-map contrast
-    ctx.beginPath();
-    for (let c = 0; c <= cols; c++) {
-        const x = c * cs;
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, h);
-    }
-    for (let r = 0; r <= rows; r++) {
-        const y = r * cs;
-        ctx.moveTo(0, y);
-        ctx.lineTo(w, y);
-    }
-    ctx.strokeStyle = 'rgba(0,0,0,0.25)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    // Redraw minor on top
-    ctx.beginPath();
-    for (let c = 0; c <= cols; c++) {
-        const x = c * cs;
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, h);
-    }
-    for (let r = 0; r <= rows; r++) {
-        const y = r * cs;
-        ctx.moveTo(0, y);
-        ctx.lineTo(w, y);
-    }
-    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
-    ctx.lineWidth = 1;
-    ctx.stroke();
-
-    // Draw major grid lines (every 5 cells) — brighter
-    ctx.beginPath();
-    for (let c = 0; c <= cols; c++) {
-        if (c % 5 !== 0) continue;
-        const x = c * cs;
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, h);
-    }
-    for (let r = 0; r <= rows; r++) {
-        if (r % 5 !== 0) continue;
-        const y = r * cs;
-        ctx.moveTo(0, y);
-        ctx.lineTo(w, y);
-    }
-    ctx.strokeStyle = 'rgba(0,0,0,0.45)';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-
-    ctx.beginPath();
-    for (let c = 0; c <= cols; c++) {
-        if (c % 5 !== 0) continue;
-        const x = c * cs;
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, h);
-    }
-    for (let r = 0; r <= rows; r++) {
-        if (r % 5 !== 0) continue;
-        const y = r * cs;
-        ctx.moveTo(0, y);
-        ctx.lineTo(w, y);
-    }
-    ctx.strokeStyle = 'rgba(255,255,255,0.65)';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
 }
 
 function _ensureTokensLayer(canvas, w, h) {
