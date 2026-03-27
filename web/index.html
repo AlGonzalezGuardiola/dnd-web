@@ -34,6 +34,7 @@
     <link rel="stylesheet" href="css/npc-generator.css?v=20260326b">
     <link rel="stylesheet" href="css/session-notes.css?v=20260326b">
     <link rel="stylesheet" href="css/narrative.css?v=20260326b">
+    <link rel="stylesheet" href="css/tv-mode.css?v=20260327a">
     <link rel="stylesheet" href="mobile.css?v=20260318b" media="screen and (max-width: 768px)">
 </head>
 
@@ -87,6 +88,10 @@
             <div class="card card-notes" id="cardNotes" onclick="openSessionNotes()">
                 <div class="card-title">📝 Notas</div>
                 <p>Apunta ideas, secretos y eventos de la partida. Búsqueda y filtrado por etiquetas.</p>
+            </div>
+            <div class="card card-tv" id="cardTvMode" onclick="openTvMode()">
+                <div class="card-title">📺 Mesa TV</div>
+                <p>Mapa de cuadrícula con fichas de combate. Diseñado para jugar con la tele como mesa.</p>
             </div>
         </div>
     </section>
@@ -713,6 +718,52 @@
         </div>
     </section>
 
+    <!-- TV Mode / Mesa de Juego -->
+    <section id="tvModeSection" style="display:none;" aria-label="Mesa de Juego TV">
+        <div class="tv-layout">
+
+            <!-- Initiative Sidebar (10%) -->
+            <aside class="tv-initiative-sidebar">
+                <div class="tv-sidebar-header">
+                    <span class="tv-round-badge" id="tvRoundBadge">Ronda 1</span>
+                    <span class="tv-sidebar-title">Iniciativa</span>
+                </div>
+                <div class="tv-turn-list" id="tvTurnList"></div>
+                <div class="tv-sidebar-controls">
+                    <button class="tv-control-btn" onclick="tvPrevTurn()">◀ Anterior</button>
+                    <button class="tv-control-btn primary" onclick="tvNextTurn()">Siguiente ▶</button>
+                    <button class="tv-control-btn secondary" onclick="setView('combatManager')" style="margin-top:4px">⚔️ Ver combate</button>
+                </div>
+            </aside>
+
+            <!-- Map Area (90%) -->
+            <div class="tv-map-area" id="tvMapArea">
+
+                <!-- Inner canvas: gets pan+zoom transform -->
+                <div class="tv-map-canvas" id="tvMapCanvas">
+                    <!-- Grid bg, major lines and tokens layer injected by JS -->
+                </div>
+
+                <!-- Empty state overlay -->
+                <div class="tv-empty-overlay" id="tvEmptyOverlay">
+                    <div class="tv-empty-icon">⚔️</div>
+                    <div class="tv-empty-title">Inicia un combate para ver los tokens</div>
+                    <div class="tv-empty-sub">El mapa de cuadrícula aparecerá aquí</div>
+                </div>
+
+                <!-- Zoom controls -->
+                <div class="tv-zoom-controls">
+                    <button class="tv-zoom-btn" onclick="tvZoomIn()" title="Acercar">+</button>
+                    <button class="tv-zoom-btn" onclick="tvResetZoom()" title="Ajustar al área">⌂</button>
+                    <button class="tv-zoom-btn" onclick="tvZoomOut()" title="Alejar">−</button>
+                </div>
+
+                <div class="tv-map-info">Arrastra para mover · Rueda para zoom · Click en ficha para acciones</div>
+            </div>
+
+        </div>
+    </section>
+
     <script src="characters2.js?v=20260325b"></script>
     <script src="data.js?v=20260310o"></script>
     <script src="globals.js?v=20260325a"></script>
@@ -735,6 +786,7 @@
     <script src="npc-generator.js?v=20260325a"></script>
     <script src="session-notes.js?v=20260325a"></script>
     <script src="narrative.js?v=20260326b"></script>
+    <script src="tv-mode.js?v=20260327a"></script>
 </body>
 
 </html>

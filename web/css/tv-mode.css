@@ -1,0 +1,717 @@
+/* Landing card */
+.card.card-tv {
+    border-color: rgba(100, 60, 180, 0.4);
+    background: linear-gradient(145deg, rgba(10, 5, 22, 0.95), rgba(6, 3, 14, 0.97));
+    cursor: pointer;
+}
+
+.card.card-tv:hover {
+    border-color: rgba(130, 80, 220, 0.75);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.7), 0 0 28px rgba(100, 60, 180, 0.22);
+}
+
+/* ============================================
+   TV Mode — Mesa de Juego
+   Diseñado para pantalla grande (TV horizontal)
+   ============================================ */
+
+#tvModeSection {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    overflow: hidden;
+    background: #080c14;
+}
+
+.tv-layout {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+/* ─── Initiative Sidebar (10%) ───────────────── */
+
+.tv-initiative-sidebar {
+    width: 10%;
+    min-width: 130px;
+    max-width: 210px;
+    background: rgba(8, 12, 20, 0.99);
+    border-right: 2px solid rgba(212, 175, 55, 0.6);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 10;
+    flex-shrink: 0;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.6);
+}
+
+.tv-sidebar-header {
+    padding: 14px 10px 10px;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.25);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    flex-shrink: 0;
+}
+
+.tv-round-badge {
+    font-family: 'Cinzel', serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent-gold);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    text-align: center;
+}
+
+.tv-sidebar-title {
+    font-size: 9px;
+    color: rgba(168, 144, 112, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+}
+
+/* Turn list */
+.tv-turn-list {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 4px 0;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(212, 175, 55, 0.2) transparent;
+}
+
+.tv-turn-list::-webkit-scrollbar {
+    width: 3px;
+}
+.tv-turn-list::-webkit-scrollbar-track { background: transparent; }
+.tv-turn-list::-webkit-scrollbar-thumb { background: rgba(212, 175, 55, 0.2); border-radius: 2px; }
+
+.tv-turn-item {
+    padding: 8px 10px 6px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    transition: background 0.12s, border-color 0.12s;
+}
+
+.tv-turn-item:hover {
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.tv-turn-item.active {
+    background: rgba(212, 175, 55, 0.1);
+    border-left-color: var(--accent-gold);
+}
+
+.tv-turn-item.dead {
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+.tv-turn-item-top {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-bottom: 5px;
+}
+
+.tv-turn-init {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent-gold);
+    min-width: 22px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.tv-turn-name {
+    font-size: 11px;
+    color: rgba(232, 213, 183, 0.85);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+    line-height: 1.2;
+}
+
+.tv-turn-item.active .tv-turn-name {
+    color: #fff;
+    font-weight: 700;
+}
+
+.tv-turn-hp-bar {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.tv-turn-hp-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+.tv-turn-conditions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+    margin-top: 4px;
+}
+
+.tv-cond-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: #ffaa00;
+    flex-shrink: 0;
+}
+
+/* Sidebar controls */
+.tv-sidebar-controls {
+    padding: 10px 8px 14px;
+    border-top: 1px solid rgba(212, 175, 55, 0.18);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.tv-control-btn {
+    width: 100%;
+    padding: 9px 4px;
+    border: 1px solid rgba(212, 175, 55, 0.35);
+    border-radius: 7px;
+    background: rgba(212, 175, 55, 0.08);
+    color: var(--accent-gold);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.12s, border-color 0.12s;
+    letter-spacing: 0.04em;
+    font-family: inherit;
+}
+
+.tv-control-btn:hover {
+    background: rgba(212, 175, 55, 0.2);
+    border-color: var(--accent-gold);
+}
+
+.tv-control-btn.primary {
+    background: rgba(212, 175, 55, 0.18);
+    border-color: rgba(212, 175, 55, 0.6);
+    color: #ffe08a;
+}
+
+.tv-control-btn.secondary {
+    border-color: rgba(255, 255, 255, 0.12);
+    background: transparent;
+    color: rgba(168, 144, 112, 0.7);
+    font-size: 10px;
+}
+
+.tv-control-btn.secondary:hover {
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(232, 213, 183, 0.8);
+}
+
+/* ─── Map Area (90%) ─────────────────────────── */
+
+.tv-map-area {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: #101624;
+    cursor: grab;
+    user-select: none;
+}
+
+.tv-map-area.panning {
+    cursor: grabbing;
+}
+
+/* Inner canvas — gets pan+zoom transform */
+.tv-map-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform-origin: 0 0;
+    /* width & height set by JS */
+}
+
+/* Placeholder grid (CSS background lines) */
+.tv-grid-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    /* width/height set by JS */
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.055) 1px, transparent 1px);
+    background-size: var(--tv-cell-size, 60px) var(--tv-cell-size, 60px);
+    pointer-events: none;
+}
+
+/* Thicker lines every 5 cells */
+.tv-grid-major {
+    position: absolute;
+    top: 0;
+    left: 0;
+    /* width/height set by JS */
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.12) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.12) 1px, transparent 1px);
+    background-size: calc(var(--tv-cell-size, 60px) * 5) calc(var(--tv-cell-size, 60px) * 5);
+    pointer-events: none;
+}
+
+/* Map image (for when user provides a real map) */
+.tv-map-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    pointer-events: none;
+}
+
+/* Tokens layer — children are absolutely positioned */
+.tv-tokens-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    /* width/height set by JS */
+    pointer-events: none;
+}
+
+/* ─── Character Tokens ───────────────────────── */
+
+.tv-token {
+    position: absolute;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 3px solid;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: grab;
+    pointer-events: all;
+    transform: translate(-50%, -50%);
+    transition: box-shadow 0.15s;
+    user-select: none;
+    z-index: 10;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: 'Cinzel', serif;
+    letter-spacing: 0.02em;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.6);
+}
+
+.tv-token:hover {
+    z-index: 50;
+    transform: translate(-50%, -50%) scale(1.12);
+    box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.18), 0 4px 16px rgba(0, 0, 0, 0.7);
+}
+
+.tv-token.dragging {
+    cursor: grabbing;
+    z-index: 100;
+    transform: translate(-50%, -50%) scale(1.18);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.85);
+    transition: none;
+}
+
+.tv-token.active-turn {
+    animation: tv-token-active 1.8s ease-in-out infinite;
+}
+
+@keyframes tv-token-active {
+    0%, 100% {
+        box-shadow:
+            0 0 0 0px rgba(212, 175, 55, 0.8),
+            0 3px 12px rgba(0, 0, 0, 0.6);
+    }
+    50% {
+        box-shadow:
+            0 0 0 9px rgba(212, 175, 55, 0),
+            0 3px 12px rgba(0, 0, 0, 0.6);
+    }
+}
+
+.tv-token.dead {
+    opacity: 0.28;
+    filter: grayscale(100%) brightness(0.6);
+    cursor: default;
+}
+
+.tv-token.dead:hover {
+    transform: translate(-50%, -50%);
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.6);
+}
+
+/* Type colors */
+.tv-token.jugador {
+    border-color: var(--accent-gold);
+    background: rgba(212, 175, 55, 0.22);
+    color: #ffe08a;
+}
+
+.tv-token.aliado {
+    border-color: #4caf50;
+    background: rgba(76, 175, 80, 0.22);
+    color: #81c784;
+}
+
+.tv-token.enemigo {
+    border-color: #e53935;
+    background: rgba(229, 57, 53, 0.22);
+    color: #ef9a9a;
+}
+
+/* Token label (tooltip above) */
+.tv-token-label {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.88);
+    color: #e8d5b7;
+    font-size: 10px;
+    font-family: 'Inter', sans-serif;
+    white-space: nowrap;
+    padding: 3px 7px;
+    border-radius: 4px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    font-weight: 600;
+    letter-spacing: 0;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 200;
+}
+
+.tv-token:hover .tv-token-label {
+    opacity: 1;
+}
+
+/* HP bar under token */
+.tv-token-hp-wrap {
+    position: absolute;
+    bottom: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 52px;
+    height: 5px;
+    background: rgba(0, 0, 0, 0.55);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.tv-token-hp-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+/* Token initials */
+.tv-token-abbrev {
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1;
+}
+
+/* ─── Token Action Popup ─────────────────────── */
+
+.tv-token-popup {
+    position: fixed;
+    z-index: 9000;
+    background: rgba(10, 14, 23, 0.97);
+    border: 1px solid rgba(212, 175, 55, 0.45);
+    border-radius: 14px;
+    padding: 16px 18px;
+    min-width: 230px;
+    max-width: 290px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+}
+
+.tv-popup-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.tv-popup-name {
+    font-family: 'Cinzel', serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: #e8d5b7;
+}
+
+.tv-popup-tipo {
+    font-size: 9px;
+    color: rgba(168, 144, 112, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    display: block;
+}
+
+.tv-popup-close {
+    background: none;
+    border: none;
+    color: rgba(168, 144, 112, 0.6);
+    font-size: 20px;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 4px;
+    transition: color 0.12s;
+}
+
+.tv-popup-close:hover {
+    color: #e8d5b7;
+}
+
+/* HP display */
+.tv-popup-hp-block {
+    margin-bottom: 12px;
+}
+
+.tv-popup-hp-label {
+    font-size: 10px;
+    color: rgba(168, 144, 112, 0.7);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+}
+
+.tv-popup-hp-display {
+    font-family: 'Cinzel', serif;
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    line-height: 1;
+}
+
+.tv-popup-hp-bar {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.tv-popup-hp-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    transition: width 0.3s;
+}
+
+/* Damage / Heal row */
+.tv-popup-dmg-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.tv-popup-dmg-input {
+    flex: 1;
+    padding: 7px 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 7px;
+    color: #e8d5b7;
+    font-size: 14px;
+    text-align: center;
+    font-family: 'Cinzel', serif;
+    min-width: 0;
+}
+
+.tv-popup-dmg-input:focus {
+    outline: none;
+    border-color: rgba(212, 175, 55, 0.5);
+}
+
+.tv-popup-btn {
+    padding: 7px 12px;
+    border-radius: 7px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    border: 1px solid;
+    transition: background 0.12s;
+    letter-spacing: 0.04em;
+    font-family: inherit;
+    white-space: nowrap;
+}
+
+.tv-popup-btn.dmg {
+    border-color: rgba(229, 57, 53, 0.5);
+    background: rgba(229, 57, 53, 0.15);
+    color: #ef9a9a;
+}
+
+.tv-popup-btn.dmg:hover {
+    background: rgba(229, 57, 53, 0.3);
+}
+
+.tv-popup-btn.heal {
+    border-color: rgba(76, 175, 80, 0.5);
+    background: rgba(76, 175, 80, 0.15);
+    color: #81c784;
+}
+
+.tv-popup-btn.heal:hover {
+    background: rgba(76, 175, 80, 0.3);
+}
+
+/* Conditions */
+.tv-popup-cond-section {
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    padding-top: 10px;
+}
+
+.tv-popup-cond-title {
+    font-size: 9px;
+    color: rgba(168, 144, 112, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 7px;
+}
+
+.tv-popup-cond-btns {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+}
+
+.tv-popup-cond-btn {
+    padding: 4px 9px;
+    border-radius: 20px;
+    font-size: 10px;
+    cursor: pointer;
+    border: 1px solid rgba(255, 153, 0, 0.3);
+    background: transparent;
+    color: rgba(255, 153, 0, 0.65);
+    transition: all 0.12s;
+    font-family: inherit;
+    font-weight: 500;
+}
+
+.tv-popup-cond-btn:hover {
+    background: rgba(255, 153, 0, 0.1);
+    border-color: rgba(255, 153, 0, 0.5);
+}
+
+.tv-popup-cond-btn.active {
+    background: rgba(255, 153, 0, 0.2);
+    border-color: #ff9900;
+    color: #ffbb55;
+}
+
+/* ─── Zoom Controls ──────────────────────────── */
+
+.tv-zoom-controls {
+    position: absolute;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 20;
+}
+
+.tv-zoom-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(0, 0, 0, 0.65);
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s, border-color 0.12s;
+    font-family: inherit;
+    backdrop-filter: blur(4px);
+}
+
+.tv-zoom-btn:hover {
+    background: rgba(212, 175, 55, 0.2);
+    border-color: rgba(212, 175, 55, 0.5);
+    color: var(--accent-gold);
+}
+
+/* ─── Map Info ───────────────────────────────── */
+
+.tv-map-info {
+    position: absolute;
+    bottom: 18px;
+    right: 18px;
+    background: rgba(0, 0, 0, 0.55);
+    color: rgba(255, 255, 255, 0.35);
+    font-size: 10px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    pointer-events: none;
+    z-index: 20;
+    backdrop-filter: blur(4px);
+    letter-spacing: 0.04em;
+}
+
+/* ─── Empty State ────────────────────────────── */
+
+.tv-empty-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.tv-empty-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+    opacity: 0.2;
+}
+
+.tv-empty-title {
+    font-family: 'Cinzel', serif;
+    font-size: 18px;
+    color: rgba(255, 255, 255, 0.18);
+    margin-bottom: 8px;
+}
+
+.tv-empty-sub {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.1);
+    letter-spacing: 0.04em;
+}
+
+/* ─── Grid cell hover highlight ─────────────── */
+
+.tv-cell-highlight {
+    position: absolute;
+    pointer-events: none;
+    border-radius: 3px;
+    background: rgba(212, 175, 55, 0.12);
+    border: 1px solid rgba(212, 175, 55, 0.3);
+    transition: opacity 0.1s;
+    z-index: 5;
+}

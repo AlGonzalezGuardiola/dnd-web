@@ -25,6 +25,7 @@ const _ROUTES = {
     sessionNotes:  'notas',
     map:           'mapa',
     npcGenerator:  'generador-npc',
+    tvMode:        'mesa-tv',
 };
 
 // Reverse map: path segment → viewName
@@ -419,6 +420,8 @@ function setView(viewName) {
     if (narrativaHubEl) narrativaHubEl.style.display = 'none';
     const narrativeEl = document.getElementById('narrativeSection');
     if (narrativeEl) narrativeEl.style.display = 'none';
+    const tvModeEl = document.getElementById('tvModeSection');
+    if (tvModeEl) tvModeEl.style.display = 'none';
 
     // Also hide the character sheet if it was open
     const sheetContainer = document.getElementById('characterSheetContainer');
@@ -528,6 +531,14 @@ function setView(viewName) {
             if (diceWidget) diceWidget.style.display = 'none';
             document.getElementById('breadcrumbs').textContent = '📜 Narrativa › Crónicas';
             document.getElementById('btnBack').style.display = 'flex';
+            break;
+        case 'tvMode':
+            document.getElementById('tvModeSection').style.display = 'flex';
+            if (editorToolbar) editorToolbar.style.display = 'none';
+            if (hud) hud.style.display = 'none';
+            if (diceWidget) diceWidget.style.display = 'none';
+            // Init TV mode on first open
+            if (typeof initTvMode === 'function') initTvMode();
             break;
     }
 }
