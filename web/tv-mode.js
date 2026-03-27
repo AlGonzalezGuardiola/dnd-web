@@ -63,25 +63,23 @@ function _buildTvGrid() {
     }
 }
 
-// Map image loaded: size canvas to image, fit zoom, hide grid lines
+// Map image loaded: orient to landscape, show grid overlay, auto-fit zoom
 function _buildTvGridWithMap(canvas, mapUrl) {
     const img = new Image();
     img.onload = () => {
-        const natW = img.naturalWidth;
-        const natH = img.naturalHeight;
+        // ── 1. Force landscape orientation ──────────────────────────────────
+        // If the image is portrait (H > W), rotate it 90° CW to landscape.
+        const { src: finalSrc, w: effW, h: effH } = _ensureLandscape(img);
 
-        // Size canvas to natural image dimensions
-        canvas.style.width  = natW + 'px';
-        canvas.style.height = natH + 'px';
+        // ── 2. Size canvas to effective (landscape) image dimensions ─────────
+        canvas.style.width  = effW + 'px';
+        canvas.style.height = effH + 'px';
 
-        // Adjust grid dimensions so token snap grid covers the image
-        tvState.gridCols = Math.ceil(natW / tvState.cellSize);
-        tvState.gridRows = Math.ceil(natH / tvState.cellSize);
+        // Update grid cell count so the snap grid covers the whole image
+        tvState.gridCols = Math.ceil(effW / tvState.cellSize);
+        tvState.gridRows = Math.ceil(effH / tvState.cellSize);
 
-        // Hide CSS grid lines (map already has its own grid)
-        _setGridLinesVisible(canvas, false);
-
-        // Set image as background (full canvas size)
+        // ── 3. Map image (first child — below everything) ────────────────────
         let mapImg = canvas.querySelector('.tv-map-image');
         if (!mapImg) {
             mapImg = document.createElement('img');
@@ -89,28 +87,52 @@ function _buildTvGridWithMap(canvas, mapUrl) {
             mapImg.alt = 'Mapa de combate';
             canvas.insertBefore(mapImg, canvas.firstChild);
         }
-        mapImg.src = mapUrl;
-        mapImg.style.display  = 'block';
-        mapImg.style.position = 'absolute';
-        mapImg.style.top      = '0';
-        mapImg.style.left     = '0';
-        mapImg.style.width    = natW + 'px';
-        mapImg.style.height   = natH + 'px';
+        mapImg.src              = finalSrc;
+        mapImg.style.display    = 'block';
+        mapImg.style.position   = 'absolute';
+        mapImg.style.top        = '0';
+        mapImg.style.left       = '0';
+        mapImg.style.width      = effW + 'px';
+        mapImg.style.height     = effH + 'px';
 
-        // Tokens layer
-        _ensureTokensLayer(canvas, natW, natH);
+        // ── 4. Grid overlay (always on — user maps have no pre-drawn grid) ───
+        _setGridLinesVisible(canvas, true, effW, effH, tvState.cellSize);
 
-        // Auto-fit: zoom so the map fills the available area
-        _autoFitMap(natW, natH);
+        // ── 5. Tokens & rings layers ─────────────────────────────────────────
+        _ensureTokensLayer(canvas, effW, effH);
+        _ensureDistanceRingsSvg(canvas, effW, effH);
 
-        // Distance rings SVG
-        _ensureDistanceRingsSvg(canvas, natW, natH);
+        // ── 6. Auto-fit zoom so the full map fills the play area ─────────────
+        _autoFitMap(effW, effH);
     };
     img.onerror = () => {
         console.warn('[TV] No se pudo cargar el mapa:', mapUrl);
         _buildTvGridEmpty(canvas);
     };
     img.src = mapUrl;
+}
+
+// Returns { src, w, h } — rotates portrait images 90° CW via offscreen canvas
+function _ensureLandscape(img) {
+    const nw = img.naturalWidth;
+    const nh = img.naturalHeight;
+
+    if (nh <= nw) {
+        // Already landscape (or square)
+        return { src: img.src, w: nw, h: nh };
+    }
+
+    // Portrait → rotate 90° clockwise
+    // After rotation: new width = nh, new height = nw
+    const oc  = document.createElement('canvas');
+    oc.width  = nh;
+    oc.height = nw;
+    const ctx = oc.getContext('2d');
+    // translate to new width (=nh), rotate CW, draw image at origin
+    ctx.translate(nh, 0);
+    ctx.rotate(Math.PI / 2);
+    ctx.drawImage(img, 0, 0, nw, nh);
+    return { src: oc.toDataURL('image/jpeg', 0.92), w: nh, h: nw };
 }
 
 // No map: show default placeholder grid
@@ -175,21 +197,21 @@ function _ensureTokensLayer(canvas, w, h) {
     layer.style.height = h + 'px';
 }
 
-// Auto-fit: zoom to show the full map in the available area
+// Auto-fit: zoom so the full map fills the available play area
 function _autoFitMap(imgW, imgH) {
     const mapArea = document.getElementById('tvMapArea');
     if (!mapArea) return;
 
-    // Wait one tick for the area to have correct dimensions
     requestAnimationFrame(() => {
         const areaW = mapArea.offsetWidth;
         const areaH = mapArea.offsetHeight;
 
+        // Use min (contain) so the whole map is always visible
         const scaleX = areaW / imgW;
         const scaleY = areaH / imgH;
-        tvState.zoom  = Math.min(scaleX, scaleY);
+        tvState.zoom = Math.min(scaleX, scaleY);
 
-        // Center the image
+        // Center within the play area
         tvState.pan.x = (areaW - imgW * tvState.zoom) / 2;
         tvState.pan.y = (areaH - imgH * tvState.zoom) / 2;
 
@@ -783,18 +805,15 @@ function tvZoomOut() {
 
 function tvResetZoom() {
     const mapArea = document.getElementById('tvMapArea');
-    const canvas = document.getElementById('tvMapCanvas');
+    const canvas  = document.getElementById('tvMapCanvas');
     if (!mapArea || !canvas) return;
 
     const areaW = mapArea.offsetWidth;
     const areaH = mapArea.offsetHeight;
-    const w = tvState.gridCols * tvState.cellSize;
-    const h = tvState.gridRows * tvState.cellSize;
+    const w = parseInt(canvas.style.width)  || tvState.gridCols * tvState.cellSize;
+    const h = parseInt(canvas.style.height) || tvState.gridRows * tvState.cellSize;
 
-    // Fit grid in viewport
-    const scaleX = areaW / w;
-    const scaleY = areaH / h;
-    tvState.zoom = Math.min(scaleX, scaleY, 1);
+    tvState.zoom  = Math.min(areaW / w, areaH / h);
     tvState.pan.x = (areaW - w * tvState.zoom) / 2;
     tvState.pan.y = (areaH - h * tvState.zoom) / 2;
     _applyTvTransform();
