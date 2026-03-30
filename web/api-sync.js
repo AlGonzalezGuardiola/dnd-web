@@ -19,6 +19,7 @@ function _buildSaveBody() {
         reactionsUsed:          combatState.reactionsUsed          || {},
         pendingReactionTrigger: combatState.pendingReactionTrigger || null,
         combatMap:              combatState.combatMap              || { id: null, name: '', url: '' },
+        tokenPositions:         (typeof tvState !== 'undefined' ? tvState.tokenPositions : null) || {},
         _clientId:              CLIENT_ID,
     };
 }
@@ -100,6 +101,11 @@ function applyRemoteState(data) {
         reactionsUsed:     data.reactionsUsed     || {},
         combatMap:         data.combatMap         || combatState.combatMap || { id: null, name: '', url: '' },
     });
+    // Sync token positions into tvState so the TV map updates live
+    if (data.tokenPositions && typeof tvState !== 'undefined') {
+        Object.assign(tvState.tokenPositions, data.tokenPositions);
+        if (currentView() === 'tvMode' && typeof renderTvTokens === 'function') renderTvTokens();
+    }
     if (combatModeActive) renderCombatManager();
     if (data.pendingReactionTrigger) {
         handleIncomingReactionTrigger(data.pendingReactionTrigger);

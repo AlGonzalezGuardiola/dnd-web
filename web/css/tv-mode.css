@@ -540,6 +540,20 @@
     box-shadow: 0 3px 12px rgba(0, 0, 0, 0.6);
 }
 
+/* Non-controllable tokens: no grab cursor for players */
+.tv-token:not(.tv-token-mine) {
+    cursor: default;
+}
+.tv-token:not(.tv-token-mine):hover {
+    transform: translate(-50%, -50%); /* no scale-up hint either */
+}
+
+/* Own token: subtle gold outline so player can identify it */
+.tv-token.tv-token-mine {
+    outline: 2px solid rgba(212, 175, 55, 0.55);
+    outline-offset: 3px;
+}
+
 .tv-token:hover {
     z-index: 50;
     transform: translate(-50%, -50%) scale(1.12);

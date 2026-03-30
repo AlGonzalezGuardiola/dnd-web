@@ -120,6 +120,7 @@ function _renderPlayerCombatLayout(view) {
         </div>
         <div class="player-active-footer">
             ${nextTurnBtn}
+            <button class="btn-player-map" onclick="openTvMode()" title="Ver mapa de combate">🗺️ Mapa</button>
         </div>`;
 
     const panelEl = document.getElementById('playerCombatPanel');

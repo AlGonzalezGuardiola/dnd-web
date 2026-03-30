@@ -294,6 +294,7 @@ function renderTvTokens() {
         tokenEl.style.top = py + 'px';
         tokenEl.classList.toggle('active-turn', isActive && !isDead);
         tokenEl.classList.toggle('dead', isDead);
+        tokenEl.classList.toggle('tv-token-mine', _canPlayerControlToken(p.id));
 
         // Update abbrev & label in case name changed
         tokenEl.querySelector('.tv-token-abbrev').textContent = abbrev;
@@ -400,6 +401,19 @@ function hideDistanceRings() {
     tvState.activeRingsPid = null;
 }
 
+// ─── Player permission helper ─────────────────────
+
+// Returns true if the current user can control (drag/popup) this token.
+// Master can control everything; players only control their own char + summoned allies.
+function _canPlayerControlToken(pid) {
+    if (isMaster()) return true;
+    const charId = gameRole.characterId;
+    if (!charId) return false;
+    if (pid === charId) return true;
+    const p = combatState.participants?.find(p => p.id === pid);
+    return p?.ownerCharId === charId;
+}
+
 // ─── Token Click / Focus ──────────────────────────
 
 function _tvTokenClick(e) {
@@ -411,7 +425,10 @@ function _tvTokenClick(e) {
         hideDistanceRings();
     } else {
         showDistanceRings(pid);
-        tvOpenTokenPopup(pid, e.clientX, e.clientY);
+        // Players only see the action popup for their own token(s)
+        if (_canPlayerControlToken(pid)) {
+            tvOpenTokenPopup(pid, e.clientX, e.clientY);
+        }
     }
 }
 
@@ -444,6 +461,9 @@ function _tvTokenMouseDown(e) {
 
     const tokenEl = e.currentTarget;
     const pid = tokenEl.dataset.pid;
+
+    // Players can only drag their own token(s)
+    if (!_canPlayerControlToken(pid)) return;
     const mapArea = document.getElementById('tvMapArea');
     const mapRect = mapArea.getBoundingClientRect();
 
@@ -492,6 +512,8 @@ function _tvTokenMouseDown(e) {
         renderTvTokens();
         // Refresh rings if the moved token had them
         if (tvState.activeRingsPid === movedPid) showDistanceRings(movedPid);
+        // Sync new position to server so all devices see the move
+        if (typeof saveToApi === 'function') saveToApi();
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
     }

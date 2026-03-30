@@ -115,6 +115,9 @@ const CombatSchema = new mongoose.Schema({
         url:  { type: String, default: '' },
     },
 
+    // Token positions on the TV map: { participantId: { col, row } }
+    tokenPositions: { type: mongoose.Schema.Types.Mixed, default: {} },
+
     // References to CombatEntity documents created during this combat
     entities: [{ type: mongoose.Schema.Types.ObjectId, ref: 'CombatEntity' }],
 }, {
