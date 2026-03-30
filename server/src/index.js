@@ -19,7 +19,7 @@ const PORT = process.env.PORT || 3001;
 
 // ── Middleware ────────────────────────────────────────────────────────────────
 app.use(cors());
-app.use(express.json({ limit: '2mb' }));  // combat state can be large with full log
+app.use(express.json({ limit: '140mb' }));  // combat-maps upload can be up to 100 MB video (base64 +33%)
 
 // ── Health check (ambas rutas: directa y via proxy Apache /api/health) ────────
 const health = (_req, res) => res.json({ status: 'ok', ts: new Date().toISOString() });
