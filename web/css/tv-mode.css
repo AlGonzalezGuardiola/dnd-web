@@ -668,6 +668,16 @@
     line-height: 1;
 }
 
+/* Token with portrait photo */
+.tv-token-has-photo {
+    background-size: cover;
+    background-position: center top;
+}
+
+.tv-token-has-photo .tv-token-abbrev {
+    display: none;
+}
+
 /* ─── Token Action Popup ─────────────────────── */
 
 .tv-token-popup {

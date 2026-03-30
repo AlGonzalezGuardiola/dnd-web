@@ -29,12 +29,12 @@
     <link rel="stylesheet" href="css/base.css?v=20260326b">
     <link rel="stylesheet" href="css/map.css?v=20260326b">
     <link rel="stylesheet" href="css/character-sheet.css?v=20260330c">
-    <link rel="stylesheet" href="css/combat.css?v=20260330a">
+    <link rel="stylesheet" href="css/combat.css?v=20260330b">
     <link rel="stylesheet" href="css/encounters.css?v=20260326b">
     <link rel="stylesheet" href="css/npc-generator.css?v=20260326b">
     <link rel="stylesheet" href="css/session-notes.css?v=20260326b">
     <link rel="stylesheet" href="css/narrative.css?v=20260330b">
-    <link rel="stylesheet" href="css/tv-mode.css?v=20260327a">
+    <link rel="stylesheet" href="css/tv-mode.css?v=20260330a">
     <link rel="stylesheet" href="mobile.css?v=20260330a" media="screen and (max-width: 768px)">
 </head>
 
@@ -177,6 +177,13 @@
                     <input id="charAliadoPg"     class="npc-input npc-input-sm" type="number" placeholder="PG" min="1">
                     <input id="charAliadoCa"     class="npc-input npc-input-sm" type="number" placeholder="CA" min="1">
                 </div>
+                <div class="npc-photo-row">
+                    <label class="npc-photo-upload-btn">
+                        📷 Foto (opcional)
+                        <input type="file" accept="image/*" style="display:none" onchange="onNpcPhotoChange(this,'aliado')">
+                    </label>
+                    <img id="charAliadoImgPreview" class="npc-photo-preview" style="display:none">
+                </div>
                 <div class="npc-toggle-row">
                     <label class="npc-toggle-label">
                         <input type="checkbox" id="charAliadoEsInvocacion" onchange="toggleCharSummonFields('aliado')">
@@ -218,6 +225,13 @@
                     <input id="charEnemigoCa"        class="npc-input npc-input-sm" type="number" placeholder="CA" min="1">
                     <input id="charEnemigoGroupSize" class="npc-input npc-input-sm" type="number" placeholder="Grupo (nº)" min="1"
                            title="2+ para crear un grupo (PG = HP por miembro)">
+                </div>
+                <div class="npc-photo-row">
+                    <label class="npc-photo-upload-btn">
+                        📷 Foto (opcional)
+                        <input type="file" accept="image/*" style="display:none" onchange="onNpcPhotoChange(this,'enemigo')">
+                    </label>
+                    <img id="charEnemigoImgPreview" class="npc-photo-preview" style="display:none">
                 </div>
                 <small class="npc-group-hint">💡 Rellena «Grupo» con 2+ para crear un grupo (PG = HP por miembro)</small>
                 <div class="npc-builder-row npc-actions-row">
@@ -890,11 +904,11 @@
     <script src="role.js?v=20260324a"></script>
     <script src="map.js?v=20260330a"></script>
     <script src="map-editor.js?v=20260324a"></script>
-    <script src="combat-templates.js?v=20260326b"></script>
+    <script src="combat-templates.js?v=20260330a"></script>
     <script src="character-sheet-tabs.js?v=20260330a"></script>
     <script src="character-sheet.js?v=20260330b"></script>
-    <script src="character-edit.js?v=20260330c"></script>
-    <script src="combat-setup.js?v=20260324a"></script>
+    <script src="character-edit.js?v=20260330d"></script>
+    <script src="combat-setup.js?v=20260330a"></script>
     <script src="combat-manager.js?v=20260330c"></script>
     <script src="reactions.js?v=20260326c"></script>
     <script src="combat-log.js?v=20260324a"></script>
@@ -904,7 +918,7 @@
     <script src="session-notes.js?v=20260330a"></script>
     <script src="narrative.js?v=20260326b"></script>
     <script src="narrative-images.js?v=20260330a"></script>
-    <script src="tv-mode.js?v=20260327a"></script>
+    <script src="tv-mode.js?v=20260330a"></script>
     <script src="combat-maps.js?v=20260330a"></script>
 </body>
 

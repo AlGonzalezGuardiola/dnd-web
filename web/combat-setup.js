@@ -185,7 +185,7 @@ function beginCombatFromSetup() {
             charData = {
                 id: uid, tipo: npc.tipo, nombre: npc.nombre,
                 clase: npc.tipo === 'aliado' ? 'Aliado' : 'Enemigo',
-                nivel: '—', imagen: '',
+                nivel: '—', imagen: npc.imagen || '',
                 resumen: { HP: String(totalHp), CA: String(npc.ca), Velocidad: '30ft' },
                 combateExtra, conjuros: [],
             };

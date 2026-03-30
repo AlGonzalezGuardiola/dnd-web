@@ -80,6 +80,7 @@ function addTemplateToSetup(templateId, tipo) {
         isSummon:  !!t.isSummon,
         summoner:  t.summoner || '',
         summonedBeforeCombat: !!t.isSummon,
+        imagen:    t.imagen || '',
     });
     renderSetupNpcList(tipo);
     _updateSetupCount();
@@ -108,11 +109,11 @@ function toggleSetupSummonFields(tipo) {
 }
 
 // ── Entity Template: save to backend catalog (fire-and-forget) ───────────────
-function _saveEntityTemplate({ name, type, stats, actions, isGroup, groupSize, isSummon, summoner, actionsText }) {
+function _saveEntityTemplate({ name, type, stats, actions, isGroup, groupSize, isSummon, summoner, actionsText, imagen }) {
     fetch(`${API_BASE}/api/entity-templates`, {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, type, stats, actions, isGroup, groupSize, isSummon, summoner, actionsText }),
+        body: JSON.stringify({ name, type, stats, actions, isGroup, groupSize, isSummon, summoner, actionsText, imagen: imagen || '' }),
     }).catch(e => console.warn('[entity-templates] save failed:', e.message));
 }
 

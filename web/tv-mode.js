@@ -110,6 +110,7 @@ function _buildTvGridWithMap(canvas, mapUrl) {
 
         // ── 6. Auto-fit zoom so the full map fills the play area ─────────────
         _autoFitMap(effW, effH);
+        renderTvTokens();
     };
     img.onerror = () => {
         console.warn('[TV] No se pudo cargar el mapa:', mapUrl);
@@ -211,6 +212,7 @@ function _buildTvGridEmpty(canvas) {
         tvState.pan.x = 0;
         tvState.pan.y = 0;
         _applyTvTransform();
+        renderTvTokens();
     });
 }
 
@@ -328,6 +330,8 @@ function renderTvTokens() {
         const { px, py } = _cellToPixel(pos.col, pos.row);
         const abbrev = _tokenAbbrev(p.name);
 
+        const imagen = p.charData?.imagen || '';
+
         let tokenEl = layer.querySelector(`.tv-token[data-pid="${p.id}"]`);
         if (!tokenEl) {
             tokenEl = document.createElement('div');
@@ -351,6 +355,14 @@ function renderTvTokens() {
         tokenEl.classList.toggle('active-turn', isActive && !isDead);
         tokenEl.classList.toggle('dead', isDead);
         tokenEl.classList.toggle('tv-token-mine', _canPlayerControlToken(p.id));
+        tokenEl.classList.toggle('tv-token-has-photo', !!imagen);
+
+        // Portrait photo: show instead of initials when available
+        if (imagen) {
+            tokenEl.style.backgroundImage = `url(${imagen})`;
+        } else {
+            tokenEl.style.backgroundImage = '';
+        }
 
         // Update abbrev & label in case name changed
         tokenEl.querySelector('.tv-token-abbrev').textContent = abbrev;

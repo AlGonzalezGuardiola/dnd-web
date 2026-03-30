@@ -30,6 +30,9 @@ const EntityTemplateSchema = new mongoose.Schema({
     isSummon: { type: Boolean, default: false },
     summoner: { type: String, enum: ['ASTHOR', 'ZERO', ''], default: '' },
 
+    // Optional portrait photo (base64 data URL or external URL)
+    imagen: { type: String, default: '' },
+
     // Raw action text strings (as entered in the setup form)
     actionsText: {
         acciones:    { type: String, default: '' },

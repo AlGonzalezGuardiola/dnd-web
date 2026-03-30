@@ -488,6 +488,7 @@ function renderPersonajesTemplatesList(tipo) {
             const actStr = [t.actionsText?.acciones, t.actionsText?.adicionales, t.actionsText?.reacciones]
                 .filter(Boolean).join(' | ');
             return `<div class="npc-builder-item">
+                ${t.imagen ? `<img class="npc-item-thumb" src="${t.imagen}" alt="">` : ''}
                 <div class="npc-item-info">
                     <span class="npc-item-name">${t.name}</span>
                     <span class="npc-item-stats">❤️ ${t.stats.hp} · 🛡️ ${t.stats.ac}${badges ? ' · ' + badges : ''}</span>
@@ -520,6 +521,8 @@ async function createCharTemplate(tipo) {
     const isSummon = tipo === 'aliado' && !!(document.getElementById('charAliadoEsInvocacion')?.checked);
     const summoner = isSummon ? (document.getElementById('charAliadoSumoner')?.value || '') : '';
 
+    const imagen = _npcImagen[tipo] || '';
+
     await fetch(`${API_BASE}/api/entity-templates`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -530,6 +533,7 @@ async function createCharTemplate(tipo) {
             actions: [],
             isGroup, groupSize, isSummon, summoner,
             actionsText: { acciones, adicionales, reacciones },
+            imagen,
         }),
     }).catch(e => console.warn('[personajes] save failed:', e.message));
 
@@ -538,6 +542,11 @@ async function createCharTemplate(tipo) {
         const el = document.getElementById(id);
         if (el) el.value = '';
     });
+    // Clear photo
+    _npcImagen[tipo] = '';
+    const cap = tipo.charAt(0).toUpperCase() + tipo.slice(1);
+    const preview = document.getElementById(`char${cap}ImgPreview`);
+    if (preview) { preview.src = ''; preview.style.display = 'none'; }
     if (tipo === 'enemigo') { const gs = document.getElementById('charEnemigoGroupSize'); if (gs) gs.value = ''; }
     if (tipo === 'aliado')  { const chk = document.getElementById('charAliadoEsInvocacion'); if (chk) { chk.checked = false; toggleCharSummonFields('aliado'); } }
 
@@ -663,6 +672,22 @@ function toggleCharSummonFields(tipo) {
 }
 
 // === Edit Actions ===
+// ── NPC builder photo ──────────────────────────────────────────────────────────
+const _npcImagen = { aliado: '', enemigo: '' };
+
+function onNpcPhotoChange(input, tipo) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        _npcImagen[tipo] = e.target.result;
+        const cap = tipo.charAt(0).toUpperCase() + tipo.slice(1);
+        const preview = document.getElementById(`char${cap}ImgPreview`);
+        if (preview) { preview.src = e.target.result; preview.style.display = 'block'; }
+    };
+    reader.readAsDataURL(file);
+}
+
 function onPortraitFileChange(input) {
     const file = input.files[0];
     if (!file) return;

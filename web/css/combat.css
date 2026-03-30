@@ -3079,6 +3079,41 @@ body.role-jugador .master-only { display: none !important; }
     flex: 1;
     min-width: 0;
 }
+.npc-item-thumb {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: top center;
+    border: 2px solid var(--border-color);
+    flex-shrink: 0;
+}
+.npc-photo-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+.npc-photo-upload-btn {
+    cursor: pointer;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-size: 12px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    white-space: nowrap;
+    transition: background 0.2s;
+}
+.npc-photo-upload-btn:hover { background: rgba(255,255,255,0.1); }
+.npc-photo-preview {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    object-fit: cover;
+    object-position: top center;
+    border: 2px solid var(--border-color);
+}
 .npc-item-name   { font-size: 14px; font-weight: 600; color: var(--text-primary); }
 .npc-item-stats  { font-size: 12px; color: var(--text-muted); }
 .npc-item-actions {
