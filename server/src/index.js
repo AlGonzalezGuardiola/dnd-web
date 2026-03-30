@@ -13,6 +13,7 @@ const sessionNotesRouter      = require('./routes/sessionNotes');
 const narrativeSessionsRouter = require('./routes/narrativeSessions');
 const mapsRouter              = require('./routes/maps');
 const combatMapsRouter        = require('./routes/combatMaps');
+const narrativeImagesRouter   = require('./routes/narrativeImages');
 
 const app  = express();
 const PORT = process.env.PORT || 3001;
@@ -36,6 +37,7 @@ app.use('/api/session-notes',       sessionNotesRouter);
 app.use('/api/narrative-sessions',  narrativeSessionsRouter);
 app.use('/api/maps',                mapsRouter);
 app.use('/api/combat-maps',         combatMapsRouter);
+app.use('/api/narrative-images',    narrativeImagesRouter);
 
 // ── Static files (web/) + SPA fallback ───────────────────────────────────────
 const WEB_DIR = path.join(__dirname, '../../web');

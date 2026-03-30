@@ -20,8 +20,9 @@ const _ROUTES = {
     onlineWaiting: 'combate/sala-espera',
     combatManager: 'combate/activo',
     combatLogView: 'combate/registro',
-    narrativaHub:  'narrativa',
-    narrative:     'narrativa/cronicas',
+    narrativaHub:     'narrativa',
+    narrative:        'narrativa/cronicas',
+    narrativeImages:  'narrativa/imagenes',
     sessionNotes:  'notas',
     map:           'mapa',
     npcGenerator:  'generador-npc',
@@ -420,6 +421,8 @@ function setView(viewName) {
     if (narrativaHubEl) narrativaHubEl.style.display = 'none';
     const narrativeEl = document.getElementById('narrativeSection');
     if (narrativeEl) narrativeEl.style.display = 'none';
+    const narrativeImagesEl = document.getElementById('narrativeImagesSection');
+    if (narrativeImagesEl) narrativeImagesEl.style.display = 'none';
     const tvModeEl = document.getElementById('tvModeSection');
     if (tvModeEl) tvModeEl.style.display = 'none';
     const combatMapsEl = document.getElementById('combatMapsView');
@@ -532,6 +535,14 @@ function setView(viewName) {
             if (hud) hud.style.display = 'flex';
             if (diceWidget) diceWidget.style.display = 'none';
             document.getElementById('breadcrumbs').textContent = '📜 Narrativa › Crónicas';
+            document.getElementById('btnBack').style.display = 'flex';
+            break;
+        case 'narrativeImages':
+            document.getElementById('narrativeImagesSection').style.display = 'flex';
+            if (editorToolbar) editorToolbar.style.display = 'none';
+            if (hud) hud.style.display = 'flex';
+            if (diceWidget) diceWidget.style.display = 'none';
+            document.getElementById('breadcrumbs').textContent = '📜 Narrativa › Imágenes';
             document.getElementById('btnBack').style.display = 'flex';
             break;
         case 'tvMode':
