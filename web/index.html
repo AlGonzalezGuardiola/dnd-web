@@ -52,6 +52,7 @@
         <div id="breadcrumbs" class="breadcrumbs" aria-live="polite">Mundo</div>
 
         <div style="display:flex; gap:8px; align-items:center;">
+            <button class="hud-btn grid-color-btn" id="mapGridColorBtn" onclick="toggleGridColor()" title="Color de líneas del grid" style="font-size:13px; font-weight:bold; letter-spacing:1px;">W</button>
             <button id="roleIndicator" class="role-indicator master" onclick="showRoleSelectionOverlay()" title="Cambiar rol">🎲 Master</button>
         </div>
     </div>
@@ -772,6 +773,8 @@
                     <button class="tv-zoom-btn" onclick="tvZoomIn()" title="Acercar">+</button>
                     <button class="tv-zoom-btn" onclick="tvResetZoom()" title="Ajustar al área">⌂</button>
                     <button class="tv-zoom-btn" onclick="tvZoomOut()" title="Alejar">−</button>
+                    <div class="tv-zoom-sep"></div>
+                    <button class="tv-zoom-btn grid-color-btn" id="tvGridColorBtn" onclick="toggleGridColor()" title="Color de líneas del grid">W</button>
                 </div>
 
                 <div class="tv-map-info">Arrastra para mover · Rueda para zoom · Click en ficha para acciones</div>

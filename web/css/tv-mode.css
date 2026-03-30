@@ -424,6 +424,12 @@
     /* background-size and background-position updated by _applyTvTransform() */
 }
 
+.tv-grid-overlay.grid-color-black {
+    background-image:
+        linear-gradient(to right,  rgba(0, 0, 0, 0.35) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.35) 1px, transparent 1px);
+}
+
 /* Map image — below tokens (z-index 10) */
 .tv-map-image {
     position: absolute;
@@ -807,6 +813,14 @@
     background: rgba(212, 175, 55, 0.2);
     border-color: rgba(212, 175, 55, 0.5);
     color: var(--accent-gold);
+}
+
+.tv-zoom-sep {
+    width: 1px;
+    height: 22px;
+    background: rgba(255, 255, 255, 0.15);
+    align-self: center;
+    margin: 0 2px;
 }
 
 /* ─── Map Info ───────────────────────────────── */

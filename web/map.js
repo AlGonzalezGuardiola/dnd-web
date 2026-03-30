@@ -28,6 +28,9 @@ function renderMap() {
 
     // Reset view
     resetView();
+
+    // Apply persisted grid color preference
+    _applyGridColor();
 }
 
 function renderPins() {
@@ -335,4 +338,34 @@ function handleMapTouchMove(e) {
 function handleMapTouchEnd(e) {
     state.isDragging = false;
     document.getElementById('mapContainer').classList.remove('grabbing');
+}
+
+// ============================================
+// Grid color toggle (shared by map + TV mode)
+// ============================================
+function _getGridColor() {
+    return localStorage.getItem('dnd_grid_color') || 'white';
+}
+
+function toggleGridColor() {
+    const next = _getGridColor() === 'white' ? 'black' : 'white';
+    localStorage.setItem('dnd_grid_color', next);
+    _applyGridColor();
+}
+
+function _applyGridColor() {
+    const isBlack = _getGridColor() === 'black';
+
+    const mapOverlay = document.getElementById('mapGridOverlay');
+    const tvOverlay  = document.getElementById('tvGridOverlay');
+    [mapOverlay, tvOverlay].forEach(el => {
+        if (el) el.classList.toggle('grid-color-black', isBlack);
+    });
+
+    const label = isBlack ? 'N' : 'W';
+    const tip   = isBlack ? 'Líneas negras · click para blancas' : 'Líneas blancas · click para negras';
+    document.querySelectorAll('.grid-color-btn').forEach(btn => {
+        btn.textContent = label;
+        btn.title = tip;
+    });
 }

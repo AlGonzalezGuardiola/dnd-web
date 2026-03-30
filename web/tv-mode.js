@@ -37,7 +37,7 @@ function initTvMode() {
     _buildTvGrid();
     _setupTvMapInteraction();
     refreshTvMode();
-
+    _applyGridColor();
 }
 
 // Called externally after any combat state change
