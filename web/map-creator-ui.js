@@ -1,5 +1,6 @@
+// FILE: web/map-creator-ui.js
 // ============================================
-// Map Creator — UI: paneles de escena, propiedades y tiles
+// Map Creator — UI: paneles de escena, propiedades, tiles y capas
 // Depends on: map-creator.js (_mc, _mcPushHistory, _mcRenderAll, etc.)
 // ============================================
 
@@ -13,6 +14,7 @@ function mcPanelTab(tab) {
     if (tab === 'scene')  _mcUpdateScenePanel();
     if (tab === 'props')  _mcUpdatePropertiesPanel();
     if (tab === 'tiles')  _mcUpdateTilesPanel();
+    if (tab === 'layers') _mcUpdateLayersPanel();
 }
 
 // ─── Scene Panel ───────────────────────────────────────────────────────────
@@ -50,7 +52,7 @@ function _mcUpdateScenePanel() {
     </div>
     <div class="mc-prop-group">
         <label class="mc-prop-label">O subir imagen</label>
-        <label class="mc-upload-btn">📁 Elegir archivo
+        <label class="mc-upload-btn">Elegir archivo
             <input type="file" accept="image/*" style="display:none" onchange="_mcBgFileChange(this)">
         </label>
     </div>`}
@@ -100,12 +102,20 @@ function _mcUpdateScenePanel() {
     </div>
     ${s.fog.enabled ? `
     <div class="mc-prop-group">
-        <label class="mc-prop-label">Tamaño del pincel: <strong>${_mc.fogBrushSize}px</strong></label>
+        <label class="mc-prop-label">Tamaño del pincel: <strong id="mcFogBrushVal">${_mc.fogBrushSize}px</strong></label>
         <input type="range" style="width:100%" min="10" max="300" step="5" value="${_mc.fogBrushSize}"
-               oninput="_mc.fogBrushSize=+this.value;this.previousElementSibling.querySelector('strong').textContent=_mc.fogBrushSize+'px'">
+               oninput="_mc.fogBrushSize=+this.value;document.getElementById('mcFogBrushVal').textContent=_mc.fogBrushSize+'px'">
+    </div>
+    <div class="mc-prop-group" style="display:flex;gap:6px">
+        <button class="mc-btn mc-btn-sm" onclick="mcSetTool('fog')" style="flex:1">
+            Pintar niebla (F)
+        </button>
+    </div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:8px;line-height:1.5">
+        Clic izq. = revelar · Clic der. = añadir niebla
     </div>
     <button class="mc-btn mc-btn-sm" onclick="_mcClearFog()" style="width:100%;margin-bottom:4px">
-        🌫 Limpiar toda la niebla
+        Limpiar toda la niebla
     </button>` : ''}
     `;
 }
@@ -190,7 +200,7 @@ function _mcUpdatePropertiesPanel() {
     if (!_mc.selection) {
         el.innerHTML = `<div class="mc-props-empty">
             Selecciona un elemento en el mapa para editar sus propiedades.<br><br>
-            <small style="font-size:10px">V = Seleccionar · B = Tile · W = Muro<br>D = Puerta · N = Nota · F = Niebla</small>
+            <small style="font-size:10px">V = Seleccionar · B = Tile · W = Muro<br>D = Puerta · N = Nota · F = Niebla · P = Dibujar</small>
         </div>`;
         return;
     }
@@ -202,7 +212,7 @@ function _mcUpdatePropertiesPanel() {
         if (!tile) { el.innerHTML = ''; return; }
         const deg = Math.round((tile.rotation || 0) * 180 / Math.PI);
         el.innerHTML = `
-        <div class="mc-prop-section">Tile</div>
+        <div class="mc-prop-section">Tile — ${_escHtml(tile.label || 'Sin nombre')}</div>
         <div class="mc-prop-group mc-prop-row">
             <div>
                 <label class="mc-prop-label">X</label>
@@ -228,17 +238,91 @@ function _mcUpdatePropertiesPanel() {
             </div>
         </div>
         <div class="mc-prop-group">
-            <label class="mc-prop-label">Rotación: <strong>${deg}°</strong></label>
-            <input type="range" style="width:100%" min="0" max="6.283" step="0.05" value="${tile.rotation || 0}"
-                   oninput="_mcTileProp('${id}','rotation',+this.value);this.previousElementSibling.querySelector('strong').textContent=Math.round(+this.value*180/Math.PI)+'°'">
+            <label class="mc-prop-label">Rotación: <strong id="mcTileRotVal">${deg}°</strong></label>
+            <input type="range" style="width:100%" min="-3.14159" max="3.14159" step="0.05" value="${tile.rotation || 0}"
+                   oninput="_mcTileProp('${id}','rotation',+this.value);document.getElementById('mcTileRotVal').textContent=Math.round(+this.value*180/Math.PI)+'°'">
         </div>
         <div class="mc-prop-group">
-            <label class="mc-prop-label">Opacidad: <strong>${Math.round((tile.alpha||1)*100)}%</strong></label>
+            <label class="mc-prop-label">Opacidad: <strong id="mcTileAlphaVal">${Math.round((tile.alpha||1)*100)}%</strong></label>
             <input type="range" style="width:100%" min="0" max="1" step="0.02"
                    value="${tile.alpha !== undefined ? tile.alpha : 1}"
-                   oninput="_mcTileProp('${id}','alpha',+this.value);this.previousElementSibling.querySelector('strong').textContent=Math.round(+this.value*100)+'%'">
+                   oninput="_mcTileProp('${id}','alpha',+this.value);document.getElementById('mcTileAlphaVal').textContent=Math.round(+this.value*100)+'%'">
         </div>
-        <button class="mc-btn mc-btn-danger mc-btn-sm" onclick="mcDeleteSelected()" style="width:100%">🗑 Eliminar tile</button>
+        <div class="mc-prop-section">Acciones</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+            <button class="mc-btn mc-btn-sm" onclick="mcDuplicate()">Duplicar</button>
+            <button class="mc-btn mc-btn-sm" onclick="mcBringToFront()">Al frente</button>
+            <button class="mc-btn mc-btn-sm" onclick="mcSendToBack()">Al fondo</button>
+            <button class="mc-btn mc-btn-danger mc-btn-sm" onclick="mcDeleteSelected()">Eliminar</button>
+        </div>
+        `;
+
+    } else if (type === 'drawing') {
+        const d = (_mc.scene.drawings || []).find(dr => dr.id === id);
+        if (!d) { el.innerHTML = ''; return; }
+        const fillHex = '#' + (d.fillColor || 0x3a5a8a).toString(16).padStart(6, '0');
+        const strokeHex = '#' + (d.strokeColor || 0x7ab3e0).toString(16).padStart(6, '0');
+        const typeName = d.type === 'rect' ? 'Rectángulo' : 'Elipse';
+        el.innerHTML = `
+        <div class="mc-prop-section">Dibujo — ${typeName}</div>
+        <div class="mc-prop-group mc-prop-row">
+            <div>
+                <label class="mc-prop-label">X</label>
+                <input type="number" class="mc-prop-input" value="${Math.round(d.x)}"
+                       onchange="_mcDrawingProp('${id}','x',+this.value)">
+            </div>
+            <div>
+                <label class="mc-prop-label">Y</label>
+                <input type="number" class="mc-prop-input" value="${Math.round(d.y)}"
+                       onchange="_mcDrawingProp('${id}','y',+this.value)">
+            </div>
+        </div>
+        <div class="mc-prop-group mc-prop-row">
+            <div>
+                <label class="mc-prop-label">Ancho</label>
+                <input type="number" class="mc-prop-input" value="${Math.round(d.width)}" min="1"
+                       onchange="_mcDrawingProp('${id}','width',+this.value)">
+            </div>
+            <div>
+                <label class="mc-prop-label">Alto</label>
+                <input type="number" class="mc-prop-input" value="${Math.round(d.height)}" min="1"
+                       onchange="_mcDrawingProp('${id}','height',+this.value)">
+            </div>
+        </div>
+        <div class="mc-prop-section">Relleno</div>
+        <div class="mc-prop-group mc-prop-row">
+            <div>
+                <label class="mc-prop-label">Color</label>
+                <input type="color" class="mc-prop-color" value="${fillHex}"
+                       oninput="_mcDrawingColorProp('${id}','fillColor',this.value)">
+            </div>
+            <div>
+                <label class="mc-prop-label">Opacidad: <strong id="mcDrawFillAlpha">${Math.round((d.fillAlpha||0.55)*100)}%</strong></label>
+                <input type="range" style="width:100%;margin-top:6px" min="0" max="1" step="0.02"
+                       value="${d.fillAlpha !== undefined ? d.fillAlpha : 0.55}"
+                       oninput="_mcDrawingProp('${id}','fillAlpha',+this.value);document.getElementById('mcDrawFillAlpha').textContent=Math.round(+this.value*100)+'%'">
+            </div>
+        </div>
+        <div class="mc-prop-section">Borde</div>
+        <div class="mc-prop-group mc-prop-row">
+            <div>
+                <label class="mc-prop-label">Color</label>
+                <input type="color" class="mc-prop-color" value="${strokeHex}"
+                       oninput="_mcDrawingColorProp('${id}','strokeColor',this.value)">
+            </div>
+            <div>
+                <label class="mc-prop-label">Grosor</label>
+                <input type="number" class="mc-prop-input" value="${d.strokeWidth !== undefined ? d.strokeWidth : 2}" min="0" max="20"
+                       onchange="_mcDrawingProp('${id}','strokeWidth',+this.value)">
+            </div>
+        </div>
+        <div class="mc-prop-section">Acciones</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+            <button class="mc-btn mc-btn-sm" onclick="mcDuplicate()">Duplicar</button>
+            <button class="mc-btn mc-btn-sm" onclick="mcBringToFront()">Al frente</button>
+            <button class="mc-btn mc-btn-sm" onclick="mcSendToBack()">Al fondo</button>
+            <button class="mc-btn mc-btn-danger mc-btn-sm" onclick="mcDeleteSelected()">Eliminar</button>
+        </div>
         `;
 
     } else if (type === 'wall') {
@@ -269,7 +353,12 @@ function _mcUpdatePropertiesPanel() {
                 <input type="number" class="mc-prop-input" value="${Math.round(wall.y2)}"
                        onchange="_mcWallProp('${id}','y2',+this.value)"></div>
         </div>
-        <button class="mc-btn mc-btn-danger mc-btn-sm" onclick="mcDeleteSelected()" style="width:100%">🗑 Eliminar muro</button>
+        <div class="mc-prop-group">
+            <button class="mc-btn mc-btn-sm" style="width:100%" onclick="_mcWallContinueChain('${id}')">
+                Continuar cadena desde este muro
+            </button>
+        </div>
+        <button class="mc-btn mc-btn-danger mc-btn-sm" onclick="mcDeleteSelected()" style="width:100%">Eliminar muro</button>
         `;
 
     } else if (type === 'door') {
@@ -286,16 +375,16 @@ function _mcUpdatePropertiesPanel() {
                        onchange="_mcDoorProp('${id}','y',+this.value)"></div>
         </div>
         <div class="mc-prop-group">
-            <label class="mc-prop-label">Rotación: ${Math.round((door.rotation||0)*180/Math.PI)}°</label>
-            <input type="range" style="width:100%" min="0" max="3.14" step="0.05" value="${door.rotation||0}"
-                   onchange="_mcDoorProp('${id}','rotation',+this.value)">
+            <label class="mc-prop-label">Rotación: <strong id="mcDoorRotVal">${Math.round((door.rotation||0)*180/Math.PI)}°</strong></label>
+            <input type="range" style="width:100%" min="0" max="3.14159" step="0.05" value="${door.rotation||0}"
+                   oninput="_mcDoorProp('${id}','rotation',+this.value);document.getElementById('mcDoorRotVal').textContent=Math.round(+this.value*180/Math.PI)+'°'">
         </div>
         <div class="mc-prop-check-row">
             <input type="checkbox" id="mcDoorOpen" ${door.open?'checked':''}
                    onchange="_mcDoorProp('${id}','open',this.checked)">
             <label for="mcDoorOpen" class="mc-prop-label" style="margin:0;cursor:pointer">Puerta abierta</label>
         </div>
-        <button class="mc-btn mc-btn-danger mc-btn-sm" onclick="mcDeleteSelected()" style="width:100%">🗑 Eliminar puerta</button>
+        <button class="mc-btn mc-btn-danger mc-btn-sm" onclick="mcDeleteSelected()" style="width:100%">Eliminar puerta</button>
         `;
 
     } else if (type === 'note') {
@@ -316,12 +405,27 @@ function _mcUpdatePropertiesPanel() {
                 <input type="number" class="mc-prop-input" value="${Math.round(note.y)}"
                        onchange="_mcNoteProp('${id}','y',+this.value)"></div>
         </div>
-        <button class="mc-btn mc-btn-danger mc-btn-sm" onclick="mcDeleteSelected()" style="width:100%">🗑 Eliminar nota</button>
+        <button class="mc-btn mc-btn-danger mc-btn-sm" onclick="mcDeleteSelected()" style="width:100%">Eliminar nota</button>
         `;
     }
 }
 
-// Property change handlers
+// ─── Wall chain continue ───────────────────────────────────────────────────
+
+function _mcWallContinueChain(wallId) {
+    const wall = _mc.scene.walls.find(w => w.id === wallId);
+    if (!wall) return;
+    mcSetTool('wall');
+    _mc.wallChain = {
+        lastPoint:  { x: wall.x2, y: wall.y2 },
+        previewEnd: { x: wall.x2, y: wall.y2 },
+    };
+    _mcRenderWalls();
+    showNotification('Cadena continuada desde el extremo del muro', 2000);
+}
+
+// ─── Property change handlers ──────────────────────────────────────────────
+
 function _mcTileProp(id, key, value) {
     const tile = _mc.scene.tiles.find(t => t.id === id);
     if (!tile) return;
@@ -330,6 +434,22 @@ function _mcTileProp(id, key, value) {
     _mcUpdateModifiedDot();
     _mcRenderTiles();
     _mcRenderUI();
+}
+
+function _mcDrawingProp(id, key, value) {
+    const d = (_mc.scene.drawings || []).find(dr => dr.id === id);
+    if (!d) return;
+    d[key]       = value;
+    _mc.modified = true;
+    _mcUpdateModifiedDot();
+    _mcRenderDrawings();
+    _mcRenderUI();
+}
+
+function _mcDrawingColorProp(id, key, hexStr) {
+    // Convert #rrggbb string to number
+    const num = parseInt(hexStr.replace('#', ''), 16);
+    _mcDrawingProp(id, key, num);
 }
 
 function _mcWallProp(id, key, value) {
@@ -362,18 +482,18 @@ function _mcNoteProp(id, key, value) {
 // ─── Tiles Panel ────────────────────────────────────────────────────────────
 
 const _MC_BUILTIN_TILES = [
-    { label: 'Piedra',   url: 'color:606060', emoji: '🪨' },
-    { label: 'Madera',   url: 'color:7A4A1E', emoji: '🪵' },
-    { label: 'Agua',     url: 'color:1A5FA8', emoji: '🌊' },
-    { label: 'Hierba',   url: 'color:2D7A3A', emoji: '🌿' },
-    { label: 'Arena',    url: 'color:C4A050', emoji: '🏖' },
-    { label: 'Lava',     url: 'color:CC3300', emoji: '🌋' },
-    { label: 'Nieve',    url: 'color:D8E8F4', emoji: '❄️' },
-    { label: 'Oscuro',   url: 'color:0d0d18', emoji: '⬛' },
-    { label: 'Tierra',   url: 'color:6B4226', emoji: '🟫' },
-    { label: 'Mármol',   url: 'color:D4CFC8', emoji: '🔲' },
-    { label: 'Musgo',    url: 'color:4A7A3A', emoji: '🌱' },
-    { label: 'Hielo',    url: 'color:A8D8EA', emoji: '🔵' },
+    { label: 'Piedra',  url: 'tile:stone',  bg: 'linear-gradient(135deg,#777,#555)',     emoji: '🪨' },
+    { label: 'Madera',  url: 'tile:wood',   bg: 'linear-gradient(180deg,#8B5A2B,#5c3314)', emoji: '🪵' },
+    { label: 'Agua',    url: 'tile:water',  bg: 'linear-gradient(135deg,#0d3b6e,#1a6ea8)', emoji: '🌊' },
+    { label: 'Hierba',  url: 'tile:grass',  bg: 'linear-gradient(135deg,#2d6b3a,#1a4a22)', emoji: '🌿' },
+    { label: 'Arena',   url: 'tile:sand',   bg: 'linear-gradient(135deg,#c4a050,#a08030)', emoji: '🏖' },
+    { label: 'Lava',    url: 'tile:lava',   bg: 'linear-gradient(135deg,#3d0a00,#cc4400)', emoji: '🌋' },
+    { label: 'Nieve',   url: 'tile:snow',   bg: 'linear-gradient(135deg,#dce8f4,#b0c8e0)', emoji: '❄️' },
+    { label: 'Oscuro',  url: 'tile:dark',   bg: 'linear-gradient(135deg,#0d0d18,#1a1a2e)', emoji: '⬛' },
+    { label: 'Tierra',  url: 'tile:dirt',   bg: 'linear-gradient(135deg,#6b4226,#4a2e16)', emoji: '🟫' },
+    { label: 'Mármol',  url: 'tile:marble', bg: 'linear-gradient(135deg,#d4cfc8,#b0a8a0)', emoji: '⬜' },
+    { label: 'Musgo',   url: 'tile:moss',   bg: 'linear-gradient(135deg,#3a5a3a,#2a4a2a)', emoji: '🌱' },
+    { label: 'Hielo',   url: 'tile:ice',    bg: 'linear-gradient(135deg,#c8e8f0,#7abcd4)', emoji: '🔵' },
 ];
 
 function _mcUpdateTilesPanel() {
@@ -385,10 +505,9 @@ function _mcUpdateTilesPanel() {
     <div class="mc-prop-section">Tiles predefinidos</div>
     <div class="mc-tile-palette">
         ${_MC_BUILTIN_TILES.map((t, i) => {
-            const col    = '#' + t.url.replace('color:', '');
             const active = _mc.tileToPlace?.url === t.url && _mc.tool === 'tile' ? 'mc-tile-active' : '';
             return `<div class="mc-tile-swatch ${active}" onclick="_mcPickBuiltinTile(${i})" title="${t.label}">
-                <div class="mc-tile-color" style="background:${col}"></div>
+                <div class="mc-tile-color" style="background:${t.bg}"></div>
                 <div class="mc-tile-label">${t.emoji} ${t.label}</div>
             </div>`;
         }).join('')}
@@ -410,18 +529,18 @@ function _mcUpdateTilesPanel() {
         </div>
     </div>
     <button class="mc-btn mc-btn-sm" onclick="_mcPickCustomTile()" style="width:100%;margin-bottom:10px">
-        ✅ Usar este tile
+        Usar este tile
     </button>
 
     <div class="mc-prop-section">Subir imagen</div>
-    <label class="mc-upload-btn" style="display:block;text-align:center">📁 Elegir imagen
+    <label class="mc-upload-btn" style="display:block;text-align:center">Elegir imagen
         <input type="file" accept="image/*" style="display:none" onchange="_mcUploadTile(this)">
     </label>
 
     ${_mc.tool === 'tile' && _mc.tileToPlace ? `
-    <div style="margin-top:14px;padding:10px;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.3);border-radius:6px;font-size:12px;color:var(--accent-gold)">
-        ✅ Tile activo: <strong>${_escHtml(_mc.tileToPlace.label || 'Personalizado')}</strong><br>
-        <span style="color:rgba(255,255,255,0.5)">Haz clic en el mapa para colocarlo (B = modo tile)</span>
+    <div class="mc-tile-active-hint">
+        Tile activo: <strong>${_escHtml(_mc.tileToPlace.label || 'Personalizado')}</strong><br>
+        <span>Haz clic en el mapa para colocarlo</span>
     </div>` : ''}
     `;
 }
@@ -460,4 +579,78 @@ function _mcUploadTile(input) {
         _mcUpdateTilesPanel();
     };
     reader.readAsDataURL(file);
+}
+
+// ─── Draw Subbar ───────────────────────────────────────────────────────────
+
+function mcSetDrawSubTool(subTool) {
+    _mc.drawSubTool = subTool;
+    document.querySelectorAll('.mc-draw-sub-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.subtool === subTool);
+    });
+}
+
+function mcSetDrawFillColor(hex) {
+    _mc.drawFillColor = parseInt(hex.replace('#', ''), 16);
+}
+
+function mcSetDrawFillAlpha(val) {
+    _mc.drawFillAlpha = +val;
+    const el = document.getElementById('mcDrawFillAlphaVal');
+    if (el) el.textContent = Math.round(+val * 100) + '%';
+}
+
+function mcSetDrawStrokeColor(hex) {
+    _mc.drawStrokeColor = parseInt(hex.replace('#', ''), 16);
+}
+
+function mcSetDrawStrokeWidth(val) {
+    _mc.drawStrokeWidth = +val;
+    const el = document.getElementById('mcDrawStrokeWidthVal');
+    if (el) el.textContent = val + 'px';
+}
+
+// ─── Layers Panel ─────────────────────────────────────────────────────────
+
+const _MC_LAYERS = [
+    { id: 'background', label: 'Fondo',     stageKey: 'background' },
+    { id: 'grid',       label: 'Cuadrícula',stageKey: 'grid'       },
+    { id: 'drawings',   label: 'Dibujos',   stageKey: 'drawings'   },
+    { id: 'tiles',      label: 'Tiles',     stageKey: 'tiles'      },
+    { id: 'walls',      label: 'Muros',     stageKey: 'walls'      },
+    { id: 'doors',      label: 'Puertas',   stageKey: 'doors'      },
+    { id: 'notes',      label: 'Notas',     stageKey: 'notes'      },
+    { id: 'fog',        label: 'Niebla',    stageKey: 'fog'        },
+];
+
+function _mcUpdateLayersPanel() {
+    const el = document.getElementById('mcPanelContent');
+    if (!el || _mc.panelTab !== 'layers') return;
+
+    el.innerHTML = `
+    <div class="mc-prop-section">Visibilidad de capas</div>
+    <div class="mc-layers-list">
+        ${_MC_LAYERS.map(layer => {
+            const stage = _mc.stage[layer.stageKey];
+            const visible = stage ? stage.visible : true;
+            return `<div class="mc-layer-row">
+                <input type="checkbox" id="mcLayer_${layer.id}" ${visible ? 'checked' : ''}
+                       onchange="_mcToggleLayer('${layer.stageKey}', this.checked)">
+                <label for="mcLayer_${layer.id}" class="mc-layer-label">
+                    <span class="mc-layer-eye">${visible ? '👁' : '🚫'}</span>
+                    ${layer.label}
+                </label>
+            </div>`;
+        }).join('')}
+    </div>
+    `;
+}
+
+function _mcToggleLayer(stageKey, visible) {
+    const stage = _mc.stage[stageKey];
+    if (stage) {
+        stage.visible = visible;
+    }
+    // Refresh layer panel icon display
+    if (_mc.panelTab === 'layers') _mcUpdateLayersPanel();
 }

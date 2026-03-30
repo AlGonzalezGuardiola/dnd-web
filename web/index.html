@@ -909,9 +909,11 @@
                         data-tip="Seleccionar (V)" onclick="mcSetTool('select')">⬜</button>
                 <button class="mc-tool-btn" data-tool="tile"
                         data-tip="Colocar tile (B)" onclick="mcSetTool('tile');mcPanelTab('tiles')">🔲</button>
+                <button class="mc-tool-btn" data-tool="draw"
+                        data-tip="Dibujar forma (P)" onclick="mcSetTool('draw')">✏️</button>
                 <div class="mc-tool-separator"></div>
                 <button class="mc-tool-btn" data-tool="wall"
-                        data-tip="Muro (W)" onclick="mcSetTool('wall')">🧱</button>
+                        data-tip="Muro — cadena (W)" onclick="mcSetTool('wall')">🧱</button>
                 <button class="mc-tool-btn" data-tool="door"
                         data-tip="Puerta (D)" onclick="mcSetTool('door')">🚪</button>
                 <div class="mc-tool-separator"></div>
@@ -921,15 +923,34 @@
                         data-tip="Niebla (F)" onclick="mcSetTool('fog')">🌫</button>
             </div>
 
+            <!-- Draw sub-toolbar (visible when draw tool is active) -->
+            <div class="mc-draw-subbar" id="mcDrawSubbar">
+                <button class="mc-draw-sub-btn active" data-subtool="rect"
+                        title="Rectángulo" onclick="mcSetDrawSubTool('rect')">▭</button>
+                <button class="mc-draw-sub-btn" data-subtool="ellipse"
+                        title="Elipse" onclick="mcSetDrawSubTool('ellipse')">⬭</button>
+                <div class="mc-tool-separator"></div>
+                <input type="color" title="Color relleno" value="#3a5a8a"
+                       style="width:28px;height:28px;border:none;border-radius:5px;cursor:pointer;padding:2px;background:transparent"
+                       oninput="mcSetDrawFillColor(this.value)">
+                <input type="color" title="Color borde" value="#7ab3e0"
+                       style="width:28px;height:28px;border:none;border-radius:5px;cursor:pointer;padding:2px;background:transparent"
+                       oninput="mcSetDrawStrokeColor(this.value)">
+            </div>
+
             <!-- PixiJS canvas -->
-            <div class="mc-canvas-wrap" id="mcCanvasWrap"></div>
+            <div class="mc-canvas-wrap" id="mcCanvasWrap">
+                <!-- Fog mode indicator -->
+                <div class="mc-fog-mode" id="mcFogModeIndicator"></div>
+            </div>
 
             <!-- Right panel -->
             <div class="mc-panel">
                 <div class="mc-panel-tabs">
-                    <button class="mc-panel-tab active" data-tab="scene" onclick="mcPanelTab('scene')">Escena</button>
-                    <button class="mc-panel-tab" data-tab="props"  onclick="mcPanelTab('props')">Props</button>
-                    <button class="mc-panel-tab" data-tab="tiles"  onclick="mcPanelTab('tiles')">Tiles</button>
+                    <button class="mc-panel-tab active" data-tab="scene"  onclick="mcPanelTab('scene')">Escena</button>
+                    <button class="mc-panel-tab" data-tab="props"         onclick="mcPanelTab('props')">Props</button>
+                    <button class="mc-panel-tab" data-tab="tiles"         onclick="mcPanelTab('tiles')">Tiles</button>
+                    <button class="mc-panel-tab" data-tab="layers"        onclick="mcPanelTab('layers')">Capas</button>
                 </div>
                 <div id="mcPanelContent" class="mc-panel-content"></div>
             </div>
@@ -939,9 +960,12 @@
         <div class="mc-statusbar">
             Zoom: <span id="mcStatusZoom">100%</span>
             &nbsp;·&nbsp; Cursor: <span id="mcStatusPos">0, 0</span>
-            &nbsp;·&nbsp; <span style="opacity:0.4">V Sel · B Tile · W Muro · D Puerta · N Nota · F Niebla · Space+Drag Pan</span>
+            &nbsp;·&nbsp; <span style="opacity:0.35">V Sel · B Tile · P Dibujar · W Muro · D Puerta · N Nota · F Niebla · ESC Cancelar</span>
         </div>
     </section>
+
+    <!-- Context Menu (map creator) -->
+    <div class="mc-ctx" id="mcContextMenu"></div>
 
     <!-- Upload Map Modal -->
     <div id="uploadMapModal" class="modal" style="display:none;" onclick="if(event.target===this)closeUploadMapModal()">
