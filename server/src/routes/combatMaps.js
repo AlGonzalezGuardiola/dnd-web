@@ -14,18 +14,17 @@ const MAPS_DIR = path.join(__dirname, '../../../web/assets/mapas');
 
 const ALLOWED_MIMES = new Set([
     'image/jpeg', 'image/png', 'image/webp', 'image/gif',
-    'video/mp4', 'video/webm', 'video/quicktime',
+    'video/mp4', 'video/webm',
 ]);
 const MIME_TO_EXT = {
-    'image/jpeg':      '.jpg',
-    'image/png':       '.png',
-    'image/webp':      '.webp',
-    'image/gif':       '.gif',
-    'video/mp4':       '.mp4',
-    'video/webm':      '.webm',
-    'video/quicktime': '.mov',
+    'image/jpeg': '.jpg',
+    'image/png':  '.png',
+    'image/webp': '.webp',
+    'image/gif':  '.gif',
+    'video/mp4':  '.mp4',
+    'video/webm': '.webm',
 };
-const VIDEO_MIMES = new Set(['video/mp4', 'video/webm', 'video/quicktime']);
+const VIDEO_MIMES = new Set(['video/mp4', 'video/webm']);
 
 function ensureMapsDir() {
     if (!fs.existsSync(MAPS_DIR)) fs.mkdirSync(MAPS_DIR, { recursive: true });
@@ -72,7 +71,7 @@ router.post('/', express.json({ limit: '140mb' }), async (req, res) => {
 
         const [, mime, b64] = match;
         if (!ALLOWED_MIMES.has(mime)) {
-            return res.status(400).json({ error: 'Tipo no permitido (usa JPG, PNG, WebP, GIF, MP4, WebM o MOV)' });
+            return res.status(400).json({ error: 'Tipo no permitido (usa JPG, PNG, WebP, GIF, MP4 o WebM)' });
         }
 
         const buffer  = Buffer.from(b64, 'base64');

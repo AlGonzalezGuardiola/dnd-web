@@ -6,7 +6,7 @@
 let _combatMapsCache = null;
 
 function _isVideoFilename(filename) {
-    return /\.(mp4|webm|ogg|mov)$/i.test(filename);
+    return /\.(mp4|webm|ogg)$/i.test(filename);
 }
 
 function openCombatMaps() {
