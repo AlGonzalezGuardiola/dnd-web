@@ -4164,6 +4164,22 @@ body.role-jugador .master-only { display: none !important; }
     display: block;
     background: var(--bg-primary);
 }
+.cm-thumb-video {
+    pointer-events: none;
+}
+.cm-video-badge {
+    display: inline-block;
+    background: rgba(212,175,55,0.15);
+    border: 1px solid rgba(212,175,55,0.4);
+    color: var(--accent-gold);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 4px;
+    vertical-align: middle;
+    margin-left: 4px;
+    letter-spacing: 0.03em;
+}
 
 .cm-thumb-placeholder {
     width: 100%;

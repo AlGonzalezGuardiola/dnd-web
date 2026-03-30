@@ -1,7 +1,7 @@
 // ============================================
 // Combat Maps — gestión de mapas de combate
-// Almacena metadatos en MongoDB + imagen en disco (web/assets/mapas/)
-// Upload via base64 JSON (sin multer)
+// Almacena metadatos en MongoDB + archivo en disco (web/assets/mapas/)
+// Upload via base64 JSON (imágenes hasta 15 MB, vídeos hasta 100 MB)
 // ============================================
 
 const express   = require('express');
@@ -10,16 +10,28 @@ const fs        = require('fs');
 const path      = require('path');
 const CombatMap = require('../models/CombatMap');
 
-const MAPS_DIR  = path.join(__dirname, '../../../web/assets/mapas');
-const IMG_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
-const IMG_EXTS  = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp', 'image/gif': '.gif' };
+const MAPS_DIR = path.join(__dirname, '../../../web/assets/mapas');
+
+const ALLOWED_MIMES = new Set([
+    'image/jpeg', 'image/png', 'image/webp', 'image/gif',
+    'video/mp4', 'video/webm',
+]);
+const MIME_TO_EXT = {
+    'image/jpeg': '.jpg',
+    'image/png':  '.png',
+    'image/webp': '.webp',
+    'image/gif':  '.gif',
+    'video/mp4':  '.mp4',
+    'video/webm': '.webm',
+};
+const VIDEO_MIMES = new Set(['video/mp4', 'video/webm']);
 
 function ensureMapsDir() {
     if (!fs.existsSync(MAPS_DIR)) fs.mkdirSync(MAPS_DIR, { recursive: true });
 }
 
-function sanitizeFilename(original) {
-    const ext  = path.extname(original).toLowerCase() || '.jpg';
+function sanitizeFilename(original, mime) {
+    const ext  = MIME_TO_EXT[mime] || path.extname(original).toLowerCase() || '.bin';
     const base = path.basename(original, path.extname(original))
         .toLowerCase()
         .replace(/[^a-z0-9]/g, '-')
@@ -40,9 +52,10 @@ router.get('/', async (_req, res) => {
     }
 });
 
-// POST /api/combat-maps — sube un nuevo mapa (base64 en JSON)
-// Body: { name: string, filename: string, fileData: "data:image/...;base64,..." }
-router.post('/', express.json({ limit: '15mb' }), async (req, res) => {
+// POST /api/combat-maps — sube imagen o vídeo (base64 en JSON)
+// Body: { name, filename, fileData: "data:<mime>;base64,<data>" }
+// Límite: 15 MB imágenes / 100 MB vídeos (base64 ≈ +33% sobre el original)
+router.post('/', express.json({ limit: '140mb' }), async (req, res) => {
     try {
         const { name, filename: originalName, fileData } = req.body;
 
@@ -50,36 +63,46 @@ router.post('/', express.json({ limit: '15mb' }), async (req, res) => {
             return res.status(400).json({ error: 'El nombre es obligatorio' });
         }
         if (!fileData || !fileData.startsWith('data:')) {
-            return res.status(400).json({ error: 'Datos de imagen inválidos' });
+            return res.status(400).json({ error: 'Datos de archivo inválidos' });
         }
 
-        // Parse data URL: data:<mime>;base64,<data>
         const match = fileData.match(/^data:([^;]+);base64,(.+)$/);
-        if (!match) {
-            return res.status(400).json({ error: 'Formato de imagen inválido' });
-        }
+        if (!match) return res.status(400).json({ error: 'Formato de archivo inválido' });
+
         const [, mime, b64] = match;
-        if (!IMG_MIMES.has(mime)) {
-            return res.status(400).json({ error: 'Tipo de imagen no permitido (usa JPG, PNG, WebP o GIF)' });
+        if (!ALLOWED_MIMES.has(mime)) {
+            return res.status(400).json({ error: 'Tipo no permitido (usa JPG, PNG, WebP, GIF, MP4 o WebM)' });
         }
 
-        const buffer = Buffer.from(b64, 'base64');
-        if (buffer.length > 15 * 1024 * 1024) {
-            return res.status(400).json({ error: 'La imagen supera los 15 MB' });
+        const buffer  = Buffer.from(b64, 'base64');
+        const isVideo = VIDEO_MIMES.has(mime);
+        const maxSize = isVideo ? 100 * 1024 * 1024 : 15 * 1024 * 1024;
+
+        if (buffer.length > maxSize) {
+            return res.status(400).json({
+                error: isVideo
+                    ? 'El vídeo supera los 100 MB'
+                    : 'La imagen supera los 15 MB',
+            });
         }
 
         ensureMapsDir();
-        const filename = sanitizeFilename(originalName || `mapa${IMG_EXTS[mime] || '.jpg'}`);
+        const filename = sanitizeFilename(originalName || 'mapa', mime);
         const filepath = path.join(MAPS_DIR, filename);
         fs.writeFileSync(filepath, buffer);
 
         const url = `assets/mapas/${filename}`;
-        const doc = await CombatMap.create({ name: name.trim(), filename, url });
+        const doc = await CombatMap.create({
+            name:     name.trim(),
+            filename,
+            url,
+            isVideo:  isVideo || false,
+        });
 
         res.status(201).json(doc);
     } catch (err) {
         console.error('[POST /api/combat-maps]', err);
-        res.status(500).json({ error: 'Error subiendo mapa', detail: err.message });
+        res.status(500).json({ error: 'Error subiendo archivo', detail: err.message });
     }
 });
 

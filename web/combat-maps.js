@@ -5,6 +5,10 @@
 
 let _combatMapsCache = null;
 
+function _isVideoFilename(filename) {
+    return /\.(mp4|webm|ogg)$/i.test(filename);
+}
+
 function openCombatMaps() {
     _combatMapsCache = null;
     setView('combatMaps');
@@ -41,18 +45,24 @@ async function renderCombatMaps() {
         return;
     }
 
-    grid.innerHTML = maps.map(m => `
-        <div class="cm-card">
-            <img class="cm-thumb" src="${m.url}" alt="${m.name}"
-                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+    grid.innerHTML = maps.map(m => {
+        const isVid = m.isVideo || _isVideoFilename(m.filename);
+        const thumb = isVid
+            ? `<video class="cm-thumb cm-thumb-video" src="${m.url}" muted loop autoplay playsinline
+                      onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"></video>`
+            : `<img class="cm-thumb" src="${m.url}" alt="${m.name}"
+                    onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`;
+        const badge = isVid ? '<span class="cm-video-badge">▶ vídeo</span>' : '';
+        return `<div class="cm-card">
+            ${thumb}
             <div class="cm-thumb-placeholder" style="display:none">🗺️</div>
             <div class="cm-info">
-                <div class="cm-name">${m.name}</div>
+                <div class="cm-name">${m.name} ${badge}</div>
                 <div class="cm-filename">${m.filename}</div>
             </div>
             <button class="cm-delete-btn" onclick="deleteCombatMap('${m._id}', '${m.name}')" title="Eliminar mapa">🗑</button>
-        </div>
-    `).join('');
+        </div>`;
+    }).join('');
 }
 
 async function deleteCombatMap(id, name) {
@@ -76,8 +86,7 @@ function openUploadMapModal() {
     if (!modal) return;
     document.getElementById('uploadMapName').value = '';
     document.getElementById('uploadMapFile').value = '';
-    document.getElementById('uploadMapPreview').style.display = 'none';
-    document.getElementById('uploadMapPreview').src = '';
+    _resetUploadPreview();
     document.getElementById('uploadMapError').textContent = '';
     modal.style.display = 'flex';
 }
@@ -85,6 +94,14 @@ function openUploadMapModal() {
 function closeUploadMapModal() {
     const modal = document.getElementById('uploadMapModal');
     if (modal) modal.style.display = 'none';
+    _resetUploadPreview();
+}
+
+function _resetUploadPreview() {
+    const img = document.getElementById('uploadMapPreview');
+    const vid = document.getElementById('uploadMapVideoPreview');
+    if (img) { img.style.display = 'none'; img.src = ''; }
+    if (vid) { vid.style.display = 'none'; vid.src = ''; vid.pause?.(); }
 }
 
 function onUploadMapFileChange(input) {
@@ -100,21 +117,29 @@ function onUploadMapFileChange(input) {
             .replace(/\b\w/g, c => c.toUpperCase());
     }
 
+    const isVid = file.type.startsWith('video/');
+
     // Show preview
     const reader = new FileReader();
     reader.onload = e => {
-        const preview = document.getElementById('uploadMapPreview');
-        preview.src = e.target.result;
-        preview.style.display = 'block';
+        const img = document.getElementById('uploadMapPreview');
+        const vid = document.getElementById('uploadMapVideoPreview');
+        if (isVid) {
+            if (img) { img.style.display = 'none'; img.src = ''; }
+            if (vid) { vid.src = e.target.result; vid.style.display = 'block'; vid.load(); vid.play().catch(() => {}); }
+        } else {
+            if (vid) { vid.style.display = 'none'; vid.src = ''; }
+            if (img) { img.src = e.target.result; img.style.display = 'block'; }
+        }
     };
     reader.readAsDataURL(file);
 }
 
 async function submitUploadMap() {
-    const nameInput  = document.getElementById('uploadMapName');
-    const fileInput  = document.getElementById('uploadMapFile');
-    const errorEl    = document.getElementById('uploadMapError');
-    const submitBtn  = document.getElementById('uploadMapSubmitBtn');
+    const nameInput = document.getElementById('uploadMapName');
+    const fileInput = document.getElementById('uploadMapFile');
+    const errorEl   = document.getElementById('uploadMapError');
+    const submitBtn = document.getElementById('uploadMapSubmitBtn');
 
     errorEl.textContent = '';
 
@@ -122,10 +147,18 @@ async function submitUploadMap() {
     const file = fileInput.files[0];
 
     if (!name) { errorEl.textContent = 'Introduce un nombre para el mapa.'; return; }
-    if (!file) { errorEl.textContent = 'Selecciona una imagen.'; return; }
-    if (file.size > 15 * 1024 * 1024) { errorEl.textContent = 'La imagen supera los 15 MB.'; return; }
+    if (!file) { errorEl.textContent = 'Selecciona un archivo.'; return; }
 
-    submitBtn.disabled = true;
+    const isVid  = file.type.startsWith('video/');
+    const maxMB  = isVid ? 100 : 15;
+    const maxBytes = maxMB * 1024 * 1024;
+
+    if (file.size > maxBytes) {
+        errorEl.textContent = `El archivo supera los ${maxMB} MB.`;
+        return;
+    }
+
+    submitBtn.disabled   = true;
     submitBtn.textContent = 'Subiendo…';
 
     try {
@@ -141,7 +174,6 @@ async function submitUploadMap() {
 
         _combatMapsCache = null;
         invalidateCombatMapsCache();
-        // Also invalidate the combat-setup map cache so new map appears in "Crear Partida"
         if (typeof _cachedServerMaps !== 'undefined') window._cachedServerMaps = null;
 
         closeUploadMapModal();
@@ -150,7 +182,7 @@ async function submitUploadMap() {
     } catch (err) {
         errorEl.textContent = err.message;
     } finally {
-        submitBtn.disabled = false;
+        submitBtn.disabled   = false;
         submitBtn.textContent = 'Subir mapa';
     }
 }

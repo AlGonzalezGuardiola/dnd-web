@@ -50,6 +50,10 @@ function refreshTvMode() {
 
 // ─── Grid / Map setup ────────────────────────────
 
+function _isVideoUrl(url) {
+    return /\.(mp4|webm|ogg)(\?.*)?$/i.test(url);
+}
+
 function _buildTvGrid() {
     const canvas = document.getElementById('tvMapCanvas');
     if (!canvas) return;
@@ -58,7 +62,11 @@ function _buildTvGrid() {
     const hasMap = !!mapUrl;
 
     if (hasMap) {
-        _buildTvGridWithMap(canvas, mapUrl);
+        if (_isVideoUrl(mapUrl)) {
+            _buildTvGridWithVideo(canvas, mapUrl);
+        } else {
+            _buildTvGridWithMap(canvas, mapUrl);
+        }
     } else {
         _buildTvGridEmpty(canvas);
     }
@@ -108,6 +116,53 @@ function _buildTvGridWithMap(canvas, mapUrl) {
         _buildTvGridEmpty(canvas);
     };
     img.src = mapUrl;
+}
+
+// Video map: use <video> element instead of <img>, no orientation rotation needed
+function _buildTvGridWithVideo(canvas, mapUrl) {
+    // Remove stale image if present
+    canvas.querySelector('.tv-map-image')?.remove();
+
+    let videoEl = canvas.querySelector('.tv-map-video');
+    if (!videoEl) {
+        videoEl = document.createElement('video');
+        videoEl.className   = 'tv-map-video';
+        videoEl.autoplay    = true;
+        videoEl.loop        = true;
+        videoEl.muted       = true;
+        videoEl.playsInline = true;
+        videoEl.style.cssText = 'position:absolute;top:0;left:0;display:block;';
+        canvas.insertBefore(videoEl, canvas.firstChild);
+    }
+
+    // Only reload if URL changed
+    if (videoEl.dataset.src === mapUrl) return;
+    videoEl.dataset.src = mapUrl;
+
+    videoEl.oncanplay = () => {
+        const effW = videoEl.videoWidth  || 1920;
+        const effH = videoEl.videoHeight || 1080;
+
+        canvas.style.width  = effW + 'px';
+        canvas.style.height = effH + 'px';
+        videoEl.style.width  = effW + 'px';
+        videoEl.style.height = effH + 'px';
+
+        tvState.gridCols = Math.ceil(effW / tvState.cellSize);
+        tvState.gridRows = Math.ceil(effH / tvState.cellSize);
+
+        _ensureTokensLayer(canvas, effW, effH);
+        _ensureDistanceRingsSvg(canvas, effW, effH);
+        _autoFitMap(effW, effH);
+        renderTvTokens();
+    };
+    videoEl.onerror = () => {
+        console.warn('[TV] No se pudo cargar el vídeo:', mapUrl);
+        _buildTvGridEmpty(canvas);
+    };
+    videoEl.src = mapUrl;
+    videoEl.load();
+    videoEl.play().catch(() => {});
 }
 
 // Returns { src, w, h } — rotates portrait images 90° CW via offscreen canvas

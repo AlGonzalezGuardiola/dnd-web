@@ -347,6 +347,8 @@
             <div class="map-preview-box">
                 <div class="map-preview-name" id="mapPreviewName"></div>
                 <img id="mapPreviewImg" class="map-preview-img" alt="Vista previa del mapa">
+                <video id="mapPreviewVideo" class="map-preview-img" style="display:none"
+                       autoplay loop muted playsinline></video>
                 <div class="map-preview-actions">
                     <button class="btn-combat-primary" id="mapPreviewSelectBtn"
                             onclick="confirmMapPreview()">✓ Seleccionar este mapa</button>
@@ -820,11 +822,14 @@
                 <input id="uploadMapName" type="text" placeholder="Ej: Taberna del Dragón" autocomplete="off">
             </div>
             <div class="form-group">
-                <label for="uploadMapFile">Imagen (JPG, PNG, WebP · máx 15 MB)</label>
-                <input id="uploadMapFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif"
+                <label for="uploadMapFile">Imagen o vídeo (JPG, PNG, WebP · máx 15 MB · MP4, WebM · máx 100 MB)</label>
+                <input id="uploadMapFile" type="file"
+                       accept="image/jpeg,image/png,image/webp,image/gif,video/mp4,video/webm"
                        onchange="onUploadMapFileChange(this)" style="color:var(--text-primary)">
             </div>
             <img id="uploadMapPreview" class="cm-upload-preview" style="display:none" alt="Vista previa">
+            <video id="uploadMapVideoPreview" class="cm-upload-preview" style="display:none"
+                   autoplay loop muted playsinline></video>
             <div id="uploadMapError" class="cm-upload-error"></div>
             <div class="modal-actions">
                 <button id="uploadMapSubmitBtn" class="btn-primary" onclick="submitUploadMap()">Subir mapa</button>

@@ -613,19 +613,24 @@ async function renderMapSetupTab() {
     } else {
         html += serverMaps.map(m => {
             const isSelected = combatState.combatMap?.id === m.filename;
+            const isVid = m.isVideo || /\.(mp4|webm|ogg)$/i.test(m.filename);
             const safeUrl  = m.url.replace(/'/g, "\\'");
             const safeName = m.name.replace(/'/g, "\\'");
             const safeFile = m.filename.replace(/'/g, "\\'");
+            const thumbHTML = isVid
+                ? `<video class="setup-map-thumb" src="${m.url}" muted loop autoplay playsinline
+                          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"></video>`
+                : `<img class="setup-map-thumb" src="${m.url}" alt="${m.name}"
+                        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`;
             return `<div class="setup-map-card${isSelected ? ' selected' : ''}"
                          onclick="openMapPreview('${safeFile}', '${safeName}', '${safeUrl}')">
                 ${isSelected ? '<span class="setup-map-selected-badge">✓ SELECCIONADO</span>' : ''}
-                <img class="setup-map-thumb" src="${m.url}" alt="${m.name}"
-                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                ${thumbHTML}
                 <div class="setup-map-thumb-placeholder" style="display:none">🗺️</div>
                 <div class="setup-map-info">
-                    <div class="setup-map-name">${m.name}</div>
+                    <div class="setup-map-name">${m.name}${isVid ? ' <span class="cm-video-badge">▶</span>' : ''}</div>
                 </div>
-                <div class="setup-map-preview-hint">👁 Ver mapa</div>
+                <div class="setup-map-preview-hint">👁 Ver${isVid ? ' vídeo' : ' mapa'}</div>
             </div>`;
         }).join('');
     }
@@ -652,13 +657,21 @@ let _previewPending = null; // { id, name, url } waiting for confirmation
 
 function openMapPreview(id, name, url) {
     _previewPending = { id, name, url };
-    const lb   = document.getElementById('mapPreviewLightbox');
-    const img  = document.getElementById('mapPreviewImg');
+    const lb    = document.getElementById('mapPreviewLightbox');
+    const img   = document.getElementById('mapPreviewImg');
+    const vid   = document.getElementById('mapPreviewVideo');
     const title = document.getElementById('mapPreviewName');
-    const btn  = document.getElementById('mapPreviewSelectBtn');
+    const btn   = document.getElementById('mapPreviewSelectBtn');
     if (!lb) return;
 
-    img.src   = url;
+    const isVid = /\.(mp4|webm|ogg)(\?.*)?$/i.test(url);
+    if (isVid) {
+        if (img) img.style.display = 'none';
+        if (vid) { vid.src = url; vid.style.display = 'block'; vid.load(); vid.play().catch(() => {}); }
+    } else {
+        if (vid) { vid.style.display = 'none'; vid.src = ''; }
+        if (img) { img.src = url; img.style.display = 'block'; }
+    }
     title.textContent = name;
 
     const isAlreadySelected = combatState.combatMap?.id === id;
@@ -678,8 +691,10 @@ function confirmMapPreview() {
 }
 
 function closeMapPreview() {
-    const lb = document.getElementById('mapPreviewLightbox');
-    if (lb) lb.style.display = 'none';
+    const lb  = document.getElementById('mapPreviewLightbox');
+    const vid = document.getElementById('mapPreviewVideo');
+    if (lb)  lb.style.display = 'none';
+    if (vid) { vid.pause(); vid.src = ''; vid.style.display = 'none'; }
     document.removeEventListener('keydown', _closeLightboxOnEscape);
 }
 
