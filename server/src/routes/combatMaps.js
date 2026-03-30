@@ -2,6 +2,7 @@
 // Combat Maps — gestión de mapas de combate
 // Almacena metadatos en MongoDB + archivo en disco (web/assets/mapas/)
 // Upload via base64 JSON (imágenes hasta 15 MB, vídeos hasta 100 MB)
+// Editor maps via POST/PATCH con sceneData JSON
 // ============================================
 
 const express   = require('express');
@@ -41,7 +42,34 @@ function sanitizeFilename(original, mime) {
     return `${Date.now()}-${base}${ext}`;
 }
 
-// GET /api/combat-maps — lista todos los mapas guardados en DB
+// Guarda base64 en disco y devuelve { filename, url }
+function saveBase64File(fileData, originalName) {
+    const match = fileData.match(/^data:([^;]+);base64,(.+)$/);
+    if (!match) throw new Error('Formato de archivo inválido');
+
+    const [, mime, b64] = match;
+    if (!ALLOWED_MIMES.has(mime)) {
+        throw new Error('Tipo no permitido (usa JPG, PNG, WebP, GIF, MP4 o WebM)');
+    }
+
+    const buffer  = Buffer.from(b64, 'base64');
+    const isVideo = VIDEO_MIMES.has(mime);
+    const maxSize = isVideo ? 100 * 1024 * 1024 : 15 * 1024 * 1024;
+
+    if (buffer.length > maxSize) {
+        throw new Error(isVideo ? 'El vídeo supera los 100 MB' : 'La imagen supera los 15 MB');
+    }
+
+    ensureMapsDir();
+    const filename = sanitizeFilename(originalName || 'mapa', mime);
+    const filepath = path.join(MAPS_DIR, filename);
+    fs.writeFileSync(filepath, buffer);
+
+    return { filename, url: `assets/mapas/${filename}`, isVideo };
+}
+
+// ─── GET /api/combat-maps — lista todos los mapas ─────────────────────────────
+
 router.get('/', async (_req, res) => {
     try {
         const maps = await CombatMap.find().sort({ createdAt: -1 });
@@ -52,51 +80,51 @@ router.get('/', async (_req, res) => {
     }
 });
 
-// POST /api/combat-maps — sube imagen o vídeo (base64 en JSON)
-// Body: { name, filename, fileData: "data:<mime>;base64,<data>" }
-// Límite: 15 MB imágenes / 100 MB vídeos (base64 ≈ +33% sobre el original)
+// ─── GET /api/combat-maps/:id — obtiene un mapa concreto (para el editor) ─────
+
+router.get('/:id', async (req, res) => {
+    try {
+        const doc = await CombatMap.findById(req.params.id);
+        if (!doc) return res.status(404).json({ error: 'Mapa no encontrado' });
+        res.json(doc);
+    } catch (err) {
+        console.error('[GET /api/combat-maps/:id]', err);
+        res.status(500).json({ error: 'Error obteniendo mapa', detail: err.message });
+    }
+});
+
+// ─── POST /api/combat-maps — sube mapa (upload o editor) ─────────────────────
+// Body upload:  { name, filename, fileData: "data:<mime>;base64,<data>" }
+// Body editor:  { name, sourceType: "editor", sceneData: {...}, fileData? }
+
 router.post('/', express.json({ limit: '140mb' }), async (req, res) => {
     try {
-        const { name, filename: originalName, fileData } = req.body;
+        const { name, filename: originalName, fileData, sceneData, sourceType } = req.body;
 
         if (!name || !name.trim()) {
             return res.status(400).json({ error: 'El nombre es obligatorio' });
         }
-        if (!fileData || !fileData.startsWith('data:')) {
+
+        const isEditorMap = sourceType === 'editor';
+
+        // Mapas del editor pueden no tener imagen inicial
+        if (!isEditorMap && (!fileData || !fileData.startsWith('data:'))) {
             return res.status(400).json({ error: 'Datos de archivo inválidos' });
         }
 
-        const match = fileData.match(/^data:([^;]+);base64,(.+)$/);
-        if (!match) return res.status(400).json({ error: 'Formato de archivo inválido' });
+        let fileInfo = { filename: '', url: '', isVideo: false };
 
-        const [, mime, b64] = match;
-        if (!ALLOWED_MIMES.has(mime)) {
-            return res.status(400).json({ error: 'Tipo no permitido (usa JPG, PNG, WebP, GIF, MP4 o WebM)' });
+        if (fileData && fileData.startsWith('data:')) {
+            fileInfo = saveBase64File(fileData, originalName || 'mapa');
         }
 
-        const buffer  = Buffer.from(b64, 'base64');
-        const isVideo = VIDEO_MIMES.has(mime);
-        const maxSize = isVideo ? 100 * 1024 * 1024 : 15 * 1024 * 1024;
-
-        if (buffer.length > maxSize) {
-            return res.status(400).json({
-                error: isVideo
-                    ? 'El vídeo supera los 100 MB'
-                    : 'La imagen supera los 15 MB',
-            });
-        }
-
-        ensureMapsDir();
-        const filename = sanitizeFilename(originalName || 'mapa', mime);
-        const filepath = path.join(MAPS_DIR, filename);
-        fs.writeFileSync(filepath, buffer);
-
-        const url = `assets/mapas/${filename}`;
         const doc = await CombatMap.create({
-            name:     name.trim(),
-            filename,
-            url,
-            isVideo:  isVideo || false,
+            name:       name.trim(),
+            filename:   fileInfo.filename,
+            url:        fileInfo.url,
+            isVideo:    fileInfo.isVideo,
+            sourceType: isEditorMap ? 'editor' : 'upload',
+            sceneData:  isEditorMap ? (sceneData || null) : null,
         });
 
         res.status(201).json(doc);
@@ -106,14 +134,56 @@ router.post('/', express.json({ limit: '140mb' }), async (req, res) => {
     }
 });
 
-// DELETE /api/combat-maps/:id — elimina un mapa de DB y disco
+// ─── PATCH /api/combat-maps/:id — actualiza mapa del editor ──────────────────
+// Body: { name?, sceneData?, fileData? }
+// Solo funciona para sourceType === 'editor'
+
+router.patch('/:id', express.json({ limit: '140mb' }), async (req, res) => {
+    try {
+        const doc = await CombatMap.findById(req.params.id);
+        if (!doc) return res.status(404).json({ error: 'Mapa no encontrado' });
+        if (doc.sourceType !== 'editor') {
+            return res.status(400).json({ error: 'Solo se pueden editar mapas creados desde el editor' });
+        }
+
+        const { name, sceneData, fileData, filename: originalName } = req.body;
+
+        if (name) doc.name = name.trim();
+        if (sceneData !== undefined) doc.sceneData = sceneData;
+
+        // Si se envía nueva imagen (thumbnail del canvas exportado)
+        if (fileData && fileData.startsWith('data:')) {
+            // Eliminar archivo antiguo si existe
+            if (doc.filename) {
+                const oldPath = path.join(MAPS_DIR, doc.filename);
+                if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+            }
+            const fileInfo = saveBase64File(fileData, originalName || doc.name || 'mapa');
+            doc.filename = fileInfo.filename;
+            doc.url      = fileInfo.url;
+            doc.isVideo  = false;
+        }
+
+        doc.markModified('sceneData');
+        await doc.save();
+        res.json(doc);
+    } catch (err) {
+        console.error('[PATCH /api/combat-maps/:id]', err);
+        res.status(500).json({ error: 'Error actualizando mapa', detail: err.message });
+    }
+});
+
+// ─── DELETE /api/combat-maps/:id — elimina un mapa de DB y disco ──────────────
+
 router.delete('/:id', async (req, res) => {
     try {
         const doc = await CombatMap.findByIdAndDelete(req.params.id);
         if (!doc) return res.status(404).json({ error: 'Mapa no encontrado' });
 
-        const filepath = path.join(MAPS_DIR, doc.filename);
-        if (fs.existsSync(filepath)) fs.unlinkSync(filepath);
+        if (doc.filename) {
+            const filepath = path.join(MAPS_DIR, doc.filename);
+            if (fs.existsSync(filepath)) fs.unlinkSync(filepath);
+        }
 
         res.json({ ok: true });
     } catch (err) {

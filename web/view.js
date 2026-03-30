@@ -24,9 +24,11 @@ const _ROUTES = {
     narrative:        'narrativa/cronicas',
     narrativeImages:  'narrativa/imagenes',
     sessionNotes:  'notas',
-    map:           'mapa',
-    npcGenerator:  'generador-npc',
-    tvMode:        'mesa-tv',
+    map:             'mapa',
+    npcGenerator:    'generador-npc',
+    tvMode:          'mesa-tv',
+    mapCreatorHub:   'mapas/editor',
+    mapCreator:      'mapas/editor/nuevo',
 };
 
 // Reverse map: path segment → viewName
@@ -430,6 +432,10 @@ function setView(viewName) {
     if (tvModeEl) tvModeEl.style.display = 'none';
     const combatMapsEl = document.getElementById('combatMapsView');
     if (combatMapsEl) combatMapsEl.style.display = 'none';
+    const mapCreatorHubEl = document.getElementById('mapCreatorHubSection');
+    if (mapCreatorHubEl) mapCreatorHubEl.style.display = 'none';
+    const mapCreatorEl = document.getElementById('mapCreatorSection');
+    if (mapCreatorEl) mapCreatorEl.style.display = 'none';
 
     // Also hide the character sheet if it was open
     const sheetContainer = document.getElementById('characterSheetContainer');
@@ -564,6 +570,22 @@ function setView(viewName) {
             if (diceWidget) diceWidget.style.display = 'none';
             document.getElementById('breadcrumbs').textContent = '🗺️ Mapas de Combate';
             document.getElementById('btnBack').style.display = 'flex';
+            break;
+        case 'mapCreatorHub':
+            document.getElementById('mapCreatorHubSection').style.display = 'flex';
+            if (editorToolbar) editorToolbar.style.display = 'none';
+            if (hud) hud.style.display = 'flex';
+            if (diceWidget) diceWidget.style.display = 'none';
+            document.getElementById('breadcrumbs').textContent = '🗺️ Creador de Mapas';
+            document.getElementById('btnBack').style.display = 'flex';
+            if (typeof initMapCreatorHub === 'function') initMapCreatorHub();
+            break;
+        case 'mapCreator':
+            document.getElementById('mapCreatorSection').style.display = 'flex';
+            if (editorToolbar) editorToolbar.style.display = 'none';
+            if (hud) hud.style.display = 'none';
+            if (diceWidget) diceWidget.style.display = 'none';
+            if (typeof initMapCreator === 'function') initMapCreator();
             break;
     }
 }

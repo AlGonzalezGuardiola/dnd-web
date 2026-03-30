@@ -4245,6 +4245,21 @@ body.role-jugador .master-only { display: none !important; }
     word-break: break-all;
 }
 
+.cm-editor-badge {
+    display: inline-block;
+    background: rgba(80,160,200,0.15);
+    border: 1px solid rgba(80,160,200,0.4);
+    color: #60a5fa;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 4px;
+    vertical-align: middle;
+    margin-left: 4px;
+    letter-spacing: 0.03em;
+}
+
+.cm-edit-btn,
 .cm-view-btn,
 .cm-delete-btn {
     position: absolute;
@@ -4264,6 +4279,10 @@ body.role-jugador .master-only { display: none !important; }
     transition: opacity 0.15s, background 0.15s;
 }
 
+.cm-edit-btn {
+    right: 84px;
+}
+
 .cm-view-btn {
     right: 46px;
 }
@@ -4272,9 +4291,14 @@ body.role-jugador .master-only { display: none !important; }
     right: 8px;
 }
 
+.cm-card:hover .cm-edit-btn,
 .cm-card:hover .cm-view-btn,
 .cm-card:hover .cm-delete-btn {
     opacity: 1;
+}
+
+.cm-edit-btn:hover {
+    background: rgba(80, 160, 200, 0.85);
 }
 
 .cm-view-btn:hover {

@@ -52,14 +52,19 @@ async function renderCombatMaps() {
                       onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"></video>`
             : `<img class="cm-thumb" src="${m.url}" alt="${m.name}"
                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`;
-        const badge = isVid ? '<span class="cm-video-badge">▶ vídeo</span>' : '';
+        const videoBadge  = isVid ? '<span class="cm-video-badge">▶ vídeo</span>' : '';
+        const editorBadge = m.sourceType === 'editor' ? '<span class="cm-editor-badge">✏ editor</span>' : '';
+        const editBtn     = m.sourceType === 'editor'
+            ? `<button class="cm-edit-btn" onclick="openMapCreator('${m._id}')" title="Editar en Creador de Mapas">✏</button>`
+            : '';
         return `<div class="cm-card">
             ${thumb}
             <div class="cm-thumb-placeholder" style="display:none">🗺️</div>
             <div class="cm-info">
-                <div class="cm-name">${m.name} ${badge}</div>
-                <div class="cm-filename">${m.filename}</div>
+                <div class="cm-name">${m.name} ${videoBadge}${editorBadge}</div>
+                <div class="cm-filename">${m.filename || '—'}</div>
             </div>
+            ${editBtn}
             <button class="cm-view-btn" onclick="openCombatMapLightbox('${m._id}')" title="Ver en grande">🔍</button>
             <button class="cm-delete-btn" onclick="deleteCombatMap('${m._id}', '${m.name}')" title="Eliminar mapa">🗑</button>
         </div>`;

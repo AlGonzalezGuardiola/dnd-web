@@ -1,0 +1,528 @@
+/* ============================================
+   Map Creator — Editor de mapas estilo Foundry VTT
+   ============================================ */
+
+/* ─── Hub (lista de mapas del editor) ──────────── */
+
+.mc-hub-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+}
+
+.mc-hub-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+.mc-hub-card {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.15s;
+    position: relative;
+}
+
+.mc-hub-card:hover {
+    border-color: var(--accent-gold);
+    box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2);
+    transform: translateY(-2px);
+}
+
+.mc-hub-thumb {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    display: block;
+    background: var(--bg-primary);
+}
+
+.mc-hub-thumb-placeholder {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+    background: #111118;
+    color: var(--text-secondary);
+}
+
+.mc-hub-info {
+    padding: 10px 12px;
+}
+
+.mc-hub-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text-primary);
+    margin-bottom: 2px;
+}
+
+.mc-hub-meta {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.mc-hub-delete-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0,0,0,0.65);
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.15s, background 0.15s;
+}
+
+.mc-hub-card:hover .mc-hub-delete-btn {
+    opacity: 1;
+}
+
+.mc-hub-delete-btn:hover {
+    background: rgba(220, 38, 38, 0.85);
+}
+
+.mc-hub-loading,
+.mc-hub-empty {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 48px 16px;
+    font-size: 15px;
+    grid-column: 1 / -1;
+}
+
+/* ─── Editor Shell ──────────────────────────────── */
+
+#mapCreatorSection {
+    position: fixed;
+    inset: 0;
+    z-index: 10;
+    background: #0d0d18;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* ─── Top Bar ───────────────────────────────────── */
+
+.mc-topbar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 14px;
+    background: #14141f;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    flex-shrink: 0;
+    height: 50px;
+    z-index: 20;
+}
+
+.mc-topbar-title {
+    flex: 1;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mc-modified-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--accent-gold);
+    display: none;
+    flex-shrink: 0;
+}
+
+.mc-topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mc-btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.06);
+    color: var(--text-primary);
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.mc-btn:hover {
+    background: rgba(255,255,255,0.12);
+    border-color: rgba(255,255,255,0.25);
+}
+
+.mc-btn-gold {
+    border-color: rgba(212,175,55,0.4);
+    color: var(--accent-gold);
+}
+
+.mc-btn-gold:hover {
+    background: rgba(212,175,55,0.12);
+    border-color: var(--accent-gold);
+}
+
+.mc-btn-icon {
+    padding: 6px 8px;
+    min-width: 32px;
+    justify-content: center;
+}
+
+.mc-btn-danger {
+    border-color: rgba(220,38,38,0.4);
+    color: #f87171;
+}
+
+.mc-btn-danger:hover {
+    background: rgba(220,38,38,0.12);
+    border-color: #f87171;
+}
+
+.mc-btn-sm {
+    padding: 4px 10px;
+    font-size: 12px;
+}
+
+/* ─── Editor Layout ─────────────────────────────── */
+
+.mc-editor-body {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+}
+
+/* ─── Left Toolbar ──────────────────────────────── */
+
+.mc-toolbar {
+    width: 50px;
+    background: #14141f;
+    border-right: 1px solid rgba(255,255,255,0.07);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 0;
+    gap: 4px;
+    flex-shrink: 0;
+    overflow-y: auto;
+}
+
+.mc-tool-btn {
+    width: 38px;
+    height: 38px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: rgba(255,255,255,0.55);
+    font-size: 18px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    position: relative;
+}
+
+.mc-tool-btn:hover {
+    background: rgba(255,255,255,0.08);
+    color: var(--text-primary);
+}
+
+.mc-tool-btn.active {
+    background: rgba(212,175,55,0.15);
+    border-color: rgba(212,175,55,0.5);
+    color: var(--accent-gold);
+}
+
+.mc-tool-separator {
+    width: 28px;
+    height: 1px;
+    background: rgba(255,255,255,0.08);
+    margin: 4px 0;
+}
+
+/* Tooltip on hover */
+.mc-tool-btn::after {
+    content: attr(data-tip);
+    position: absolute;
+    left: calc(100% + 8px);
+    top: 50%;
+    transform: translateY(-50%);
+    background: #1e1e2e;
+    border: 1px solid rgba(255,255,255,0.12);
+    color: var(--text-primary);
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.1s;
+    z-index: 100;
+}
+
+.mc-tool-btn:hover::after {
+    opacity: 1;
+}
+
+/* ─── Canvas Wrap ───────────────────────────────── */
+
+.mc-canvas-wrap {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    background: #111118;
+    cursor: default;
+}
+
+.mc-canvas-wrap canvas {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* ─── Right Properties Panel ────────────────────── */
+
+.mc-panel {
+    width: 260px;
+    background: #14141f;
+    border-left: 1px solid rgba(255,255,255,0.07);
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    overflow: hidden;
+}
+
+.mc-panel-tabs {
+    display: flex;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    flex-shrink: 0;
+}
+
+.mc-panel-tab {
+    flex: 1;
+    padding: 9px 4px;
+    font-size: 12px;
+    border: none;
+    background: transparent;
+    color: rgba(255,255,255,0.5);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.mc-panel-tab.active {
+    color: var(--accent-gold);
+    border-bottom-color: var(--accent-gold);
+}
+
+.mc-panel-tab:hover:not(.active) {
+    color: var(--text-primary);
+}
+
+.mc-panel-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.12) transparent;
+}
+
+/* ─── Properties Controls ───────────────────────── */
+
+.mc-prop-section {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.35);
+    margin: 14px 0 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.mc-prop-section:first-child {
+    margin-top: 0;
+}
+
+.mc-prop-group {
+    margin-bottom: 10px;
+}
+
+.mc-prop-label {
+    display: block;
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+    margin-bottom: 4px;
+}
+
+.mc-prop-input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 5px 8px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 5px;
+    color: var(--text-primary);
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.15s;
+}
+
+.mc-prop-input:focus {
+    border-color: var(--accent-gold);
+}
+
+select.mc-prop-input {
+    cursor: pointer;
+}
+
+textarea.mc-prop-input {
+    resize: vertical;
+    min-height: 60px;
+    font-family: inherit;
+}
+
+.mc-prop-color {
+    width: 100%;
+    height: 32px;
+    padding: 2px;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.mc-prop-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+.mc-prop-check-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.mc-props-empty {
+    color: rgba(255,255,255,0.35);
+    font-size: 12px;
+    text-align: center;
+    padding: 24px 8px;
+    line-height: 1.6;
+}
+
+.mc-upload-btn {
+    display: inline-block;
+    padding: 5px 10px;
+    background: rgba(212,175,55,0.08);
+    border: 1px solid rgba(212,175,55,0.3);
+    border-radius: 5px;
+    color: var(--accent-gold);
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.mc-upload-btn:hover {
+    background: rgba(212,175,55,0.15);
+}
+
+/* ─── Tile Palette ──────────────────────────────── */
+
+.mc-tile-palette {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+}
+
+.mc-tile-swatch {
+    border-radius: 6px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.15s, transform 0.1s;
+    text-align: center;
+}
+
+.mc-tile-swatch:hover {
+    transform: scale(1.04);
+    border-color: rgba(255,255,255,0.25);
+}
+
+.mc-tile-swatch.mc-tile-active {
+    border-color: var(--accent-gold);
+}
+
+.mc-tile-color {
+    width: 100%;
+    aspect-ratio: 1;
+    display: block;
+}
+
+.mc-tile-label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.6);
+    padding: 3px 2px;
+    background: rgba(0,0,0,0.4);
+}
+
+/* ─── Status Bar ────────────────────────────────── */
+
+.mc-statusbar {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 4px 14px;
+    background: #0d0d18;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    font-size: 11px;
+    color: rgba(255,255,255,0.35);
+    flex-shrink: 0;
+    height: 24px;
+}
+
+.mc-statusbar span {
+    color: rgba(255,255,255,0.55);
+}
+
+/* ─── Fog brush cursor preview ──────────────────── */
+
+.mc-fog-cursor {
+    position: absolute;
+    border-radius: 50%;
+    border: 2px dashed rgba(100,100,200,0.6);
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+}

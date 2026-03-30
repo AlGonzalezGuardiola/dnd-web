@@ -29,7 +29,8 @@
     <link rel="stylesheet" href="css/base.css?v=20260326b">
     <link rel="stylesheet" href="css/map.css?v=20260326b">
     <link rel="stylesheet" href="css/character-sheet.css?v=20260330c">
-    <link rel="stylesheet" href="css/combat.css?v=20260330c">
+    <link rel="stylesheet" href="css/combat.css?v=20260331a">
+    <link rel="stylesheet" href="css/map-creator.css?v=20260331a">
     <link rel="stylesheet" href="css/encounters.css?v=20260326b">
     <link rel="stylesheet" href="css/npc-generator.css?v=20260326b">
     <link rel="stylesheet" href="css/session-notes.css?v=20260326b">
@@ -88,6 +89,10 @@
             <div class="card card-notes" id="cardNotes" onclick="openSessionNotes()">
                 <div class="card-title">📝 Notas</div>
                 <p>Apunta ideas, secretos y eventos de la partida. Búsqueda y filtrado por etiquetas.</p>
+            </div>
+            <div class="card card-map-creator" id="cardMapCreator" onclick="openMapCreatorHub()">
+                <div class="card-title">🗺️ Creador de Mapas</div>
+                <p>Diseña mapas de combate con tiles, muros, niebla y notas. Guárdalos para usarlos en partida.</p>
             </div>
         </div>
     </section>
@@ -870,6 +875,74 @@
         <div id="combatMapsGrid" class="cm-grid"></div>
     </section>
 
+    <!-- ═══ Creador de Mapas: Hub ══════════════════════════════════════════ -->
+    <section id="mapCreatorHubSection" class="character-section" style="display:none;">
+        <h1 class="landing-title">🗺️ Creador de Mapas</h1>
+        <div class="mc-hub-toolbar">
+            <button class="btn-combat-primary" onclick="openMapCreator(null)">+ Nuevo mapa</button>
+        </div>
+        <div id="mcHubGrid" class="mc-hub-grid"></div>
+    </section>
+
+    <!-- ═══ Creador de Mapas: Editor ════════════════════════════════════════ -->
+    <section id="mapCreatorSection" style="display:none;">
+        <!-- Top bar -->
+        <div class="mc-topbar">
+            <button class="mc-btn mc-btn-icon" onclick="mcGoBack()" title="Volver al hub">←</button>
+            <div class="mc-topbar-title">
+                <span id="mcMapNameDisplay">Nuevo mapa</span>
+                <span class="mc-modified-dot" id="mcModifiedDot"></span>
+            </div>
+            <div class="mc-topbar-actions">
+                <button class="mc-btn mc-btn-icon" onclick="mcUndo()" title="Deshacer (Ctrl+Z)">↩</button>
+                <button class="mc-btn mc-btn-icon" onclick="mcRedo()" title="Rehacer (Ctrl+Y)">↪</button>
+                <button class="mc-btn" id="mcSaveBtn" onclick="mcSave()">💾 Guardar</button>
+                <button class="mc-btn mc-btn-gold" onclick="mcDownload()">⬇ Descargar</button>
+            </div>
+        </div>
+
+        <!-- Editor body -->
+        <div class="mc-editor-body">
+            <!-- Left toolbar -->
+            <div class="mc-toolbar">
+                <button class="mc-tool-btn active" data-tool="select"
+                        data-tip="Seleccionar (V)" onclick="mcSetTool('select')">⬜</button>
+                <button class="mc-tool-btn" data-tool="tile"
+                        data-tip="Colocar tile (B)" onclick="mcSetTool('tile');mcPanelTab('tiles')">🔲</button>
+                <div class="mc-tool-separator"></div>
+                <button class="mc-tool-btn" data-tool="wall"
+                        data-tip="Muro (W)" onclick="mcSetTool('wall')">🧱</button>
+                <button class="mc-tool-btn" data-tool="door"
+                        data-tip="Puerta (D)" onclick="mcSetTool('door')">🚪</button>
+                <div class="mc-tool-separator"></div>
+                <button class="mc-tool-btn" data-tool="note"
+                        data-tip="Nota (N)" onclick="mcSetTool('note')">📌</button>
+                <button class="mc-tool-btn" data-tool="fog"
+                        data-tip="Niebla (F)" onclick="mcSetTool('fog')">🌫</button>
+            </div>
+
+            <!-- PixiJS canvas -->
+            <div class="mc-canvas-wrap" id="mcCanvasWrap"></div>
+
+            <!-- Right panel -->
+            <div class="mc-panel">
+                <div class="mc-panel-tabs">
+                    <button class="mc-panel-tab active" data-tab="scene" onclick="mcPanelTab('scene')">Escena</button>
+                    <button class="mc-panel-tab" data-tab="props"  onclick="mcPanelTab('props')">Props</button>
+                    <button class="mc-panel-tab" data-tab="tiles"  onclick="mcPanelTab('tiles')">Tiles</button>
+                </div>
+                <div id="mcPanelContent" class="mc-panel-content"></div>
+            </div>
+        </div>
+
+        <!-- Status bar -->
+        <div class="mc-statusbar">
+            Zoom: <span id="mcStatusZoom">100%</span>
+            &nbsp;·&nbsp; Cursor: <span id="mcStatusPos">0, 0</span>
+            &nbsp;·&nbsp; <span style="opacity:0.4">V Sel · B Tile · W Muro · D Puerta · N Nota · F Niebla · Space+Drag Pan</span>
+        </div>
+    </section>
+
     <!-- Upload Map Modal -->
     <div id="uploadMapModal" class="modal" style="display:none;" onclick="if(event.target===this)closeUploadMapModal()">
         <div class="modal-content cm-modal">
@@ -902,7 +975,7 @@
     <script src="storage.js?v=20260325a"></script>
     <script src="api-sync.js?v=20260330b"></script>
     <script src="role.js?v=20260324a"></script>
-    <script src="map.js?v=20260330a"></script>
+    <script src="map.js?v=20260331a"></script>
     <script src="map-editor.js?v=20260324a"></script>
     <script src="combat-templates.js?v=20260330a"></script>
     <script src="character-sheet-tabs.js?v=20260330a"></script>
@@ -912,14 +985,19 @@
     <script src="combat-manager.js?v=20260330c"></script>
     <script src="reactions.js?v=20260326c"></script>
     <script src="combat-log.js?v=20260324a"></script>
-    <script src="view.js?v=20260330c"></script>
+    <script src="view.js?v=20260331a"></script>
     <script src="encounters.js?v=20260325a"></script>
     <script src="npc-generator.js?v=20260325a"></script>
     <script src="session-notes.js?v=20260330a"></script>
     <script src="narrative.js?v=20260326b"></script>
     <script src="narrative-images.js?v=20260330a"></script>
     <script src="tv-mode.js?v=20260330b"></script>
-    <script src="combat-maps.js?v=20260330b"></script>
+    <script src="combat-maps.js?v=20260331a"></script>
+    <!-- PixiJS v7 — motor gráfico del Creador de Mapas -->
+    <script src="https://cdn.jsdelivr.net/npm/pixi.js@7/dist/pixi.min.js"></script>
+    <script src="map-creator.js?v=20260331a"></script>
+    <script src="map-creator-tools.js?v=20260331a"></script>
+    <script src="map-creator-ui.js?v=20260331a"></script>
 </body>
 
 </html>
