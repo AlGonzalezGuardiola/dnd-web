@@ -54,8 +54,8 @@
     pointer-events: none;
     z-index: 50;
     background-image:
-        linear-gradient(to right,  rgba(255, 255, 255, 0.10) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(255, 255, 255, 0.10) 1px, transparent 1px);
+        linear-gradient(to right,  rgba(255, 255, 255, 0.25) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.25) 1px, transparent 1px);
     /* background-size and background-position are set dynamically */
 }
 
