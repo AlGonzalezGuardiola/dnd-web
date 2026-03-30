@@ -405,18 +405,18 @@ async function initPlayerCharactersFromDB() {
         data.characters.forEach(c => {
             if (window.characterData[c.charId]) {
                 const fresh = window.characterData[c.charId];
-                // Preserve game-mechanic fields from characters.js (source of truth)
-                // Only let MongoDB override user-editable display fields
-                const gameFields = {
+                // conjuros / combateExtra / ranuras are defined in characters.js
+                // and managed via the sheet editor — preserve them from the live JS
+                // so the DB never clobbers spell lists or action definitions.
+                // stats and resumen (CA, HP, Initiative, Speed, Proficiency) ARE
+                // user-editable, so DB wins for those.
+                const keepFromJs = {
                     conjuros:     fresh.conjuros,
                     combateExtra: fresh.combateExtra,
                     ranuras:      fresh.ranuras,
-                    stats:        fresh.stats,
-                    resumen:      fresh.resumen,
-                    rasgos:       fresh.rasgos,
                 };
                 Object.assign(fresh, c.data);
-                Object.assign(fresh, gameFields);
+                Object.assign(fresh, keepFromJs);
             }
         });
         renderCharacterSelectionMenu();

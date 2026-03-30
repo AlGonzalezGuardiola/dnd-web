@@ -2,6 +2,7 @@ require('dotenv').config();
 const express  = require('express');
 const mongoose = require('mongoose');
 const cors     = require('cors');
+const path     = require('path');
 
 const combatsRouter           = require('./routes/combats');
 const combatEntitiesRouter    = require('./routes/combatEntities');
@@ -36,8 +37,18 @@ app.use('/api/narrative-sessions',  narrativeSessionsRouter);
 app.use('/api/maps',                mapsRouter);
 app.use('/api/combat-maps',         combatMapsRouter);
 
-// ── 404 ───────────────────────────────────────────────────────────────────────
-app.use((_req, res) => res.status(404).json({ error: 'Ruta no encontrada' }));
+// ── Static files (web/) + SPA fallback ───────────────────────────────────────
+const WEB_DIR = path.join(__dirname, '../../web');
+app.use(express.static(WEB_DIR));
+
+// For any non-API path that doesn't match a static file, serve index.html
+// so that browser refreshes on SPA "pages" don't get a 404.
+app.get('*', (req, res) => {
+    if (req.path.startsWith('/api/')) {
+        return res.status(404).json({ error: 'Ruta no encontrada' });
+    }
+    res.sendFile(path.join(WEB_DIR, 'index.html'));
+});
 
 // ── Global error handler ──────────────────────────────────────────────────────
 app.use((err, _req, res, _next) => {
