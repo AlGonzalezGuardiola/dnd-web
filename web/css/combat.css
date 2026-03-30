@@ -2829,6 +2829,64 @@ body.role-jugador .master-only { display: none !important; }
 }
 
 /* ============================================
+   COMBAT STAT BADGES — Initiative, Speed, Prof
+   ============================================ */
+.combat-stat-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 6px 0 10px;
+}
+.combat-stat-badge {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 4px 12px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+/* ============================================
+   COMBAT ABILITY SCORES GRID
+   ============================================ */
+.combat-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+    padding: 10px 0 14px;
+    border-bottom: 1px solid var(--border-color);
+    margin-bottom: 14px;
+}
+.combat-stat-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 6px 4px;
+}
+.combat-stat-val {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: var(--font-mono, monospace);
+    line-height: 1;
+}
+.combat-stat-name {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+@media (max-width: 400px) {
+    .combat-stats-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ============================================
    FEATURE 18 — Master: Unified Tabbed Setup
    ============================================ */
 

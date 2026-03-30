@@ -414,7 +414,12 @@ function removePermanentCustomAction(participantId, nombre) {
 function renderActivePanel(targetEl, forcePIdx) {
     const idx = (forcePIdx !== undefined) ? forcePIdx : combatState.currentIndex;
     const p = combatState.participants[idx];
-    const panel = targetEl || document.getElementById('combatActivePanel') || document.getElementById('playerCombatPanel');
+    // Role-aware panel selection: player panel takes priority for non-masters so we
+    // never accidentally render into the hidden master panel (it exists in the DOM too).
+    const panel = targetEl
+        || (!isMaster() && document.getElementById('playerCombatPanel'))
+        || document.getElementById('combatActivePanel')
+        || document.getElementById('playerCombatPanel');
     if (!p || !panel) return;
 
     // isSegundaAccion / isExtraAttack only apply when rendering the actual current turn
@@ -849,6 +854,39 @@ function renderActivePanel(targetEl, forcePIdx) {
                 : '<span style="color:var(--text-muted);font-size:12px">Inactivo</span>'}
         </button>` : '';
 
+    // ─── Live sheet data: always prefer window.characterData over stale combat state ───
+    const liveCA    = liveData?.resumen?.CA    || p.ac;
+    const liveSpeed = liveData?.resumen?.Velocidad || p.speed;
+    const liveInit  = liveData?.resumen?.Iniciativa  || '';
+    const liveProf  = liveData?.resumen?.Competencia || '';
+    // Sync hp.max from sheet silently so the next saveToApi picks it up
+    if (liveData?.resumen?.HP) {
+        const sheetHpMax = parseInt(liveData.resumen.HP);
+        if (sheetHpMax > 0 && sheetHpMax !== p.hp.max) p.hp.max = sheetHpMax;
+    }
+
+    // Combat stat badges (initiative, speed, proficiency)
+    const combatBadgesHTML = (liveData && !isSegundaAccion && !isExtraAttack) ? `
+        <div class="combat-stat-badges">
+            ${liveInit  ? `<span class="combat-stat-badge">🎯 ${liveInit}</span>`  : ''}
+            ${liveSpeed ? `<span class="combat-stat-badge">💨 ${liveSpeed}</span>` : ''}
+            ${liveProf  ? `<span class="combat-stat-badge">🏅 ${liveProf}</span>` : ''}
+        </div>` : '';
+
+    // Ability scores grid (shown whenever liveData.stats exists)
+    const STAT_ABBR = { 'Fuerza': 'FUE', 'Destreza': 'DES', 'Constitución': 'CON', 'Inteligencia': 'INT', 'Sabiduría': 'SAB', 'Carisma': 'CAR' };
+    const statsGridHTML = (liveData?.stats && !isSegundaAccion && !isExtraAttack) ? `
+        <div class="combat-stats-grid">
+            ${Object.entries(liveData.stats).map(([stat, val]) => {
+                const mod = getModifier(val);
+                const sign = mod >= 0 ? '+' : '';
+                return `<div class="combat-stat-box">
+                    <div class="combat-stat-val">${sign}${mod}</div>
+                    <div class="combat-stat-name">${STAT_ABBR[stat] || stat.substring(0, 3).toUpperCase()}</div>
+                </div>`;
+            }).join('')}
+        </div>` : '';
+
     // HP slider fill percentage
     const sliderFillPct = p.hp.max > 0 ? Math.max(0, (p.hp.current / p.hp.max) * 100) : 0;
 
@@ -892,10 +930,11 @@ function renderActivePanel(targetEl, forcePIdx) {
             </div>
             <div class="combat-vital-block">
                 <div class="combat-vital-label">🛡️ Clase de Armadura</div>
-                <div class="combat-vital-value">${p.ac}</div>
-                ${p.speed ? `<div style="font-size:12px;color:var(--text-muted);margin-top:4px">💨 ${p.speed}</div>` : ''}
+                <div class="combat-vital-value">${liveCA}</div>
             </div>
         </div>
+        ${combatBadgesHTML}
+        ${statsGridHTML}
         ${(isSegundaAccion || isExtraAttack) ? '' : concentrationBanner}
         ${(isSegundaAccion || isExtraAttack) ? '' : demonicToggleHTML}
         ${(isSegundaAccion || isExtraAttack) ? '' : sirvienteToggleHTML}
@@ -1143,8 +1182,10 @@ function selectPlannerAction(participantId, nombre, atk, dado, tipoDano) {
         _plannerActionAdded = true;
     }
     saveCombatState();
-    const _planPanelEl = document.getElementById('combatActivePanel') || document.getElementById('playerCombatPanel');
-    const _planIdx = combatState.participants.findIndex(x => x.id === participantId);
+    const _planIdx    = combatState.participants.findIndex(x => x.id === participantId);
+    const _planPanelEl = isMaster()
+        ? document.getElementById('combatActivePanel')
+        : document.getElementById('playerCombatPanel');
     renderActivePanel(_planPanelEl, _planIdx >= 0 ? _planIdx : combatState.currentIndex);
     renderCombatLog();
 }
@@ -1174,8 +1215,10 @@ function removePlannerSlot(participantId, slotKey) {
         entry.slots[slotKey + '_plan'] = null;
     }
     saveCombatState();
-    const _removeIdx = combatState.participants.findIndex(x => x.id === participantId);
-    const _removePanelEl = document.getElementById('combatActivePanel') || document.getElementById('playerCombatPanel');
+    const _removeIdx    = combatState.participants.findIndex(x => x.id === participantId);
+    const _removePanelEl = isMaster()
+        ? document.getElementById('combatActivePanel')
+        : document.getElementById('playerCombatPanel');
     renderActivePanel(_removePanelEl, _removeIdx >= 0 ? _removeIdx : combatState.currentIndex);
     renderCombatLog();
 }
@@ -1190,8 +1233,10 @@ function toggleSmiteModifier(participantId, nombre, dado, tipoDano, phase) {
         entry.actions.push({ nombre, dice: dado, isModifier: true, smitePhase: phase });
     }
     saveCombatState();
-    const _smiteIdx = combatState.participants.findIndex(x => x.id === participantId);
-    const _smitePanelEl = document.getElementById('combatActivePanel') || document.getElementById('playerCombatPanel');
+    const _smiteIdx    = combatState.participants.findIndex(x => x.id === participantId);
+    const _smitePanelEl = isMaster()
+        ? document.getElementById('combatActivePanel')
+        : document.getElementById('playerCombatPanel');
     renderActivePanel(_smitePanelEl, _smiteIdx >= 0 ? _smiteIdx : combatState.currentIndex);
     renderCombatLog();
 }
