@@ -96,11 +96,11 @@
     <section id="onlineLobbyView" class="character-section" style="display:none;">
         <h1 class="landing-title">⚔️ Combate</h1>
         <div class="online-lobby">
-            <div class="online-lobby-card" onclick="openCombatMaps()" role="button" tabindex="0" aria-label="Mapas de combate">
-                <div class="online-lobby-icon">🗺️</div>
-                <div class="online-lobby-title">Mapas</div>
-                <div class="online-lobby-desc">Sube y gestiona los mapas de combate para usar en partida.</div>
-                <button class="btn-combat-primary" style="margin-top:16px">Ver mapas</button>
+            <div class="online-lobby-card" onclick="startOnlineCombatSetup()" role="button" tabindex="0" aria-label="Crear partida en línea">
+                <div class="online-lobby-icon">🌐</div>
+                <div class="online-lobby-title">Crear partida</div>
+                <div class="online-lobby-desc">Configura el combate y obtén un código para compartir con los demás jugadores.</div>
+                <button class="btn-combat-primary" style="margin-top:16px">Crear sala</button>
             </div>
             <div class="online-lobby-card" onclick="openEncounters()" role="button" tabindex="0" aria-label="Encuentros">
                 <div class="online-lobby-icon">🗡️</div>
@@ -108,11 +108,11 @@
                 <div class="online-lobby-desc">Gestiona encuentros locales: iniciativa, turnos, PV y condiciones por criatura.</div>
                 <button class="btn-combat-primary" style="margin-top:16px">Abrir encuentros</button>
             </div>
-            <div class="online-lobby-card" onclick="startOnlineCombatSetup()" role="button" tabindex="0" aria-label="Crear partida en línea">
-                <div class="online-lobby-icon">🌐</div>
-                <div class="online-lobby-title">Crear partida</div>
-                <div class="online-lobby-desc">Configura el combate y obtén un código para compartir con los demás jugadores.</div>
-                <button class="btn-combat-primary" style="margin-top:16px">Crear sala</button>
+            <div class="online-lobby-card" onclick="openCombatMaps()" role="button" tabindex="0" aria-label="Mapas de combate">
+                <div class="online-lobby-icon">🗺️</div>
+                <div class="online-lobby-title">Mapas</div>
+                <div class="online-lobby-desc">Sube y gestiona los mapas de combate para usar en partida.</div>
+                <button class="btn-combat-primary" style="margin-top:16px">Ver mapas</button>
             </div>
             <div class="online-lobby-card">
                 <div class="online-lobby-icon">🔗</div>
@@ -168,6 +168,7 @@
 
         <!-- Tab: Aliados -->
         <div id="charTabAliados" class="char-tab-panel" style="display:none;">
+            <div class="landing-cards" id="aliadosCharacterGrid"></div>
             <div id="charAliadoTemplatesList" class="char-templates-list"></div>
             <div class="npc-builder-section aliado-builder">
                 <div class="npc-builder-title">💙 Crear Aliado</div>
@@ -892,7 +893,7 @@
     <script src="combat-templates.js?v=20260326b"></script>
     <script src="character-sheet-tabs.js?v=20260326b"></script>
     <script src="character-sheet.js?v=20260330b"></script>
-    <script src="character-edit.js?v=20260325c"></script>
+    <script src="character-edit.js?v=20260330a"></script>
     <script src="combat-setup.js?v=20260324a"></script>
     <script src="combat-manager.js?v=20260330c"></script>
     <script src="reactions.js?v=20260326c"></script>

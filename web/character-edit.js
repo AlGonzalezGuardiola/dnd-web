@@ -366,6 +366,25 @@ function switchPersonajesTab(tab) {
         if (btn) btn.classList.toggle('active', t === tab);
     });
     if (tab === 'principales') renderCharacterSelectionMenu();
+    if (tab === 'aliados') renderAliadosCharacters();
+}
+
+function renderAliadosCharacters() {
+    const container = document.getElementById('aliadosCharacterGrid');
+    if (!container || !window.characterData) return;
+    const aliados = Object.values(window.characterData).filter(c => c.tipo === 'aliado');
+    if (!aliados.length) { container.innerHTML = ''; return; }
+    container.innerHTML = aliados.map(char => {
+        const imgUrl = char.imagen || 'assets/imagenes/placeholder.jpg';
+        return `
+            <div class="card character-card" onclick="renderCharacterSheet('${char.id}')">
+                <div class="card-img-wrapper" style="width:72px;height:72px;border-radius:50%;overflow:hidden;border:2px solid var(--accent-blue,#5b9bd5);margin-bottom:8px;box-shadow:0 0 10px rgba(0,0,0,0.5);flex-shrink:0;">
+                    <img src="${imgUrl}" style="width:100%;height:100%;object-fit:cover;object-position:top center;" onerror="this.src='https://placehold.co/100x100/1e2536/5b9bd5?text=?'">
+                </div>
+                <div class="card-title">${char.nombre}</div>
+                <div class="char-card-meta">${char.raza || ''} · ${char.clase || ''}</div>
+            </div>`;
+    }).join('');
 }
 
 function renderCharacterSelectionMenu() {
