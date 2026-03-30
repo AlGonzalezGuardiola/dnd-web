@@ -341,6 +341,20 @@
             </div>
         </div>
 
+        <!-- Map Preview Lightbox -->
+        <div id="mapPreviewLightbox" class="map-preview-lightbox" style="display:none;"
+             onclick="if(event.target===this)closeMapPreview()">
+            <div class="map-preview-box">
+                <div class="map-preview-name" id="mapPreviewName"></div>
+                <img id="mapPreviewImg" class="map-preview-img" alt="Vista previa del mapa">
+                <div class="map-preview-actions">
+                    <button class="btn-combat-primary" id="mapPreviewSelectBtn"
+                            onclick="confirmMapPreview()">✓ Seleccionar este mapa</button>
+                    <button class="btn-secondary" onclick="closeMapPreview()">Cerrar</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Footer -->
         <div class="combat-setup-footer">
             <span id="combatSetupCount" class="combat-setup-count">0 participantes</span>

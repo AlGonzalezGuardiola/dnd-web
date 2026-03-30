@@ -175,6 +175,72 @@
     letter-spacing: 0.04em;
 }
 
+/* "Ver mapa" hint shown on card hover */
+.setup-map-preview-hint {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.45);
+    color: #fff;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    opacity: 0;
+    transition: opacity 0.15s;
+    pointer-events: none;
+}
+
+.setup-map-card:hover .setup-map-preview-hint {
+    opacity: 1;
+}
+
+/* Map preview lightbox */
+.map-preview-lightbox {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.88);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+    padding: 20px;
+}
+
+.map-preview-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    max-width: min(90vw, 1100px);
+    max-height: 90vh;
+}
+
+.map-preview-name {
+    font-family: var(--font-heading);
+    font-size: 22px;
+    color: var(--accent-gold);
+    text-align: center;
+    letter-spacing: 0.04em;
+}
+
+.map-preview-img {
+    max-width: 100%;
+    max-height: calc(90vh - 140px);
+    object-fit: contain;
+    border-radius: 10px;
+    box-shadow: 0 8px 48px rgba(0, 0, 0, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.map-preview-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
 /* ============================================
    TV Mode — Mesa de Juego
    Diseñado para pantalla grande (TV horizontal)

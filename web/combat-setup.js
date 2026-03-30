@@ -613,16 +613,19 @@ async function renderMapSetupTab() {
     } else {
         html += serverMaps.map(m => {
             const isSelected = combatState.combatMap?.id === m.filename;
+            const safeUrl  = m.url.replace(/'/g, "\\'");
+            const safeName = m.name.replace(/'/g, "\\'");
+            const safeFile = m.filename.replace(/'/g, "\\'");
             return `<div class="setup-map-card${isSelected ? ' selected' : ''}"
-                         onclick="selectSetupMap('${m.filename}', '${m.name}', '${m.url}')">
+                         onclick="openMapPreview('${safeFile}', '${safeName}', '${safeUrl}')">
                 ${isSelected ? '<span class="setup-map-selected-badge">✓ SELECCIONADO</span>' : ''}
                 <img class="setup-map-thumb" src="${m.url}" alt="${m.name}"
                      onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
                 <div class="setup-map-thumb-placeholder" style="display:none">🗺️</div>
                 <div class="setup-map-info">
                     <div class="setup-map-name">${m.name}</div>
-                    <div class="setup-map-key">${m.filename}</div>
                 </div>
+                <div class="setup-map-preview-hint">👁 Ver mapa</div>
             </div>`;
         }).join('');
     }
@@ -641,6 +644,47 @@ function selectSetupMap(id, defaultName, url) {
         if (nameInput && !nameInput.value.trim()) nameInput.value = defaultName || id;
     }
     renderMapSetupTab();
+}
+
+// ── Map preview lightbox ──────────────────────────────────────────────────────
+
+let _previewPending = null; // { id, name, url } waiting for confirmation
+
+function openMapPreview(id, name, url) {
+    _previewPending = { id, name, url };
+    const lb   = document.getElementById('mapPreviewLightbox');
+    const img  = document.getElementById('mapPreviewImg');
+    const title = document.getElementById('mapPreviewName');
+    const btn  = document.getElementById('mapPreviewSelectBtn');
+    if (!lb) return;
+
+    img.src   = url;
+    title.textContent = name;
+
+    const isAlreadySelected = combatState.combatMap?.id === id;
+    btn.textContent = isAlreadySelected ? '✓ Ya seleccionado' : '✓ Seleccionar este mapa';
+    btn.disabled    = isAlreadySelected;
+
+    lb.style.display = 'flex';
+    document.addEventListener('keydown', _closeLightboxOnEscape);
+}
+
+function confirmMapPreview() {
+    if (_previewPending) {
+        selectSetupMap(_previewPending.id, _previewPending.name, _previewPending.url);
+        _previewPending = null;
+    }
+    closeMapPreview();
+}
+
+function closeMapPreview() {
+    const lb = document.getElementById('mapPreviewLightbox');
+    if (lb) lb.style.display = 'none';
+    document.removeEventListener('keydown', _closeLightboxOnEscape);
+}
+
+function _closeLightboxOnEscape(e) {
+    if (e.key === 'Escape') closeMapPreview();
 }
 
 function updateSetupMapName(value) {
