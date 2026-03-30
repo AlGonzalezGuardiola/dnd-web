@@ -2674,9 +2674,11 @@ body.role-jugador .master-only { display: none !important; }
     max-width: 620px;
     width: 100%;
     height: auto;
+    max-height: none;   /* override the 60vh mobile cap — body handles scrolling */
     overflow: visible;
     border: none;
     padding: 0;
+    flex: none;
 }
 .player-active-footer {
     padding: 14px 20px;
@@ -2700,6 +2702,7 @@ body.role-jugador .master-only { display: none !important; }
     border-radius: 8px;
     font-size: 14px;
     cursor: pointer;
+    touch-action: manipulation;
     transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
 .btn-player-map:hover {
@@ -2712,6 +2715,117 @@ body.role-jugador .master-only { display: none !important; }
     color: var(--text-muted);
     font-style: italic;
     align-self: center;
+}
+.player-waiting-banner {
+    padding: 10px 18px;
+    background: rgba(255,255,255,0.03);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 14px;
+    color: var(--text-muted);
+    text-align: center;
+    flex-shrink: 0;
+}
+
+/* ── Player combat panel — mobile responsive ── */
+@media (max-width: 768px) {
+    /* Critical: let the player panel grow naturally; body scrolls */
+    .player-active-body .combat-active-panel {
+        max-height: none !important;
+        overflow: visible !important;
+        flex: none !important;
+    }
+    /* Scrollable body: pull-to-scroll on iOS */
+    .player-active-body {
+        -webkit-overflow-scrolling: touch;
+        padding: 12px;
+    }
+    /* Bigger touch targets for action cards */
+    .player-active-body .combat-action-card {
+        min-height: 52px;
+        padding: 12px 14px;
+        font-size: 14px;
+    }
+    .player-active-body .combat-action-name {
+        font-size: 14px;
+    }
+    .player-active-body .combat-action-dice {
+        font-size: 12px;
+    }
+    /* Planner slots — more readable on small screens */
+    .player-active-body .planner-slot {
+        min-height: 46px;
+        padding: 10px 12px;
+    }
+    .player-active-body .planner-slot-label {
+        font-size: 12px;
+        min-width: 70px;
+    }
+    .player-active-body .planner-slot-action {
+        font-size: 14px;
+    }
+    /* Bigger remove button for fat fingers */
+    .player-active-body .planner-slot-remove {
+        min-width: 36px;
+        min-height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        padding: 4px 8px;
+    }
+    /* Slot tracker buttons */
+    .player-active-body .slot-btn {
+        min-width: 36px;
+        min-height: 36px;
+    }
+    /* Condition buttons */
+    .player-active-body .combat-cond-btn {
+        min-height: 36px;
+        padding: 6px 10px;
+        font-size: 12px;
+    }
+    /* Section title */
+    .player-active-body .combat-section-title {
+        font-size: 11px;
+        padding: 6px 10px;
+        margin-bottom: 8px;
+    }
+    /* Footer full-width on mobile */
+    .player-active-footer {
+        justify-content: stretch;
+        padding: 10px 14px;
+        gap: 8px;
+    }
+    .player-active-footer .btn-combat-primary {
+        flex: 1;
+        font-size: 15px;
+        padding: 14px 20px;
+        text-align: center;
+    }
+    .player-active-footer .btn-player-map {
+        flex-shrink: 0;
+        padding: 14px 18px;
+    }
+    .player-active-footer .player-waiting-hint {
+        flex: 1;
+        font-size: 12px;
+        text-align: center;
+    }
+    /* Action cards grid: single column on narrow phones */
+    .player-active-body .combat-action-list {
+        grid-template-columns: 1fr;
+    }
+    /* Turn planner: more compact */
+    .player-active-body .turn-planner {
+        padding: 12px;
+        gap: 8px;
+        margin-bottom: 12px;
+    }
+    /* Waiting banner compact */
+    .player-waiting-banner {
+        padding: 8px 14px;
+        font-size: 13px;
+    }
 }
 
 /* ============================================
