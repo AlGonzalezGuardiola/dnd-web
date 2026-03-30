@@ -4275,3 +4275,33 @@ body.role-jugador .master-only { display: none !important; }
     min-height: 18px;
     margin-bottom: 4px;
 }
+
+/* ── Modal mobile fix: scrollable content when viewport is small ── */
+@media (max-width: 768px) {
+    .modal {
+        align-items: flex-start;
+        padding: 16px;
+        overflow-y: auto;
+    }
+
+    .modal-content {
+        max-height: none;
+        width: 100%;
+        padding: 20px;
+        margin: auto;
+    }
+
+    .modal-actions {
+        flex-direction: column;
+    }
+
+    .modal-actions button {
+        width: 100%;
+        min-height: 48px;
+        font-size: 16px;
+    }
+
+    .cm-upload-preview {
+        max-height: 140px;
+    }
+}
