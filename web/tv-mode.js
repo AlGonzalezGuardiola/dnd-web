@@ -339,6 +339,7 @@ function renderTvTokens() {
             tokenEl.dataset.pid = p.id;
             tokenEl.innerHTML = `
                 <span class="tv-token-label">${p.name}</span>
+                <img class="tv-token-photo" alt="" style="display:none">
                 <span class="tv-token-abbrev">${abbrev}</span>
                 <div class="tv-token-hp-wrap">
                     <div class="tv-token-hp-fill"></div>
@@ -355,14 +356,19 @@ function renderTvTokens() {
         tokenEl.classList.toggle('active-turn', isActive && !isDead);
         tokenEl.classList.toggle('dead', isDead);
         tokenEl.classList.toggle('tv-token-mine', _canPlayerControlToken(p.id));
-        tokenEl.classList.toggle('tv-token-has-photo', !!imagen);
 
-        // Portrait photo: show instead of initials when available
-        if (imagen) {
-            tokenEl.style.backgroundImage = `url(${imagen})`;
-        } else {
-            tokenEl.style.backgroundImage = '';
+        // Portrait photo — same crop as character thumbnail (object-fit cover, top center)
+        const photoEl = tokenEl.querySelector('.tv-token-photo');
+        if (photoEl) {
+            if (imagen) {
+                photoEl.src = imagen;
+                photoEl.style.display = '';
+            } else {
+                photoEl.src = '';
+                photoEl.style.display = 'none';
+            }
         }
+        tokenEl.classList.toggle('tv-token-has-photo', !!imagen);
 
         // Update abbrev & label in case name changed
         tokenEl.querySelector('.tv-token-abbrev').textContent = abbrev;

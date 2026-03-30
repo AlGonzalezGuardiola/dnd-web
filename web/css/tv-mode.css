@@ -669,9 +669,15 @@
 }
 
 /* Token with portrait photo */
-.tv-token-has-photo {
-    background-size: cover;
-    background-position: center top;
+.tv-token-photo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+    border-radius: 50%;
+    pointer-events: none;
 }
 
 .tv-token-has-photo .tv-token-abbrev {
