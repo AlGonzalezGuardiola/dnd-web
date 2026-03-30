@@ -475,7 +475,7 @@ function renderPersonajesTemplatesList(tipo) {
     const apiType = tipo === 'aliado' ? 'ALLY' : 'ENEMY';
     const templates = savedTemplates[apiType];
     if (!templates.length) {
-        container.innerHTML = `<div class="npc-list-empty">No hay ${tipo}s guardados todavía</div>`;
+        container.innerHTML = '';
         return;
     }
     container.innerHTML = `
