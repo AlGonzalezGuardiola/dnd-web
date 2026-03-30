@@ -754,8 +754,11 @@
 
                 <!-- Inner canvas: gets pan+zoom transform -->
                 <div class="tv-map-canvas" id="tvMapCanvas">
-                    <!-- Grid bg, major lines and tokens layer injected by JS -->
+                    <!-- Map image and tokens layer injected by JS -->
                 </div>
+
+                <!-- Tactical grid overlay — above map, below zoom controls -->
+                <div id="tvGridOverlay" class="tv-grid-overlay"></div>
 
                 <!-- Empty state overlay -->
                 <div class="tv-empty-overlay" id="tvEmptyOverlay">

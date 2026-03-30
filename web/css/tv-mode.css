@@ -409,7 +409,22 @@
 }
 
 
-/* Map image — below grid (z-index 1) and tokens (z-index 10) */
+/* Tactical grid overlay — covers full play area, above map image, below zoom controls */
+.tv-grid-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 20;
+    background-image:
+        linear-gradient(to right,  rgba(255, 255, 255, 0.10) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.10) 1px, transparent 1px);
+    /* background-size and background-position updated by _applyTvTransform() */
+}
+
+/* Map image — below tokens (z-index 10) */
 .tv-map-image {
     position: absolute;
     top: 0;

@@ -765,6 +765,17 @@ function _applyTvTransform() {
     if (canvas) {
         canvas.style.transform = `translate(${tvState.pan.x}px, ${tvState.pan.y}px) scale(${tvState.zoom})`;
     }
+
+    // Update grid overlay. transform-origin is 0 0, so:
+    //   screen_x = canvas_x * zoom + pan.x  →  phase = pan.x mod (cellSize * zoom)
+    const grid = document.getElementById('tvGridOverlay');
+    if (grid) {
+        const cellSizePx = tvState.cellSize * tvState.zoom;
+        const offsetX = ((tvState.pan.x % cellSizePx) + cellSizePx) % cellSizePx;
+        const offsetY = ((tvState.pan.y % cellSizePx) + cellSizePx) % cellSizePx;
+        grid.style.backgroundSize     = `${cellSizePx}px ${cellSizePx}px`;
+        grid.style.backgroundPosition = `${offsetX}px ${offsetY}px`;
+    }
 }
 
 function tvZoomIn() {
