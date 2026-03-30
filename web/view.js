@@ -34,9 +34,12 @@ const _PATH_TO_VIEW = Object.fromEntries(
     Object.entries(_ROUTES).map(([k, v]) => [v, k])
 );
 
-// Detect app base path at runtime (works on any sub-path or localhost root)
+// Detect app base path from the <base href> tag (set in index.html).
+// Falls back to regex heuristic for environments without a base tag.
 const _APP_BASE = (() => {
-    const m = location.pathname.match(/^(\/(?:[^/]+\/)*dnd-web)\//);
+    const base = document.querySelector('base[href]');
+    if (base) return base.getAttribute('href');
+    const m = location.pathname.match(/^(\/(?:[^/]+\/)*dnd-web\/web)\//);
     return m ? m[1] + '/' : '/';
 })();
 
