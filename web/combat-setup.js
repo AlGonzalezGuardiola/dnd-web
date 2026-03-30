@@ -588,10 +588,10 @@ async function renderMapSetupTab() {
 
     grid.innerHTML = '<div class="setup-map-loading">🔄 Cargando mapas…</div>';
 
-    // Fetch server maps (cached after first load)
+    // Fetch maps from DB (cached after first load; invalidated on upload)
     if (!_cachedServerMaps) {
         try {
-            const res = await fetch(`${API_BASE}/api/maps`);
+            const res = await fetch(`${API_BASE}/api/combat-maps`);
             _cachedServerMaps = res.ok ? await res.json() : [];
         } catch (_) {
             _cachedServerMaps = [];
@@ -608,7 +608,7 @@ async function renderMapSetupTab() {
 
     if (!serverMaps.length) {
         html += `<div class="setup-map-empty-hint">
-            No hay mapas en <code>assets/mapas/</code>. Añade imágenes JPG o PNG a esa carpeta y reinicia el servidor.
+            No hay mapas disponibles. Ve a <strong>Combate › Mapas</strong> y sube el primero.
         </div>`;
     } else {
         html += serverMaps.map(m => {

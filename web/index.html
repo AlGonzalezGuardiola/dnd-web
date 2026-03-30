@@ -96,6 +96,12 @@
     <section id="onlineLobbyView" class="character-section" style="display:none;">
         <h1 class="landing-title">⚔️ Combate</h1>
         <div class="online-lobby">
+            <div class="online-lobby-card" onclick="openCombatMaps()" role="button" tabindex="0" aria-label="Mapas de combate">
+                <div class="online-lobby-icon">🗺️</div>
+                <div class="online-lobby-title">Mapas</div>
+                <div class="online-lobby-desc">Sube y gestiona los mapas de combate para usar en partida.</div>
+                <button class="btn-combat-primary" style="margin-top:16px">Ver mapas</button>
+            </div>
             <div class="online-lobby-card" onclick="openEncounters()" role="button" tabindex="0" aria-label="Encuentros">
                 <div class="online-lobby-icon">🗡️</div>
                 <div class="online-lobby-title">Encuentros</div>
@@ -782,6 +788,37 @@
         </div>
     </section>
 
+    <!-- Combat Maps View -->
+    <section id="combatMapsView" class="character-section" style="display:none;">
+        <h1 class="landing-title">🗺️ Mapas de Combate</h1>
+        <div class="cm-toolbar">
+            <button class="btn-combat-primary cm-add-btn" onclick="openUploadMapModal()">+ Añadir mapa</button>
+        </div>
+        <div id="combatMapsGrid" class="cm-grid"></div>
+    </section>
+
+    <!-- Upload Map Modal -->
+    <div id="uploadMapModal" class="modal" style="display:none;" onclick="if(event.target===this)closeUploadMapModal()">
+        <div class="modal-content cm-modal">
+            <h2>Subir nuevo mapa</h2>
+            <div class="form-group">
+                <label for="uploadMapName">Nombre del mapa</label>
+                <input id="uploadMapName" type="text" placeholder="Ej: Taberna del Dragón" autocomplete="off">
+            </div>
+            <div class="form-group">
+                <label for="uploadMapFile">Imagen (JPG, PNG, WebP · máx 15 MB)</label>
+                <input id="uploadMapFile" type="file" accept="image/jpeg,image/png,image/webp,image/gif"
+                       onchange="onUploadMapFileChange(this)" style="color:var(--text-primary)">
+            </div>
+            <img id="uploadMapPreview" class="cm-upload-preview" style="display:none" alt="Vista previa">
+            <div id="uploadMapError" class="cm-upload-error"></div>
+            <div class="modal-actions">
+                <button id="uploadMapSubmitBtn" class="btn-primary" onclick="submitUploadMap()">Subir mapa</button>
+                <button class="btn-secondary" onclick="closeUploadMapModal()">Cancelar</button>
+            </div>
+        </div>
+    </div>
+
     <script src="characters2.js?v=20260325b"></script>
     <script src="data.js?v=20260310o"></script>
     <script src="globals.js?v=20260325a"></script>
@@ -805,6 +842,7 @@
     <script src="session-notes.js?v=20260325a"></script>
     <script src="narrative.js?v=20260326b"></script>
     <script src="tv-mode.js?v=20260327a"></script>
+    <script src="combat-maps.js?v=20260330a"></script>
 </body>
 
 </html>

@@ -208,6 +208,7 @@ function navigateBack() {
         return;
     }
     if (view === 'onlineLobby') { setView('landing'); return; }
+    if (view === 'combatMaps') { setView('onlineLobby'); return; }
     if (view === 'onlineWaiting') { setView('onlineLobby'); return; }
     if (view === 'encounters') { setView('onlineLobby'); return; }
     if (view === 'npcGenerator') { setView('landing'); return; }

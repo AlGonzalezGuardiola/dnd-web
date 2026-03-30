@@ -422,6 +422,8 @@ function setView(viewName) {
     if (narrativeEl) narrativeEl.style.display = 'none';
     const tvModeEl = document.getElementById('tvModeSection');
     if (tvModeEl) tvModeEl.style.display = 'none';
+    const combatMapsEl = document.getElementById('combatMapsView');
+    if (combatMapsEl) combatMapsEl.style.display = 'none';
 
     // Also hide the character sheet if it was open
     const sheetContainer = document.getElementById('characterSheetContainer');
@@ -540,6 +542,14 @@ function setView(viewName) {
             document.getElementById('breadcrumbs').textContent = '⚔️ Combate › Modo TV';
             document.getElementById('btnBack').style.display = 'flex';
             if (typeof initTvMode === 'function') initTvMode();
+            break;
+        case 'combatMaps':
+            document.getElementById('combatMapsView').style.display = 'flex';
+            if (editorToolbar) editorToolbar.style.display = 'none';
+            if (hud) hud.style.display = 'flex';
+            if (diceWidget) diceWidget.style.display = 'none';
+            document.getElementById('breadcrumbs').textContent = '🗺️ Mapas de Combate';
+            document.getElementById('btnBack').style.display = 'flex';
             break;
     }
 }
