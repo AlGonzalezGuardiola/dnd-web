@@ -60,6 +60,7 @@ async function renderCombatMaps() {
                 <div class="cm-name">${m.name} ${badge}</div>
                 <div class="cm-filename">${m.filename}</div>
             </div>
+            <button class="cm-view-btn" onclick="openCombatMapLightbox('${m._id}')" title="Ver en grande">🔍</button>
             <button class="cm-delete-btn" onclick="deleteCombatMap('${m._id}', '${m.name}')" title="Eliminar mapa">🗑</button>
         </div>`;
     }).join('');
@@ -194,4 +195,47 @@ function _readFileAsDataURL(file) {
         reader.onerror = () => reject(new Error('Error leyendo el archivo'));
         reader.readAsDataURL(file);
     });
+}
+
+// ─── Lightbox ─────────────────────────────────────
+
+function openCombatMapLightbox(id) {
+    const maps = _combatMapsCache || [];
+    const m = maps.find(x => x._id === id);
+    if (!m) return;
+
+    const isVid = m.isVideo || _isVideoFilename(m.filename);
+
+    const overlay = document.createElement('div');
+    overlay.className = 'cm-lightbox-overlay';
+    overlay.addEventListener('click', e => {
+        if (e.target === overlay) _closeCombatMapLightbox(overlay);
+    });
+
+    const media = isVid
+        ? `<video class="cm-lightbox-media" src="${m.url}" controls autoplay loop playsinline></video>`
+        : `<img class="cm-lightbox-media" src="${m.url}" alt="${m.name}">`;
+
+    overlay.innerHTML = `
+        <div class="cm-lightbox">
+            <button class="cm-lightbox-close" onclick="_closeCombatMapLightbox(this.closest('.cm-lightbox-overlay'))" title="Cerrar">✕</button>
+            ${media}
+            <div class="cm-lightbox-caption">${m.name}</div>
+        </div>`;
+
+    document.body.appendChild(overlay);
+    requestAnimationFrame(() => overlay.classList.add('cm-lightbox-visible'));
+
+    const onKey = e => {
+        if (e.key === 'Escape') { _closeCombatMapLightbox(overlay); document.removeEventListener('keydown', onKey); }
+    };
+    document.addEventListener('keydown', onKey);
+    overlay._removeKey = onKey;
+}
+
+function _closeCombatMapLightbox(overlay) {
+    if (!overlay) return;
+    if (overlay._removeKey) document.removeEventListener('keydown', overlay._removeKey);
+    overlay.classList.remove('cm-lightbox-visible');
+    setTimeout(() => overlay.remove(), 250);
 }
