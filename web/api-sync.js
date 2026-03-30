@@ -101,10 +101,17 @@ function applyRemoteState(data) {
         reactionsUsed:     data.reactionsUsed     || {},
         combatMap:         data.combatMap         || combatState.combatMap || { id: null, name: '', url: '' },
     });
-    // Sync token positions into tvState so the TV map updates live
+    // Sync token positions: replace entirely so all clients stay authoritative
     if (data.tokenPositions && typeof tvState !== 'undefined') {
-        Object.assign(tvState.tokenPositions, data.tokenPositions);
+        tvState.tokenPositions = { ...data.tokenPositions };
         if (currentView() === 'tvMode' && typeof renderTvTokens === 'function') renderTvTokens();
+    }
+    // Rebuild TV grid if the combat map changed (e.g. master swapped maps mid-session)
+    if (data.combatMap?.url && typeof _buildTvGrid === 'function') {
+        const prevUrl = combatState.combatMap?.url;
+        if (data.combatMap.url !== prevUrl && currentView() === 'tvMode') {
+            _buildTvGrid();
+        }
     }
     if (combatModeActive) renderCombatManager();
     if (data.pendingReactionTrigger) {
@@ -301,7 +308,12 @@ async function joinOnlineSession() {
                 extraAttackTurn:   data.combat?.extraAttackTurn ?? false,
                 nextLogId:         data.combat?.nextLogId ?? 0,
                 log:               data.combat?.log || [],
+                combatMap:         data.combat?.combatMap || { id: null, name: '', url: '' },
             });
+            // Restore token positions from server
+            if (data.combat?.tokenPositions && typeof tvState !== 'undefined') {
+                tvState.tokenPositions = { ...data.combat.tokenPositions };
+            }
             combatModeActive = true;
             setView('combatManager');
             renderCombatManager();

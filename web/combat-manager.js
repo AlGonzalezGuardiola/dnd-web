@@ -1144,7 +1144,8 @@ function selectPlannerAction(participantId, nombre, atk, dado, tipoDano) {
     }
     saveCombatState();
     const _planPanelEl = document.getElementById('combatActivePanel') || document.getElementById('playerCombatPanel');
-    renderActivePanel(_planPanelEl, combatState.currentIndex);
+    const _planIdx = combatState.participants.findIndex(x => x.id === participantId);
+    renderActivePanel(_planPanelEl, _planIdx >= 0 ? _planIdx : combatState.currentIndex);
     renderCombatLog();
 }
 
@@ -1173,7 +1174,9 @@ function removePlannerSlot(participantId, slotKey) {
         entry.slots[slotKey + '_plan'] = null;
     }
     saveCombatState();
-    renderActivePanel(document.getElementById('playerCombatPanel'), combatState.currentIndex);
+    const _removeIdx = combatState.participants.findIndex(x => x.id === participantId);
+    const _removePanelEl = document.getElementById('combatActivePanel') || document.getElementById('playerCombatPanel');
+    renderActivePanel(_removePanelEl, _removeIdx >= 0 ? _removeIdx : combatState.currentIndex);
     renderCombatLog();
 }
 
@@ -1187,8 +1190,9 @@ function toggleSmiteModifier(participantId, nombre, dado, tipoDano, phase) {
         entry.actions.push({ nombre, dice: dado, isModifier: true, smitePhase: phase });
     }
     saveCombatState();
-    const panelEl = document.getElementById('combatActivePanel') || document.getElementById('playerCombatPanel');
-    renderActivePanel(panelEl, combatState.currentIndex);
+    const _smiteIdx = combatState.participants.findIndex(x => x.id === participantId);
+    const _smitePanelEl = document.getElementById('combatActivePanel') || document.getElementById('playerCombatPanel');
+    renderActivePanel(_smitePanelEl, _smiteIdx >= 0 ? _smiteIdx : combatState.currentIndex);
     renderCombatLog();
 }
 
