@@ -285,6 +285,7 @@ function renderTvTokens() {
                     <div class="tv-token-hp-fill"></div>
                 </div>`;
             tokenEl.addEventListener('mousedown', _tvTokenMouseDown);
+            tokenEl.addEventListener('touchstart', _tvTokenTouchStart, { passive: false });
             tokenEl.addEventListener('click', _tvTokenClick);
             layer.appendChild(tokenEl);
         }
@@ -520,6 +521,71 @@ function _tvTokenMouseDown(e) {
 
     document.addEventListener('mousemove', onMouseMove);
     document.addEventListener('mouseup', onMouseUp);
+}
+
+function _tvTokenTouchStart(e) {
+    if (e.touches.length !== 1) return;
+    const tokenEl = e.currentTarget;
+    const pid = tokenEl.dataset.pid;
+    if (!_canPlayerControlToken(pid)) return;
+
+    e.stopPropagation(); // Prevent map pan from starting
+    e.preventDefault();  // Prevent scroll
+
+    const mapArea = document.getElementById('tvMapArea');
+    const mapRect = mapArea.getBoundingClientRect();
+
+    _tvDrag = { pid, tokenEl, mapRect };
+    tokenEl.classList.add('dragging');
+
+    let hl = document.getElementById('tvCellHighlight');
+    if (!hl) {
+        hl = document.createElement('div');
+        hl.id = 'tvCellHighlight';
+        hl.className = 'tv-cell-highlight';
+        document.getElementById('tvMapCanvas').appendChild(hl);
+    }
+
+    function onTouchMove(te) {
+        if (!_tvDrag || te.touches.length !== 1) return;
+        te.preventDefault();
+        const touch = te.touches[0];
+        const rawX = (touch.clientX - _tvDrag.mapRect.left - tvState.pan.x) / tvState.zoom;
+        const rawY = (touch.clientY - _tvDrag.mapRect.top - tvState.pan.y) / tvState.zoom;
+        const { col, row } = _pixelToCell(rawX, rawY);
+        const cs = tvState.cellSize;
+        const { px, py } = _cellToPixel(col, row);
+        _tvDrag.tokenEl.style.left = px + 'px';
+        _tvDrag.tokenEl.style.top = py + 'px';
+        hl.style.display = 'block';
+        hl.style.left = (col * cs) + 'px';
+        hl.style.top = (row * cs) + 'px';
+        hl.style.width = cs + 'px';
+        hl.style.height = cs + 'px';
+    }
+
+    function onTouchEnd(te) {
+        if (!_tvDrag) return;
+        const touch = te.changedTouches[0];
+        const rawX = (touch.clientX - _tvDrag.mapRect.left - tvState.pan.x) / tvState.zoom;
+        const rawY = (touch.clientY - _tvDrag.mapRect.top - tvState.pan.y) / tvState.zoom;
+        const { col, row } = _pixelToCell(rawX, rawY);
+        const clampedCol = Math.max(0, Math.min(tvState.gridCols - 1, col));
+        const clampedRow = Math.max(0, Math.min(tvState.gridRows - 1, row));
+        tvState.tokenPositions[_tvDrag.pid] = { col: clampedCol, row: clampedRow };
+        _tvDrag.tokenEl.classList.remove('dragging');
+        hl.style.display = 'none';
+        const movedPid = _tvDrag.pid;
+        _tvDrag = null;
+        renderTvTokens();
+        if (tvState.activeRingsPid === movedPid) showDistanceRings(movedPid);
+        if (typeof saveToApi === 'function') saveToApi();
+        document.removeEventListener('touchmove', onTouchMove);
+        document.removeEventListener('touchend', onTouchEnd);
+    }
+
+    document.addEventListener('touchmove', onTouchMove, { passive: false });
+    document.addEventListener('touchend', onTouchEnd);
 }
 
 // ─── Token Popup ──────────────────────────────────
