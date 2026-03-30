@@ -254,6 +254,25 @@ function resetView() {
 function applyTransform() {
     const canvas = document.getElementById('mapCanvas');
     canvas.style.transform = `translate(${state.pan.x}px, ${state.pan.y}px) scale(${state.zoom})`;
+
+    // Update grid overlay: keeps the repeating grid aligned to the canvas
+    // transform-origin is center center, so the effective screen offset of canvas-origin is:
+    //   screen_x = ox*(1 - zoom) + pan.x*zoom   (where ox = container half-width)
+    const grid = document.getElementById('mapGridOverlay');
+    if (grid) {
+        const BASE_CELL = 60; // px at zoom 1 — matches 5 ft DnD square
+        const cellSizePx = BASE_CELL * state.zoom;
+        const container = document.getElementById('mapContainer');
+        const ox = container.clientWidth  / 2;
+        const oy = container.clientHeight / 2;
+        // Phase: position of the canvas origin (x=0, y=0) in screen-space, mod cell size
+        const rawX = ox * (1 - state.zoom) + state.pan.x * state.zoom;
+        const rawY = oy * (1 - state.zoom) + state.pan.y * state.zoom;
+        const offsetX = ((rawX % cellSizePx) + cellSizePx) % cellSizePx;
+        const offsetY = ((rawY % cellSizePx) + cellSizePx) % cellSizePx;
+        grid.style.backgroundSize     = `${cellSizePx}px ${cellSizePx}px`;
+        grid.style.backgroundPosition = `${offsetX}px ${offsetY}px`;
+    }
 }
 
 function handleMapWheel(e) {
