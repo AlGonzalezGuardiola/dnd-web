@@ -1215,7 +1215,10 @@ function removePlannerSlot(participantId, slotKey) {
             const actionObj = allItems.find(x => x.nombre === plan.nombre);
             if (actionObj?.nivel && typeof actionObj.nivel === 'number') {
                 initSpellSlotsForChar(participantId);
-                const slotDef = _findSlotDef(pData3?.ranuras, actionObj.nivel);
+                const usedSlot = plan._usedSlot;
+                const slotDef = usedSlot
+                    ? pData3?.ranuras?.find(s => s.nombre === usedSlot)
+                    : _findSlotDef(pData3?.ranuras, actionObj.nivel);
                 if (slotDef) {
                     const key = slotDef.nombre;
                     spellSlotState[participantId][key] = Math.min(slotDef.total, (spellSlotState[participantId][key] ?? slotDef.total) + 1);

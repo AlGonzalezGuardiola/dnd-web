@@ -1728,11 +1728,14 @@ button, .card, .pin, .tab-btn, .hud-btn, .die-btn,
     background: rgba(124, 58, 237, 0.12);
     border: 1px solid rgba(124, 58, 237, 0.35);
     border-radius: 8px;
-    padding: 10px 14px;
+    padding: 12px 14px;
+    min-height: 48px;
     color: var(--text-primary);
     cursor: pointer;
+    touch-action: manipulation;
     transition: background 150ms ease, border-color 150ms ease;
     font-size: 13px;
+    width: 100%;
 }
 
 .spell-level-btn:hover {
@@ -1766,9 +1769,12 @@ button, .card, .pin, .tab-btn, .hud-btn, .die-btn,
     border: 1px solid var(--border-color);
     border-radius: 6px;
     color: var(--text-muted);
-    padding: 8px;
+    padding: 10px;
+    min-height: 44px;
     cursor: pointer;
-    font-size: 12px;
+    touch-action: manipulation;
+    font-size: 13px;
+    width: 100%;
     transition: color 150ms ease, border-color 150ms ease;
 }
 

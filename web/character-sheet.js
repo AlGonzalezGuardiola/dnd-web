@@ -526,6 +526,7 @@ function openSpellLevelModal(charId, spellName, baseLevel, onConfirm) {
             <button class="spell-level-cancel" onclick="document.getElementById('spellLevelModal').remove()">Cancelar</button>
         </div>`;
     document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) { modal.remove(); window._confirmSpellLevel = null; } });
 
     window._confirmSpellLevel = function(slotName) {
         document.getElementById('spellLevelModal')?.remove();
