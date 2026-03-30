@@ -1052,6 +1052,35 @@ button, .card, .pin, .tab-btn, .hud-btn, .die-btn,
     animation: slideUp 0.3s ease-out;
 }
 
+.portrait-upload-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.portrait-upload-btn {
+    cursor: pointer;
+    background: rgba(212, 175, 55, 0.15);
+    border: 1px solid rgba(212, 175, 55, 0.4);
+    color: var(--accent-gold);
+    font-size: 12px;
+    padding: 5px 10px;
+    border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    transition: background 0.2s;
+}
+
+.portrait-upload-btn:hover {
+    background: rgba(212, 175, 55, 0.25);
+}
+
+.portrait-url-input {
+    flex: 1;
+    font-size: 11px;
+    min-width: 0;
+}
+
 @keyframes slideUp {
     from {
         transform: translateY(100%);

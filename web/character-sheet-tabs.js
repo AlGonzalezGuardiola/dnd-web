@@ -410,21 +410,20 @@ function updateTabs(data) {
     tabFeatures.innerHTML = narrativeHTML;
 
     // 3. Tab Inventory: Categorized
-    let inventorySearchHTML = `
-        <div class="inventory-filters" style="margin-bottom:20px;">
-            <input type="text" id="inventorySearch" placeholder="Buscar en equipo..." class="sheet-input" style="width:100%">
-        </div>
-        <div id="inventoryResults">
-    `;
-    tabInventory.innerHTML = inventorySearchHTML + '</div>';
-    renderCategorizedInventory(data, "");
-
-    // Search logic for inventory
-    const invSearch = document.getElementById('inventorySearch');
-    if (invSearch) {
-        invSearch.addEventListener('input', (e) => {
-            renderCategorizedInventory(data, e.target.value.toLowerCase());
-        });
+    if (!data.inventario || data.inventario.length === 0) {
+        tabInventory.innerHTML = '<div style="text-align:center;color:var(--text-secondary);padding:40px 20px;font-size:14px;">Sin inventario.</div>';
+    } else {
+        const inventorySearchHTML = `
+            <div class="inventory-filters" style="margin-bottom:20px;">
+                <input type="text" id="inventorySearch" placeholder="Buscar en equipo..." class="sheet-input" style="width:100%">
+            </div>
+            <div id="inventoryResults"></div>`;
+        tabInventory.innerHTML = inventorySearchHTML;
+        renderCategorizedInventory(data, "");
+        const invSearch = document.getElementById('inventorySearch');
+        if (invSearch) {
+            invSearch.addEventListener('input', e => renderCategorizedInventory(data, e.target.value.toLowerCase()));
+        }
     }
 
     // 4. Tab Spells: With quick filters

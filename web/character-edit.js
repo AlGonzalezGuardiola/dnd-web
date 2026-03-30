@@ -34,8 +34,16 @@ function renderCharacterSheet(charId) {
             <img id="portraitImg" src="${imgUrl}" class="sheet-portrait-img" style="transform: scale(${imgScale})" onerror="this.src='https://placehold.co/400x500/1e2536/d4af37?text=Sin+Imagen'">
             ${isCharacterEditing ? `
                 <div class="portrait-edit-overlay">
-                    <input class="sheet-input" id="editImage" value="${data.imagen || ''}" placeholder="URL Imagen...">
-                    <input type="range" id="editImageScale" min="1.0" max="3.0" step="0.1" value="${imgScale}">
+                    <div class="portrait-upload-row">
+                        <label class="portrait-upload-btn">
+                            📷 Subir foto
+                            <input type="file" accept="image/*" style="display:none" onchange="onPortraitFileChange(this)">
+                        </label>
+                        <input class="sheet-input portrait-url-input" id="editImage"
+                               value="${data.imagen?.startsWith('data:') ? '' : (data.imagen || '')}"
+                               placeholder="O pega URL…">
+                    </div>
+                    <input type="range" id="editImageScale" min="1.0" max="3.0" step="0.1" value="${imgScale}" title="Zoom de la imagen">
                 </div>` : ''}
         </div>
     `;
@@ -163,7 +171,7 @@ function renderCharacterSheet(charId) {
         featuresHTML += `
             <div class="feature-item" style="grid-column: 1/-1">
                 <h3>Competencias (Habilidades)</h3>
-                <input class="sheet-input" value="${data.habilidades.join(', ')}" id="editSkills">
+                <input class="sheet-input" value="${(data.habilidades || []).join(', ')}" id="editSkills">
                 <small style="color:var(--text-secondary)">Separar por comas</small>
             </div>
         `;
@@ -171,7 +179,7 @@ function renderCharacterSheet(charId) {
         featuresHTML += `
             <div class="feature-item">
                 <h3>Competencias</h3>
-                <div class="item-desc"><strong>Habilidades:</strong> ${data.habilidades.join(', ')}</div>
+                <div class="item-desc"><strong>Habilidades:</strong> ${(data.habilidades || []).join(', ')}</div>
             </div>
         `;
     }
@@ -655,6 +663,25 @@ function toggleCharSummonFields(tipo) {
 }
 
 // === Edit Actions ===
+function onPortraitFileChange(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        const dataUrl = e.target.result;
+        const img = document.getElementById('portraitImg');
+        if (img) img.src = dataUrl;
+        // Store in hidden field; saveCharacterChanges reads it
+        const urlInput = document.getElementById('editImage');
+        if (urlInput) { urlInput.value = ''; urlInput.placeholder = '✅ Foto cargada'; }
+        // Keep data URL in the char object directly so save picks it up
+        if (window.characterData[currentCharacterId]) {
+            window.characterData[currentCharacterId]._pendingPortrait = dataUrl;
+        }
+    };
+    reader.readAsDataURL(file);
+}
+
 function toggleCharacterEditMode() {
     isCharacterEditing = !isCharacterEditing;
     const saveBtn = document.getElementById('saveCharBtn');
@@ -667,9 +694,14 @@ function toggleCharacterEditMode() {
 function saveCharacterChanges() {
     const char = window.characterData[currentCharacterId];
 
-    // Portrait
-    const imageInput = document.getElementById('editImage');
-    if (imageInput) char.imagen = imageInput.value;
+    // Portrait — file upload takes priority over URL input
+    if (char._pendingPortrait) {
+        char.imagen = char._pendingPortrait;
+        delete char._pendingPortrait;
+    } else {
+        const imageInput = document.getElementById('editImage');
+        if (imageInput && imageInput.value.trim()) char.imagen = imageInput.value.trim();
+    }
 
     const scaleInput = document.getElementById('editImageScale');
     if (scaleInput) char.imagenScale = parseFloat(scaleInput.value);
@@ -714,7 +746,9 @@ function saveCharacterChanges() {
     // Skills
     const skillsInput = document.getElementById('editSkills');
     if (skillsInput) {
-        char.habilidades = skillsInput.value.split(',').map(s => s.trim()).filter(s => s);
+        char.habilidades = skillsInput.value.split(',').map(s => s.trim()).filter(Boolean);
+    } else if (!char.habilidades) {
+        char.habilidades = [];
     }
 
     isCharacterEditing = false;
@@ -723,7 +757,11 @@ function saveCharacterChanges() {
     if (saveBtn) saveBtn.style.display = 'none';
     if (editBtn) editBtn.textContent = '✎ Editar Hoja';
     renderCharacterSheet(currentCharacterId);
-    renderCharacterSelectionMenu();
+    if (char.tipo === 'aliado') {
+        renderAliadosCharacters();
+    } else {
+        renderCharacterSelectionMenu();
+    }
 
     // Persist to DB
     fetch(`${API_BASE}/api/player-characters/${currentCharacterId}`, {
