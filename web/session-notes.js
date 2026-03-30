@@ -22,7 +22,7 @@
             const res = await fetch(apiBase());
             if (!res.ok) throw new Error('HTTP ' + res.status);
             const data = await res.json();
-            notes = (data.notes || []).map(n => ({
+            const remoteNotes = (data.notes || []).map(n => ({
                 id: n.clientId,
                 title: n.title,
                 tag: n.tag,
@@ -30,9 +30,23 @@
                 createdAt: n.createdAt,
                 updatedAt: n.updatedAt,
             }));
+
+            // One-time migration: if MongoDB has no notes but localStorage does, push them up
+            if (remoteNotes.length === 0) {
+                let localNotes = [];
+                try { localNotes = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch (_) {}
+                if (localNotes.length > 0) {
+                    await Promise.all(localNotes.map(n => apiSave(n)));
+                    notes = localNotes;
+                    return;
+                }
+            }
+
+            notes = remoteNotes;
             // Sync to localStorage as cache
             try { localStorage.setItem(STORAGE_KEY, JSON.stringify(notes)); } catch (_) {}
         } catch (e) {
+            console.warn('[session-notes] load failed:', e.message);
             // Fallback to localStorage cache
             try { notes = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch (_) { notes = []; }
         }
@@ -54,7 +68,8 @@
             });
             if (!res.ok) throw new Error('HTTP ' + res.status);
         } catch (e) {
-            console.warn('[session-notes] save failed, using localStorage only:', e.message);
+            console.warn('[session-notes] save failed:', e.message);
+            showNotification('⚠️ Nota guardada solo localmente — sin conexión con el servidor', 3000);
         }
         // Always update localStorage cache
         try { localStorage.setItem(STORAGE_KEY, JSON.stringify(notes)); } catch (_) {}
