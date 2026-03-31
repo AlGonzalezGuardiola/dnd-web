@@ -119,11 +119,32 @@ function applyRemoteState(data) {
     }
 }
 
+let _sseReconnectTimer = null;
+let _sseReconnectDelay = 2000;
+
 function connectToSSE(id) {
     if (sseSource) { sseSource.close(); sseSource = null; }
+    clearTimeout(_sseReconnectTimer);
+
     sseSource = new EventSource(`${API_BASE}/api/combats/${id}/stream`);
+
+    sseSource.onopen = () => {
+        _sseReconnectDelay = 2000; // reset backoff on successful connection
+    };
+
     sseSource.onmessage = e => {
         try { applyRemoteState(JSON.parse(e.data)); } catch (_) {}
+    };
+
+    sseSource.onerror = () => {
+        sseSource.close();
+        sseSource = null;
+        // Only reconnect if we're still in an active session
+        if (!activeCombatId) return;
+        _sseReconnectTimer = setTimeout(() => {
+            connectToSSE(id);
+            _sseReconnectDelay = Math.min(_sseReconnectDelay * 2, 30000); // cap at 30s
+        }, _sseReconnectDelay);
     };
 }
 

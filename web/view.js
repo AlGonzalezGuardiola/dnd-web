@@ -437,6 +437,9 @@ function setView(viewName) {
     const editorToolbar = document.getElementById('editorToolbar');
     const hud = document.getElementById('hud');
     const diceWidget = document.getElementById('diceRollerWidget');
+    const breadcrumbs = document.getElementById('breadcrumbs');
+    const btnBack = document.getElementById('btnBack');
+    const setBreadcrumb = (text) => { if (breadcrumbs) breadcrumbs.textContent = text; if (btnBack) btnBack.style.display = 'flex'; };
 
     // Reset scroll position when changing views
     window.scrollTo(0, 0);
@@ -460,24 +463,21 @@ function setView(viewName) {
             if (editorToolbar) editorToolbar.style.display = 'none';
             if (hud) hud.style.display = 'flex';
             if (diceWidget) diceWidget.style.display = 'none';
-            document.getElementById('breadcrumbs').textContent = '👥 Personajes';
-            document.getElementById('btnBack').style.display = 'flex';
+            setBreadcrumb('👥 Personajes');
             break;
         case 'combatSetup':
             document.getElementById('combatSetupSection').style.display = 'flex';
             if (editorToolbar) editorToolbar.style.display = 'none';
             if (hud) hud.style.display = 'flex';
             if (diceWidget) diceWidget.style.display = 'none';
-            document.getElementById('breadcrumbs').textContent = '⚔️ Combate › Configuración';
-            document.getElementById('btnBack').style.display = 'flex';
+            setBreadcrumb('⚔️ Combate › Configuración');
             break;
         case 'combatInit':
             document.getElementById('combatInitSection').style.display = 'flex';
             if (editorToolbar) editorToolbar.style.display = 'none';
             if (hud) hud.style.display = 'flex';
             if (diceWidget) diceWidget.style.display = 'none';
-            document.getElementById('breadcrumbs').textContent = '⚔️ Combate › Iniciativa';
-            document.getElementById('btnBack').style.display = 'flex';
+            setBreadcrumb('⚔️ Combate › Iniciativa');
             break;
         case 'combatManager':
             document.getElementById('combatManagerSection').style.display = 'flex';
@@ -490,16 +490,14 @@ function setView(viewName) {
             if (editorToolbar) editorToolbar.style.display = 'none';
             if (hud) hud.style.display = 'flex';
             if (diceWidget) diceWidget.style.display = 'none';
-            document.getElementById('breadcrumbs').textContent = '🌐 Combate en Línea';
-            document.getElementById('btnBack').style.display = 'flex';
+            setBreadcrumb('🌐 Combate en Línea');
             break;
         case 'onlineWaiting':
             document.getElementById('onlineWaitingView').style.display = 'flex';
             if (editorToolbar) editorToolbar.style.display = 'none';
             if (hud) hud.style.display = 'flex';
             if (diceWidget) diceWidget.style.display = 'none';
-            document.getElementById('breadcrumbs').textContent = '🌐 Sala de espera';
-            document.getElementById('btnBack').style.display = 'flex';
+            setBreadcrumb('🌐 Sala de espera');
             break;
         case 'combatLogView':
             document.getElementById('combatLogView').style.display = 'flex';
@@ -512,48 +510,42 @@ function setView(viewName) {
             if (editorToolbar) editorToolbar.style.display = 'none';
             if (hud) hud.style.display = 'flex';
             if (diceWidget) diceWidget.style.display = 'none';
-            document.getElementById('breadcrumbs').textContent = '⚔️ Encuentros';
-            document.getElementById('btnBack').style.display = 'flex';
+            setBreadcrumb('⚔️ Encuentros');
             break;
         case 'sessionNotes':
             document.getElementById('sessionNotesSection').style.display = 'flex';
             if (editorToolbar) editorToolbar.style.display = 'none';
             if (hud) hud.style.display = 'flex';
             if (diceWidget) diceWidget.style.display = 'none';
-            document.getElementById('breadcrumbs').textContent = '📝 Notas de Sesión';
-            document.getElementById('btnBack').style.display = 'flex';
+            setBreadcrumb('📝 Notas de Sesión');
             break;
         case 'narrativaHub':
             document.getElementById('narrativaHubView').style.display = 'flex';
             if (editorToolbar) editorToolbar.style.display = 'none';
             if (hud) hud.style.display = 'flex';
             if (diceWidget) diceWidget.style.display = 'none';
-            document.getElementById('breadcrumbs').textContent = '📜 Narrativa';
-            document.getElementById('btnBack').style.display = 'flex';
+            setBreadcrumb('📜 Narrativa');
             break;
         case 'narrative':
             document.getElementById('narrativeSection').style.display = 'flex';
             if (editorToolbar) editorToolbar.style.display = 'none';
             if (hud) hud.style.display = 'flex';
             if (diceWidget) diceWidget.style.display = 'none';
-            document.getElementById('breadcrumbs').textContent = '📜 Narrativa › Crónicas';
-            document.getElementById('btnBack').style.display = 'flex';
+            setBreadcrumb('📜 Narrativa › Crónicas');
             break;
         case 'narrativeImages':
             document.getElementById('narrativeImagesSection').style.display = 'flex';
             if (editorToolbar) editorToolbar.style.display = 'none';
             if (hud) hud.style.display = 'flex';
             if (diceWidget) diceWidget.style.display = 'none';
-            document.getElementById('breadcrumbs').textContent = '📜 Narrativa › Imágenes';
-            document.getElementById('btnBack').style.display = 'flex';
+            setBreadcrumb('📜 Narrativa › Imágenes');
             break;
         case 'tvMode':
             document.getElementById('tvModeSection').style.display = 'flex';
             if (editorToolbar) editorToolbar.style.display = 'none';
             if (hud) hud.style.display = 'flex';
             if (diceWidget) diceWidget.style.display = 'none';
-            document.getElementById('breadcrumbs').textContent = '⚔️ Combate › Modo TV';
-            document.getElementById('btnBack').style.display = 'flex';
+            setBreadcrumb('⚔️ Combate › Modo TV');
             if (typeof initTvMode === 'function') initTvMode();
             break;
         case 'combatMaps':
@@ -561,8 +553,7 @@ function setView(viewName) {
             if (editorToolbar) editorToolbar.style.display = 'none';
             if (hud) hud.style.display = 'flex';
             if (diceWidget) diceWidget.style.display = 'none';
-            document.getElementById('breadcrumbs').textContent = '🗺️ Mapas de Combate';
-            document.getElementById('btnBack').style.display = 'flex';
+            setBreadcrumb('🗺️ Mapas de Combate');
             break;
     }
 }

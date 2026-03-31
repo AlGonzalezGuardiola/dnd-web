@@ -61,7 +61,7 @@ async function renderCombatMaps() {
                 <div class="cm-filename">${m.filename || '—'}</div>
             </div>
             <button class="cm-view-btn" onclick="openCombatMapLightbox('${m._id}')" title="Ver en grande">🔍</button>
-            <button class="cm-delete-btn" onclick="deleteCombatMap('${m._id}', '${m.name}')" title="Eliminar mapa">🗑</button>
+            <button class="cm-delete-btn" onclick="deleteCombatMap('${m._id}', '${m.name.replace(/'/g,'\\'')}')" title="Eliminar mapa">🗑</button>
         </div>`;
     }).join('');
 }
