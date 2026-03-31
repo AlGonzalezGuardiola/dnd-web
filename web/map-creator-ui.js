@@ -481,6 +481,7 @@ function _mcNoteProp(id, key, value) {
 
 // ─── Tiles Panel ────────────────────────────────────────────────────────────
 
+// Flat array kept for backward compatibility
 const _MC_BUILTIN_TILES = [
     { label: 'Piedra',  url: 'tile:stone',  bg: 'linear-gradient(135deg,#777,#555)',     emoji: '🪨' },
     { label: 'Madera',  url: 'tile:wood',   bg: 'linear-gradient(180deg,#8B5A2B,#5c3314)', emoji: '🪵' },
@@ -496,24 +497,185 @@ const _MC_BUILTIN_TILES = [
     { label: 'Hielo',   url: 'tile:ice',    bg: 'linear-gradient(135deg,#c8e8f0,#7abcd4)', emoji: '🔵' },
 ];
 
+// Category-organised tile palette (the authoritative data)
+const _MC_TILE_CATEGORIES = [
+    {
+        label: 'Mazmorra',
+        emoji: '🏰',
+        tiles: [
+            { label: 'Piedra',     url: 'tile:stone',   bg: 'linear-gradient(135deg,#777,#555)',      emoji: '🪨' },
+            { label: 'Mazmorra',   url: 'tile:dungeon', bg: 'linear-gradient(135deg,#2a2a2e,#111)',   emoji: '🏰' },
+            { label: 'Ladrillo',   url: 'tile:brick',   bg: 'linear-gradient(135deg,#8a3a28,#5a2010)', emoji: '🧱' },
+            { label: 'Adoquín',    url: 'tile:cobble',  bg: 'linear-gradient(135deg,#4a4a4a,#333)',   emoji: '🪨' },
+            { label: 'Grava',      url: 'tile:gravel',  bg: 'linear-gradient(135deg,#6a6258,#4a4238)', emoji: '⚪' },
+            { label: 'Sangre',     url: 'tile:blood',   bg: 'linear-gradient(135deg,#555558,#6a0a0a)', emoji: '🩸' },
+            { label: 'Hueso',      url: 'tile:bone',    bg: 'linear-gradient(135deg,#dad0c0,#a89880)', emoji: '🦴' },
+            { label: 'Cripta',     url: 'tile:crypt',   bg: 'linear-gradient(135deg,#141818,#0a0c0a)', emoji: '⚰️' },
+            { label: 'Hierro',     url: 'tile:iron',    bg: 'linear-gradient(135deg,#3a3a3e,#222228)', emoji: '⚙️' },
+            { label: 'Óxido',      url: 'tile:rust',    bg: 'linear-gradient(135deg,#6a4830,#4a2818)', emoji: '🟧' },
+            { label: 'Rejilla',    url: 'tile:grate',   bg: 'linear-gradient(135deg,#1a1a20,#0a0a10)', emoji: '▦' },
+        ],
+    },
+    {
+        label: 'Exterior',
+        emoji: '🌲',
+        tiles: [
+            { label: 'Hierba',      url: 'tile:grass',      bg: 'linear-gradient(135deg,#2d6b3a,#1a4a22)', emoji: '🌿' },
+            { label: 'Tierra',      url: 'tile:dirt',       bg: 'linear-gradient(135deg,#6b4226,#4a2e16)', emoji: '🟫' },
+            { label: 'Arena',       url: 'tile:sand',       bg: 'linear-gradient(135deg,#c4a050,#a08030)', emoji: '🏖' },
+            { label: 'Nieve',       url: 'tile:snow',       bg: 'linear-gradient(135deg,#dce8f4,#b0c8e0)', emoji: '❄️' },
+            { label: 'Barro',       url: 'tile:mud',        bg: 'linear-gradient(135deg,#3a2a18,#201410)', emoji: '🟤' },
+            { label: 'Pantano',     url: 'tile:swamp',      bg: 'linear-gradient(135deg,#1e2e18,#0e1a0e)', emoji: '🌾' },
+            { label: 'Bosque',      url: 'tile:forest',     bg: 'linear-gradient(135deg,#3a2818,#201408)', emoji: '🌲' },
+            { label: 'Camino',      url: 'tile:path',       bg: 'linear-gradient(135deg,#b09060,#8a7040)', emoji: '🛤' },
+            { label: 'Roca',        url: 'tile:rock',       bg: 'linear-gradient(135deg,#585858,#383838)', emoji: '🗻' },
+            { label: 'Volcánico',   url: 'tile:volcanic',   bg: 'linear-gradient(135deg,#141414,#300800)', emoji: '🌋' },
+            { label: 'Grava camino',url: 'tile:gravel_path',bg: 'linear-gradient(135deg,#b0b0a8,#909088)', emoji: '⚪' },
+            { label: 'Mar profundo',url: 'tile:deepwater',  bg: 'linear-gradient(135deg,#04111e,#020c18)', emoji: '🌊' },
+            { label: 'Agua poco',   url: 'tile:shallows',   bg: 'linear-gradient(135deg,#4899b8,#3070a0)', emoji: '💧' },
+            { label: 'Agua',        url: 'tile:water',      bg: 'linear-gradient(135deg,#0d3b6e,#1a6ea8)', emoji: '🌊' },
+            { label: 'Montaña',     url: 'tile:mountain',   bg: 'linear-gradient(135deg,#787878,#585858)', emoji: '⛰' },
+            { label: 'Musgo',       url: 'tile:moss',       bg: 'linear-gradient(135deg,#3a5a3a,#2a4a2a)', emoji: '🌱' },
+            { label: 'Hielo',       url: 'tile:ice',        bg: 'linear-gradient(135deg,#c8e8f0,#7abcd4)', emoji: '🔵' },
+            { label: 'Lava',        url: 'tile:lava',       bg: 'linear-gradient(135deg,#3d0a00,#cc4400)', emoji: '🔥' },
+        ],
+    },
+    {
+        label: 'Interior',
+        emoji: '🏠',
+        tiles: [
+            { label: 'Madera',      url: 'tile:wood',         bg: 'linear-gradient(180deg,#8B5A2B,#5c3314)', emoji: '🪵' },
+            { label: 'Mármol',      url: 'tile:marble',       bg: 'linear-gradient(135deg,#d4cfc8,#b0a8a0)', emoji: '⬜' },
+            { label: 'Alfombra roja',url: 'tile:carpet_red',  bg: 'linear-gradient(135deg,#8a1020,#6a0818)', emoji: '🟥' },
+            { label: 'Alfombra azul',url: 'tile:carpet_blue', bg: 'linear-gradient(135deg,#12205a,#0c1840)', emoji: '🟦' },
+            { label: 'Cerámica',    url: 'tile:tile_floor',   bg: 'linear-gradient(135deg,#e8e0d4,#c8c0b4)', emoji: '⬛' },
+            { label: 'Parqué',      url: 'tile:parquet',      bg: 'linear-gradient(135deg,#a06030,#804020)', emoji: '🪵' },
+            { label: 'Tapete',      url: 'tile:rug',          bg: 'linear-gradient(135deg,#8a2018,#600e10)', emoji: '🎨' },
+            { label: 'Paja',        url: 'tile:straw',        bg: 'linear-gradient(135deg,#b89040,#907028)', emoji: '🌾' },
+            { label: 'Tablón oscuro',url: 'tile:plank_dark',  bg: 'linear-gradient(135deg,#4a2810,#2a1408)', emoji: '🟫' },
+            { label: 'Losa int.',   url: 'tile:flagstone_int',bg: 'linear-gradient(135deg,#a8a0a0,#888080)', emoji: '⬜' },
+        ],
+    },
+    {
+        label: 'Magia y Especial',
+        emoji: '✨',
+        tiles: [
+            { label: 'Oscuro',     url: 'tile:dark',     bg: 'linear-gradient(135deg,#0d0d18,#1a1a2e)', emoji: '⬛' },
+            { label: 'Arcano',     url: 'tile:arcane',   bg: 'linear-gradient(135deg,#080c1a,#100830)', emoji: '🔮' },
+            { label: 'Vacío',      url: 'tile:void',     bg: 'linear-gradient(135deg,#020208,#0a0418)', emoji: '🌌' },
+            { label: 'Cristal',    url: 'tile:crystal',  bg: 'linear-gradient(135deg,#8ad8e8,#40a8c8)', emoji: '💎' },
+            { label: 'Necrótico',  url: 'tile:necrotic', bg: 'linear-gradient(135deg,#080a08,#181830)', emoji: '💀' },
+            { label: 'Fuego',      url: 'tile:fire',     bg: 'linear-gradient(135deg,#2a0800,#7a1800)', emoji: '🔥' },
+            { label: 'Sagrado',    url: 'tile:holy',     bg: 'linear-gradient(135deg,#f8f0e0,#e0d0a0)', emoji: '✨' },
+            { label: 'Tóxico',     url: 'tile:toxic',    bg: 'linear-gradient(135deg,#1a3010,#2a5018)', emoji: '☣️' },
+            { label: 'Sombra',     url: 'tile:shadow',   bg: 'linear-gradient(135deg,#0e0e16,#060614)', emoji: '🌑' },
+            { label: 'Portal',     url: 'tile:portal',   bg: 'linear-gradient(135deg,#0a0415,#300660)', emoji: '🌀' },
+            { label: 'Cielo',      url: 'tile:sky',      bg: 'linear-gradient(135deg,#6aacdc,#9cc8ec)', emoji: '☁️' },
+        ],
+    },
+    {
+        label: 'Estructuras',
+        emoji: '🧱',
+        tiles: [
+            { label: 'Muro piedra', url: 'tile:wall_stone',  bg: 'linear-gradient(135deg,#9898a0,#787880)', emoji: '🧱' },
+            { label: 'Muro madera', url: 'tile:wall_wood',   bg: 'linear-gradient(135deg,#6a4020,#4a2810)', emoji: '🪵' },
+            { label: 'Teja',        url: 'tile:roof_tile',   bg: 'linear-gradient(135deg,#b84830,#882818)', emoji: '🏠' },
+            { label: 'Paja tejado', url: 'tile:thatch',      bg: 'linear-gradient(135deg,#a88030,#786018)', emoji: '🌾' },
+        ],
+    },
+];
+
+// Scene templates
+const _MC_SCENE_TEMPLATES = [
+    {
+        label: 'Habitación mazmorra', emoji: '🏰',
+        bg:   { type: 'color', color: '#1a1518', width: 1400, height: 1050 },
+        grid: { enabled: true, size: 70, color: '#555577', alpha: 0.2 },
+    },
+    {
+        label: 'Taberna', emoji: '🍺',
+        bg:   { type: 'color', color: '#2a1a0a', width: 1120, height: 840 },
+        grid: { enabled: true, size: 70, color: '#886644', alpha: 0.15 },
+    },
+    {
+        label: 'Bosque', emoji: '🌲',
+        bg:   { type: 'color', color: '#0d1a0d', width: 1960, height: 1400 },
+        grid: { enabled: true, size: 70, color: '#3a6a3a', alpha: 0.15 },
+    },
+    {
+        label: 'Cueva', emoji: '🦇',
+        bg:   { type: 'color', color: '#0d0d10', width: 1400, height: 1050 },
+        grid: { enabled: true, size: 70, color: '#444455', alpha: 0.12 },
+    },
+    {
+        label: 'Ciudad / Plaza', emoji: '🏙',
+        bg:   { type: 'color', color: '#1a1a22', width: 2100, height: 1400 },
+        grid: { enabled: true, size: 70, color: '#666688', alpha: 0.18 },
+    },
+    {
+        label: 'Mar abierto', emoji: '⛵',
+        bg:   { type: 'color', color: '#041830', width: 2100, height: 1400 },
+        grid: { enabled: true, size: 70, color: '#1a4a6a', alpha: 0.2 },
+    },
+    {
+        label: 'Templo sagrado', emoji: '⛩',
+        bg:   { type: 'color', color: '#1a1510', width: 1400, height: 1050 },
+        grid: { enabled: true, size: 70, color: '#aa9944', alpha: 0.15 },
+    },
+    {
+        label: 'Cripta', emoji: '💀',
+        bg:   { type: 'color', color: '#0a0e0a', width: 1050, height: 1050 },
+        grid: { enabled: true, size: 70, color: '#3a4a3a', alpha: 0.15 },
+    },
+];
+
 function _mcUpdateTilesPanel() {
     const el = document.getElementById('mcPanelContent');
     if (!el || _mc.panelTab !== 'tiles') return;
     const gs = _mc.scene?.grid?.size || 70;
 
-    el.innerHTML = `
-    <div class="mc-prop-section">Tiles predefinidos</div>
-    <div class="mc-tile-palette">
-        ${_MC_BUILTIN_TILES.map((t, i) => {
+    // Active tile hint at top
+    const hintHtml = (_mc.tool === 'tile' && _mc.tileToPlace) ? `
+    <div class="mc-tile-active-hint">
+        Tile activo: <strong>${_escHtml(_mc.tileToPlace.label || 'Personalizado')}</strong><br>
+        <span>Haz clic en el mapa para colocarlo</span>
+    </div>` : '';
+
+    // Scene templates section
+    const templatesHtml = `
+    <div class="mc-prop-section" style="display:flex;align-items:center;justify-content:space-between;margin-top:4px">
+        <span>Plantillas de escena</span>
+    </div>
+    <div class="mc-template-grid">
+        ${_MC_SCENE_TEMPLATES.map((t, i) => `
+        <div class="mc-template-btn" onclick="mcApplyTemplate(${i})" title="${t.label}">
+            <span class="mc-template-emoji">${t.emoji}</span>
+            <span class="mc-template-label">${t.label}</span>
+        </div>`).join('')}
+    </div>`;
+
+    // Categories
+    const categoriesHtml = _MC_TILE_CATEGORIES.map((cat, ci) => {
+        const tilesHtml = cat.tiles.map(t => {
             const active = _mc.tileToPlace?.url === t.url && _mc.tool === 'tile' ? 'mc-tile-active' : '';
-            return `<div class="mc-tile-swatch ${active}" onclick="_mcPickBuiltinTile(${i})" title="${t.label}">
+            return `<div class="mc-tile-swatch ${active}" onclick="_mcPickTileDef('${t.url}')" title="${t.label}">
                 <div class="mc-tile-color" style="background:${t.bg}"></div>
                 <div class="mc-tile-label">${t.emoji} ${t.label}</div>
             </div>`;
-        }).join('')}
-    </div>
+        }).join('');
+        const catId = `mcTileCat_${ci}`;
+        return `
+        <details class="mc-tile-cat" open>
+            <summary class="mc-tile-cat-header">
+                ${cat.emoji} ${cat.label} <span class="mc-tile-cat-count">${cat.tiles.length}</span>
+            </summary>
+            <div class="mc-tile-palette">${tilesHtml}</div>
+        </details>`;
+    }).join('');
 
-    <div class="mc-prop-section" style="margin-top:18px">Tile personalizado</div>
+    // Custom tile + upload
+    const customHtml = `
+    <div class="mc-prop-section" style="margin-top:14px">Tile personalizado</div>
     <div class="mc-prop-group">
         <label class="mc-prop-label">URL de imagen</label>
         <input class="mc-prop-input" id="mcCustomTileUrl" placeholder="https://…">
@@ -531,26 +693,47 @@ function _mcUpdateTilesPanel() {
     <button class="mc-btn mc-btn-sm" onclick="_mcPickCustomTile()" style="width:100%;margin-bottom:10px">
         Usar este tile
     </button>
-
     <div class="mc-prop-section">Subir imagen</div>
     <label class="mc-upload-btn" style="display:block;text-align:center">Elegir imagen
         <input type="file" accept="image/*" style="display:none" onchange="_mcUploadTile(this)">
-    </label>
+    </label>`;
 
-    ${_mc.tool === 'tile' && _mc.tileToPlace ? `
-    <div class="mc-tile-active-hint">
-        Tile activo: <strong>${_escHtml(_mc.tileToPlace.label || 'Personalizado')}</strong><br>
-        <span>Haz clic en el mapa para colocarlo</span>
-    </div>` : ''}
-    `;
+    el.innerHTML = hintHtml + templatesHtml + categoriesHtml + customHtml;
 }
 
+function _mcPickTileDef(urlKey) {
+    // Find tile def across all categories
+    for (const cat of _MC_TILE_CATEGORIES) {
+        const t = cat.tiles.find(tile => tile.url === urlKey);
+        if (t) {
+            const gs = _mc.scene?.grid?.size || 70;
+            _mc.tileToPlace = { url: t.url, label: t.label, w: gs, h: gs };
+            mcSetTool('tile');
+            _mcUpdateTilesPanel();
+            return;
+        }
+    }
+}
+
+// Backward-compat shim: _mcPickBuiltinTile(index) still works for old callers
 function _mcPickBuiltinTile(index) {
-    const t        = _MC_BUILTIN_TILES[index];
-    const gs       = _mc.scene?.grid?.size || 70;
-    _mc.tileToPlace = { url: t.url, label: t.label, w: gs, h: gs };
-    mcSetTool('tile');
-    _mcUpdateTilesPanel();
+    const t = _MC_BUILTIN_TILES[index];
+    if (!t) return;
+    _mcPickTileDef(t.url);
+}
+
+function mcApplyTemplate(index) {
+    const tmpl = _MC_SCENE_TEMPLATES[index];
+    if (!tmpl) return;
+    if (!confirm(`¿Aplicar la plantilla "${tmpl.label}"?\nSe reemplazarán el fondo y la cuadrícula, pero se conservarán los tiles y muros.`)) return;
+    _mcPushHistory();
+    _mc.scene.background = Object.assign({}, _mc.scene.background, tmpl.bg);
+    _mc.scene.grid       = Object.assign({}, _mc.scene.grid, tmpl.grid);
+    _mcRenderBackground();
+    _mcRenderGrid();
+    _mc.modified = true;
+    _mcUpdateModifiedDot();
+    showNotification('Plantilla aplicada: ' + tmpl.label, 2000);
 }
 
 function _mcPickCustomTile() {
