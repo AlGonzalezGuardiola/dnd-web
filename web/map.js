@@ -217,12 +217,6 @@ function navigateBack() {
     if (view === 'narrativaHub') { setView('landing'); return; }
     if (view === 'narrative') { setView('narrativaHub'); return; }
     if (view === 'narrativeImages') { setView('narrativaHub'); return; }
-    if (view === 'mapCreatorHub') { setView('landing'); return; }
-    if (view === 'mapCreator') {
-        if (typeof mcGoBack === 'function') { mcGoBack(); return; }
-        setView('mapCreatorHub'); return;
-    }
-
     // Map navigation back
     if (state.history.length === 0) return;
     state.currentMap = state.history.pop();
