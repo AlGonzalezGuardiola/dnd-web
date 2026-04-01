@@ -84,6 +84,16 @@ function moveMyToken(dir) {
     _updateMovementWidget();
 }
 
+function toggleMovementWidget() {
+    const widget = document.getElementById('movementWidget');
+    if (!widget) return;
+    const open = widget.style.display === 'none' || widget.getAttribute('aria-hidden') === 'true';
+    widget.style.display  = open ? 'flex' : 'none';
+    widget.setAttribute('aria-hidden', open ? 'false' : 'true');
+    const btn = document.getElementById('btnToggleMovement');
+    if (btn) btn.classList.toggle('active', open);
+}
+
 function _updateMovementWidget() {
     const rem    = _movementState.remaining;
     const max    = _movementState.max;
@@ -212,21 +222,28 @@ function _renderPlayerCombatLayout(view) {
             `<span class="mv-pip${i >= rem ? ' mv-pip-used' : ''}"></span>`
         ).join('');
         movementWidget = `
-        <div class="mv-widget" id="movementWidget">
-            <div class="mv-info">
-                <span class="mv-label">Movimiento</span>
-                <span class="mv-remaining" id="mvRemaining">${ft}ft</span>
+        <div class="mv-widget" id="movementWidget" style="display:none;" aria-hidden="true">
+            <div class="mv-widget-header">
+                <div class="mv-info">
+                    <span class="mv-label">Movimiento</span>
+                    <span class="mv-remaining" id="mvRemaining">${ft}ft</span>
+                </div>
+                <div class="mv-pips" id="mvPips">${pips}</div>
+                <button class="mv-close-btn" onclick="toggleMovementWidget()" aria-label="Cerrar">✕</button>
             </div>
-            <div class="mv-pips" id="mvPips">${pips}</div>
             <div class="mv-dpad">
-                <button class="mv-btn mv-up"    ontouchstart="moveMyToken('up')"    onclick="moveMyToken('up')"    aria-label="Arriba">▲</button>
-                <button class="mv-btn mv-left"  ontouchstart="moveMyToken('left')"  onclick="moveMyToken('left')"  aria-label="Izquierda">◄</button>
+                <button class="mv-btn mv-up"    onclick="moveMyToken('up')"    aria-label="Arriba">▲</button>
+                <button class="mv-btn mv-left"  onclick="moveMyToken('left')"  aria-label="Izquierda">◄</button>
                 <button class="mv-btn mv-ctr"   disabled aria-hidden="true">✦</button>
-                <button class="mv-btn mv-right" ontouchstart="moveMyToken('right')" onclick="moveMyToken('right')" aria-label="Derecha">►</button>
-                <button class="mv-btn mv-down"  ontouchstart="moveMyToken('down')"  onclick="moveMyToken('down')"  aria-label="Abajo">▼</button>
+                <button class="mv-btn mv-right" onclick="moveMyToken('right')" aria-label="Derecha">►</button>
+                <button class="mv-btn mv-down"  onclick="moveMyToken('down')"  aria-label="Abajo">▼</button>
             </div>
         </div>`;
     }
+
+    const moveBtn = isMyTurn
+        ? `<button class="btn-player-move" id="btnToggleMovement" onclick="toggleMovementWidget()" title="Mover personaje">🧭 Mover</button>`
+        : '';
 
     view.innerHTML = `
         <div class="player-active-header">
@@ -240,6 +257,7 @@ function _renderPlayerCombatLayout(view) {
         ${movementWidget}
         <div class="player-active-footer">
             ${nextTurnBtn}
+            ${moveBtn}
             <button class="btn-player-map" onclick="openTvMode()" title="Ver mapa de combate">🗺️ Mapa</button>
         </div>`;
 
