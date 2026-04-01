@@ -663,7 +663,10 @@ function renderActivePanel(targetEl, forcePIdx) {
     // Helper to render action chips
     const renderChips = (items) => items.map(a => {
         const atk = a.atk || '';
-        const dado = a.dado && a.dado !== '—' ? a.dado : (a._custom ? '' : (extractDiceFromDesc(a.desc) || ''));
+        const dadoBase = a.dado && a.dado !== '—' ? a.dado : (a._custom ? '' : (extractDiceFromDesc(a.desc) || ''));
+        // Demonic form: +1d8 necrotic baked into the dice string on attack actions
+        const demonicActive = p.demonicForm && p.id === 'Vel' && atk;
+        const dado = demonicActive && dadoBase ? dadoBase + '+1d8' : dadoBase;
         const diceDisplay = atk ? `${atk}${dado ? ' / ' + dado : ''}` : dado;
         const safeName = a.nombre.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
         const safeDice = diceDisplay.replace(/'/g, "\\'");
@@ -671,8 +674,7 @@ function renderActivePanel(targetEl, forcePIdx) {
         const safeDado = dado.replace(/'/g, "\\'");
         const safeDesc = (a.desc || '').replace(/'/g, "\\'").replace(/"/g, '&quot;').replace(/\n/g, ' ');
         const safeTipoDano = (a.tipo_dano || '').replace(/'/g, "\\'");
-        const demonicBonus = (p.demonicForm && p.id === 'Vel' && atk)
-            ? '<small class="demonic-bonus">+1d8 Necr.</small>' : '';
+        const demonicBonus = demonicActive ? '<small class="demonic-bonus">+1d8 Necr.</small>' : '';
         const removeBtn = a._custom
             ? `<button class="chip-remove-btn" onclick="removePermanentCustomAction('${p.id}','${safeName}')" title="Eliminar acción">✕</button>` : '';
         // Player mode: highlight if assigned in planner
@@ -1664,6 +1666,8 @@ function toggleDemonicFormInCombat(participantId) {
         p.speed = p.baseSpeed;
         showNotification('💔 Forma Demoníaca desactivada', 2000);
     }
+    // Reset movement so speed change applies on next widget open
+    _movementState.turnKey = '';
     saveCombatState();
     renderCombatManager();
 }
