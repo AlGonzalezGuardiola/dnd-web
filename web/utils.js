@@ -2,15 +2,14 @@
 // Utility helpers — depends on globals.js
 // ============================================
 
+let _notifTimer = null;
 function showNotification(message, duration = 3000) {
     const notification = document.getElementById('notification');
-    if (notification) {
-        notification.textContent = message;
-        notification.classList.add('show');
-        setTimeout(() => {
-            notification.classList.remove('show');
-        }, duration);
-    }
+    if (!notification) return;
+    clearTimeout(_notifTimer);
+    notification.textContent = message;
+    notification.classList.add('show');
+    _notifTimer = setTimeout(() => notification.classList.remove('show'), duration);
 }
 
 function updateTaskMd(action) {
@@ -26,6 +25,17 @@ function getSliderGradient(pct) {
 }
 
 // ---- Shared combat/sheet utilities ----
+
+// Escapa caracteres HTML peligrosos en strings de usuario
+function _escHtml(str) {
+    if (!str && str !== 0) return '';
+    return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
 
 function getModifier(value) {
     return Math.floor((value - 10) / 2);

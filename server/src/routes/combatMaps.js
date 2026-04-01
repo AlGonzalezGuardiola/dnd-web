@@ -104,6 +104,9 @@ router.post('/', express.json({ limit: '140mb' }), async (req, res) => {
         if (!name || !name.trim()) {
             return res.status(400).json({ error: 'El nombre es obligatorio' });
         }
+        if (name.trim().length > 100) {
+            return res.status(400).json({ error: 'El nombre no puede superar 100 caracteres' });
+        }
 
         const isEditorMap = sourceType === 'editor';
 

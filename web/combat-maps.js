@@ -47,21 +47,23 @@ async function renderCombatMaps() {
 
     grid.innerHTML = maps.map(m => {
         const isVid = m.isVideo || _isVideoFilename(m.filename);
+        const safeName = _escHtml(m.name);
+        const safeNameJs = m.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
         const thumb = isVid
             ? `<video class="cm-thumb cm-thumb-video" src="${m.url}" muted loop autoplay playsinline
                       onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"></video>`
-            : `<img class="cm-thumb" src="${m.url}" alt="${m.name}"
+            : `<img class="cm-thumb" src="${m.url}" alt="${safeName}"
                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`;
         const videoBadge = isVid ? '<span class="cm-video-badge">▶ vídeo</span>' : '';
         return `<div class="cm-card">
             ${thumb}
             <div class="cm-thumb-placeholder" style="display:none">🗺️</div>
             <div class="cm-info">
-                <div class="cm-name">${m.name} ${videoBadge}</div>
-                <div class="cm-filename">${m.filename || '—'}</div>
+                <div class="cm-name">${safeName} ${videoBadge}</div>
+                <div class="cm-filename">${_escHtml(m.filename) || '—'}</div>
             </div>
             <button class="cm-view-btn" onclick="openCombatMapLightbox('${m._id}')" title="Ver en grande">🔍</button>
-            <button class="cm-delete-btn" onclick="deleteCombatMap('${m._id}', '${m.name.replace(/'/g,'\\'')}')" title="Eliminar mapa">🗑</button>
+            <button class="cm-delete-btn" onclick="deleteCombatMap('${m._id}','${safeNameJs}')" title="Eliminar mapa">🗑</button>
         </div>`;
     }).join('');
 }
@@ -212,15 +214,16 @@ function openCombatMapLightbox(id) {
         if (e.target === overlay) _closeCombatMapLightbox(overlay);
     });
 
+    const safeName = _escHtml(m.name);
     const media = isVid
         ? `<video class="cm-lightbox-media" src="${m.url}" controls autoplay loop playsinline></video>`
-        : `<img class="cm-lightbox-media" src="${m.url}" alt="${m.name}">`;
+        : `<img class="cm-lightbox-media" src="${m.url}" alt="${safeName}">`;
 
     overlay.innerHTML = `
         <div class="cm-lightbox">
             <button class="cm-lightbox-close" onclick="_closeCombatMapLightbox(this.closest('.cm-lightbox-overlay'))" title="Cerrar">✕</button>
             ${media}
-            <div class="cm-lightbox-caption">${m.name}</div>
+            <div class="cm-lightbox-caption">${safeName}</div>
         </div>`;
 
     document.body.appendChild(overlay);

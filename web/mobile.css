@@ -130,7 +130,7 @@
     .character-section {
         position: static;
         width: 100%;
-        padding: 84px 16px 40px;
+        padding: calc(84px + env(safe-area-inset-top, 0px)) 16px calc(40px + env(safe-area-inset-bottom, 0px));
         height: auto;
         min-height: 100vh;
         overflow-y: auto;
@@ -314,19 +314,27 @@
         background: rgba(15, 20, 30, 0.9);
         border: 1px solid var(--accent-gold);
         border-radius: 10px;
-        overflow: hidden;
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
         margin: 8px 0 16px;
         gap: 0;
         border-bottom: 1px solid var(--accent-gold);
+        flex-wrap: nowrap;
     }
 
+    .sheet-tabs-nav::-webkit-scrollbar { display: none; }
+
     .tab-btn {
-        flex: 1;
-        padding: 12px 8px;
+        flex: 0 0 auto;
+        min-width: 60px;
+        padding: 12px 10px;
         font-size: 11px;
         border-bottom: none;
         background: transparent;
         border-radius: 0;
+        white-space: nowrap;
     }
 
     .tab-btn.active {

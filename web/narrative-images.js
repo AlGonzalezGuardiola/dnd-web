@@ -36,18 +36,22 @@ async function renderNarrativeImages() {
         return;
     }
 
-    grid.innerHTML = images.map(img => `
+    grid.innerHTML = images.map(img => {
+        const safeName = _escHtml(img.name);
+        const safeDesc = _escHtml(img.description);
+        const safeNameJs = img.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        return `
         <div class="ni-card" onclick="openNarrativeImageLightbox('${img._id}')">
-            <img class="ni-thumb" src="${img.url}" alt="${img.name}"
+            <img class="ni-thumb" src="${img.url}" alt="${safeName}"
                  onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
             <div class="ni-thumb-placeholder" style="display:none">🖼️</div>
             <div class="ni-info">
-                <div class="ni-name">${img.name}</div>
-                ${img.description ? `<div class="ni-desc">${img.description}</div>` : ''}
+                <div class="ni-name">${safeName}</div>
+                ${img.description ? `<div class="ni-desc">${safeDesc}</div>` : ''}
             </div>
-            <button class="ni-delete-btn" onclick="event.stopPropagation();deleteNarrativeImage('${img._id}','${img.name.replace(/'/g,"\\'")}')">🗑</button>
-        </div>
-    `).join('');
+            <button class="ni-delete-btn" onclick="event.stopPropagation();deleteNarrativeImage('${img._id}','${safeNameJs}')">🗑</button>
+        </div>`;
+    }).join('');
 }
 
 function openNarrativeImageLightbox(id) {
@@ -62,9 +66,9 @@ function openNarrativeImageLightbox(id) {
     overlay.innerHTML = `
         <div class="ni-lightbox">
             <button class="ni-lightbox-close" onclick="document.getElementById('niLightboxOverlay').remove()">✕</button>
-            <img class="ni-lightbox-img" src="${img.url}" alt="${img.name}">
+            <img class="ni-lightbox-img" src="${img.url}" alt="${_escHtml(img.name)}">
             <div class="ni-lightbox-caption">
-                <div class="ni-lightbox-name">${img.name}</div>
+                <div class="ni-lightbox-name">${_escHtml(img.name)}</div>
                 ${img.description ? `<div class="ni-lightbox-desc">${img.description}</div>` : ''}
             </div>
         </div>`;
