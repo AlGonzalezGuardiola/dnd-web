@@ -572,6 +572,9 @@
 .tv-token.active-turn {
     animation: tv-token-active 1.8s ease-in-out infinite;
 }
+.tv-token.active-turn.demonic {
+    animation: tv-token-active-demonic 1.8s ease-in-out infinite;
+}
 
 @keyframes tv-token-active {
     0%, 100% {
@@ -582,6 +585,21 @@
     50% {
         box-shadow:
             0 0 0 9px rgba(212, 175, 55, 0),
+            0 3px 12px rgba(0, 0, 0, 0.6);
+    }
+}
+
+@keyframes tv-token-active-demonic {
+    0%, 100% {
+        box-shadow:
+            0 0 0 0px rgba(181, 123, 238, 0.9),
+            0 0 14px rgba(181, 123, 238, 0.5),
+            0 3px 12px rgba(0, 0, 0, 0.6);
+    }
+    50% {
+        box-shadow:
+            0 0 0 10px rgba(181, 123, 238, 0),
+            0 0 20px rgba(181, 123, 238, 0.3),
             0 3px 12px rgba(0, 0, 0, 0.6);
     }
 }
@@ -602,6 +620,14 @@
     border-color: var(--accent-gold);
     background: rgba(212, 175, 55, 0.22);
     color: #ffe08a;
+}
+
+/* Demonic form override — lilac/purple ring */
+.tv-token.demonic {
+    border-color: #b57bee;
+    background: rgba(181, 123, 238, 0.22);
+    color: #d4a8ff;
+    box-shadow: 0 0 14px rgba(181, 123, 238, 0.5), 0 3px 12px rgba(0, 0, 0, 0.6);
 }
 
 .tv-token.aliado {

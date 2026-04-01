@@ -356,6 +356,7 @@ function renderTvTokens() {
         tokenEl.classList.toggle('active-turn', isActive && !isDead);
         tokenEl.classList.toggle('dead', isDead);
         tokenEl.classList.toggle('tv-token-mine', _canPlayerControlToken(p.id));
+        tokenEl.classList.toggle('demonic', !!p.demonicForm);
 
         // Portrait photo — same crop as character thumbnail (object-fit cover, top center)
         const photoEl = tokenEl.querySelector('.tv-token-photo');

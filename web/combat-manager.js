@@ -454,7 +454,16 @@ function rollActionDice(participantId, nombre, atk, dado) {
     if (dado && dado !== '—' && dado !== '') {
         const dmg = rollDiceString(dado);
         damageTotal = dmg.total;
-        parts.push(`Daño: ${dmg.breakdown} = **${dmg.total}**`);
+        let dmgLine = `Daño: ${dmg.breakdown} = **${dmg.total}**`;
+
+        // Demonic form bonus: +1d8 necrotic on any attack action
+        if (p.demonicForm && p.id === 'Vel' && atk && atk !== '—' && atk !== '') {
+            const necr = rollDiceString('1d8');
+            damageTotal += necr.total;
+            dmgLine += ` + 😈 ${necr.breakdown} necrótico = **${damageTotal}**`;
+        }
+
+        parts.push(dmgLine);
     }
 
     const rollText = `🎲 ${nombre}: ${parts.join(' / ')}`;
