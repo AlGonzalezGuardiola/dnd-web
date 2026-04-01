@@ -787,12 +787,16 @@ function renderActivePanel(targetEl, forcePIdx) {
         const renderPlannerCard = (item, sectionKey) => {
             const plan = currentEntry?.slots?.[sectionKey + '_plan'];
             const isSelected = plan?.nombre === item.nombre;
+            // Demonic form: bake +1d8 into dado for attack actions
+            const rawDado = item.dado && item.dado !== '—' ? item.dado : '';
+            const demonicOnCard = p.demonicForm && p.id === 'Vel' && item.atk;
+            const effectiveDado = demonicOnCard && rawDado ? rawDado + '+1d8' : rawDado;
             const diceStr = item.atk
-                ? `ATK ${item.atk}${item.dado && item.dado !== '—' ? ` | DMG ${item.dado}` : ''}`
-                : (item.dado && item.dado !== '—' ? `DMG ${item.dado}` : (extractDiceFromDesc(item.desc) || ''));
+                ? `ATK ${item.atk}${effectiveDado ? ` | DMG ${effectiveDado}` : ''}`
+                : (effectiveDado ? `DMG ${effectiveDado}` : (extractDiceFromDesc(item.desc) || ''));
             const safeName = item.nombre.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
             const safeAtk  = (item.atk || '').replace(/'/g, "\\'");
-            const safeDado = (item.dado || '').replace(/'/g, "\\'");
+            const safeDado = effectiveDado.replace(/'/g, "\\'");
             const safeTipo = (item.tipo_dano || '').replace(/'/g, "\\'");
             return `<div class="combat-action-card${isSelected ? ' selected' : ''}"
                      onclick="selectPlannerAction('${p.id}','${safeName}','${safeAtk}','${safeDado}','${safeTipo}')">
@@ -1389,11 +1393,16 @@ function removePlannerSlot(participantId, slotKey) {
 function toggleSmiteModifier(participantId, nombre, dado, tipoDano, phase) {
     const entry = getCurrentLogEntry();
     if (!entry) return;
+    const p = combatState.participants.find(x => x.id === participantId);
     const existingIdx = entry.actions.findIndex(x => x.nombre === nombre && x.smitePhase === phase);
     if (existingIdx >= 0) {
         entry.actions.splice(existingIdx, 1);
+        // Deactivate persistent aura flag
+        if (p && nombre === 'Aura Necrótica') p.auraNecroticActive = false;
     } else {
         entry.actions.push({ nombre, dice: dado, isModifier: true, smitePhase: phase });
+        // Activate persistent aura flag
+        if (p && nombre === 'Aura Necrótica') p.auraNecroticActive = true;
     }
     saveCombatState();
     const _smiteIdx    = combatState.participants.findIndex(x => x.id === participantId);

@@ -44,7 +44,7 @@ function showPlayerCombat() {
         note: '',
         charData: cd,
         customActions: [],
-        demonicForm: false,
+        demonicForm: false, auraNecroticActive: false,
     }];
     combatState.currentIndex = 0;
     combatState.round = 1;
@@ -83,7 +83,7 @@ function goToCombatInitiative() {
             conditions: [],
             note: '',
             charData: char,
-            demonicForm: false,
+            demonicForm: false, auraNecroticActive: false,
             tipo: char.tipo || 'jugador',
             customActions: [],
         };
@@ -158,7 +158,7 @@ function beginCombatFromSetup() {
             conditions: [],
             note: '',
             charData: char,
-            demonicForm: false,
+            demonicForm: false, auraNecroticActive: false,
             tipo: char.tipo || 'jugador',
             customActions: [],
         };

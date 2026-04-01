@@ -358,6 +358,25 @@ function renderTvTokens() {
         tokenEl.classList.toggle('tv-token-mine', _canPlayerControlToken(p.id));
         tokenEl.classList.toggle('demonic', !!p.demonicForm);
 
+        // Aura Necrótica circle: 20ft radius = 4 cells
+        const auraId = `tv-aura-${p.id}`;
+        let auraEl = layer.querySelector(`[data-aura-id="${auraId}"]`);
+        if (p.auraNecroticActive) {
+            const radiusPx = 4 * tvState.cellSize; // 20ft = 4 cells
+            if (!auraEl) {
+                auraEl = document.createElement('div');
+                auraEl.className = 'tv-aura-circle';
+                auraEl.dataset.auraId = auraId;
+                layer.appendChild(auraEl);
+            }
+            auraEl.style.left   = px + 'px';
+            auraEl.style.top    = py + 'px';
+            auraEl.style.width  = (radiusPx * 2) + 'px';
+            auraEl.style.height = (radiusPx * 2) + 'px';
+        } else if (auraEl) {
+            auraEl.remove();
+        }
+
         // Portrait photo — same crop as character thumbnail (object-fit cover, top center)
         const photoEl = tokenEl.querySelector('.tv-token-photo');
         if (photoEl) {
