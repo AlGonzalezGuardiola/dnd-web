@@ -34,7 +34,7 @@
     <link rel="stylesheet" href="css/npc-generator.css?v=20260326b">
     <link rel="stylesheet" href="css/session-notes.css?v=20260326b">
     <link rel="stylesheet" href="css/narrative.css?v=20260330b">
-    <link rel="stylesheet" href="css/tv-mode.css?v=20260330b">
+    <link rel="stylesheet" href="css/tv-mode.css?v=20260401a">
     <link rel="stylesheet" href="mobile.css?v=20260330a" media="screen and (max-width: 768px)">
 </head>
 
@@ -856,6 +856,22 @@
                 </div>
 
                 <div class="tv-map-info">Arrastra para mover · Rueda para zoom · Click en ficha para acciones</div>
+
+                <!-- Movement d-pad overlay — shown on player's turn (or always for master) -->
+                <div id="tvMovementWidget" class="tv-mv-widget" style="display:none;">
+                    <div class="tv-mv-top">
+                        <span class="tv-mv-label">Movimiento</span>
+                        <span class="tv-mv-remaining" id="tvMvRemaining">30ft</span>
+                    </div>
+                    <div class="tv-mv-pips" id="tvMvPips"></div>
+                    <div class="tv-mv-dpad">
+                        <button class="tv-mv-btn tv-mv-up"    onclick="moveMyToken('up')"    aria-label="Arriba">▲</button>
+                        <button class="tv-mv-btn tv-mv-left"  onclick="moveMyToken('left')"  aria-label="Izquierda">◄</button>
+                        <button class="tv-mv-btn tv-mv-ctr"   disabled>✦</button>
+                        <button class="tv-mv-btn tv-mv-right" onclick="moveMyToken('right')" aria-label="Derecha">►</button>
+                        <button class="tv-mv-btn tv-mv-down"  onclick="moveMyToken('down')"  aria-label="Abajo">▼</button>
+                    </div>
+                </div>
             </div>
 
         </div>
@@ -901,7 +917,7 @@
     <script src="globals.js?v=20260325a"></script>
     <script src="utils.js?v=20260324a"></script>
     <script src="storage.js?v=20260325a"></script>
-    <script src="api-sync.js?v=20260330b"></script>
+    <script src="api-sync.js?v=20260401a"></script>
     <script src="role.js?v=20260324a"></script>
     <script src="map.js?v=20260331a"></script>
     <script src="map-editor.js?v=20260324a"></script>
@@ -910,7 +926,7 @@
     <script src="character-sheet.js?v=20260330b"></script>
     <script src="character-edit.js?v=20260330d"></script>
     <script src="combat-setup.js?v=20260330a"></script>
-    <script src="combat-manager.js?v=20260330c"></script>
+    <script src="combat-manager.js?v=20260401a"></script>
     <script src="reactions.js?v=20260326c"></script>
     <script src="combat-log.js?v=20260324a"></script>
     <script src="view.js?v=20260331a"></script>
@@ -919,7 +935,7 @@
     <script src="session-notes.js?v=20260330a"></script>
     <script src="narrative.js?v=20260326b"></script>
     <script src="narrative-images.js?v=20260330a"></script>
-    <script src="tv-mode.js?v=20260330b"></script>
+    <script src="tv-mode.js?v=20260401a"></script>
     <script src="combat-maps.js?v=20260331a"></script>
 </body>
 
