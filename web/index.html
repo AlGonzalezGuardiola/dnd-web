@@ -29,12 +29,12 @@
     <link rel="stylesheet" href="css/base.css?v=20260326b">
     <link rel="stylesheet" href="css/map.css?v=20260326b">
     <link rel="stylesheet" href="css/character-sheet.css?v=20260330c">
-    <link rel="stylesheet" href="css/combat.css?v=20260331a">
+    <link rel="stylesheet" href="css/combat.css?v=20260401b">
     <link rel="stylesheet" href="css/encounters.css?v=20260326b">
     <link rel="stylesheet" href="css/npc-generator.css?v=20260326b">
     <link rel="stylesheet" href="css/session-notes.css?v=20260326b">
     <link rel="stylesheet" href="css/narrative.css?v=20260330b">
-    <link rel="stylesheet" href="css/tv-mode.css?v=20260401a">
+    <link rel="stylesheet" href="css/tv-mode.css?v=20260401b">
     <link rel="stylesheet" href="mobile.css?v=20260330a" media="screen and (max-width: 768px)">
 </head>
 
@@ -856,22 +856,6 @@
                 </div>
 
                 <div class="tv-map-info">Arrastra para mover · Rueda para zoom · Click en ficha para acciones</div>
-
-                <!-- Movement d-pad overlay — shown on player's turn (or always for master) -->
-                <div id="tvMovementWidget" class="tv-mv-widget" style="display:none;">
-                    <div class="tv-mv-top">
-                        <span class="tv-mv-label">Movimiento</span>
-                        <span class="tv-mv-remaining" id="tvMvRemaining">30ft</span>
-                    </div>
-                    <div class="tv-mv-pips" id="tvMvPips"></div>
-                    <div class="tv-mv-dpad">
-                        <button class="tv-mv-btn tv-mv-up"    onclick="moveMyToken('up')"    aria-label="Arriba">▲</button>
-                        <button class="tv-mv-btn tv-mv-left"  onclick="moveMyToken('left')"  aria-label="Izquierda">◄</button>
-                        <button class="tv-mv-btn tv-mv-ctr"   disabled>✦</button>
-                        <button class="tv-mv-btn tv-mv-right" onclick="moveMyToken('right')" aria-label="Derecha">►</button>
-                        <button class="tv-mv-btn tv-mv-down"  onclick="moveMyToken('down')"  aria-label="Abajo">▼</button>
-                    </div>
-                </div>
             </div>
 
         </div>

@@ -105,7 +105,6 @@ function applyRemoteState(data) {
     if (data.tokenPositions && typeof tvState !== 'undefined') {
         tvState.tokenPositions = { ...data.tokenPositions };
         if (currentView() === 'tvMode' && typeof renderTvTokens === 'function') renderTvTokens();
-        if (currentView() === 'tvMode' && typeof updateTvMovementWidget === 'function') updateTvMovementWidget();
     }
     // Rebuild TV grid if the combat map changed (e.g. master swapped maps mid-session)
     if (data.combatMap?.url && typeof _buildTvGrid === 'function') {

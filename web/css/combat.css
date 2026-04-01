@@ -2730,93 +2730,125 @@ body.role-jugador .master-only { display: none !important; }
 .mv-widget {
     display: flex;
     align-items: center;
-    gap: 14px;
+    gap: 16px;
     padding: 10px 20px;
     background: rgba(212,175,55,0.05);
     border-top: 1px solid rgba(212,175,55,0.2);
     border-bottom: 1px solid rgba(212,175,55,0.2);
     flex-shrink: 0;
 }
+
+/* Left column: label + ft remaining + pips */
+.mv-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    min-width: 0;
+}
 .mv-label {
-    font-size: 11px;
+    font-size: 10px;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--accent-gold);
     opacity: 0.7;
-    white-space: nowrap;
+}
+.mv-remaining {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--accent-gold);
+    line-height: 1;
 }
 .mv-pips {
     display: flex;
-    gap: 4px;
-    align-items: center;
+    gap: 3px;
+    flex-wrap: wrap;
+    margin-top: 2px;
 }
 .mv-pip {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     background: var(--accent-gold);
     opacity: 0.85;
     transition: opacity 0.15s, background 0.15s;
 }
 .mv-pip.mv-pip-used {
-    background: rgba(255,255,255,0.15);
-    opacity: 0.4;
+    background: rgba(255,255,255,0.12);
+    opacity: 0.35;
 }
-.mv-remaining {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--accent-gold);
-    min-width: 32px;
-}
-/* D-pad grid: 3×3 with arrows at N/W/E/S and center disabled */
+
+/* Right: d-pad */
 .mv-dpad {
     display: grid;
-    grid-template-columns: repeat(3, 36px);
-    grid-template-rows: repeat(3, 36px);
-    gap: 3px;
-    margin-left: auto;
+    grid-template-columns: repeat(3, 44px);
+    grid-template-rows: repeat(3, 44px);
+    gap: 4px;
+    flex-shrink: 0;
 }
-/* up=row1,col2  left=row2,col1  center=row2,col2  right=row2,col3  down=row3,col2 */
-.mv-dpad .mv-btn:nth-child(1) { grid-column: 2; grid-row: 1; }
-.mv-dpad .mv-btn:nth-child(2) { grid-column: 1; grid-row: 2; }
-.mv-dpad .mv-btn:nth-child(3) { grid-column: 2; grid-row: 2; }
-.mv-dpad .mv-btn:nth-child(4) { grid-column: 3; grid-row: 2; }
-.mv-dpad .mv-btn:nth-child(5) { grid-column: 2; grid-row: 3; }
+.mv-up    { grid-column: 2; grid-row: 1; }
+.mv-left  { grid-column: 1; grid-row: 2; }
+.mv-ctr   { grid-column: 2; grid-row: 2; }
+.mv-right { grid-column: 3; grid-row: 2; }
+.mv-down  { grid-column: 2; grid-row: 3; }
 
 .mv-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 8px;
-    border: 1px solid rgba(212,175,55,0.35);
-    background: rgba(212,175,55,0.08);
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    border: 1px solid rgba(212,175,55,0.4);
+    background: rgba(212,175,55,0.1);
     color: var(--accent-gold);
-    font-size: 14px;
+    font-size: 16px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.12s, transform 0.08s;
+    transition: background 0.1s, transform 0.08s;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
     user-select: none;
 }
-.mv-btn:hover { background: rgba(212,175,55,0.22); }
-.mv-btn:active { transform: scale(0.88); background: rgba(212,175,55,0.35); }
-.mv-btn-center {
+.mv-btn:hover  { background: rgba(212,175,55,0.25); }
+.mv-btn:active { transform: scale(0.86); background: rgba(212,175,55,0.38); }
+.mv-ctr {
     background: transparent;
-    border-color: rgba(255,255,255,0.08);
-    color: rgba(255,255,255,0.2);
+    border-color: rgba(255,255,255,0.07);
+    color: rgba(255,255,255,0.18);
     cursor: default;
     font-size: 10px;
+    pointer-events: none;
 }
-.mv-btn-center:hover { background: transparent; }
-.mv-btn-center:active { transform: none; }
 
+/* ── Mobile: d-pad centered, bigger buttons ── */
 @media (max-width: 768px) {
-    .mv-widget { padding: 8px 14px; gap: 10px; }
-    .mv-dpad { grid-template-columns: repeat(3, 42px); grid-template-rows: repeat(3, 42px); }
-    .mv-btn { width: 42px; height: 42px; font-size: 16px; }
-    .mv-pips { flex-wrap: wrap; max-width: 80px; }
+    .mv-widget {
+        flex-direction: column;
+        align-items: center;
+        padding: 14px 16px 16px;
+        gap: 10px;
+    }
+    .mv-info {
+        flex-direction: row;
+        align-items: center;
+        gap: 12px;
+        width: 100%;
+        justify-content: center;
+    }
+    .mv-remaining { font-size: 22px; }
+    .mv-pips { justify-content: center; }
+    .mv-dpad {
+        grid-template-columns: repeat(3, 56px);
+        grid-template-rows: repeat(3, 56px);
+        gap: 6px;
+    }
+    .mv-btn {
+        width: 56px;
+        height: 56px;
+        font-size: 20px;
+        border-radius: 12px;
+        border-width: 2px;
+    }
 }
 
 /* ── Player combat panel — mobile responsive ── */

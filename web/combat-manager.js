@@ -85,8 +85,14 @@ function moveMyToken(dir) {
 }
 
 function _updateMovementWidget() {
-    // Update TV mode overlay (the main movement UI)
-    if (typeof updateTvMovementWidget === 'function') updateTvMovementWidget();
+    const rem    = _movementState.remaining;
+    const max    = _movementState.max;
+    const remEl  = document.getElementById('mvRemaining');
+    const pipsEl = document.getElementById('mvPips');
+    if (remEl)  remEl.textContent = `${rem * 5}ft`;
+    if (pipsEl) pipsEl.innerHTML  = Array.from({ length: max }, (_, i) =>
+        `<span class="mv-pip${i >= rem ? ' mv-pip-used' : ''}"></span>`
+    ).join('');
 }
 
 // ─── End movement system ──────────────────────────────────────────────────────
@@ -195,6 +201,33 @@ function _renderPlayerCombatLayout(view) {
         ? `<div class="player-waiting-banner">⏳ Turno de <strong>${currentP.name.split(' ')[0]}</strong> — El Master gestiona este turno</div>`
         : '';
 
+    // Movement widget — shown when it's the player's turn
+    let movementWidget = '';
+    if (isMyTurn) {
+        _initMovementForTurn();
+        const rem = _movementState.remaining;
+        const max = _movementState.max;
+        const ft  = rem * 5;
+        const pips = Array.from({ length: max }, (_, i) =>
+            `<span class="mv-pip${i >= rem ? ' mv-pip-used' : ''}"></span>`
+        ).join('');
+        movementWidget = `
+        <div class="mv-widget" id="movementWidget">
+            <div class="mv-info">
+                <span class="mv-label">Movimiento</span>
+                <span class="mv-remaining" id="mvRemaining">${ft}ft</span>
+            </div>
+            <div class="mv-pips" id="mvPips">${pips}</div>
+            <div class="mv-dpad">
+                <button class="mv-btn mv-up"    ontouchstart="moveMyToken('up')"    onclick="moveMyToken('up')"    aria-label="Arriba">▲</button>
+                <button class="mv-btn mv-left"  ontouchstart="moveMyToken('left')"  onclick="moveMyToken('left')"  aria-label="Izquierda">◄</button>
+                <button class="mv-btn mv-ctr"   disabled aria-hidden="true">✦</button>
+                <button class="mv-btn mv-right" ontouchstart="moveMyToken('right')" onclick="moveMyToken('right')" aria-label="Derecha">►</button>
+                <button class="mv-btn mv-down"  ontouchstart="moveMyToken('down')"  onclick="moveMyToken('down')"  aria-label="Abajo">▼</button>
+            </div>
+        </div>`;
+    }
+
     view.innerHTML = `
         <div class="player-active-header">
             <div class="combat-round-badge">${roundLabel}</div>
@@ -204,6 +237,7 @@ function _renderPlayerCombatLayout(view) {
         <div class="player-active-body">
             <div id="playerCombatPanel" class="combat-active-panel"></div>
         </div>
+        ${movementWidget}
         <div class="player-active-footer">
             ${nextTurnBtn}
             <button class="btn-player-map" onclick="openTvMode()" title="Ver mapa de combate">🗺️ Mapa</button>

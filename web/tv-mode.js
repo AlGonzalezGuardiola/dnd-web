@@ -46,7 +46,6 @@ function refreshTvMode() {
     renderTvInitiative();
     renderTvTokens();
     _updateTvEmptyState();
-    updateTvMovementWidget();
 }
 
 // ─── Grid / Map setup ────────────────────────────
@@ -964,40 +963,6 @@ function tvResetZoom() {
     tvState.pan.x = (areaW - w * tvState.zoom) / 2;
     tvState.pan.y = (areaH - h * tvState.zoom) / 2;
     _applyTvTransform();
-}
-
-// ─── Movement widget overlay ──────────────────────
-
-function updateTvMovementWidget() {
-    const widget = document.getElementById('tvMovementWidget');
-    if (!widget) return;
-
-    if (!combatState.isActive) { widget.style.display = 'none'; return; }
-
-    const currentP = combatState.participants[combatState.currentIndex];
-    if (!currentP) { widget.style.display = 'none'; return; }
-
-    // Master: always show for current participant
-    // Player: only show when it's their turn
-    const isMasterView = isMaster();
-    const isMyCharTurn = gameRole.characterId && currentP.id === gameRole.characterId;
-    const isMyAllyTurn = currentP.ownerCharId === gameRole.characterId;
-    const canControl   = isMasterView || isMyCharTurn || isMyAllyTurn;
-
-    if (!canControl) { widget.style.display = 'none'; return; }
-
-    if (typeof _initMovementForTurn === 'function') _initMovementForTurn();
-    const rem = _movementState.remaining;
-    const max = _movementState.max;
-
-    const remEl  = document.getElementById('tvMvRemaining');
-    const pipsEl = document.getElementById('tvMvPips');
-    if (remEl)  remEl.textContent = `${rem * 5}ft`;
-    if (pipsEl) pipsEl.innerHTML  = Array.from({ length: max }, (_, i) =>
-        `<span class="tv-mv-pip${i >= rem ? ' tv-mv-pip-used' : ''}"></span>`
-    ).join('');
-
-    widget.style.display = 'flex';
 }
 
 // ─── Empty state ──────────────────────────────────
