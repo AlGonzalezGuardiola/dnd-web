@@ -5,6 +5,104 @@
 //   renderCombatShareLink, isMaster, setView
 // ============================================
 
+// ─── Movement system ──────────────────────────────────────────────────────────
+
+// Tracks remaining movement (cells) for the current turn, keyed by "round-index"
+const _movementState = { turnKey: '', remaining: 0, max: 0 };
+
+function _getSpeedCells(p) {
+    const speedStr = p.speed || p.charData?.resumen?.Velocidad || '30ft';
+    const ft = parseInt(String(speedStr)) || 30;
+    return Math.max(1, Math.round(ft / 5)); // 5ft per cell
+}
+
+function _initMovementForTurn() {
+    const turnKey = `${combatState.round}-${combatState.currentIndex}`;
+    if (_movementState.turnKey === turnKey) return; // already initialized
+    const p = combatState.participants[combatState.currentIndex];
+    const cells = p ? _getSpeedCells(p) : 6;
+    _movementState.turnKey    = turnKey;
+    _movementState.remaining  = cells;
+    _movementState.max        = cells;
+}
+
+function moveMyToken(dir) {
+    if (!combatState.isActive) return;
+
+    // Find the participant this player controls
+    const myP = combatState.participants.find(p => p.id === gameRole.characterId)
+             || combatState.participants[combatState.currentIndex];
+    if (!myP) return;
+
+    // Confirm it's this player's turn
+    const currentP = combatState.participants[combatState.currentIndex];
+    const isMyTurn = currentP && (
+        currentP.id === gameRole.characterId ||
+        currentP.ownerCharId === gameRole.characterId
+    );
+    if (!isMaster() && !isMyTurn) return;
+
+    _initMovementForTurn();
+    if (_movementState.remaining <= 0) {
+        showNotification('⚠️ Sin movimiento disponible este turno', 2000);
+        return;
+    }
+
+    // Ensure tvState is available (tv-mode.js must be loaded)
+    if (typeof tvState === 'undefined') return;
+
+    // Ensure token has a position
+    if (!tvState.tokenPositions[myP.id]) {
+        const idx = combatState.participants.indexOf(myP);
+        tvState.tokenPositions[myP.id] = typeof _defaultTokenPos === 'function'
+            ? _defaultTokenPos(idx, combatState.participants.length)
+            : { col: 2, row: 2 };
+    }
+
+    const pos = tvState.tokenPositions[myP.id];
+    let { col, row } = pos;
+
+    if (dir === 'up')    row--;
+    if (dir === 'down')  row++;
+    if (dir === 'left')  col--;
+    if (dir === 'right') col++;
+
+    // Clamp to grid
+    col = Math.max(0, Math.min((tvState.gridCols || 30) - 1, col));
+    row = Math.max(0, Math.min((tvState.gridRows || 20) - 1, row));
+
+    tvState.tokenPositions[myP.id] = { col, row };
+    _movementState.remaining--;
+
+    // Sync to all devices
+    saveToApi();
+
+    // Re-render TV map if it's visible on this device
+    if (typeof renderTvTokens === 'function') renderTvTokens();
+
+    // Update the movement widget without full re-render
+    _updateMovementWidget();
+}
+
+function _updateMovementWidget() {
+    const widget = document.getElementById('movementWidget');
+    if (!widget) return;
+    const rem = _movementState.remaining;
+    const max = _movementState.max;
+    const ft  = rem * 5;
+    widget.querySelector('.mv-remaining')?.setText
+        ? null
+        : null;
+    const remEl = widget.querySelector('.mv-remaining');
+    if (remEl) remEl.textContent = `${ft}ft`;
+    const pips = widget.querySelectorAll('.mv-pip');
+    pips.forEach((pip, i) => {
+        pip.classList.toggle('mv-pip-used', i >= rem);
+    });
+}
+
+// ─── End movement system ──────────────────────────────────────────────────────
+
 // Always prefer live window.characterData over stale p.charData stored in MongoDB session
 function getEffectiveCharData(p) {
     if (!p) return null;
@@ -109,6 +207,31 @@ function _renderPlayerCombatLayout(view) {
         ? `<div class="player-waiting-banner">⏳ Turno de <strong>${currentP.name.split(' ')[0]}</strong> — El Master gestiona este turno</div>`
         : '';
 
+    // Movement widget — only shown when it's the player's turn
+    let movementWidget = '';
+    if (isMyTurn) {
+        _initMovementForTurn();
+        const rem = _movementState.remaining;
+        const max = _movementState.max;
+        const ft  = rem * 5;
+        const pips = Array.from({ length: max }, (_, i) =>
+            `<span class="mv-pip${i >= rem ? ' mv-pip-used' : ''}"></span>`
+        ).join('');
+        movementWidget = `
+        <div class="mv-widget" id="movementWidget">
+            <div class="mv-label">Movimiento</div>
+            <div class="mv-pips">${pips}</div>
+            <div class="mv-remaining">${ft}ft</div>
+            <div class="mv-dpad">
+                <button class="mv-btn" onclick="moveMyToken('up')"    aria-label="Arriba">▲</button>
+                <button class="mv-btn" onclick="moveMyToken('left')"  aria-label="Izquierda">◄</button>
+                <button class="mv-btn mv-btn-center" disabled>✦</button>
+                <button class="mv-btn" onclick="moveMyToken('right')" aria-label="Derecha">►</button>
+                <button class="mv-btn" onclick="moveMyToken('down')"  aria-label="Abajo">▼</button>
+            </div>
+        </div>`;
+    }
+
     view.innerHTML = `
         <div class="player-active-header">
             <div class="combat-round-badge">${roundLabel}</div>
@@ -118,6 +241,7 @@ function _renderPlayerCombatLayout(view) {
         <div class="player-active-body">
             <div id="playerCombatPanel" class="combat-active-panel"></div>
         </div>
+        ${movementWidget}
         <div class="player-active-footer">
             ${nextTurnBtn}
             <button class="btn-player-map" onclick="openTvMode()" title="Ver mapa de combate">🗺️ Mapa</button>
@@ -1374,6 +1498,7 @@ function dismissNextTurnWarning() {
 }
 
 function _doNextTurn() {
+    _movementState.turnKey = ''; // reset movement for the incoming participant
     const current = getCurrentLogEntry();
     if (current) current.isCurrent = false;
 

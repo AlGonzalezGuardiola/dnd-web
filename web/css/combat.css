@@ -2726,6 +2726,99 @@ body.role-jugador .master-only { display: none !important; }
     flex-shrink: 0;
 }
 
+/* ── Movement widget ── */
+.mv-widget {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 10px 20px;
+    background: rgba(212,175,55,0.05);
+    border-top: 1px solid rgba(212,175,55,0.2);
+    border-bottom: 1px solid rgba(212,175,55,0.2);
+    flex-shrink: 0;
+}
+.mv-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent-gold);
+    opacity: 0.7;
+    white-space: nowrap;
+}
+.mv-pips {
+    display: flex;
+    gap: 4px;
+    align-items: center;
+}
+.mv-pip {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--accent-gold);
+    opacity: 0.85;
+    transition: opacity 0.15s, background 0.15s;
+}
+.mv-pip.mv-pip-used {
+    background: rgba(255,255,255,0.15);
+    opacity: 0.4;
+}
+.mv-remaining {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent-gold);
+    min-width: 32px;
+}
+/* D-pad grid: 3×3 with arrows at N/W/E/S and center disabled */
+.mv-dpad {
+    display: grid;
+    grid-template-columns: repeat(3, 36px);
+    grid-template-rows: repeat(3, 36px);
+    gap: 3px;
+    margin-left: auto;
+}
+/* up=row1,col2  left=row2,col1  center=row2,col2  right=row2,col3  down=row3,col2 */
+.mv-dpad .mv-btn:nth-child(1) { grid-column: 2; grid-row: 1; }
+.mv-dpad .mv-btn:nth-child(2) { grid-column: 1; grid-row: 2; }
+.mv-dpad .mv-btn:nth-child(3) { grid-column: 2; grid-row: 2; }
+.mv-dpad .mv-btn:nth-child(4) { grid-column: 3; grid-row: 2; }
+.mv-dpad .mv-btn:nth-child(5) { grid-column: 2; grid-row: 3; }
+
+.mv-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid rgba(212,175,55,0.35);
+    background: rgba(212,175,55,0.08);
+    color: var(--accent-gold);
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.12s, transform 0.08s;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+.mv-btn:hover { background: rgba(212,175,55,0.22); }
+.mv-btn:active { transform: scale(0.88); background: rgba(212,175,55,0.35); }
+.mv-btn-center {
+    background: transparent;
+    border-color: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.2);
+    cursor: default;
+    font-size: 10px;
+}
+.mv-btn-center:hover { background: transparent; }
+.mv-btn-center:active { transform: none; }
+
+@media (max-width: 768px) {
+    .mv-widget { padding: 8px 14px; gap: 10px; }
+    .mv-dpad { grid-template-columns: repeat(3, 42px); grid-template-rows: repeat(3, 42px); }
+    .mv-btn { width: 42px; height: 42px; font-size: 16px; }
+    .mv-pips { flex-wrap: wrap; max-width: 80px; }
+}
+
 /* ── Player combat panel — mobile responsive ── */
 @media (max-width: 768px) {
     /* Critical: let the player panel grow naturally; body scrolls */
