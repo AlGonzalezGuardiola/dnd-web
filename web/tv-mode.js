@@ -38,6 +38,7 @@ function initTvMode() {
     _setupTvMapInteraction();
     refreshTvMode();
     _applyGridColor();
+    _initAoeDragListeners();
 }
 
 // Called externally after any combat state change
@@ -1007,4 +1008,123 @@ function tvSetGridSize(cols, rows) {
     tvState.gridRows = Math.max(8, Math.min(60, parseInt(rows)));
     _buildTvGrid();
     renderTvTokens();
+}
+
+// ─── AoE Circle Tool ─────────────────────────────────────────────────────────
+
+const _aoeState = {
+    active:       false,
+    radiusFt:     20,
+    centerX:      0,     // canvas coords (px, before zoom)
+    centerY:      0,
+    dragging:     false,
+    dragOffsetX:  0,
+    dragOffsetY:  0,
+};
+
+let _aoeDragListenersAdded = false;
+
+// Called once from initTvMode — attaches global mouse/touch listeners for dragging
+function _initAoeDragListeners() {
+    if (_aoeDragListenersAdded) return;
+    _aoeDragListenersAdded = true;
+
+    const getClient = e => e.touches ? e.touches[0] : e;
+
+    document.addEventListener('mousemove', e => {
+        if (!_aoeState.dragging) return;
+        const mapArea = document.getElementById('tvMapArea');
+        if (!mapArea) return;
+        const rect = mapArea.getBoundingClientRect();
+        const screenX = e.clientX - rect.left - _aoeState.dragOffsetX;
+        const screenY = e.clientY - rect.top  - _aoeState.dragOffsetY;
+        _aoeState.centerX = (screenX - tvState.pan.x) / tvState.zoom;
+        _aoeState.centerY = (screenY - tvState.pan.y) / tvState.zoom;
+        _renderAoeCircle();
+    });
+
+    document.addEventListener('touchmove', e => {
+        if (!_aoeState.dragging) return;
+        const touch = getClient(e);
+        const mapArea = document.getElementById('tvMapArea');
+        if (!mapArea) return;
+        const rect = mapArea.getBoundingClientRect();
+        const screenX = touch.clientX - rect.left - _aoeState.dragOffsetX;
+        const screenY = touch.clientY - rect.top  - _aoeState.dragOffsetY;
+        _aoeState.centerX = (screenX - tvState.pan.x) / tvState.zoom;
+        _aoeState.centerY = (screenY - tvState.pan.y) / tvState.zoom;
+        _renderAoeCircle();
+    }, { passive: true });
+
+    document.addEventListener('mouseup',  () => { _aoeState.dragging = false; });
+    document.addEventListener('touchend', () => { _aoeState.dragging = false; });
+}
+
+function toggleAoeTool() {
+    _aoeState.active = !_aoeState.active;
+
+    const btn = document.getElementById('tvAoeBtn');
+    if (btn) btn.classList.toggle('active', _aoeState.active);
+
+    if (_aoeState.active) {
+        // Place circle at center of visible map area
+        const mapArea = document.getElementById('tvMapArea');
+        if (mapArea) {
+            _aoeState.centerX = (mapArea.offsetWidth  / 2 - tvState.pan.x) / tvState.zoom;
+            _aoeState.centerY = (mapArea.offsetHeight / 2 - tvState.pan.y) / tvState.zoom;
+        }
+        _renderAoeCircle();
+    } else {
+        _removeAoeCircle();
+    }
+}
+
+function setAoeRadius(ft) {
+    _aoeState.radiusFt = parseInt(ft) || 20;
+    if (_aoeState.active) _renderAoeCircle();
+}
+
+function _renderAoeCircle() {
+    const canvas = document.getElementById('tvMapCanvas');
+    if (!canvas) return;
+
+    let el = document.getElementById('tvAoeCircle');
+    if (!el) {
+        el = document.createElement('div');
+        el.id        = 'tvAoeCircle';
+        el.className = 'tv-aoe-circle';
+        canvas.appendChild(el);
+
+        // Drag start — mousedown on the circle
+        const startDrag = e => {
+            if (!_aoeState.active) return;
+            e.stopPropagation();
+            if (e.cancelable) e.preventDefault();
+            _aoeState.dragging = true;
+
+            const mapArea = document.getElementById('tvMapArea');
+            const rect    = mapArea.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            // Offset from circle center to click point (screen coords)
+            const screenCX = _aoeState.centerX * tvState.zoom + tvState.pan.x;
+            const screenCY = _aoeState.centerY * tvState.zoom + tvState.pan.y;
+            _aoeState.dragOffsetX = clientX - rect.left - screenCX;
+            _aoeState.dragOffsetY = clientY - rect.top  - screenCY;
+        };
+
+        el.addEventListener('mousedown',  startDrag);
+        el.addEventListener('touchstart', startDrag, { passive: false });
+    }
+
+    const radiusPx = (_aoeState.radiusFt / 5) * tvState.cellSize;
+    el.style.left   = `${_aoeState.centerX - radiusPx}px`;
+    el.style.top    = `${_aoeState.centerY - radiusPx}px`;
+    el.style.width  = `${radiusPx * 2}px`;
+    el.style.height = `${radiusPx * 2}px`;
+    el.style.display = '';
+}
+
+function _removeAoeCircle() {
+    document.getElementById('tvAoeCircle')?.remove();
 }
