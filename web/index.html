@@ -420,6 +420,7 @@
                         <button onclick="_closeOptionsMenu();showQuickAllyModal('combat')">💙 Añadir aliado</button>
                         <button onclick="_closeOptionsMenu();openCombatLogView()">📝 Ver registro</button>
                         <button onclick="_closeOptionsMenu();openTvMode()">📺 Modo TV</button>
+                        <button onclick="_closeOptionsMenu();openCombatMapPicker()">🗺️ Cambiar mapa</button>
                     </div>
                 </div>
             </div>
@@ -896,6 +897,17 @@
         </div>
     </div>
 
+    <!-- ===== MODAL: Cambiar mapa en combate ===== -->
+    <div id="changeCombatMapModal" class="modal" style="display:none;" onclick="if(event.target===this)closeCombatMapPicker()">
+        <div class="modal-content" style="max-width:820px;width:95%;max-height:85vh;overflow-y:auto;">
+            <h2>🗺️ Cambiar mapa de combate</h2>
+            <div id="combatMapPickerGrid" class="setup-map-grid"></div>
+            <div class="modal-actions" style="margin-top:16px;">
+                <button class="btn-secondary" onclick="closeCombatMapPicker()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
     <script src="characters2.js?v=20260325b"></script>
     <script src="data.js?v=20260310o"></script>
     <script src="globals.js?v=20260325a"></script>
@@ -920,7 +932,7 @@
     <script src="narrative.js?v=20260326b"></script>
     <script src="narrative-images.js?v=20260330a"></script>
     <script src="tv-mode.js?v=20260401c"></script>
-    <script src="combat-maps.js?v=20260331a"></script>
+    <script src="combat-maps.js?v=20260403a"></script>
 </body>
 
 </html>

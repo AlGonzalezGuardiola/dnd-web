@@ -242,3 +242,86 @@ function _closeCombatMapLightbox(overlay) {
     overlay.classList.remove('cm-lightbox-visible');
     setTimeout(() => overlay.remove(), 250);
 }
+
+// ─── In-combat map picker ─────────────────────────────────────────────────────
+
+async function openCombatMapPicker() {
+    const modal = document.getElementById('changeCombatMapModal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    await _renderCombatMapPickerGrid();
+}
+
+function closeCombatMapPicker() {
+    const modal = document.getElementById('changeCombatMapModal');
+    if (modal) modal.style.display = 'none';
+}
+
+async function _renderCombatMapPickerGrid() {
+    const grid = document.getElementById('combatMapPickerGrid');
+    if (!grid) return;
+
+    grid.innerHTML = '<div class="setup-map-loading">🔄 Cargando mapas…</div>';
+
+    if (!_combatMapsCache) {
+        try {
+            const res = await fetch(`${API_BASE}/api/combat-maps`);
+            _combatMapsCache = res.ok ? await res.json() : [];
+        } catch (_) {
+            _combatMapsCache = [];
+        }
+    }
+
+    const maps = _combatMapsCache;
+    const noMapSelected = !combatState.combatMap?.id;
+
+    let html = `<div class="setup-map-card no-map${noMapSelected ? ' selected' : ''}"
+                     onclick="selectCombatMap(null, null, null)">
+        ${noMapSelected ? '✓ ' : ''}Sin mapa
+    </div>`;
+
+    if (!maps.length) {
+        html += `<div class="setup-map-empty-hint">
+            No hay mapas disponibles. Ve a <strong>Combate › Mapas</strong> para subir el primero.
+        </div>`;
+    } else {
+        html += maps.map(m => {
+            const isSelected = combatState.combatMap?.id === m.filename;
+            const isVid = m.isVideo || /\.(mp4|webm|ogg)$/i.test(m.filename);
+            const safeUrl  = m.url.replace(/'/g, "\\'");
+            const safeName = m.name.replace(/'/g, "\\'");
+            const safeFile = m.filename.replace(/'/g, "\\'");
+            const thumbHTML = isVid
+                ? `<video class="setup-map-thumb" src="${m.url}" muted loop autoplay playsinline
+                          onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"></video>`
+                : `<img class="setup-map-thumb" src="${m.url}" alt="${m.name}"
+                        onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`;
+            return `<div class="setup-map-card${isSelected ? ' selected' : ''}"
+                         onclick="selectCombatMap('${safeFile}', '${safeName}', '${safeUrl}')">
+                ${isSelected ? '<span class="setup-map-selected-badge">✓ SELECCIONADO</span>' : ''}
+                ${thumbHTML}
+                <div class="setup-map-thumb-placeholder" style="display:none">🗺️</div>
+                <div class="setup-map-info">
+                    <div class="setup-map-name">${m.name}${isVid ? ' <span class="cm-video-badge">▶</span>' : ''}</div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    grid.innerHTML = html;
+}
+
+function selectCombatMap(id, name, url) {
+    combatState.combatMap = id
+        ? { id, name: name || id, url: url || '' }
+        : { id: null, name: '', url: '' };
+
+    // Rebuild TV grid on this device if TV mode is currently visible
+    if (typeof _buildTvGrid === 'function' && currentView() === 'tvMode') {
+        _buildTvGrid();
+    }
+
+    saveToApi();
+    closeCombatMapPicker();
+    showNotification(id ? `🗺️ Mapa cambiado: ${name}` : '🗺️ Mapa de combate eliminado', 2000);
+}
