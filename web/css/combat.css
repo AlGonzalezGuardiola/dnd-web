@@ -1498,9 +1498,10 @@
     display: none;
     flex-direction: column;
     min-width: 210px;
+    max-height: min(420px, 80vh);
+    overflow-y: auto;
     z-index: 1200;   /* above combat-body content + clv-header */
     box-shadow: 0 8px 28px rgba(0,0,0,0.55);
-    overflow: hidden;
 }
 .options-dropdown.open { display: flex; }
 
@@ -2689,6 +2690,7 @@ body.role-jugador .master-only { display: none !important; }
     align-items: center;
     gap: 10px;
     flex-shrink: 0;
+    flex-wrap: wrap;
 }
 .player-active-footer .btn-combat-primary {
     font-size: 15px;
