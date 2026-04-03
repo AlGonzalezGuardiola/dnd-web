@@ -32,7 +32,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 18px 14px 14px;
+    padding: 72px 14px 14px;
     border-bottom: 1px solid rgba(160,100,30,0.2);
     gap: 10px;
 }

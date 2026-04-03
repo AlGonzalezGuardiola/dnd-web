@@ -1102,3 +1102,22 @@
     outline: none;
     border-color: rgba(212, 175, 55, 0.6);
 }
+
+/* Navigation buttons in toolbar */
+.tv-nav-btn {
+    min-width: 38px;
+    font-size: 16px;
+}
+
+.tv-nav-btn.tv-nav-primary {
+    background: rgba(212, 175, 55, 0.18);
+    border-color: rgba(212, 175, 55, 0.5);
+    color: var(--accent-gold);
+    font-size: 18px;
+    min-width: 44px;
+}
+
+.tv-nav-btn.tv-nav-primary:hover {
+    background: rgba(212, 175, 55, 0.32);
+    border-color: rgba(212, 175, 55, 0.8);
+}

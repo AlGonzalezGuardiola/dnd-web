@@ -33,8 +33,8 @@
     <link rel="stylesheet" href="css/encounters.css?v=20260326b">
     <link rel="stylesheet" href="css/npc-generator.css?v=20260326b">
     <link rel="stylesheet" href="css/session-notes.css?v=20260326b">
-    <link rel="stylesheet" href="css/narrative.css?v=20260330b">
-    <link rel="stylesheet" href="css/tv-mode.css?v=20260403b">
+    <link rel="stylesheet" href="css/narrative.css?v=20260403c">
+    <link rel="stylesheet" href="css/tv-mode.css?v=20260403c">
     <link rel="stylesheet" href="mobile.css?v=20260330a" media="screen and (max-width: 768px)">
 </head>
 
@@ -822,11 +822,6 @@
                     <span class="tv-sidebar-title">Iniciativa</span>
                 </div>
                 <div class="tv-turn-list" id="tvTurnList"></div>
-                <div class="tv-sidebar-controls">
-                    <button class="tv-control-btn" onclick="tvPrevTurn()">◀ Anterior</button>
-                    <button class="tv-control-btn primary" onclick="tvNextTurn()">Siguiente ▶</button>
-                    <button class="tv-control-btn secondary" onclick="setView('combatManager')" style="margin-top:4px">⚔️ Ver combate</button>
-                </div>
             </aside>
 
             <!-- Map Area (90%) -->
@@ -849,6 +844,10 @@
 
                 <!-- Toolbar de herramientas -->
                 <div class="tv-zoom-controls">
+                    <button class="tv-zoom-btn tv-nav-btn" onclick="tvPrevTurn()" title="Turno anterior">◀</button>
+                    <button class="tv-zoom-btn tv-nav-btn tv-nav-primary" onclick="tvNextTurn()" title="Siguiente turno">▶</button>
+                    <button class="tv-zoom-btn tv-nav-btn" onclick="setView('combatManager')" title="Ver combate">⚔️</button>
+                    <div class="tv-zoom-sep"></div>
                     <button class="tv-zoom-btn" onclick="tvZoomIn()" title="Acercar">+</button>
                     <button class="tv-zoom-btn" onclick="tvResetZoom()" title="Ajustar imagen al área">⌂</button>
                     <button class="tv-zoom-btn" onclick="tvZoomOut()" title="Alejar">−</button>
@@ -924,7 +923,7 @@
     <script src="globals.js?v=20260325a"></script>
     <script src="utils.js?v=20260324a"></script>
     <script src="storage.js?v=20260325a"></script>
-    <script src="api-sync.js?v=20260401a"></script>
+    <script src="api-sync.js?v=20260403c"></script>
     <script src="role.js?v=20260324a"></script>
     <script src="map.js?v=20260331a"></script>
     <script src="map-editor.js?v=20260324a"></script>

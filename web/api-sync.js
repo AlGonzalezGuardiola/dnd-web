@@ -104,8 +104,9 @@ function applyRemoteState(data) {
     // Sync token positions: replace entirely so all clients stay authoritative
     if (data.tokenPositions && typeof tvState !== 'undefined') {
         tvState.tokenPositions = { ...data.tokenPositions };
-        if (currentView() === 'tvMode' && typeof renderTvTokens === 'function') renderTvTokens();
     }
+    // Always re-render TV tokens when in TV mode (covers aura changes, HP, etc.)
+    if (currentView() === 'tvMode' && typeof renderTvTokens === 'function') renderTvTokens();
     // Rebuild TV grid if the combat map changed (e.g. master swapped maps mid-session)
     if (data.combatMap?.url && typeof _buildTvGrid === 'function') {
         const prevUrl = combatState.combatMap?.url;
