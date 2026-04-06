@@ -5,6 +5,8 @@
 
 // ---- One-time migration: CombatTemplate NPCs → EntityTemplate ----
 
+const _shouldMigrateNpc = n => !n.isSummon && !n._useExistingCharData && n.nombre;
+
 function _npcToEntityTemplateBody(n) {
     return JSON.stringify({
         name:       n.nombre,
@@ -33,9 +35,7 @@ async function migrateEncounterNpcsToTemplates() {
         const res = await fetch(`${API_BASE}/api/combat-templates`);
         if (!res.ok) return;
         const { templates } = await res.json();
-        const allNpcs = (templates || []).flatMap(t =>
-            (t.npcs || []).filter(n => !n.isSummon && !n._useExistingCharData && n.nombre)
-        );
+        const allNpcs = (templates || []).flatMap(t => (t.npcs || []).filter(_shouldMigrateNpc));
         if (!allNpcs.length) return;
         await Promise.all(allNpcs.map(n =>
             fetch(`${API_BASE}/api/entity-templates`, {
@@ -147,11 +147,6 @@ function toggleTemplateInCombat(templateId, tipo) {
 function updateTemplateInitiative(templateId, value) {
     const npc = setupNpcs.find(n => n._templateId === templateId);
     if (npc) npc.initiative = parseInt(value) || 0;
-}
-
-// Keep alias for any residual references
-function addTemplateToSetup(templateId, tipo) {
-    toggleTemplateInCombat(templateId, tipo);
 }
 
 async function deleteEntityTemplate(templateId, tipo) {
@@ -278,7 +273,7 @@ window.loadCombatTemplate = async function (id) {
         }));
 
         // Migrate combat template NPCs into EntityTemplate so they appear in both sections
-        const npcsToMigrate = (tpl.npcs || []).filter(n => !n.isSummon && !n._useExistingCharData && n.nombre);
+        const npcsToMigrate = (tpl.npcs || []).filter(_shouldMigrateNpc);
         if (npcsToMigrate.length) {
             await Promise.all(npcsToMigrate.map(n =>
                 fetch(`${API_BASE}/api/entity-templates`, {
