@@ -1493,42 +1493,7 @@ function nextCombatTurn() {
         return;
     }
 
-    const p = combatState.participants[combatState.currentIndex];
-    if (p?.tipo === 'jugador') { _doNextTurn(); return; }
-
-    const current = getCurrentLogEntry();
-    // Extra attack / segunda acción mini-turns: no warning needed, can always pass
-    if (combatState.extraAttackTurn) { _doNextTurn(); return; }
-    if (combatState.segundaAccionTurn) { _doNextTurn(); return; }
-    if (!current?.actions.length && !current?.note?.trim()) {
-        showNextTurnWarning();
-        return;
-    }
     _doNextTurn();
-}
-
-function showNextTurnWarning() {
-    if (document.getElementById('nextTurnWarning')) return;
-    const panel = document.getElementById('combatActivePanel');
-    if (!panel) return;
-    const div = document.createElement('div');
-    div.id = 'nextTurnWarning';
-    div.className = 'next-turn-warning';
-    div.innerHTML = `⚠️ Sin acciones registradas. ¿Seguro que quieres continuar?
-        <div style="margin-top:8px;display:flex;gap:8px;justify-content:center">
-            <button class="btn-combat-secondary" onclick="confirmNextTurn()" style="padding:6px 16px">Continuar</button>
-            <button class="btn-combat-secondary" onclick="dismissNextTurnWarning()" style="padding:6px 16px">Cancelar</button>
-        </div>`;
-    panel.prepend(div);
-}
-
-function confirmNextTurn() {
-    dismissNextTurnWarning();
-    _doNextTurn();
-}
-
-function dismissNextTurnWarning() {
-    document.getElementById('nextTurnWarning')?.remove();
 }
 
 function _doNextTurn() {
@@ -1589,7 +1554,7 @@ function _doNextTurn() {
     }
 
     createCurrentTurnEntry();
-    saveCombatState();
+    saveCombatState({ immediate: isOnlineCombat });
     renderCombatManager();
 }
 
@@ -1603,7 +1568,7 @@ function skipSegundaAccion() {
         combatState.round++;
     }
     createCurrentTurnEntry();
-    saveCombatState();
+    saveCombatState({ immediate: isOnlineCombat });
     renderCombatManager();
 }
 
@@ -1617,7 +1582,7 @@ function skipExtraAttack() {
         combatState.round++;
     }
     createCurrentTurnEntry();
-    saveCombatState();
+    saveCombatState({ immediate: isOnlineCombat });
     renderCombatManager();
 }
 

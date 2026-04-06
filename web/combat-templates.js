@@ -5,6 +5,25 @@
 
 // ---- One-time migration: CombatTemplate NPCs → EntityTemplate ----
 
+function _npcToEntityTemplateBody(n) {
+    return JSON.stringify({
+        name:       n.nombre,
+        type:       n.tipo === 'aliado' ? 'ALLY' : 'ENEMY',
+        stats:      { hp: n.pg || 10, ac: n.ca || 10 },
+        actions:    [],
+        isGroup:    !!n.isGroup,
+        groupSize:  n.groupSize || 1,
+        isSummon:   false,
+        summoner:   '',
+        actionsText: {
+            acciones:    n.acciones    || '',
+            adicionales: n.adicionales || '',
+            reacciones:  n.reacciones  || '',
+        },
+        imagen: n.imagen || '',
+    });
+}
+
 let _npcMigrationDone = false;
 
 async function migrateEncounterNpcsToTemplates() {
@@ -22,22 +41,7 @@ async function migrateEncounterNpcsToTemplates() {
             fetch(`${API_BASE}/api/entity-templates`, {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    name:       n.nombre,
-                    type:       n.tipo === 'aliado' ? 'ALLY' : 'ENEMY',
-                    stats:      { hp: n.pg || 10, ac: n.ca || 10 },
-                    actions:    [],
-                    isGroup:    !!n.isGroup,
-                    groupSize:  n.groupSize || 1,
-                    isSummon:   false,
-                    summoner:   '',
-                    actionsText: {
-                        acciones:    n.acciones    || '',
-                        adicionales: n.adicionales || '',
-                        reacciones:  n.reacciones  || '',
-                    },
-                    imagen: n.imagen || '',
-                }),
+                body:    _npcToEntityTemplateBody(n),
             }).catch(() => {})
         ));
     } catch (e) {
@@ -63,8 +67,8 @@ async function loadSavedTemplates(tipo) {
 }
 
 function _renderTemplateCard(t, tipo) {
-    const isSelected = setupNpcs.some(n => n._templateId === t._id);
-    const selectedNpc = isSelected ? setupNpcs.find(n => n._templateId === t._id) : null;
+    const selectedNpc = setupNpcs.find(n => n._templateId === t._id);
+    const isSelected = !!selectedNpc;
     const initVal = selectedNpc?.initiative ?? '';
     const badges = [
         t.isGroup && t.groupSize >= 2 ? `👥 ×${t.groupSize}` : '',
@@ -278,24 +282,9 @@ window.loadCombatTemplate = async function (id) {
         if (npcsToMigrate.length) {
             await Promise.all(npcsToMigrate.map(n =>
                 fetch(`${API_BASE}/api/entity-templates`, {
-                    method: 'POST',
+                    method:  'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        name:       n.nombre,
-                        type:       n.tipo === 'aliado' ? 'ALLY' : 'ENEMY',
-                        stats:      { hp: n.pg || 10, ac: n.ca || 10 },
-                        actions:    [],
-                        isGroup:    !!n.isGroup,
-                        groupSize:  n.groupSize || 1,
-                        isSummon:   false,
-                        summoner:   '',
-                        actionsText: {
-                            acciones:    n.acciones    || '',
-                            adicionales: n.adicionales || '',
-                            reacciones:  n.reacciones  || '',
-                        },
-                        imagen: n.imagen || '',
-                    }),
+                    body:    _npcToEntityTemplateBody(n),
                 }).catch(e => console.warn('[migrate npc]', e.message))
             ));
         }
