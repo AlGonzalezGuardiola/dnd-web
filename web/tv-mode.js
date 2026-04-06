@@ -608,7 +608,7 @@ function _tvTokenMouseDown(e) {
         // Refresh rings if the moved token had them
         if (tvState.activeRingsPid === movedPid) showDistanceRings(movedPid);
         // Sync new position to server so all devices see the move
-        if (typeof saveToApi === 'function') saveToApi();
+        if (typeof saveToApiNow === 'function') saveToApiNow();
         document.removeEventListener('mousemove', onMouseMove);
         document.removeEventListener('mouseup', onMouseUp);
     }
@@ -673,7 +673,7 @@ function _tvTokenTouchStart(e) {
         _tvDrag = null;
         renderTvTokens();
         if (tvState.activeRingsPid === movedPid) showDistanceRings(movedPid);
-        if (typeof saveToApi === 'function') saveToApi();
+        if (typeof saveToApiNow === 'function') saveToApiNow();
         document.removeEventListener('touchmove', onTouchMove);
         document.removeEventListener('touchend', onTouchEnd);
     }
@@ -781,6 +781,7 @@ function tvApplyDamage(pid) {
 
     const newHp = Math.max(0, (p.hp?.current ?? 0) - amount);
     setParticipantHp(pid, newHp);
+    if (isOnlineCombat) saveCombatState({ immediate: true });
     if (input) input.value = '';
 
     renderTvInitiative();
@@ -802,6 +803,7 @@ function tvApplyHeal(pid) {
 
     const newHp = Math.min(p.hp?.max ?? 9999, (p.hp?.current ?? 0) + amount);
     setParticipantHp(pid, newHp);
+    if (isOnlineCombat) saveCombatState({ immediate: true });
     if (input) input.value = '';
 
     renderTvInitiative();
@@ -814,6 +816,7 @@ function tvApplyHeal(pid) {
 
 function tvToggleCondition(pid, condId) {
     toggleParticipantCondition(pid, condId);
+    if (isOnlineCombat) saveCombatState({ immediate: true });
     renderTvInitiative();
     renderTvTokens();
     const popup = document.getElementById('tvTokenPopup');

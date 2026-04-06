@@ -89,6 +89,8 @@ function applyRemoteState(data) {
     }
 
     _hydrateParticipants(data.participants);
+    // Capture previous map URL before Object.assign overwrites it
+    const prevMapUrl = combatState.combatMap?.url;
     Object.assign(combatState, {
         participants:      data.participants      || [],
         currentIndex:      data.currentIndex      ?? combatState.currentIndex,
@@ -105,14 +107,13 @@ function applyRemoteState(data) {
     if (data.tokenPositions && typeof tvState !== 'undefined') {
         tvState.tokenPositions = { ...data.tokenPositions };
     }
-    // Always re-render TV tokens when in TV mode (covers aura changes, HP, etc.)
-    if (currentView() === 'tvMode' && typeof renderTvTokens === 'function') renderTvTokens();
-    // Rebuild TV grid if the combat map changed (e.g. master swapped maps mid-session)
-    if (data.combatMap?.url && typeof _buildTvGrid === 'function') {
-        const prevUrl = combatState.combatMap?.url;
-        if (data.combatMap.url !== prevUrl && currentView() === 'tvMode') {
+    if (currentView() === 'tvMode') {
+        // Rebuild grid if map changed (must compare against prevMapUrl, before Object.assign)
+        if (data.combatMap?.url && data.combatMap.url !== prevMapUrl && typeof _buildTvGrid === 'function') {
             _buildTvGrid();
         }
+        // Refresh both tokens and initiative sidebar
+        if (typeof refreshTvMode === 'function') refreshTvMode();
     }
     if (combatModeActive) renderCombatManager();
     if (data.pendingReactionTrigger) {
