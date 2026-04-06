@@ -109,13 +109,19 @@ function toggleSetupSummonFields(tipo) {
     if (fields) fields.style.display = checked ? 'block' : 'none';
 }
 
-// ── Entity Template: save to backend catalog (fire-and-forget) ───────────────
-function _saveEntityTemplate({ name, type, stats, actions, isGroup, groupSize, isSummon, summoner, actionsText, imagen }) {
-    fetch(`${API_BASE}/api/entity-templates`, {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, type, stats, actions, isGroup, groupSize, isSummon, summoner, actionsText, imagen: imagen || '' }),
-    }).catch(e => console.warn('[entity-templates] save failed:', e.message));
+// ── Entity Template: save to backend catalog ─────────────────────────────────
+async function _saveEntityTemplate({ name, type, stats, actions, isGroup, groupSize, isSummon, summoner, actionsText, imagen }) {
+    try {
+        await fetch(`${API_BASE}/api/entity-templates`, {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name, type, stats, actions, isGroup, groupSize, isSummon, summoner, actionsText, imagen: imagen || '' }),
+        });
+        const tipo = type === 'ALLY' ? 'aliado' : 'enemigo';
+        await loadSavedTemplates(tipo);
+    } catch (e) {
+        console.warn('[entity-templates] save failed:', e.message);
+    }
 }
 
 function buildSirvienteCharData(ac) {
@@ -204,6 +210,33 @@ window.loadCombatTemplate = async function (id) {
             ...n,
             charData: n.charData || window.characterData[n.id] || { combateExtra: [], conjuros: [] },
         }));
+
+        // Migrate combat template NPCs into EntityTemplate so they appear in both sections
+        const npcsToMigrate = (tpl.npcs || []).filter(n => !n.isSummon && !n._useExistingCharData && n.nombre);
+        if (npcsToMigrate.length) {
+            await Promise.all(npcsToMigrate.map(n =>
+                fetch(`${API_BASE}/api/entity-templates`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name:       n.nombre,
+                        type:       n.tipo === 'aliado' ? 'ALLY' : 'ENEMY',
+                        stats:      { hp: n.pg || 10, ac: n.ca || 10 },
+                        actions:    [],
+                        isGroup:    !!n.isGroup,
+                        groupSize:  n.groupSize || 1,
+                        isSummon:   false,
+                        summoner:   '',
+                        actionsText: {
+                            acciones:    n.acciones    || '',
+                            adicionales: n.adicionales || '',
+                            reacciones:  n.reacciones  || '',
+                        },
+                        imagen: n.imagen || '',
+                    }),
+                }).catch(e => console.warn('[migrate npc]', e.message))
+            ));
+        }
 
         // Always start a fresh online session when launching from a saved template
         clearOnlineSession();

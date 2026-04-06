@@ -746,7 +746,7 @@ function setParticipantInitiative(id, value) {
 }
 
 // ---- Setup NPC Builder ----
-function addSetupNpc(tipo) {
+async function addSetupNpc(tipo) {
     const p = tipo === 'aliado' ? 'aliado' : 'enemigo';
     const nombre     = document.getElementById(`${p}Nombre`)?.value?.trim();
     const pg         = parseInt(document.getElementById(`${p}Pg`)?.value)   || 10;
@@ -776,7 +776,7 @@ function addSetupNpc(tipo) {
     });
 
     // ── Save as reusable template (no initiative) ─────────────────────────────
-    _saveEntityTemplate({
+    await _saveEntityTemplate({
         name:    nombre,
         type:    tipo === 'aliado' ? 'ALLY' : 'ENEMY',
         stats:   { hp: pg, ac: ca },
