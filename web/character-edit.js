@@ -362,8 +362,6 @@ function setupCharacterSheetListeners() {
 function openPersonajesSection() {
     setView('characters');
     switchPersonajesTab('principales');
-    loadPersonajesTemplates('aliado');
-    loadPersonajesTemplates('enemigo');
 }
 
 function switchPersonajesTab(tab) {
@@ -374,7 +372,8 @@ function switchPersonajesTab(tab) {
         if (btn) btn.classList.toggle('active', t === tab);
     });
     if (tab === 'principales') renderCharacterSelectionMenu();
-    if (tab === 'aliados') renderAliadosCharacters();
+    if (tab === 'aliados')  { renderAliadosCharacters(); loadSavedTemplates('aliado'); }
+    if (tab === 'enemigos') loadSavedTemplates('enemigo');
 }
 
 function renderAliadosCharacters() {

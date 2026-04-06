@@ -19,8 +19,6 @@ function showCombatSetup() {
     setView('combatSetup');
     switchCombatSetupTab('jugadores');
     renderCombatSetup();
-    loadSavedTemplates('aliado');
-    loadSavedTemplates('enemigo');
 }
 
 // Jugador personal turn manager — completely independent from master
@@ -574,7 +572,9 @@ function switchCombatSetupTab(tabName) {
     Object.entries(panels).forEach(([key, el]) => {
         if (el) el.style.display = key === tabName ? 'block' : 'none';
     });
-    if (tabName === 'mapa') renderMapSetupTab();
+    if (tabName === 'aliados')  loadSavedTemplates('aliado');
+    if (tabName === 'enemigos') loadSavedTemplates('enemigo');
+    if (tabName === 'mapa')     renderMapSetupTab();
 }
 
 // ── Map selection tab ────────────────────────────────────────────────────────
