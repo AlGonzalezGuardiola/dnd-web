@@ -453,21 +453,10 @@ async function initPlayerCharactersFromDB() {
 }
 
 async function loadPersonajesTemplates(tipo) {
-    const apiType = tipo === 'aliado' ? 'ALLY' : 'ENEMY';
-    try {
-        const res = await fetch(`${API_BASE}/api/entity-templates?type=${apiType}`);
-        const data = await res.json();
-        if (data.success) {
-            savedTemplates[apiType] = data.templates;
-            renderPersonajesTemplatesList(tipo);
-        }
-    } catch (e) {
-        console.warn('[personajes] load failed:', e.message);
-    }
+    return loadSavedTemplates(tipo);
 }
 
-// renderSavedTemplatesSection is defined in combat-setup.js for the combat-setup UI.
-// Calls within character-edit.js use renderPersonajesTemplatesList directly.
+// renderSavedTemplatesSection is defined in combat-templates.js for the combat-setup UI.
 
 function renderPersonajesTemplatesList(tipo) {
     const container = document.getElementById(`char${tipo.charAt(0).toUpperCase() + tipo.slice(1)}TemplatesList`);
@@ -552,8 +541,6 @@ async function createCharTemplate(tipo) {
 
     showNotification(`${tipo === 'aliado' ? '💙' : '💀'} ${nombre} guardado`, 1500);
     await loadPersonajesTemplates(tipo);
-    // Also refresh saved templates in combat setup section if it's open
-    renderPersonajesTemplatesList(tipo);
 }
 
 async function deletePersonajesTemplate(templateId, tipo) {

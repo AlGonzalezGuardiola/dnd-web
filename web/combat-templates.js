@@ -13,6 +13,7 @@ async function loadSavedTemplates(tipo) {
         if (data.success) {
             savedTemplates[apiType] = data.templates;
             renderSavedTemplatesSection(tipo);
+            renderPersonajesTemplatesList(tipo);
         }
     } catch (e) {
         console.warn('[entity-templates] load failed:', e.message);
