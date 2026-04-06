@@ -332,6 +332,15 @@ function renderCombatSetup() {
             : `<div class="combat-category-empty">No hay jugadores disponibles</div>`;
     }
 
+    const aliadoGrid = document.getElementById('aliadoExistingGrid');
+    if (aliadoGrid) {
+        const aliados = Object.values(window.characterData).filter(c => c.tipo === 'aliado');
+        aliadoGrid.style.display = aliados.length ? 'flex' : 'none';
+        aliadoGrid.innerHTML = aliados.length
+            ? `<div class="npc-existing-label">💙 Personajes aliados</div>` +
+              aliados.map(renderCombatSetupCard).join('')
+            : '';
+    }
     renderSpecialSummonsSection();
     _updateSetupCount();
 }
