@@ -20,27 +20,32 @@ async function loadSavedTemplates(tipo) {
     }
 }
 
-function renderNpcTemplateRow(t, tipo) {
-    return _renderTemplateCard(t, tipo);
-}
-
 function _renderTemplateCard(t, tipo) {
+    const isSelected = setupNpcs.some(n => n._templateId === t._id);
+    const selectedNpc = isSelected ? setupNpcs.find(n => n._templateId === t._id) : null;
+    const initVal = selectedNpc?.initiative ?? '';
     const badges = [
         t.isGroup && t.groupSize >= 2 ? `👥 ×${t.groupSize}` : '',
         t.isSummon ? `✨ ${t.summoner}` : '',
     ].filter(Boolean).join(' · ');
     const actStr = [t.actionsText?.acciones, t.actionsText?.adicionales, t.actionsText?.reacciones]
         .filter(Boolean).join(' | ');
-    return `<div class="template-card">
+    return `<div class="template-card${isSelected ? ' template-card--selected' : ''}"
+                 onclick="toggleTemplateInCombat('${t._id}','${tipo}')">
         <div class="template-card-info">
             <span class="template-card-name">${t.name}</span>
             <span class="template-card-stats">❤️ ${t.stats.hp} · 🛡️ ${t.stats.ac}${badges ? ' · ' + badges : ''}</span>
             ${actStr ? `<span class="template-card-acts">⚔️ ${actStr}</span>` : ''}
         </div>
-        <div class="template-card-controls">
-            <input type="number" class="setup-init-input" placeholder="Init" id="tInit_${t._id}" min="-5" max="30">
-            <button class="template-add-btn" onclick="addTemplateToSetup('${t._id}','${tipo}')">＋</button>
-            <button class="template-delete-btn" onclick="deleteEntityTemplate('${t._id}','${tipo}')">🗑</button>
+        <div class="template-card-controls" onclick="event.stopPropagation()">
+            <input type="number" class="setup-init-input" placeholder="Init"
+                   id="tInit_${t._id}" min="-5" max="30" value="${initVal}"
+                   oninput="updateTemplateInitiative('${t._id}', this.value)">
+            ${isSelected
+                ? `<span class="template-selected-badge">✓</span>`
+                : `<span class="template-unselected-hint">＋</span>`}
+            <button class="template-delete-btn"
+                    onclick="event.stopPropagation();deleteEntityTemplate('${t._id}','${tipo}')">🗑</button>
         </div>
     </div>`;
 }
@@ -51,41 +56,56 @@ function renderSavedTemplatesSection(tipo) {
     const apiType = tipo === 'aliado' ? 'ALLY' : 'ENEMY';
     const templates = savedTemplates[apiType];
     if (!templates.length) {
-        container.innerHTML = '';
+        container.innerHTML = `<div class="setup-empty-hint">No hay plantillas. Crea una desde Personajes → ${tipo === 'aliado' ? 'Aliados' : 'Enemigos'}.</div>`;
         return;
     }
     container.innerHTML = `
-        <div class="saved-templates-header">${tipo === 'aliado' ? '💙' : '💀'} Plantillas guardadas</div>
         <div class="saved-templates-grid">
             ${templates.map(t => _renderTemplateCard(t, tipo)).join('')}
         </div>`;
 }
 
-function addTemplateToSetup(templateId, tipo) {
+function toggleTemplateInCombat(templateId, tipo) {
     const apiType = tipo === 'aliado' ? 'ALLY' : 'ENEMY';
     const t = savedTemplates[apiType].find(x => x._id === templateId);
     if (!t) return;
-    const initEl = document.getElementById(`tInit_${templateId}`);
-    const initiative = parseInt(initEl?.value) || 0;
-    setupNpcs.push({
-        tipo,
-        nombre:      t.name,
-        pg:          t.stats.hp,
-        ca:          t.stats.ac,
-        initiative,
-        acciones:    t.actionsText?.acciones    || '',
-        adicionales: t.actionsText?.adicionales || '',
-        reacciones:  t.actionsText?.reacciones  || '',
-        isGroup:   !!t.isGroup,
-        groupSize: t.groupSize || 1,
-        isSummon:  !!t.isSummon,
-        summoner:  t.summoner || '',
-        summonedBeforeCombat: !!t.isSummon,
-        imagen:    t.imagen || '',
-    });
-    renderSetupNpcList(tipo);
+
+    const existingIdx = setupNpcs.findIndex(n => n._templateId === templateId);
+    if (existingIdx >= 0) {
+        setupNpcs.splice(existingIdx, 1);
+    } else {
+        const initEl = document.getElementById(`tInit_${templateId}`);
+        const initiative = parseInt(initEl?.value) || 0;
+        setupNpcs.push({
+            _templateId: templateId,
+            tipo,
+            nombre:      t.name,
+            pg:          t.stats.hp,
+            ca:          t.stats.ac,
+            initiative,
+            acciones:    t.actionsText?.acciones    || '',
+            adicionales: t.actionsText?.adicionales || '',
+            reacciones:  t.actionsText?.reacciones  || '',
+            isGroup:   !!t.isGroup,
+            groupSize: t.groupSize || 1,
+            isSummon:  !!t.isSummon,
+            summoner:  t.summoner || '',
+            summonedBeforeCombat: !!t.isSummon,
+            imagen:    t.imagen || '',
+        });
+    }
+    renderSavedTemplatesSection(tipo);
     _updateSetupCount();
-    showNotification(`${tipo === 'aliado' ? '💙' : '💀'} ${t.name} añadido`, 1500);
+}
+
+function updateTemplateInitiative(templateId, value) {
+    const npc = setupNpcs.find(n => n._templateId === templateId);
+    if (npc) npc.initiative = parseInt(value) || 0;
+}
+
+// Keep alias for any residual references
+function addTemplateToSetup(templateId, tipo) {
+    toggleTemplateInCombat(templateId, tipo);
 }
 
 async function deleteEntityTemplate(templateId, tipo) {

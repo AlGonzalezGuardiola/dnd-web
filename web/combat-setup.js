@@ -332,27 +332,7 @@ function renderCombatSetup() {
             : `<div class="combat-category-empty">No hay jugadores disponibles</div>`;
     }
 
-    // --- Existing aliados / enemigos in their tabs ---
-    const aliadoGrid = document.getElementById('aliadoExistingGrid');
-    if (aliadoGrid) {
-        const aliados = chars.filter(c => c.tipo === 'aliado');
-        aliadoGrid.style.display = aliados.length ? 'flex' : 'none';
-        aliadoGrid.innerHTML = aliados.length
-            ? `<div class="npc-existing-label">📋 Personajes existentes</div>` +
-              aliados.map(renderCombatSetupCard).join('')
-            : '';
-    }
     renderSpecialSummonsSection();
-    const enemigoGrid = document.getElementById('enemigoExistingGrid');
-    if (enemigoGrid) {
-        const enemigos = chars.filter(c => c.tipo === 'enemigo');
-        enemigoGrid.style.display = enemigos.length ? 'flex' : 'none';
-        enemigoGrid.innerHTML = enemigos.length
-            ? `<div class="npc-existing-label">📋 Personajes existentes</div>` +
-              enemigos.map(renderCombatSetupCard).join('')
-            : '';
-    }
-
     _updateSetupCount();
 }
 
@@ -545,7 +525,6 @@ function addSpecialSummonToSetup(type, invId) {
         });
     }
 
-    renderSetupNpcList('aliado');
     renderSpecialSummonsSection();
     _updateSetupCount();
     showNotification('💙 Invocación añadida', 2000);
