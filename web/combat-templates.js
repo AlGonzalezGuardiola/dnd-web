@@ -3,6 +3,48 @@
 // Depends on: globals.js, utils.js, storage.js, combat-setup.js
 // ============================================
 
+// ---- One-time migration: CombatTemplate NPCs → EntityTemplate ----
+
+let _npcMigrationDone = false;
+
+async function migrateEncounterNpcsToTemplates() {
+    if (_npcMigrationDone) return;
+    _npcMigrationDone = true;
+    try {
+        const res = await fetch(`${API_BASE}/api/combat-templates`);
+        if (!res.ok) return;
+        const { templates } = await res.json();
+        const allNpcs = (templates || []).flatMap(t =>
+            (t.npcs || []).filter(n => !n.isSummon && !n._useExistingCharData && n.nombre)
+        );
+        if (!allNpcs.length) return;
+        await Promise.all(allNpcs.map(n =>
+            fetch(`${API_BASE}/api/entity-templates`, {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name:       n.nombre,
+                    type:       n.tipo === 'aliado' ? 'ALLY' : 'ENEMY',
+                    stats:      { hp: n.pg || 10, ac: n.ca || 10 },
+                    actions:    [],
+                    isGroup:    !!n.isGroup,
+                    groupSize:  n.groupSize || 1,
+                    isSummon:   false,
+                    summoner:   '',
+                    actionsText: {
+                        acciones:    n.acciones    || '',
+                        adicionales: n.adicionales || '',
+                        reacciones:  n.reacciones  || '',
+                    },
+                    imagen: n.imagen || '',
+                }),
+            }).catch(() => {})
+        ));
+    } catch (e) {
+        console.warn('[migrate encounters]', e.message);
+    }
+}
+
 // ---- Saved Templates (DB) ----
 
 async function loadSavedTemplates(tipo) {

@@ -118,6 +118,7 @@ async function init() {
         updateTaskMd('Initialize');
         initRole();
         loadSavedCombatIfAny();
+        migrateEncounterNpcsToTemplates();
     } catch (error) {
         console.error('Error loading data:', error);
         showWelcomeScreen();
@@ -543,9 +544,8 @@ function setView(viewName) {
         case 'tvMode':
             document.getElementById('tvModeSection').style.display = 'flex';
             if (editorToolbar) editorToolbar.style.display = 'none';
-            if (hud) hud.style.display = 'flex';
+            if (hud) hud.style.display = 'none';   // toolbar propio en TV mode
             if (diceWidget) diceWidget.style.display = 'none';
-            setBreadcrumb('⚔️ Combate › Modo TV');
             if (typeof initTvMode === 'function') initTvMode();
             break;
         case 'combatMaps':
