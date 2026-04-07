@@ -860,7 +860,7 @@
                     <div class="tv-zoom-sep"></div>
                     <button class="tv-zoom-btn tv-aoe-btn" id="tvAoeBtn" onclick="addAoeCircle()" title="Añadir círculo de área de efecto">⭕</button>
                     <button class="tv-zoom-btn" onclick="clearAllAoeCircles()" title="Limpiar todos los círculos AoE">🗑</button>
-                    <select class="tv-aoe-select" id="tvAoeRadius" title="Radio del área de efecto">
+                    <select class="tv-aoe-select" id="tvAoeRadius" onchange="setAoeRadius(this.value)" title="Radio del área de efecto">
                         <option value="5">5ft</option>
                         <option value="10">10ft</option>
                         <option value="20" selected>20ft</option>

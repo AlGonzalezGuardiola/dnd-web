@@ -40,6 +40,11 @@ function initTvMode() {
     if (!document.getElementById('tvModeSection')) return;
     _buildTvGrid();
     _setupTvMapInteraction();
+    // Sync toolbar button states with tvState
+    const namesBtn = document.getElementById('tvNamesBtn');
+    if (namesBtn) namesBtn.classList.toggle('active', tvState.showTokenNames);
+    const hpBtn = document.getElementById('tvHpBtn');
+    if (hpBtn) hpBtn.classList.toggle('active', tvState.showTokenHp);
     refreshTvMode();
     _applyGridColor();
     _initAoeDragListeners();
@@ -476,7 +481,8 @@ function renderTvTokens() {
         if (fill)     { fill.style.width = hpPct + '%'; fill.style.background = hpColor; }
         if (tempFill) {
             const tempPct = (p.tempHp && p.hp?.max > 0) ? Math.min(100, (p.tempHp / p.hp.max) * 100) : 0;
-            tempFill.style.width = tempPct + '%';
+            tempFill.style.width   = tempPct + '%';
+            tempFill.style.display = tempPct > 0 ? '' : 'none';
         }
 
         // Condition icons ring

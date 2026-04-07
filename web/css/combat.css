@@ -4688,7 +4688,7 @@ body.role-jugador .master-only { display: none !important; }
 
 /* ─── AoE Damage Modal ────────────────────────── */
 
-.aoe-modal .modal-content {
+.aoe-modal {
     max-width: 520px;
 }
 

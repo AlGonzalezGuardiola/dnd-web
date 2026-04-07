@@ -1500,7 +1500,7 @@ function setTempHp(id, value) {
     const p = combatState.participants.find(x => x.id === id);
     if (!p) return;
     p.tempHp = Math.max(0, isNaN(value) ? 0 : value);
-    saveCombatState();
+    saveCombatState({ immediate: isOnlineCombat });
     // Lightweight update of the temp HP block
     const block = document.getElementById('activeTempHpBlock');
     if (block) {
@@ -1728,6 +1728,7 @@ function applyMassSave() {
     checked.forEach(pid => {
         const p = combatState.participants.find(x => x.id === pid);
         if (!p) return;
+        if (!p.conditions) p.conditions = [];
         if (effect && !p.conditions.includes(effect)) {
             p.conditions.push(effect);
         }
