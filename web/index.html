@@ -29,13 +29,15 @@
     <link rel="stylesheet" href="css/base.css?v=20260326b">
     <link rel="stylesheet" href="css/map.css?v=20260403a">
     <link rel="stylesheet" href="css/character-sheet.css?v=20260330c">
-    <link rel="stylesheet" href="css/combat.css?v=20260403a">
+    <link rel="stylesheet" href="css/combat.css?v=20260406a">
     <link rel="stylesheet" href="css/encounters.css?v=20260326b">
     <link rel="stylesheet" href="css/npc-generator.css?v=20260326b">
     <link rel="stylesheet" href="css/session-notes.css?v=20260326b">
     <link rel="stylesheet" href="css/narrative.css?v=20260403c">
-    <link rel="stylesheet" href="css/tv-mode.css?v=20260403c">
+    <link rel="stylesheet" href="css/tv-mode.css?v=20260406a">
     <link rel="stylesheet" href="mobile.css?v=20260330a" media="screen and (max-width: 768px)">
+    <!-- QR code library (used in waiting room) -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js" defer></script>
 </head>
 
 <body>
@@ -145,6 +147,7 @@
                     onclick="startOnlineCombat()">
                 ⚔️ Iniciar combate
             </button>
+            <div id="waitingQrCode" class="waiting-qr-container"></div>
             <div class="waiting-hint">Los demás jugadores entran en <strong>Combate en Línea → Unirse</strong> e introducen el código</div>
         </div>
     </section>
@@ -412,6 +415,8 @@
                         <button onclick="_closeOptionsMenu();openCombatLogView()">📝 Ver registro</button>
                         <button onclick="_closeOptionsMenu();openTvMode()">📺 Modo TV</button>
                         <button onclick="_closeOptionsMenu();openCombatMapPicker()">🗺️ Cambiar mapa</button>
+                        <button onclick="_closeOptionsMenu();openAoeDamageModal()">💥 Daño en área</button>
+                        <button onclick="_closeOptionsMenu();openMassSaveModal()">🎲 Tirada de salvación</button>
                     </div>
                 </div>
             </div>
@@ -421,6 +426,9 @@
                 <span class="scoreboard-crown">🏆</span>
                 <div class="scoreboard-list" id="scoreboardList"></div>
             </div>
+
+            <!-- Concentration tracker (shown when any participant has concentration) -->
+            <div id="concentrationTracker" class="concentration-tracker" style="display:none;"></div>
 
             <!-- Main body: Active panel + Combat Log -->
             <div class="combat-body">
@@ -847,15 +855,28 @@
                     <div class="tv-zoom-sep"></div>
                     <button class="tv-zoom-btn" onclick="openCombatMapPicker()" title="Cambiar mapa de combate">🗺</button>
                     <div class="tv-zoom-sep"></div>
-                    <button class="tv-zoom-btn tv-aoe-btn" id="tvAoeBtn" onclick="toggleAoeTool()" title="Círculo de área de efecto (arrastrarlo sobre el mapa)">⭕</button>
-                    <select class="tv-aoe-select" id="tvAoeRadius" onchange="setAoeRadius(this.value)" title="Radio del área de efecto">
+                    <button class="tv-zoom-btn" id="tvNamesBtn" onclick="toggleTokenNames()" title="Mostrar/ocultar nombres de tokens">N</button>
+                    <button class="tv-zoom-btn" id="tvHpBtn" onclick="toggleTokenHp()" title="Mostrar/ocultar HP en tokens">❤</button>
+                    <div class="tv-zoom-sep"></div>
+                    <button class="tv-zoom-btn tv-aoe-btn" id="tvAoeBtn" onclick="addAoeCircle()" title="Añadir círculo de área de efecto">⭕</button>
+                    <button class="tv-zoom-btn" onclick="clearAllAoeCircles()" title="Limpiar todos los círculos AoE">🗑</button>
+                    <select class="tv-aoe-select" id="tvAoeRadius" title="Radio del área de efecto">
                         <option value="5">5ft</option>
                         <option value="10">10ft</option>
                         <option value="20" selected>20ft</option>
                         <option value="30">30ft</option>
                         <option value="40">40ft</option>
                     </select>
+                    <select class="tv-aoe-select" id="tvAoeShape" title="Forma del área de efecto">
+                        <option value="circle">Círculo</option>
+                        <option value="square">Cuadrado</option>
+                        <option value="cone">Cono</option>
+                        <option value="line">Línea</option>
+                    </select>
                 </div>
+
+                <!-- Turn banner overlay -->
+                <div id="tvTurnBanner" class="tv-turn-banner" style="display:none;"></div>
 
                 <div class="tv-map-info">Arrastra para mover · Rueda para zoom · Click en ficha para acciones</div>
             </div>
@@ -914,7 +935,7 @@
     <script src="globals.js?v=20260325a"></script>
     <script src="utils.js?v=20260324a"></script>
     <script src="storage.js?v=20260325a"></script>
-    <script src="api-sync.js?v=20260403c"></script>
+    <script src="api-sync.js?v=20260406a"></script>
     <script src="role.js?v=20260324a"></script>
     <script src="map.js?v=20260331a"></script>
     <script src="map-editor.js?v=20260324a"></script>
@@ -923,16 +944,16 @@
     <script src="character-sheet.js?v=20260330b"></script>
     <script src="character-edit.js?v=20260330d"></script>
     <script src="combat-setup.js?v=20260330a"></script>
-    <script src="combat-manager.js?v=20260401c"></script>
+    <script src="combat-manager.js?v=20260406a"></script>
     <script src="reactions.js?v=20260326c"></script>
     <script src="combat-log.js?v=20260324a"></script>
-    <script src="view.js?v=20260331a"></script>
+    <script src="view.js?v=20260406a"></script>
     <script src="encounters.js?v=20260325a"></script>
     <script src="npc-generator.js?v=20260325a"></script>
     <script src="session-notes.js?v=20260330a"></script>
     <script src="narrative.js?v=20260326b"></script>
     <script src="narrative-images.js?v=20260330a"></script>
-    <script src="tv-mode.js?v=20260403a"></script>
+    <script src="tv-mode.js?v=20260406a"></script>
     <script src="combat-maps.js?v=20260403a"></script>
 </body>
 

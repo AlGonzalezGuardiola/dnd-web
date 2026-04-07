@@ -119,6 +119,13 @@ async function init() {
         initRole();
         loadSavedCombatIfAny();
         migrateEncounterNpcsToTemplates();
+        // Auto-join if ?join=CODE is in the URL (e.g. scanned from QR)
+        const _urlJoin = new URLSearchParams(location.search).get('join');
+        if (_urlJoin) {
+            showOnlineLobby();
+            const inp = document.getElementById('onlineJoinInput');
+            if (inp) { inp.value = _urlJoin.toUpperCase(); }
+        }
     } catch (error) {
         console.error('Error loading data:', error);
         showWelcomeScreen();

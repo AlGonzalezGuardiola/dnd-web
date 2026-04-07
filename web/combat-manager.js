@@ -145,6 +145,7 @@ function renderCombatManager() {
     renderActivePanel();
     renderCombatLog();
     renderKillScoreboard();
+    _renderConcentrationTracker();
 }
 
 // ---- Damage panel (below action cards) ----
@@ -268,12 +269,13 @@ function _renderPlayerCombatLayout(view) {
     const renderIdx = (myIdx >= 0) ? myIdx : combatState.currentIndex;
     renderActivePanel(panelEl, renderIdx);
 
-    // Show "¡Es tu turno!" popup once when turn starts
+    // Show "¡Es tu turno!" popup + push notification once when turn starts
     if (isMyTurn) {
         const turnKey = `${combatState.round}-${combatState.currentIndex}`;
         if (turnKey !== _lastPlayerTurnNotified) {
             _lastPlayerTurnNotified = turnKey;
             _showYourTurnPopup(currentP.name);
+            _sendTurnNotification(currentP.name);
         }
     }
 }
@@ -1043,6 +1045,20 @@ function renderActivePanel(targetEl, forcePIdx) {
     // HP slider fill percentage
     const sliderFillPct = p.hp.max > 0 ? Math.max(0, (p.hp.current / p.hp.max) * 100) : 0;
 
+    // Temp HP
+    const tempHp = p.tempHp || 0;
+    const tempHpBlock = `
+        <div class="combat-vital-block combat-temphp-block" id="activeTempHpBlock">
+            <div class="combat-vital-label">🛡️ HP Temporal</div>
+            <div class="combat-vital-value">
+                <input type="number" id="activeTempHpInput" class="hp-number-input"
+                       min="0" max="999" value="${tempHp}"
+                       onchange="setTempHp('${p.id}', parseInt(this.value)||0)"
+                       inputmode="numeric" aria-label="HP temporal">
+            </div>
+            ${tempHp > 0 ? `<div class="temphp-bar-wrap"><div class="temphp-bar-fill" style="width:${Math.min(100,(tempHp/p.hp.max)*100)}%"></div></div>` : ''}
+        </div>`;
+
     const panelClass = `combat-active-panel${p.demonicForm ? ' demonic-active' : ''}${isSegundaAccion ? ' segunda-accion-active' : ''}${isExtraAttack ? ' extra-attack-active' : ''}`;
     panel.className = panelClass;
 
@@ -1081,6 +1097,7 @@ function renderActivePanel(targetEl, forcePIdx) {
                        style="--fill-pct:${sliderFillPct}%"
                        oninput="setParticipantHp('${p.id}', parseInt(this.value))">
             </div>
+            ${tempHpBlock}
             <div class="combat-vital-block">
                 <div class="combat-vital-label">🛡️ Clase de Armadura</div>
                 <div class="combat-vital-value">${liveCA}</div>
@@ -1477,6 +1494,257 @@ function toggleParticipantCondition(id, condId) {
     else p.conditions.push(condId);
     saveCombatState();
     renderActivePanel();
+}
+
+function setTempHp(id, value) {
+    const p = combatState.participants.find(x => x.id === id);
+    if (!p) return;
+    p.tempHp = Math.max(0, isNaN(value) ? 0 : value);
+    saveCombatState();
+    // Lightweight update of the temp HP block
+    const block = document.getElementById('activeTempHpBlock');
+    if (block) {
+        const inp = document.getElementById('activeTempHpInput');
+        if (inp) inp.value = p.tempHp;
+    }
+    renderTurnQueue();
+}
+
+// ─── Concentration Tracker ────────────────────────────────────────────────────
+
+function _renderConcentrationTracker() {
+    const container = document.getElementById('concentrationTracker');
+    if (!container) return;
+    const concentrating = combatState.participants.filter(p => p.conditions?.includes('concentracion'));
+    if (!concentrating.length) { container.style.display = 'none'; return; }
+    container.style.display = '';
+    container.innerHTML = `
+        <div class="conc-tracker-title">🧠 Concentración activa</div>
+        ${concentrating.map(p => `
+            <div class="conc-tracker-row">
+                <span class="conc-tracker-name">${p.name.split(' ')[0]}</span>
+                <input class="conc-spell-input" type="text" placeholder="Hechizo…"
+                       value="${p.concentrationSpell || ''}"
+                       oninput="setConcentrationSpell('${p.id}', this.value)"
+                       title="Hechizo en concentración">
+            </div>`).join('')}`;
+}
+
+function setConcentrationSpell(id, spellName) {
+    const p = combatState.participants.find(x => x.id === id);
+    if (!p) return;
+    p.concentrationSpell = spellName;
+    saveCombatState();
+}
+
+// ─── AoE Damage Modal ─────────────────────────────────────────────────────────
+
+function openAoeDamageModal() {
+    document.getElementById('aoeDamageOverlay')?.remove();
+    const overlay = document.createElement('div');
+    overlay.id = 'aoeDamageOverlay';
+    overlay.className = 'combat-resume-overlay';
+    overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+
+    const targets = combatState.participants.filter(p => !p.isGroup || p.membersRemaining > 0);
+    const rows = targets.map(p => {
+        const hpPct   = p.hp.max > 0 ? Math.round(p.hp.current / p.hp.max * 100) : 0;
+        const hpColor = hpPct <= 0 ? '#555' : hpPct <= 25 ? '#e53935' : hpPct <= 50 ? '#ff9800' : '#4caf50';
+        return `<label class="aoe-target-row">
+            <input type="checkbox" class="aoe-target-cb" value="${p.id}" checked>
+            <span class="aoe-target-name">${p.name.split(' ')[0]}</span>
+            <span class="aoe-hp-text" style="color:${hpColor}">${p.hp.current}/${p.hp.max}</span>
+            <div class="aoe-hp-bar"><div class="aoe-hp-fill" style="width:${hpPct}%;background:${hpColor}"></div></div>
+        </label>`;
+    }).join('');
+
+    overlay.innerHTML = `
+        <div class="action-detail-modal aoe-modal">
+            <div class="action-detail-name">💥 Daño en Área</div>
+            <div class="aoe-input-row">
+                <input type="number" id="aoeDmgAmount" class="combat-custom-input" placeholder="Cantidad de daño" min="0" style="flex:1">
+                <label class="aoe-half-label"><input type="checkbox" id="aoeDmgHalf"> ½ daño</label>
+            </div>
+            <div class="aoe-select-btns">
+                <button class="btn-combat-secondary" onclick="_aoeSelectAll(true)">Todos</button>
+                <button class="btn-combat-secondary" onclick="_aoeSelectAll(false)">Ninguno</button>
+                <button class="btn-combat-secondary" onclick="_aoeSelectByTipo('enemigo')">Enemigos</button>
+                <button class="btn-combat-secondary" onclick="_aoeSelectByTipo('jugador','aliado')">Aliados</button>
+            </div>
+            <div class="aoe-targets-list">${rows}</div>
+            <div style="display:flex;gap:8px;margin-top:12px">
+                <button class="btn-combat-primary" style="flex:1" onclick="applyAoeDamage()">💥 Aplicar</button>
+                <button class="btn-combat-secondary" onclick="document.getElementById('aoeDamageOverlay')?.remove()">Cancelar</button>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+    document.getElementById('aoeDmgAmount')?.focus();
+}
+
+function _aoeSelectAll(checked) {
+    document.querySelectorAll('.aoe-target-cb').forEach(cb => cb.checked = checked);
+}
+function _aoeSelectByTipo(...tipos) {
+    document.querySelectorAll('.aoe-target-cb').forEach(cb => {
+        const p = combatState.participants.find(x => x.id === cb.value);
+        cb.checked = p ? tipos.includes(p.tipo) : false;
+    });
+}
+
+function applyAoeDamage() {
+    const raw    = parseInt(document.getElementById('aoeDmgAmount')?.value || '0', 10);
+    const isHalf = document.getElementById('aoeDmgHalf')?.checked;
+    const amount = isHalf ? Math.floor(raw / 2) : raw;
+    if (!amount || amount <= 0) { showNotification('⚠️ Introduce una cantidad', 1500); return; }
+
+    const checked = [...document.querySelectorAll('.aoe-target-cb:checked')].map(cb => cb.value);
+    if (!checked.length) { showNotification('⚠️ Selecciona al menos un objetivo', 1500); return; }
+
+    let affected = 0;
+    checked.forEach(pid => {
+        const p = combatState.participants.find(x => x.id === pid);
+        if (!p) return;
+        // Absorb temp HP first
+        const tempHp = p.tempHp || 0;
+        const absorbed = Math.min(tempHp, amount);
+        p.tempHp = tempHp - absorbed;
+        const newHp = Math.max(0, (p.hp?.current ?? 0) - (amount - absorbed));
+        // Concentration reminder
+        if (p.hp.current > newHp && p.conditions?.includes('concentracion')) {
+            const dmg = p.hp.current - newHp;
+            showNotification(`🧠 ${p.name.split(' ')[0]}: CON CD ${Math.max(10, Math.floor(dmg / 2))}!`, 4000);
+        }
+        p.hp.current = Math.max(0, Math.min(p.hp.max, newHp));
+        affected++;
+    });
+
+    saveCombatState({ immediate: isOnlineCombat });
+    renderTurnQueue();
+    renderCombatManager();
+    document.getElementById('aoeDamageOverlay')?.remove();
+    showNotification(`💥 ${amount}${isHalf ? ' (½)' : ''} de daño a ${affected} objetivo${affected !== 1 ? 's' : ''}`, 2500);
+}
+
+// ─── Mass Saving Throw Modal ──────────────────────────────────────────────────
+
+const SAVE_ABILITIES = [
+    { key: 'Fuerza',       abbr: 'FUE' },
+    { key: 'Destreza',     abbr: 'DES' },
+    { key: 'Constitución', abbr: 'CON' },
+    { key: 'Inteligencia', abbr: 'INT' },
+    { key: 'Sabiduría',    abbr: 'SAB' },
+    { key: 'Carisma',      abbr: 'CAR' },
+];
+
+function openMassSaveModal() {
+    document.getElementById('massSaveOverlay')?.remove();
+    const overlay = document.createElement('div');
+    overlay.id = 'massSaveOverlay';
+    overlay.className = 'combat-resume-overlay';
+    overlay.onclick = e => { if (e.target === overlay) overlay.remove(); };
+
+    const abilityOptions = SAVE_ABILITIES.map(a =>
+        `<option value="${a.key}">${a.abbr} — ${a.key}</option>`
+    ).join('');
+
+    const rows = combatState.participants.map(p => {
+        const mod = _getSaveMod(p, 'Destreza'); // default, updated on roll
+        return `<label class="aoe-target-row mass-save-row" data-pid="${p.id}">
+            <input type="checkbox" class="mass-save-fail-cb" value="${p.id}">
+            <span class="aoe-target-name">${p.name.split(' ')[0]}</span>
+            <span class="mass-save-result" id="msr_${p.id}">—</span>
+        </label>`;
+    }).join('');
+
+    overlay.innerHTML = `
+        <div class="action-detail-modal aoe-modal">
+            <div class="action-detail-name">🎲 Salvación Masiva</div>
+            <div class="aoe-input-row">
+                <select id="massSaveAbility" class="combat-custom-input" style="flex:1" onchange="_massSaveRollAll()">
+                    ${abilityOptions}
+                </select>
+                <input type="number" id="massSaveDc" class="combat-custom-input" placeholder="CD" min="1" max="30" style="width:70px" oninput="_massSaveRollAll()">
+            </div>
+            <div class="aoe-select-btns">
+                <button class="btn-combat-secondary" onclick="_massSaveRollAll()">🎲 Tirar todos</button>
+                <button class="btn-combat-secondary" onclick="document.querySelectorAll('.mass-save-fail-cb').forEach(c=>c.checked=true)">Marcar todos</button>
+            </div>
+            <div class="aoe-targets-list">${rows}</div>
+            <div class="aoe-input-row" style="margin-top:8px">
+                <select id="massSaveEffect" class="combat-custom-input" style="flex:1">
+                    <option value="">— Solo registrar —</option>
+                    <option value="envenenado">Aplicar: Envenenado</option>
+                    <option value="paralizado">Aplicar: Paralizado</option>
+                    <option value="aturdido">Aplicar: Aturdido</option>
+                    <option value="asustado">Aplicar: Asustado</option>
+                    <option value="caido">Aplicar: Caído</option>
+                </select>
+            </div>
+            <div style="display:flex;gap:8px;margin-top:12px">
+                <button class="btn-combat-primary" style="flex:1" onclick="applyMassSave()">✓ Aplicar a marcados</button>
+                <button class="btn-combat-secondary" onclick="document.getElementById('massSaveOverlay')?.remove()">Cancelar</button>
+            </div>
+        </div>`;
+    document.body.appendChild(overlay);
+}
+
+function _getSaveMod(p, ability) {
+    const stats = getEffectiveCharData(p)?.stats;
+    if (!stats || !stats[ability]) return 0;
+    return Math.floor((stats[ability] - 10) / 2);
+}
+
+function _massSaveRollAll() {
+    const ability = document.getElementById('massSaveAbility')?.value || 'Destreza';
+    const dc      = parseInt(document.getElementById('massSaveDc')?.value || '0', 10);
+
+    combatState.participants.forEach(p => {
+        const mod    = _getSaveMod(p, ability);
+        const roll   = Math.floor(Math.random() * 20) + 1;
+        const total  = roll + mod;
+        const passed = dc > 0 ? total >= dc : null;
+
+        const el = document.getElementById(`msr_${p.id}`);
+        if (el) {
+            el.textContent = `d20:${roll}${mod >= 0 ? '+' : ''}${mod}=${total}${passed !== null ? (passed ? ' ✓' : ' ✗') : ''}`;
+            el.style.color = passed === false ? '#ef5350' : passed === true ? '#4caf50' : '#e8d5b7';
+        }
+
+        // Auto-check the checkbox if they failed
+        if (passed === false) {
+            const cb = document.querySelector(`.mass-save-fail-cb[value="${p.id}"]`);
+            if (cb) cb.checked = true;
+        }
+    });
+}
+
+function applyMassSave() {
+    const ability  = document.getElementById('massSaveAbility')?.value   || 'Destreza';
+    const effect   = document.getElementById('massSaveEffect')?.value    || '';
+    const checked  = [...document.querySelectorAll('.mass-save-fail-cb:checked')].map(cb => cb.value);
+
+    if (!checked.length) { showNotification('⚠️ Nadie marcado como fallido', 1500); return; }
+
+    checked.forEach(pid => {
+        const p = combatState.participants.find(x => x.id === pid);
+        if (!p) return;
+        if (effect && !p.conditions.includes(effect)) {
+            p.conditions.push(effect);
+        }
+    });
+
+    saveCombatState({ immediate: isOnlineCombat });
+    renderCombatManager();
+    document.getElementById('massSaveOverlay')?.remove();
+    showNotification(`🎲 Salvación de ${ability}: ${checked.length} fallo${checked.length !== 1 ? 's' : ''}${effect ? ' → ' + effect : ''}`, 3000);
+}
+
+// ─── Push Notifications ───────────────────────────────────────────────────────
+
+function _sendTurnNotification(charName) {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    if (document.visibilityState === 'visible') return; // already focused — popup is enough
+    new Notification('¡Es tu turno!', { body: `Turno de ${charName}`, icon: 'favicon.svg' });
 }
 
 function nextCombatTurn() {

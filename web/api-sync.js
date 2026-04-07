@@ -210,6 +210,14 @@ function updateWaitingRoom(deviceCount, joinCode, isMasterDevice) {
         btn.disabled        = false;
         btn.textContent     = '⚔️ Iniciar combate';
     }
+
+    // Generate QR code for the join URL
+    const qrContainer = document.getElementById('waitingQrCode');
+    if (qrContainer && code !== '------' && typeof QRCode !== 'undefined') {
+        const joinUrl = `${window.location.origin}${window.location.pathname}?join=${code}`;
+        qrContainer.innerHTML = '';
+        new QRCode(qrContainer, { text: joinUrl, width: 160, height: 160, colorDark: '#e8d5b7', colorLight: '#0a0e17' });
+    }
 }
 
 async function startOnlineCombat() {
@@ -317,6 +325,10 @@ async function joinOnlineSession() {
         activeCombatId = String(data.combatId);
         localStorage.setItem(COMBAT_ID_KEY, activeCombatId);
         updateRoleIndicator();
+        // Request push notification permission (player needs to know when it's their turn)
+        if ('Notification' in window && Notification.permission === 'default') {
+            Notification.requestPermission().catch(() => {});
+        }
 
         connectToSSE(activeCombatId);
 

@@ -4582,3 +4582,278 @@ body.role-jugador .master-only { display: none !important; }
         max-height: 140px;
     }
 }
+
+/* ─── Temp HP block in active panel ──────────── */
+
+.combat-temphp-block {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: rgba(251, 191, 36, 0.06);
+    border: 1px solid rgba(251, 191, 36, 0.2);
+    border-radius: 10px;
+    margin-bottom: 8px;
+}
+
+.combat-temphp-block label {
+    font-size: 12px;
+    color: #fbbf24;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.combat-temphp-block input[type="number"] {
+    width: 64px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    border-radius: 6px;
+    color: #fbbf24;
+    font-size: 14px;
+    font-weight: 700;
+    text-align: center;
+    padding: 4px 6px;
+    font-family: inherit;
+}
+
+.temphp-bar-wrap {
+    flex: 1;
+    height: 6px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.temphp-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #fbbf24, #f59e0b);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+}
+
+/* ─── Concentration Tracker ───────────────────── */
+
+.concentration-tracker {
+    padding: 8px 14px;
+    background: rgba(147, 51, 234, 0.06);
+    border: 1px solid rgba(147, 51, 234, 0.25);
+    border-radius: 10px;
+    margin: 4px 8px;
+}
+
+.conc-tracker-title {
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(196, 148, 255, 0.8);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 6px;
+}
+
+.conc-tracker-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(147, 51, 234, 0.1);
+}
+
+.conc-tracker-row:last-child {
+    border-bottom: none;
+}
+
+.conc-tracker-name {
+    font-size: 12px;
+    color: var(--text-primary);
+    min-width: 80px;
+    flex-shrink: 0;
+}
+
+.conc-spell-input {
+    flex: 1;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(147, 51, 234, 0.25);
+    border-radius: 6px;
+    color: rgba(196, 148, 255, 0.9);
+    font-size: 12px;
+    padding: 3px 8px;
+    font-family: inherit;
+    font-style: italic;
+}
+
+.conc-spell-input:focus {
+    outline: none;
+    border-color: rgba(147, 51, 234, 0.55);
+}
+
+/* ─── AoE Damage Modal ────────────────────────── */
+
+.aoe-modal .modal-content {
+    max-width: 520px;
+}
+
+.aoe-input-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.aoe-input-row label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.aoe-input-row input[type="number"] {
+    width: 80px;
+    background: rgba(0,0,0,0.35);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 15px;
+    font-weight: 600;
+    text-align: center;
+    padding: 6px;
+    font-family: inherit;
+}
+
+.aoe-half-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    user-select: none;
+}
+
+.aoe-select-btns {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.aoe-select-btns button {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background 0.12s;
+}
+
+.aoe-select-btns button:hover {
+    background: rgba(255,255,255,0.13);
+    color: var(--text-primary);
+}
+
+.aoe-targets-list {
+    max-height: 260px;
+    overflow-y: auto;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 4px 0;
+    margin-bottom: 14px;
+}
+
+.aoe-target-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    cursor: pointer;
+}
+
+.aoe-target-row:last-child {
+    border-bottom: none;
+}
+
+.aoe-target-row:hover {
+    background: rgba(255,255,255,0.04);
+}
+
+.aoe-target-row input[type="checkbox"] {
+    width: 15px;
+    height: 15px;
+    accent-color: #f87171;
+    flex-shrink: 0;
+}
+
+.aoe-target-name {
+    flex: 1;
+    font-size: 13px;
+    color: var(--text-primary);
+}
+
+.aoe-target-tipo {
+    font-size: 11px;
+    color: var(--text-secondary);
+}
+
+.aoe-hp-bar {
+    width: 60px;
+    height: 5px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 3px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.aoe-hp-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: #4ade80;
+    transition: width 0.2s;
+}
+
+/* ─── Mass Save Modal ─────────────────────────── */
+
+.mass-save-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.mass-save-row label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.mass-save-row select,
+.mass-save-row input[type="number"] {
+    background: rgba(0,0,0,0.35);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 13px;
+    padding: 5px 8px;
+    font-family: inherit;
+}
+
+.mass-save-result {
+    font-size: 12px;
+    color: var(--text-secondary);
+    padding: 2px 0;
+}
+
+/* ─── Waiting room QR ─────────────────────────── */
+
+.waiting-qr-container {
+    margin: 16px auto 8px;
+    display: flex;
+    justify-content: center;
+}
+
+.waiting-qr-container canvas,
+.waiting-qr-container img {
+    border-radius: 8px;
+    border: 2px solid rgba(232, 213, 183, 0.2);
+}

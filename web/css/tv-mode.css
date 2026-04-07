@@ -1121,3 +1121,255 @@
     background: rgba(212, 175, 55, 0.32);
     border-color: rgba(212, 175, 55, 0.8);
 }
+
+/* ─── Turn Banner ─────────────────────────────── */
+
+.tv-turn-banner {
+    position: absolute;
+    top: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    background: rgba(10, 14, 23, 0.88);
+    border: 1px solid rgba(212, 175, 55, 0.45);
+    border-radius: 16px;
+    padding: 10px 20px 10px 12px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(212, 175, 55, 0.15);
+    pointer-events: none;
+    min-width: 220px;
+    max-width: 480px;
+}
+
+.tv-banner-portrait {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 2px solid rgba(212, 175, 55, 0.6);
+    object-fit: cover;
+    flex-shrink: 0;
+    background: rgba(212, 175, 55, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    overflow: hidden;
+}
+
+.tv-banner-portrait img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.tv-banner-info {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.tv-banner-name {
+    font-family: 'Cinzel', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--accent-gold);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tv-banner-sub {
+    font-size: 12px;
+    color: rgba(232, 213, 183, 0.65);
+    white-space: nowrap;
+}
+
+.tv-turn-banner--flash {
+    animation: tv-banner-flash 0.6s ease-out;
+}
+
+@keyframes tv-banner-flash {
+    0%   { opacity: 0; transform: translateX(-50%) scale(0.92); }
+    40%  { opacity: 1; transform: translateX(-50%) scale(1.04); }
+    100% { opacity: 1; transform: translateX(-50%) scale(1); }
+}
+
+/* ─── Token Names always-on ───────────────────── */
+
+.tv-names-always .tv-token-label {
+    opacity: 1 !important;
+    font-size: 13px;
+    font-weight: 600;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.9), 0 0 8px rgba(0,0,0,0.7);
+    bottom: -20px;
+}
+
+/* ─── HP number overlay on token ─────────────────*/
+
+.tv-token-hp-num {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 11px;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.95), 0 0 6px rgba(0,0,0,0.8);
+    pointer-events: none;
+    white-space: nowrap;
+    z-index: 3;
+    display: none;
+}
+
+.tv-show-hp .tv-token-hp-num {
+    display: block;
+}
+
+/* ─── Temp HP bar on token ────────────────────── */
+
+.tv-token-temphp-fill {
+    position: absolute;
+    bottom: 4px;
+    left: 4px;
+    right: 4px;
+    height: 3px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #fbbf24, #f59e0b);
+    box-shadow: 0 0 4px rgba(251, 191, 36, 0.5);
+    pointer-events: none;
+    z-index: 3;
+    display: none;
+}
+
+/* ─── Condition icons ring ────────────────────── */
+
+.tv-token-conds-ring {
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 2px;
+    pointer-events: none;
+    z-index: 4;
+}
+
+.tv-cond-badge {
+    font-size: 13px;
+    line-height: 1;
+    filter: drop-shadow(0 1px 3px rgba(0,0,0,0.9));
+}
+
+/* ─── Multi-circle AoE ────────────────────────── */
+
+.tv-aoe-shape {
+    position: absolute;
+    border: 2px solid rgba(255, 100, 60, 0.9);
+    background: rgba(255, 100, 60, 0.13);
+    box-shadow:
+        0 0 0 1px rgba(255, 100, 60, 0.25),
+        inset 0 0 30px rgba(255, 100, 60, 0.07);
+    cursor: grab;
+    pointer-events: all;
+    z-index: 9;
+    user-select: none;
+}
+
+.tv-aoe-shape:active {
+    cursor: grabbing;
+}
+
+.tv-aoe-shape.tv-aoe-selected {
+    border-color: rgba(255, 200, 60, 0.95);
+    background: rgba(255, 200, 60, 0.15);
+    box-shadow: 0 0 0 2px rgba(255, 200, 60, 0.4), inset 0 0 30px rgba(255, 200, 60, 0.08);
+}
+
+.tv-aoe-delete-btn {
+    position: absolute;
+    top: -12px;
+    right: -12px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: rgba(180, 30, 30, 0.9);
+    border: 1px solid rgba(255, 80, 80, 0.6);
+    color: #fff;
+    font-size: 12px;
+    line-height: 22px;
+    text-align: center;
+    cursor: pointer;
+    display: none;
+    z-index: 2;
+    pointer-events: all;
+}
+
+.tv-aoe-shape.tv-aoe-selected .tv-aoe-delete-btn {
+    display: block;
+}
+
+.tv-aoe-rotate-handle {
+    position: absolute;
+    bottom: -16px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: rgba(255, 200, 60, 0.9);
+    border: 1px solid rgba(255, 255, 200, 0.7);
+    cursor: grab;
+    display: none;
+    z-index: 2;
+    pointer-events: all;
+}
+
+.tv-aoe-shape.tv-aoe-selected .tv-aoe-rotate-handle {
+    display: block;
+}
+
+/* ─── Token popup size row ────────────────────── */
+
+.tv-popup-size-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: rgba(232, 213, 183, 0.75);
+    padding: 4px 0;
+    border-top: 1px solid rgba(255,255,255,0.07);
+}
+
+.tv-popup-size-select {
+    flex: 1;
+    background: rgba(0,0,0,0.5);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 13px;
+    padding: 4px 6px;
+    font-family: inherit;
+    cursor: pointer;
+}
+
+.tv-banner-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: 2px solid rgba(212, 175, 55, 0.6);
+    background: rgba(212, 175, 55, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.tv-banner-sep {
+    margin: 0 4px;
+    opacity: 0.4;
+}

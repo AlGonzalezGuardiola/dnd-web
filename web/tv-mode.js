@@ -24,6 +24,10 @@ const tvState = {
     activePopupId: null,
     activeRingsPid: null, // token with distance rings shown
     cellHighlight: null,  // { col, row } — used during drag
+
+    // Display toggles (local, not synced)
+    showTokenNames: true,
+    showTokenHp: false,
 };
 
 // ─── Entry point ─────────────────────────────────
@@ -46,7 +50,54 @@ function refreshTvMode() {
     if (state.currentView !== 'tvMode') return;
     renderTvInitiative();
     renderTvTokens();
+    _updateTvTurnBanner();
     _updateTvEmptyState();
+}
+
+// ─── Turn Banner ──────────────────────────────────
+
+let _lastBannerTurnKey = '';
+
+function _updateTvTurnBanner() {
+    const banner = document.getElementById('tvTurnBanner');
+    if (!banner) return;
+
+    if (!combatState.isActive || !combatState.participants.length) {
+        banner.style.display = 'none';
+        return;
+    }
+
+    const p = combatState.participants[combatState.currentIndex];
+    if (!p) return;
+
+    const turnKey = `${combatState.round}-${combatState.currentIndex}`;
+    const imagen  = p.charData?.imagen || '';
+    const hpPct   = p.hp?.max > 0 ? Math.max(0, Math.round((p.hp.current / p.hp.max) * 100)) : 100;
+    const hpColor = hpPct > 60 ? '#4caf50' : hpPct > 25 ? '#ffaa00' : '#ef5350';
+    const tipoIcon = { jugador: '🎮', aliado: '💙', enemigo: '💀' }[p.tipo] || '⚔️';
+
+    banner.style.display = 'flex';
+    banner.innerHTML = `
+        ${imagen
+            ? `<img class="tv-banner-portrait" src="${imagen}" alt="">`
+            : `<div class="tv-banner-icon">${tipoIcon}</div>`}
+        <div class="tv-banner-info">
+            <div class="tv-banner-name">${p.name}</div>
+            <div class="tv-banner-sub">
+                <span style="color:${hpColor}">❤️ ${p.hp?.current ?? '?'} / ${p.hp?.max ?? '?'}</span>
+                <span class="tv-banner-sep">·</span>
+                <span>Init ${p.initiative ?? '–'}</span>
+                <span class="tv-banner-sep">·</span>
+                <span>Ronda ${combatState.round}</span>
+            </div>
+        </div>`;
+
+    if (turnKey !== _lastBannerTurnKey) {
+        _lastBannerTurnKey = turnKey;
+        banner.classList.remove('tv-turn-banner--flash');
+        void banner.offsetWidth; // force reflow
+        banner.classList.add('tv-turn-banner--flash');
+    }
 }
 
 // ─── Grid / Map setup ────────────────────────────
@@ -315,12 +366,19 @@ function renderTvTokens() {
         if (!existingIds.has(el.dataset.pid)) el.remove();
     });
 
+    const COND_ICONS = {
+        envenenado: '🤢', paralizado: '⛓️', aturdido: '💫', concentracion: '🧠',
+        caido: '🔻', asustado: '😱', invisible: '👁️', encantado: '💜', cegado: '🚫',
+    };
+
     participants.forEach((p, i) => {
         const isActive = i === currentIndex;
         const isDead = (p.hp?.current ?? 1) <= 0;
         const hpPct = p.hp?.max > 0 ? Math.max(0, Math.round((p.hp.current / p.hp.max) * 100)) : 100;
         const hpColor = hpPct > 60 ? '#4caf50' : hpPct > 25 ? '#ffaa00' : '#ef5350';
         const tipo = p.tipo || 'jugador';
+        const tokenSize = p.tokenSize || 1;
+        const sizePx = tokenSize * tvState.cellSize;
 
         // Assign default position if new
         if (!tvState.tokenPositions[p.id]) {
@@ -328,9 +386,12 @@ function renderTvTokens() {
         }
 
         const pos = tvState.tokenPositions[p.id];
-        const { px, py } = _cellToPixel(pos.col, pos.row);
+        // For tokens bigger than 1 cell, shift so they're centered on their grid anchor
+        const cellOffsetPx = (tokenSize - 1) * tvState.cellSize / 2;
+        const rawPx = _cellToPixel(pos.col, pos.row);
+        const px = rawPx.px + cellOffsetPx;
+        const py = rawPx.py + cellOffsetPx;
         const abbrev = _tokenAbbrev(p.name);
-
         const imagen = p.charData?.imagen || '';
 
         let tokenEl = layer.querySelector(`.tv-token[data-pid="${p.id}"]`);
@@ -339,11 +400,14 @@ function renderTvTokens() {
             tokenEl.className = `tv-token ${tipo}`;
             tokenEl.dataset.pid = p.id;
             tokenEl.innerHTML = `
+                <div class="tv-token-conds-ring"></div>
                 <span class="tv-token-label">${p.name}</span>
                 <img class="tv-token-photo" alt="" style="display:none">
                 <span class="tv-token-abbrev">${abbrev}</span>
+                <span class="tv-token-hp-num" style="display:none"></span>
                 <div class="tv-token-hp-wrap">
                     <div class="tv-token-hp-fill"></div>
+                    <div class="tv-token-temphp-fill"></div>
                 </div>`;
             tokenEl.addEventListener('mousedown', _tvTokenMouseDown);
             tokenEl.addEventListener('touchstart', _tvTokenTouchStart, { passive: false });
@@ -351,13 +415,18 @@ function renderTvTokens() {
             layer.appendChild(tokenEl);
         }
 
+        // Token size
+        tokenEl.style.width  = sizePx + 'px';
+        tokenEl.style.height = sizePx + 'px';
+
         // Update position & classes
         tokenEl.style.left = px + 'px';
-        tokenEl.style.top = py + 'px';
+        tokenEl.style.top  = py + 'px';
         tokenEl.classList.toggle('active-turn', isActive && !isDead);
         tokenEl.classList.toggle('dead', isDead);
         tokenEl.classList.toggle('tv-token-mine', _canPlayerControlToken(p.id));
         tokenEl.classList.toggle('demonic', !!p.demonicForm);
+        tokenEl.classList.toggle('tv-names-always', tvState.showTokenNames);
 
         // Aura Necrótica circle: 20ft radius = 4 cells
         const auraId = `tv-aura-${p.id}`;
@@ -378,27 +447,47 @@ function renderTvTokens() {
             auraEl.remove();
         }
 
-        // Portrait photo — same crop as character thumbnail (object-fit cover, top center)
+        // Portrait photo
         const photoEl = tokenEl.querySelector('.tv-token-photo');
         if (photoEl) {
-            if (imagen) {
-                photoEl.src = imagen;
-                photoEl.style.display = '';
-            } else {
-                photoEl.src = '';
-                photoEl.style.display = 'none';
-            }
+            if (imagen) { photoEl.src = imagen; photoEl.style.display = ''; }
+            else { photoEl.src = ''; photoEl.style.display = 'none'; }
         }
         tokenEl.classList.toggle('tv-token-has-photo', !!imagen);
 
-        // Update abbrev & label in case name changed
+        // Abbrev & label
         tokenEl.querySelector('.tv-token-abbrev').textContent = abbrev;
-        tokenEl.querySelector('.tv-token-label').textContent = p.name;
+        tokenEl.querySelector('.tv-token-label').textContent  = p.name;
 
-        // HP bar
-        const fill = tokenEl.querySelector('.tv-token-hp-fill');
-        fill.style.width = hpPct + '%';
-        fill.style.background = hpColor;
+        // HP number overlay
+        const hpNumEl = tokenEl.querySelector('.tv-token-hp-num');
+        if (hpNumEl) {
+            const tempHp = p.tempHp || 0;
+            hpNumEl.style.display = tvState.showTokenHp ? '' : 'none';
+            hpNumEl.textContent = tempHp > 0
+                ? `${p.hp?.current}+${tempHp}`
+                : `${p.hp?.current ?? '?'}`;
+            hpNumEl.style.color = hpColor;
+        }
+
+        // HP bar + temp HP bar
+        const fill    = tokenEl.querySelector('.tv-token-hp-fill');
+        const tempFill = tokenEl.querySelector('.tv-token-temphp-fill');
+        if (fill)     { fill.style.width = hpPct + '%'; fill.style.background = hpColor; }
+        if (tempFill) {
+            const tempPct = (p.tempHp && p.hp?.max > 0) ? Math.min(100, (p.tempHp / p.hp.max) * 100) : 0;
+            tempFill.style.width = tempPct + '%';
+        }
+
+        // Condition icons ring
+        const condsRing = tokenEl.querySelector('.tv-token-conds-ring');
+        if (condsRing) {
+            const activeConds = (p.conditions || []).filter(c => COND_ICONS[c]).slice(0, 6);
+            condsRing.innerHTML = activeConds.map(c =>
+                `<span class="tv-cond-badge" title="${c}">${COND_ICONS[c]}</span>`
+            ).join('');
+            condsRing.style.display = activeConds.length ? '' : 'none';
+        }
     });
 }
 
@@ -524,6 +613,33 @@ function _tvTokenClick(e) {
         if (_canPlayerControlToken(pid)) {
             tvOpenTokenPopup(pid, e.clientX, e.clientY);
         }
+    }
+}
+
+function toggleTokenNames() {
+    tvState.showTokenNames = !tvState.showTokenNames;
+    const btn = document.getElementById('tvNamesBtn');
+    if (btn) btn.classList.toggle('active', tvState.showTokenNames);
+    renderTvTokens();
+}
+
+function toggleTokenHp() {
+    tvState.showTokenHp = !tvState.showTokenHp;
+    const btn = document.getElementById('tvHpBtn');
+    if (btn) btn.classList.toggle('active', tvState.showTokenHp);
+    renderTvTokens();
+}
+
+function tvSetTokenSize(pid, size) {
+    const p = combatState.participants.find(x => x.id === pid);
+    if (!p) return;
+    p.tokenSize = parseInt(size) || 1;
+    saveCombatState({ immediate: isOnlineCombat });
+    renderTvTokens();
+    // Reopen popup with updated state
+    const popup = document.getElementById('tvTokenPopup');
+    if (popup && tvState.activePopupId === pid) {
+        tvOpenTokenPopup(pid, parseInt(popup.style.left), parseInt(popup.style.top));
     }
 }
 
@@ -719,6 +835,10 @@ function tvOpenTokenPopup(pid, clientX, clientY) {
         document.body.appendChild(popup);
     }
 
+    const tempHp    = p.tempHp || 0;
+    const tokenSize = p.tokenSize || 1;
+    const sizeLabels = { 1: 'Med.', 2: 'Grande', 3: 'Enorme', 4: 'Garg.' };
+
     popup.innerHTML = `
         <div class="tv-popup-header">
             <div>
@@ -728,7 +848,7 @@ function tvOpenTokenPopup(pid, clientX, clientY) {
             <button class="tv-popup-close" onclick="tvCloseTokenPopup()">×</button>
         </div>
         <div class="tv-popup-hp-block">
-            <div class="tv-popup-hp-label">Puntos de vida</div>
+            <div class="tv-popup-hp-label">Puntos de vida${tempHp > 0 ? ` <span style="color:#f9c74f">+${tempHp} temp</span>` : ''}</div>
             <div class="tv-popup-hp-display" style="color:${hpColor}">
                 ${p.hp?.current ?? '?'}<span style="font-size:14px;opacity:0.5"> / ${p.hp?.max ?? '?'}</span>
             </div>
@@ -741,9 +861,22 @@ function tvOpenTokenPopup(pid, clientX, clientY) {
             <button class="tv-popup-btn dmg" onclick="tvApplyDamage('${pid}')">Daño</button>
             <button class="tv-popup-btn heal" onclick="tvApplyHeal('${pid}')">Curar</button>
         </div>
+        <div class="tv-popup-dmg-row" style="margin-top:4px">
+            <input class="tv-popup-dmg-input" id="tvTempHpInput" type="number" min="0" max="999" placeholder="Temp HP" title="HP Temporal" style="flex:1">
+            <button class="tv-popup-btn" style="background:rgba(249,199,63,0.2);border-color:rgba(249,199,63,0.5);color:#f9c74f" onclick="tvSetTempHp('${pid}')">+Temp</button>
+        </div>
         <div class="tv-popup-cond-section">
             <div class="tv-popup-cond-title">Condiciones</div>
             <div class="tv-popup-cond-btns">${condButtons}</div>
+        </div>
+        <div class="tv-popup-size-row">
+            <span class="tv-popup-cond-title">Tamaño token</span>
+            <select class="tv-popup-size-select" onchange="tvSetTokenSize('${pid}',this.value)">
+                <option value="1" ${tokenSize===1?'selected':''}>S/M (1 celda)</option>
+                <option value="2" ${tokenSize===2?'selected':''}>Grande (2)</option>
+                <option value="3" ${tokenSize===3?'selected':''}>Enorme (3)</option>
+                <option value="4" ${tokenSize===4?'selected':''}>Gargantuesco (4)</option>
+            </select>
         </div>`;
 
     // Position popup: avoid going off-screen
@@ -779,7 +912,12 @@ function tvApplyDamage(pid) {
     const p = combatState.participants.find(x => x.id === pid);
     if (!p) return;
 
-    const newHp = Math.max(0, (p.hp?.current ?? 0) - amount);
+    // Absorb damage with temp HP first
+    const tempHp = p.tempHp || 0;
+    const tempAbsorbed = Math.min(tempHp, amount);
+    p.tempHp = tempHp - tempAbsorbed;
+    const remainder = amount - tempAbsorbed;
+    const newHp = Math.max(0, (p.hp?.current ?? 0) - remainder);
     setParticipantHp(pid, newHp);
     if (isOnlineCombat) saveCombatState({ immediate: true });
     if (input) input.value = '';
@@ -806,6 +944,23 @@ function tvApplyHeal(pid) {
     if (isOnlineCombat) saveCombatState({ immediate: true });
     if (input) input.value = '';
 
+    renderTvInitiative();
+    renderTvTokens();
+    const popup = document.getElementById('tvTokenPopup');
+    if (popup && tvState.activePopupId === pid) {
+        tvOpenTokenPopup(pid, parseInt(popup.style.left), parseInt(popup.style.top));
+    }
+}
+
+function tvSetTempHp(pid) {
+    const input = document.getElementById('tvTempHpInput');
+    const amount = parseInt(input?.value || '0', 10);
+    if (isNaN(amount) || amount < 0) return;
+    const p = combatState.participants.find(x => x.id === pid);
+    if (!p) return;
+    p.tempHp = amount;
+    if (isOnlineCombat) saveCombatState({ immediate: true });
+    if (input) input.value = '';
     renderTvInitiative();
     renderTvTokens();
     const popup = document.getElementById('tvTokenPopup');
@@ -1013,121 +1168,221 @@ function tvSetGridSize(cols, rows) {
     renderTvTokens();
 }
 
-// ─── AoE Circle Tool ─────────────────────────────────────────────────────────
+// ─── AoE Tool — Multiple circles / shapes ────────────────────────────────────
 
-const _aoeState = {
-    active:       false,
-    radiusFt:     20,
-    centerX:      0,     // canvas coords (px, before zoom)
-    centerY:      0,
-    dragging:     false,
-    dragOffsetX:  0,
-    dragOffsetY:  0,
-};
-
+let _aoeCircles     = []; // [{ id, radiusFt, centerX, centerY, shape, rotation }]
+let _selectedAoeId  = null;
+let _activeDragAoeId = null;
+let _aoeDragOffset   = { x: 0, y: 0 };
+let _aoeRotateDragId = null;
+let _aoeRotateOrigin = null; // { cx, cy } canvas px at drag start
+let _aoeRotateStartAngle = 0;
+let _aoeIdCounter   = 0;
 let _aoeDragListenersAdded = false;
 
-// Called once from initTvMode — attaches global mouse/touch listeners for dragging
+const AOE_SHAPES = ['circle', 'square', 'cone', 'line'];
+const AOE_COLORS = ['rgba(100,180,255,0.25)', 'rgba(255,120,80,0.25)', 'rgba(120,255,120,0.25)', 'rgba(255,220,0,0.25)'];
+// Each circle gets a stable color based on its id index
+function _aoeColor(id) { return AOE_COLORS[id % AOE_COLORS.length]; }
+
+// Called once from initTvMode
 function _initAoeDragListeners() {
     if (_aoeDragListenersAdded) return;
     _aoeDragListenersAdded = true;
 
-    const getClient = e => e.touches ? e.touches[0] : e;
+    const getXY = e => e.touches ? { x: e.touches[0].clientX, y: e.touches[0].clientY }
+                                 : { x: e.clientX,             y: e.clientY             };
 
-    document.addEventListener('mousemove', e => {
-        if (!_aoeState.dragging) return;
-        const mapArea = document.getElementById('tvMapArea');
-        if (!mapArea) return;
-        const rect = mapArea.getBoundingClientRect();
-        const screenX = e.clientX - rect.left - _aoeState.dragOffsetX;
-        const screenY = e.clientY - rect.top  - _aoeState.dragOffsetY;
-        _aoeState.centerX = (screenX - tvState.pan.x) / tvState.zoom;
-        _aoeState.centerY = (screenY - tvState.pan.y) / tvState.zoom;
-        _renderAoeCircle();
-    });
-
-    document.addEventListener('touchmove', e => {
-        if (!_aoeState.dragging) return;
-        const touch = getClient(e);
-        const mapArea = document.getElementById('tvMapArea');
-        if (!mapArea) return;
-        const rect = mapArea.getBoundingClientRect();
-        const screenX = touch.clientX - rect.left - _aoeState.dragOffsetX;
-        const screenY = touch.clientY - rect.top  - _aoeState.dragOffsetY;
-        _aoeState.centerX = (screenX - tvState.pan.x) / tvState.zoom;
-        _aoeState.centerY = (screenY - tvState.pan.y) / tvState.zoom;
-        _renderAoeCircle();
-    }, { passive: true });
-
-    document.addEventListener('mouseup',  () => { _aoeState.dragging = false; });
-    document.addEventListener('touchend', () => { _aoeState.dragging = false; });
+    document.addEventListener('mousemove', e => _aoeOnMove(getXY(e)));
+    document.addEventListener('touchmove', e => { if (_activeDragAoeId !== null || _aoeRotateDragId !== null) { e.preventDefault(); _aoeOnMove(getXY(e)); } }, { passive: false });
+    document.addEventListener('mouseup',  () => { _activeDragAoeId = null; _aoeRotateDragId = null; });
+    document.addEventListener('touchend', () => { _activeDragAoeId = null; _aoeRotateDragId = null; });
 }
 
-function toggleAoeTool() {
-    _aoeState.active = !_aoeState.active;
+function _aoeOnMove({ x, y }) {
+    const mapArea = document.getElementById('tvMapArea');
+    if (!mapArea) return;
+    const rect = mapArea.getBoundingClientRect();
 
-    const btn = document.getElementById('tvAoeBtn');
-    if (btn) btn.classList.toggle('active', _aoeState.active);
-
-    if (_aoeState.active) {
-        // Place circle at center of visible map area
-        const mapArea = document.getElementById('tvMapArea');
-        if (mapArea) {
-            _aoeState.centerX = (mapArea.offsetWidth  / 2 - tvState.pan.x) / tvState.zoom;
-            _aoeState.centerY = (mapArea.offsetHeight / 2 - tvState.pan.y) / tvState.zoom;
-        }
-        _renderAoeCircle();
-    } else {
-        _removeAoeCircle();
+    if (_activeDragAoeId !== null) {
+        const circle = _aoeCircles.find(c => c.id === _activeDragAoeId);
+        if (!circle) return;
+        const screenX = x - rect.left - _aoeDragOffset.x;
+        const screenY = y - rect.top  - _aoeDragOffset.y;
+        circle.centerX = (screenX - tvState.pan.x) / tvState.zoom;
+        circle.centerY = (screenY - tvState.pan.y) / tvState.zoom;
+        _renderAllAoeCircles();
     }
+
+    if (_aoeRotateDragId !== null) {
+        const circle = _aoeCircles.find(c => c.id === _aoeRotateDragId);
+        if (!circle || !_aoeRotateOrigin) return;
+        const dx = x - rect.left - (_aoeRotateOrigin.cx * tvState.zoom + tvState.pan.x);
+        const dy = y - rect.top  - (_aoeRotateOrigin.cy * tvState.zoom + tvState.pan.y);
+        const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+        circle.rotation = angle - _aoeRotateStartAngle;
+        _renderAllAoeCircles();
+    }
+}
+
+function addAoeCircle() {
+    const mapArea = document.getElementById('tvMapArea');
+    const radiusFt = parseInt(document.getElementById('tvAoeRadius')?.value) || 20;
+    const shape    = document.getElementById('tvAoeShape')?.value   || 'circle';
+    const centerX  = mapArea ? (mapArea.offsetWidth  / 2 - tvState.pan.x) / tvState.zoom : 400;
+    const centerY  = mapArea ? (mapArea.offsetHeight / 2 - tvState.pan.y) / tvState.zoom : 300;
+
+    const circle = { id: _aoeIdCounter++, radiusFt, centerX, centerY, shape, rotation: 0 };
+    _aoeCircles.push(circle);
+    _selectedAoeId = circle.id;
+    _renderAllAoeCircles();
+}
+
+function clearAllAoeCircles() {
+    _aoeCircles = [];
+    _selectedAoeId = null;
+    _renderAllAoeCircles();
 }
 
 function setAoeRadius(ft) {
-    _aoeState.radiusFt = parseInt(ft) || 20;
-    if (_aoeState.active) _renderAoeCircle();
+    if (_selectedAoeId === null && _aoeCircles.length) {
+        _selectedAoeId = _aoeCircles[_aoeCircles.length - 1].id;
+    }
+    const circle = _aoeCircles.find(c => c.id === _selectedAoeId);
+    if (circle) { circle.radiusFt = parseInt(ft) || 20; _renderAllAoeCircles(); }
 }
 
-function _renderAoeCircle() {
+function _renderAllAoeCircles() {
     const canvas = document.getElementById('tvMapCanvas');
     if (!canvas) return;
 
-    let el = document.getElementById('tvAoeCircle');
-    if (!el) {
-        el = document.createElement('div');
-        el.id        = 'tvAoeCircle';
-        el.className = 'tv-aoe-circle';
-        canvas.appendChild(el);
+    // Remove stale elements
+    const activeIds = new Set(_aoeCircles.map(c => String(c.id)));
+    canvas.querySelectorAll('.tv-aoe-shape').forEach(el => {
+        if (!activeIds.has(el.dataset.aoeId)) el.remove();
+    });
 
-        // Drag start — mousedown on the circle
-        const startDrag = e => {
-            if (!_aoeState.active) return;
-            e.stopPropagation();
-            if (e.cancelable) e.preventDefault();
-            _aoeState.dragging = true;
+    _aoeCircles.forEach(circle => {
+        const radiusPx = (circle.radiusFt / 5) * tvState.cellSize;
+        const color    = _aoeColor(circle.id);
 
-            const mapArea = document.getElementById('tvMapArea');
-            const rect    = mapArea.getBoundingClientRect();
-            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            // Offset from circle center to click point (screen coords)
-            const screenCX = _aoeState.centerX * tvState.zoom + tvState.pan.x;
-            const screenCY = _aoeState.centerY * tvState.zoom + tvState.pan.y;
-            _aoeState.dragOffsetX = clientX - rect.left - screenCX;
-            _aoeState.dragOffsetY = clientY - rect.top  - screenCY;
-        };
+        let el = canvas.querySelector(`.tv-aoe-shape[data-aoe-id="${circle.id}"]`);
+        if (!el) {
+            el = document.createElement('div');
+            el.className      = 'tv-aoe-shape';
+            el.dataset.aoeId  = circle.id;
+            // Delete button
+            const del = document.createElement('button');
+            del.className = 'tv-aoe-delete-btn';
+            del.textContent = '✕';
+            del.title = 'Eliminar';
+            del.addEventListener('mousedown', e => e.stopPropagation());
+            del.addEventListener('click', e => {
+                e.stopPropagation();
+                _aoeCircles = _aoeCircles.filter(c => c.id !== circle.id);
+                if (_selectedAoeId === circle.id) _selectedAoeId = null;
+                _renderAllAoeCircles();
+            });
+            // Rotate handle
+            const rotHandle = document.createElement('div');
+            rotHandle.className = 'tv-aoe-rotate-handle';
+            rotHandle.title = 'Rotar';
+            rotHandle.addEventListener('mousedown', e => {
+                e.stopPropagation();
+                _aoeRotateDragId = circle.id;
+                _aoeRotateOrigin = { cx: circle.centerX, cy: circle.centerY };
+                const mapArea = document.getElementById('tvMapArea');
+                const rect = mapArea?.getBoundingClientRect();
+                if (rect) {
+                    const dx = e.clientX - rect.left - (circle.centerX * tvState.zoom + tvState.pan.x);
+                    const dy = e.clientY - rect.top  - (circle.centerY * tvState.zoom + tvState.pan.y);
+                    _aoeRotateStartAngle = Math.atan2(dy, dx) * (180 / Math.PI) - (circle.rotation || 0);
+                }
+            });
 
-        el.addEventListener('mousedown',  startDrag);
-        el.addEventListener('touchstart', startDrag, { passive: false });
-    }
+            const startDrag = e => {
+                if (_aoeRotateDragId !== null) return;
+                e.stopPropagation();
+                if (e.cancelable) e.preventDefault();
+                _activeDragAoeId = circle.id;
+                _selectedAoeId   = circle.id;
+                const mapArea = document.getElementById('tvMapArea');
+                const rect    = mapArea?.getBoundingClientRect();
+                if (rect) {
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+                    const screenCX = circle.centerX * tvState.zoom + tvState.pan.x;
+                    const screenCY = circle.centerY * tvState.zoom + tvState.pan.y;
+                    _aoeDragOffset.x = clientX - rect.left - screenCX;
+                    _aoeDragOffset.y = clientY - rect.top  - screenCY;
+                }
+            };
+            el.addEventListener('mousedown',  startDrag);
+            el.addEventListener('touchstart', startDrag, { passive: false });
+            el.appendChild(del);
+            el.appendChild(rotHandle);
+            canvas.appendChild(el);
+        }
 
-    const radiusPx = (_aoeState.radiusFt / 5) * tvState.cellSize;
-    el.style.left   = `${_aoeState.centerX - radiusPx}px`;
-    el.style.top    = `${_aoeState.centerY - radiusPx}px`;
-    el.style.width  = `${radiusPx * 2}px`;
-    el.style.height = `${radiusPx * 2}px`;
-    el.style.display = '';
+        // Apply shape-specific sizing and styles
+        el.style.position      = 'absolute';
+        el.style.pointerEvents = 'all';
+        el.style.cursor        = 'grab';
+        el.style.background    = color;
+        el.style.borderColor   = color.replace('0.25', '0.8');
+        el.style.borderWidth   = '2px';
+        el.style.borderStyle   = 'dashed';
+        el.style.boxSizing     = 'border-box';
+
+        const rot = circle.rotation || 0;
+        const shape = circle.shape || 'circle';
+
+        if (shape === 'circle') {
+            const d = radiusPx * 2;
+            el.style.width           = d + 'px';
+            el.style.height          = d + 'px';
+            el.style.borderRadius    = '50%';
+            el.style.left            = (circle.centerX - radiusPx) + 'px';
+            el.style.top             = (circle.centerY - radiusPx) + 'px';
+            el.style.clipPath        = '';
+            el.style.transform       = `rotate(${rot}deg)`;
+            el.style.transformOrigin = 'center center';
+        } else if (shape === 'square') {
+            const d = radiusPx * 2;
+            el.style.width           = d + 'px';
+            el.style.height          = d + 'px';
+            el.style.borderRadius    = '4px';
+            el.style.left            = (circle.centerX - radiusPx) + 'px';
+            el.style.top             = (circle.centerY - radiusPx) + 'px';
+            el.style.clipPath        = '';
+            el.style.transform       = `rotate(${rot}deg)`;
+            el.style.transformOrigin = 'center center';
+        } else if (shape === 'cone') {
+            const d = radiusPx * 2;
+            el.style.width           = d + 'px';
+            el.style.height          = d + 'px';
+            el.style.borderRadius    = '0';
+            el.style.borderStyle     = 'none';
+            el.style.left            = (circle.centerX - radiusPx) + 'px';
+            el.style.top             = (circle.centerY - radiusPx) + 'px';
+            el.style.clipPath        = 'polygon(50% 100%, 0% 0%, 100% 0%)';
+            el.style.transform       = `rotate(${rot}deg)`;
+            el.style.transformOrigin = '50% 100%';
+        } else if (shape === 'line') {
+            const lineW = tvState.cellSize;
+            el.style.width           = lineW + 'px';
+            el.style.height          = (radiusPx * 2) + 'px';
+            el.style.borderRadius    = '2px';
+            el.style.left            = (circle.centerX - lineW / 2) + 'px';
+            el.style.top             = (circle.centerY - radiusPx) + 'px';
+            el.style.clipPath        = '';
+            el.style.transform       = `rotate(${rot}deg)`;
+            el.style.transformOrigin = 'center center';
+        }
+
+        el.classList.toggle('tv-aoe-selected', circle.id === _selectedAoeId);
+    });
 }
 
-function _removeAoeCircle() {
-    document.getElementById('tvAoeCircle')?.remove();
-}
+// Keep backward-compat — the button in HTML still calls toggleAoeTool
+function toggleAoeTool() { addAoeCircle(); }
