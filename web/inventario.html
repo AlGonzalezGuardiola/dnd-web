@@ -431,42 +431,60 @@
         color: var(--gold);
     }
 
-    /* popover */
-    .info-popover {
-        position: fixed;
-        z-index: 500;
-        width: 280px;
-        background: linear-gradient(155deg, rgba(16,20,38,.98) 0%, rgba(10,13,26,.99) 100%);
-        border: 1px solid var(--gold-line);
-        border-radius: 12px;
-        box-shadow: 0 16px 48px rgba(0,0,0,.7), 0 0 0 1px rgba(201,162,39,.08);
-        padding: 14px 16px 16px;
-        flex-direction: column;
-        gap: 10px;
-        backdrop-filter: blur(14px);
-        /* hidden by default — shown only via .visible class */
+    /* info modal overlay */
+    .info-modal-overlay {
         display: none;
-        opacity: 0;
-        transform: scale(.94) translateY(-4px);
-        transition: opacity .18s var(--ease), transform .18s var(--ease);
+        position: fixed;
+        inset: 0;
+        z-index: 9000;
+        background: rgba(0,0,0,.55);
+        backdrop-filter: blur(4px);
+        align-items: center;
+        justify-content: center;
     }
-    .info-popover.visible {
+    .info-modal-overlay.open {
         display: flex;
-        opacity: 1;
-        transform: none;
-        /* retrigger transition after display:flex */
-        animation: popIn .18s var(--ease) both;
     }
-    @keyframes popIn {
-        from { opacity: 0; transform: scale(.94) translateY(-4px); }
+    .info-modal {
+        width: min(320px, calc(100vw - 32px));
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        background: linear-gradient(155deg, rgba(16,20,38,.99) 0%, rgba(10,13,26,1) 100%);
+        border: 1px solid var(--gold-line);
+        border-radius: 14px;
+        box-shadow: 0 20px 60px rgba(0,0,0,.8);
+        padding: 18px 18px 20px;
+        animation: modalIn .18s cubic-bezier(.22,1,.36,1) both;
+    }
+    @keyframes modalIn {
+        from { opacity: 0; transform: scale(.92) translateY(10px); }
         to   { opacity: 1; transform: none; }
+    }
+    .popover-hdr {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
     }
     .popover-name {
         font-family: var(--font-title);
         font-size: 12px; letter-spacing: .08em;
         color: var(--gold); text-transform: uppercase;
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        flex: 1;
     }
+    .popover-close-btn {
+        width: 26px; height: 26px; border-radius: 50%;
+        border: 1px solid rgba(255,255,255,.12);
+        background: rgba(255,255,255,.05);
+        color: var(--text-3); font-size: 14px;
+        cursor: pointer; display: flex;
+        align-items: center; justify-content: center;
+        flex-shrink: 0;
+        transition: background .15s, color .15s;
+    }
+    .popover-close-btn:hover { background: rgba(255,255,255,.12); color: var(--text); }
     .popover-desc {
         background: rgba(255,255,255,.05);
         border: 1px solid rgba(255,255,255,.1);
@@ -475,7 +493,7 @@
         font-family: var(--font-body);
         font-size: 13px; line-height: 1.55;
         padding: 9px 11px;
-        resize: none; height: 90px; width: 100%;
+        resize: none; height: 100px; width: 100%;
         transition: border-color .15s;
     }
     .popover-desc::placeholder { color: var(--text-3); font-style: italic; }
@@ -611,11 +629,16 @@
     </div>
 
 </div>
-<!-- Info popover -->
-<div class="info-popover" id="infoPopover">
-    <div class="popover-name" id="popoverName"></div>
-    <textarea class="popover-desc" id="popoverDesc" placeholder="Sin descripción aún… escribe algo aquí" maxlength="400"></textarea>
-    <div class="popover-hint">Se guarda automáticamente</div>
+<!-- Info modal -->
+<div class="info-modal-overlay" id="infoModal" onclick="onModalOverlayClick(event)">
+    <div class="info-modal">
+        <div class="popover-hdr">
+            <div class="popover-name" id="popoverName"></div>
+            <button class="popover-close-btn" onclick="closePopover()" title="Cerrar">✕</button>
+        </div>
+        <textarea class="popover-desc" id="popoverDesc" placeholder="Sin descripción aún… escribe algo aquí" maxlength="400"></textarea>
+        <div class="popover-hint">Se guarda automáticamente · ESC para cerrar</div>
+    </div>
 </div>
 
 <div class="snack" id="snack"></div>
@@ -656,11 +679,6 @@ function toggleSection(catId) {
 // ── Boot ──
 window.addEventListener('DOMContentLoaded', () => {
     load();
-    // Close popover clicking outside
-    document.addEventListener('click', e => {
-        const pop = document.getElementById('infoPopover');
-        if (!pop.contains(e.target) && !e.target.closest('.item-info')) closePopover();
-    });
     document.addEventListener('keydown', e => { if (e.key === 'Escape') closePopover(); });
 });
 
@@ -923,7 +941,7 @@ function cancelEdit() {
     render();
 }
 
-// ── Popover ──
+// ── Info modal ──
 function togglePopover(e, btn, id) {
     e.stopPropagation();
     if (popoverId === id) { closePopover(); return; }
@@ -933,45 +951,32 @@ function togglePopover(e, btn, id) {
     if (!it) return;
     popoverId = id;
 
-    const pop  = document.getElementById('infoPopover');
-    const desc = document.getElementById('popoverDesc');
     document.getElementById('popoverName').textContent = it.nombre;
+    const desc = document.getElementById('popoverDesc');
     desc.value = it.desc || '';
 
-    // Position: use fixed CSS width (280px) to avoid needing to show element first
-    const rect = btn.getBoundingClientRect();
-    const pw   = 280;
-    let left = rect.left + rect.width / 2 - pw / 2;
-    let top  = rect.bottom + 8;
-    if (left + pw > window.innerWidth - 10) left = window.innerWidth - pw - 10;
-    if (left < 10) left = 10;
-    pop.style.left = left + 'px';
-    pop.style.top  = top  + 'px';
-    pop.classList.add('visible');
-
-    // Adjust vertical if below viewport after render
-    requestAnimationFrame(() => {
-        const pr = pop.getBoundingClientRect();
-        if (pr.bottom > window.innerHeight - 10)
-            pop.style.top = (rect.top - pr.height - 8) + 'px';
-    });
+    document.getElementById('infoModal').classList.add('open');
 
     desc.oninput = () => {
         const item = items.find(i => i.id === popoverId);
-        if (item) {
-            item.desc = desc.value.trim() || null;
-            const infoBtn = document.querySelector(`#row-${id} .item-info`);
-            if (infoBtn) infoBtn.classList.toggle('active', !!item.desc);
-            scheduleSave();
-        }
+        if (!item) return;
+        item.desc = desc.value.trim() || null;
+        const infoBtn = document.querySelector(`#row-${id} .item-info`);
+        if (infoBtn) infoBtn.classList.toggle('active', !!item.desc);
+        scheduleSave();
     };
-    desc.focus();
+    // Let the modal appear before focusing
+    requestAnimationFrame(() => desc.focus());
 }
 
 function closePopover() {
     if (!popoverId) return;
-    document.getElementById('infoPopover').classList.remove('visible');
+    document.getElementById('infoModal').classList.remove('open');
     popoverId = null;
+}
+
+function onModalOverlayClick(e) {
+    if (e.target === document.getElementById('infoModal')) closePopover();
 }
 
 // ── Save ──
