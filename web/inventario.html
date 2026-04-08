@@ -441,16 +441,25 @@
         border-radius: 12px;
         box-shadow: 0 16px 48px rgba(0,0,0,.7), 0 0 0 1px rgba(201,162,39,.08);
         padding: 14px 16px 16px;
-        display: none;
         flex-direction: column;
         gap: 10px;
         backdrop-filter: blur(14px);
-        animation: popIn .2s var(--ease) both;
+        /* hidden by default — shown only via .visible class */
+        display: none;
+        opacity: 0;
+        transform: scale(.94) translateY(-4px);
+        transition: opacity .18s var(--ease), transform .18s var(--ease);
     }
-    .info-popover.visible { display: flex; }
+    .info-popover.visible {
+        display: flex;
+        opacity: 1;
+        transform: none;
+        /* retrigger transition after display:flex */
+        animation: popIn .18s var(--ease) both;
+    }
     @keyframes popIn {
         from { opacity: 0; transform: scale(.94) translateY(-4px); }
-        to   { opacity: 1; transform: scale(1) translateY(0); }
+        to   { opacity: 1; transform: none; }
     }
     .popover-name {
         font-family: var(--font-title);
@@ -762,7 +771,7 @@ function renderRow(it) {
                 onchange="onItemImgChange(this,'${it.id}')">
         </div>
         <div class="item-name">${esc(it.nombre)}</div>
-        <button class="item-info${it.desc ? ' active' : ''}" onclick="togglePopover(event,'${it.id}')"
+        <button class="item-info${it.desc ? ' active' : ''}" onclick="togglePopover(event,this,'${it.id}')"
             title="${it.desc ? 'Ver descripción' : 'Añadir descripción'}"
             aria-label="Descripción de ${esc(it.nombre)}">i</button>
         <button class="item-edit-btn" onclick="editItem('${it.id}')" title="Editar objeto" aria-label="Editar ${esc(it.nombre)}">✏</button>
@@ -915,12 +924,12 @@ function cancelEdit() {
 }
 
 // ── Popover ──
-function togglePopover(e, id) {
+function togglePopover(e, btn, id) {
     e.stopPropagation();
     if (popoverId === id) { closePopover(); return; }
     closePopover();
 
-    const it  = items.find(i => i.id === id);
+    const it = items.find(i => i.id === id);
     if (!it) return;
     popoverId = id;
 
@@ -929,29 +938,28 @@ function togglePopover(e, id) {
     document.getElementById('popoverName').textContent = it.nombre;
     desc.value = it.desc || '';
 
-    // Position below the button, keeping within viewport
-    const btn  = e.currentTarget;
+    // Position: use fixed CSS width (280px) to avoid needing to show element first
     const rect = btn.getBoundingClientRect();
-    pop.style.display = 'flex'; // measure first
-    const pw = pop.offsetWidth;
+    const pw   = 280;
     let left = rect.left + rect.width / 2 - pw / 2;
     let top  = rect.bottom + 8;
     if (left + pw > window.innerWidth - 10) left = window.innerWidth - pw - 10;
     if (left < 10) left = 10;
-    if (top + pop.offsetHeight > window.innerHeight - 10) top = rect.top - pop.offsetHeight - 8;
     pop.style.left = left + 'px';
     pop.style.top  = top  + 'px';
     pop.classList.add('visible');
 
-    // highlight btn
-    btn.classList.add('active');
+    // Adjust vertical if below viewport after render
+    requestAnimationFrame(() => {
+        const pr = pop.getBoundingClientRect();
+        if (pr.bottom > window.innerHeight - 10)
+            pop.style.top = (rect.top - pr.height - 8) + 'px';
+    });
 
-    // save on blur of textarea
     desc.oninput = () => {
         const item = items.find(i => i.id === popoverId);
         if (item) {
             item.desc = desc.value.trim() || null;
-            // update info btn highlight
             const infoBtn = document.querySelector(`#row-${id} .item-info`);
             if (infoBtn) infoBtn.classList.toggle('active', !!item.desc);
             scheduleSave();
@@ -962,9 +970,7 @@ function togglePopover(e, id) {
 
 function closePopover() {
     if (!popoverId) return;
-    const pop = document.getElementById('infoPopover');
-    pop.classList.remove('visible');
-    pop.style.display = 'none';
+    document.getElementById('infoPopover').classList.remove('visible');
     popoverId = null;
 }
 
