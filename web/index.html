@@ -55,9 +55,6 @@
 
         <div class="hud-right-stack">
             <button id="roleIndicator" class="role-indicator master" onclick="showRoleSelectionOverlay()" title="Cambiar rol">🎲 Master</button>
-            <a href="inventario.html" class="bolso-hud-link" title="Bolso de Hermione">
-                <span class="bolso-hud-icon">👜</span>
-            </a>
         </div>
     </div>
 
@@ -169,6 +166,14 @@
 
         <!-- Tab: Principales -->
         <div id="charTabPrincipales" class="char-tab-panel">
+            <a href="inventario.html" class="bolso-group-btn" title="Inventario compartido del grupo">
+                <span class="bolso-group-icon">👜</span>
+                <span class="bolso-group-text">
+                    <span class="bolso-group-label">Bolso de Hermione</span>
+                    <span class="bolso-group-sub">Inventario compartido del grupo</span>
+                </span>
+                <span class="bolso-group-arrow">→</span>
+            </a>
             <div class="landing-cards" id="characterListContainer"></div>
         </div>
 

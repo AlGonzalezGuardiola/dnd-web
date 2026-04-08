@@ -2404,27 +2404,62 @@ body.role-jugador .master-only { display: none !important; }
     align-items: flex-end;
     gap: 5px;
 }
-.bolso-hud-link {
+/* Group inventory button in Personajes/Principales */
+.bolso-group-btn {
     display: flex;
     align-items: center;
-    justify-content: center;
+    gap: 16px;
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto 28px;
+    padding: 16px 22px;
     text-decoration: none;
-    background: linear-gradient(135deg, rgba(201,162,39,0.14) 0%, rgba(201,162,39,0.06) 100%);
-    border: 1px solid var(--border-color);
-    border-radius: 10px;
-    padding: 4px 8px;
+    background: linear-gradient(135deg, rgba(201,162,39,0.11) 0%, rgba(130,90,15,0.06) 100%);
+    border: 1px solid rgba(201,162,39,0.28);
+    border-radius: 14px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04);
     transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.15s;
     cursor: pointer;
 }
-.bolso-hud-link:hover {
-    background: linear-gradient(135deg, rgba(201,162,39,0.28) 0%, rgba(201,162,39,0.14) 100%);
-    border-color: var(--accent-gold);
-    box-shadow: 0 0 14px rgba(201,162,39,0.28);
-    transform: translateY(-1px);
+.bolso-group-btn:hover {
+    background: linear-gradient(135deg, rgba(201,162,39,0.22) 0%, rgba(130,90,15,0.12) 100%);
+    border-color: rgba(201,162,39,0.55);
+    box-shadow: 0 6px 28px rgba(201,162,39,0.18);
+    transform: translateY(-2px);
 }
-.bolso-hud-icon {
-    font-size: 28px;
+.bolso-group-icon {
+    font-size: 48px;
     line-height: 1;
+    flex-shrink: 0;
+    filter: drop-shadow(0 2px 6px rgba(201,162,39,0.3));
+}
+.bolso-group-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.bolso-group-label {
+    font-family: var(--font-heading, serif);
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--accent-gold);
+    letter-spacing: 0.03em;
+}
+.bolso-group-sub {
+    font-size: 12px;
+    color: var(--text-muted);
+    letter-spacing: 0.02em;
+}
+.bolso-group-arrow {
+    font-size: 20px;
+    color: rgba(201,162,39,0.45);
+    flex-shrink: 0;
+    transition: transform 0.2s, color 0.2s;
+}
+.bolso-group-btn:hover .bolso-group-arrow {
+    transform: translateX(4px);
+    color: var(--accent-gold);
 }
 
 /* --- Role indicator badge in HUD --- */

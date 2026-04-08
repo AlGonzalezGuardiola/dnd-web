@@ -438,9 +438,14 @@
     .narrative-main {
         padding: 36px 12px 50px;
     }
+    .narrative-view {
+        padding: 48px 22px 40px;
+        margin: 20px auto 40px;
+    }
     .narrative-view::before,
     .narrative-view::after {
-        left: -6px; right: -6px;
+        left: -8px; right: -8px;
+        height: 20px;
     }
 
     .narrative-editor-top-row {
@@ -609,161 +614,224 @@
 
 /* ── Parchment scroll (chapter view) ── */
 .narrative-view {
-    max-width: 720px;
-    margin: 0 auto;
+    max-width: 760px;
+    margin: 30px auto 50px;
     position: relative;
-    /* Parchment paper */
+
+    /*
+     * Layered parchment background:
+     * 1. Vignette (dark edges — aged, worn)
+     * 2. Random-ish stain spots (water damage / foxing)
+     * 3. Diagonal crack-lines at several angles
+     * 4. Horizontal fibre texture
+     * 5. Tonal gradient (uneven parchment colouring)
+     */
     background:
-        /* Vignette — darker at the very edges */
-        radial-gradient(ellipse 96% 98% at 50% 50%,
-            transparent 75%, rgba(80,50,10,.25) 100%),
-        /* Subtle horizontal ruled lines */
+        /* Edge vignette — heavy darkening like old worn parchment */
+        radial-gradient(ellipse 90% 92% at 50% 50%,
+            transparent 55%, rgba(60,35,5,.45) 100%),
+        /* Left & right edge shadow (curl / roll look) */
+        linear-gradient(90deg,
+            rgba(40,22,3,.22) 0%, transparent 8%,
+            transparent 92%, rgba(40,22,3,.22) 100%),
+        /* Stain spots (foxing / water marks) */
+        radial-gradient(ellipse 18% 12% at 12% 28%, rgba(90,55,8,.14) 0%, transparent 100%),
+        radial-gradient(ellipse 10% 20% at 88% 18%, rgba(75,45,6,.11) 0%, transparent 100%),
+        radial-gradient(ellipse 22% 9%  at 70% 72%, rgba(85,50,7,.12) 0%, transparent 100%),
+        radial-gradient(ellipse 14% 16% at 30% 88%, rgba(70,40,5,.10) 0%, transparent 100%),
+        radial-gradient(ellipse 8%  14% at 55% 45%, rgba(95,60,10,.08) 0%, transparent 100%),
+        /* Crack lines — thin diagonals at varied angles */
         repeating-linear-gradient(
-            transparent 0px, transparent 31px,
-            rgba(120,80,20,.06) 31px, rgba(120,80,20,.06) 32px
+            118deg,
+            transparent 0px, transparent 220px,
+            rgba(55,30,3,.055) 220px, rgba(55,30,3,.055) 221px,
+            transparent 221px, transparent 520px
         ),
-        /* Parchment tonal gradient */
-        linear-gradient(165deg,
-            #f8edcc 0%, #f0e0b0 18%, #edd9a2 38%,
-            #f2e3b5 55%, #e8d498 72%, #ede0b0 88%, #f0e4be 100%
+        repeating-linear-gradient(
+            63deg,
+            transparent 0px, transparent 310px,
+            rgba(45,25,2,.045) 310px, rgba(45,25,2,.045) 311px,
+            transparent 311px, transparent 680px
+        ),
+        repeating-linear-gradient(
+            145deg,
+            transparent 0px, transparent 170px,
+            rgba(60,32,4,.05)  170px, rgba(60,32,4,.05)  171px,
+            transparent 171px, transparent 400px
+        ),
+        repeating-linear-gradient(
+            28deg,
+            transparent 0px, transparent 260px,
+            rgba(40,20,2,.04)  260px, rgba(40,20,2,.04)  261px,
+            transparent 261px, transparent 600px
+        ),
+        /* Horizontal fibre (paper grain) */
+        repeating-linear-gradient(
+            transparent 0px, transparent 26px,
+            rgba(100,65,15,.055) 26px, rgba(100,65,15,.055) 27px
+        ),
+        /* Base parchment gradient — warm, uneven, aged amber */
+        linear-gradient(158deg,
+            #f0dfa8 0%,  #e2cc88 8%,
+            #f5e8c0 18%, #ddc880 28%,
+            #f2e2aa 40%, #e0cc84 52%,
+            #f5e6b8 62%, #d8c07a 74%,
+            #ede0a6 84%, #f0e2b0 100%
         );
-    border: 1px solid rgba(140,95,20,.3);
-    border-radius: 3px;
-    /* Parchment shadow — depth + slight curl feeling */
+
+    /* Border: aged ink-stained edge */
+    border: 1.5px solid rgba(110,70,10,.35);
+    border-radius: 2px;
+
+    /* Shadow: depth, lift, and slight warm glow beneath */
     box-shadow:
-        0 2px 0   rgba(200,150,40,.25),
-        0 8px 30px rgba(0,0,0,.55),
-        0 20px 60px rgba(0,0,0,.4),
-        inset 0 0 80px rgba(160,110,30,.05);
+        0 1px 0   rgba(240,190,60,.2),
+        0 6px 24px rgba(0,0,0,.5),
+        0 24px 70px rgba(0,0,0,.45),
+        0 40px 100px rgba(0,0,0,.3),
+        inset 0 0 120px rgba(140,90,15,.06);
+
+    padding: 70px 80px 60px;
 }
 
 /* Top scroll rod */
 .narrative-view::before {
     content: '';
     position: absolute;
-    top: 0; left: -12px; right: -12px;
-    height: 20px;
+    top: 0; left: -14px; right: -14px;
+    height: 26px;
     background: linear-gradient(180deg,
-        #3d1f05 0%,
-        #8b5015 12%,
-        #d4902a 28%,
-        #f0b84a 42%,
-        #e0a035 55%,
-        #b07020 68%,
-        #7a4510 82%,
-        #4a2408 100%
+        #2e1504 0%,
+        #7a3f0e 10%,
+        #c07828 24%,
+        #e8a840 36%,
+        #f5c058 46%,
+        #e8a840 56%,
+        #b86e20 68%,
+        #7a3f0e 80%,
+        #4a2206 90%,
+        #2e1504 100%
     );
-    border-radius: 10px;
+    border-radius: 13px;
     box-shadow:
-        0 4px 16px rgba(0,0,0,.75),
-        0 1px 0 rgba(255,220,120,.25),
-        inset 0 1px 0 rgba(255,230,140,.35),
-        inset 0 -2px 4px rgba(0,0,0,.4);
-    transform: translateY(-55%);
-    z-index: 3;
+        0 5px 20px rgba(0,0,0,.8),
+        0 2px 6px  rgba(0,0,0,.6),
+        inset 0 2px 3px rgba(255,235,150,.4),
+        inset 0 -3px 5px rgba(0,0,0,.5);
+    transform: translateY(-50%);
+    z-index: 4;
 }
 
 /* Bottom scroll rod */
 .narrative-view::after {
     content: '';
     position: absolute;
-    bottom: 0; left: -12px; right: -12px;
-    height: 20px;
+    bottom: 0; left: -14px; right: -14px;
+    height: 26px;
     background: linear-gradient(180deg,
-        #3d1f05 0%,
-        #8b5015 12%,
-        #d4902a 28%,
-        #f0b84a 42%,
-        #e0a035 55%,
-        #b07020 68%,
-        #7a4510 82%,
-        #4a2408 100%
+        #2e1504 0%,
+        #7a3f0e 10%,
+        #c07828 24%,
+        #e8a840 36%,
+        #f5c058 46%,
+        #e8a840 56%,
+        #b86e20 68%,
+        #7a3f0e 80%,
+        #4a2206 90%,
+        #2e1504 100%
     );
-    border-radius: 10px;
+    border-radius: 13px;
     box-shadow:
-        0 4px 16px rgba(0,0,0,.75),
-        0 1px 0 rgba(255,220,120,.25),
-        inset 0 1px 0 rgba(255,230,140,.35),
-        inset 0 -2px 4px rgba(0,0,0,.4);
-    transform: translateY(55%);
-    z-index: 3;
+        0 5px 20px rgba(0,0,0,.8),
+        0 2px 6px  rgba(0,0,0,.6),
+        inset 0 2px 3px rgba(255,235,150,.4),
+        inset 0 -3px 5px rgba(0,0,0,.5);
+    transform: translateY(50%);
+    z-index: 4;
 }
 
-/* Parchment content padding */
+/* ── Text colours on parchment (dark ink) ── */
 .narrative-view .narrative-chapter-header {
-    margin-bottom: 26px;
-    padding-top: 30px;
+    margin-bottom: 32px;
+    padding-top: 0;
 }
 .narrative-view .chapter-label {
-    color: #7a4a08;
+    color: #6b3e08;
     font-size: 9px;
-    letter-spacing: 0.38em;
-    text-shadow: none;
+    letter-spacing: 0.42em;
+    text-shadow: 0 1px 0 rgba(255,220,140,.5);
 }
 .narrative-view .chapter-ornament {
-    background: linear-gradient(to right, transparent, rgba(100,65,12,.35), transparent);
+    background: linear-gradient(to right, transparent, rgba(90,55,10,.38), transparent);
 }
 
 .narrative-view .narrative-view-title {
-    color: #1e0e03;
-    font-size: 30px;
-    text-shadow: 0 1px 0 rgba(255,220,150,.4);
-    margin-bottom: 8px;
+    color: #18080a;
+    font-size: 32px;
+    text-shadow: 0 1px 2px rgba(255,210,120,.3);
+    margin-bottom: 10px;
+    line-height: 1.25;
 }
 .narrative-view .narrative-view-date {
-    color: #7a5018;
+    color: #7a4d14;
     font-size: 12px;
-    letter-spacing: 0.06em;
-    margin-bottom: 20px;
+    letter-spacing: 0.07em;
+    margin-bottom: 26px;
 }
 .narrative-view .narrative-view-summary {
-    border-left: 3px solid rgba(100,60,10,.35);
-    background: rgba(120,75,12,.06);
-    color: #3a1e06;
-    font-size: 14px;
+    border-left: 3px solid rgba(90,50,8,.4);
+    background: rgba(100,62,10,.07);
+    color: #2e1506;
+    font-size: 14.5px;
+    line-height: 1.75;
     border-radius: 0 4px 4px 0;
+    padding: 14px 20px 14px 22px;
+    margin-bottom: 32px;
 }
 .narrative-view .narrative-view-divider {
-    background: linear-gradient(to right, rgba(100,65,12,.3), transparent);
+    background: linear-gradient(to right, rgba(90,55,10,.3), transparent);
+    margin-bottom: 32px;
 }
 .narrative-view .narrative-view-content {
-    color: #261508;
-    font-size: 14.5px;
-    line-height: 1.9;
+    color: #1c0d04;
+    font-size: 15px;
+    line-height: 2;
+    margin-bottom: 40px;
 }
 .narrative-view .narrative-view-no-content {
-    color: #8a6030;
+    color: #8a5e28;
     font-style: italic;
 }
 .narrative-view .narrative-tags-row {
-    padding-bottom: 30px; /* room for bottom rod */
+    margin-bottom: 32px;
 }
 .narrative-view .narrative-tag-chip {
-    background: rgba(100,60,10,.08);
+    background: rgba(90,52,8,.09);
     opacity: 1;
-    border-color: rgba(100,60,10,.4);
-    color: #7a4a10;
+    border-color: rgba(90,52,8,.38);
+    color: #6a3c08;
     font-size: 11px;
 }
 .narrative-view .narrative-view-footer {
-    padding-bottom: 30px;
-    border-top-color: rgba(100,65,12,.25);
+    padding-top: 20px;
+    padding-bottom: 0;
+    border-top-color: rgba(90,55,8,.22);
 }
-/* override button colors on parchment */
 .narrative-view .narrative-edit-btn,
 .narrative-view .narrative-delete-btn {
-    background: rgba(100,60,10,.1) !important;
-    border-color: rgba(100,60,10,.35) !important;
-    color: #5a3208 !important;
+    background: rgba(90,52,8,.09) !important;
+    border-color: rgba(90,52,8,.32) !important;
+    color: #4e2806 !important;
+    min-height: 38px;
 }
 .narrative-view .narrative-edit-btn:hover {
-    background: rgba(100,60,10,.2) !important;
-    color: #3a1e04 !important;
+    background: rgba(90,52,8,.18) !important;
+    color: #2e1603 !important;
 }
 .narrative-view .narrative-delete-btn:hover {
-    background: rgba(150,30,10,.12) !important;
-    border-color: rgba(180,40,10,.45) !important;
-    color: #8b1a06 !important;
+    background: rgba(140,25,8,.12) !important;
+    border-color: rgba(160,30,8,.42) !important;
+    color: #7a1204 !important;
 }
 
 /* ── Empty state on library theme ── */
