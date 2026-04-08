@@ -12,732 +12,633 @@
     </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bolso de Hermione — DnD</title>
+    <title>Bolso de Hermione</title>
     <link rel="icon" type="image/svg+xml" href="favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <style>
-        /* ── Reset & Base ── */
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* ─── Reset ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { height: 100%; }
 
-        :root {
-            --bg-primary:   #05080f;
-            --bg-panel:     #0c1020;
-            --bg-card:      #0f1627;
-            --bg-glass:     rgba(8,12,24,0.88);
-            --gold:         #c9a227;
-            --gold-bright:  #f0c040;
-            --gold-dim:     rgba(201,162,39,0.18);
-            --gold-border:  rgba(201,162,39,0.30);
-            --gold-glow:    rgba(201,162,39,0.22);
-            --text-primary: #e8dcc8;
-            --text-secondary: #9ba3b5;
-            --text-muted:   #5a6478;
-            --border:       rgba(201,162,39,0.22);
-            --border-hover: rgba(201,162,39,0.55);
-            --danger:       rgba(200,50,50,0.8);
-            --font-heading: 'Cinzel', serif;
-            --font-display: 'Cormorant Garamond', serif;
-            --font-body:    'Inter', sans-serif;
-            --ease-out:     cubic-bezier(0.22, 1, 0.36, 1);
-        }
+    /* ─── Tokens ─────────────────────────────────── */
+    :root {
+        --bg:          #06090f;
+        --surface:     rgba(14,18,32,0.96);
+        --surface2:    rgba(18,22,38,0.92);
+        --gold:        #c9a227;
+        --gold-bright: #f0c040;
+        --gold-dim:    rgba(201,162,39,0.14);
+        --gold-line:   rgba(201,162,39,0.22);
+        --gold-glow:   rgba(201,162,39,0.25);
+        --text:        #e8dcc8;
+        --text-2:      #9ba3b5;
+        --text-3:      #505870;
+        --danger:      rgba(190,50,50,0.85);
+        --ease:        cubic-bezier(0.22,1,0.36,1);
+        --font-title:  'Cinzel', serif;
+        --font-body:   'Inter', sans-serif;
+        --font-nums:   'Cormorant Garamond', serif;
+    }
 
-        html { height: 100%; }
+    /* ─── Background ────────────────────────────── */
+    body {
+        font-family: var(--font-body);
+        background:
+            radial-gradient(ellipse at 20% 60%, rgba(139,26,26,0.08) 0%, transparent 55%),
+            radial-gradient(ellipse at 80% 15%, rgba(80,40,180,0.07) 0%, transparent 50%),
+            linear-gradient(170deg, #05080f 0%, #0d1120 55%, #060a14 100%);
+        background-attachment: fixed;
+        color: var(--text);
+        min-height: 100vh;
+    }
+    body::before {
+        content: '';
+        position: fixed; inset: 0; pointer-events: none; z-index: 0;
+        background-image:
+            radial-gradient(1.5px 1.5px at 12% 22%, rgba(255,255,255,.55), transparent),
+            radial-gradient(1px 1px   at 58% 68%, rgba(255,255,255,.35), transparent),
+            radial-gradient(2px 2px   at 82% 12%, rgba(255,255,255,.45), transparent),
+            radial-gradient(1px 1px   at 30% 82%, rgba(255,255,255,.30), transparent),
+            radial-gradient(1.5px 1.5px at 72% 48%, rgba(255,255,255,.40), transparent),
+            radial-gradient(1px 1px   at 92% 78%, rgba(255,255,255,.30), transparent);
+        background-size: 300% 300%;
+        animation: twinkle 9s ease-in-out infinite;
+    }
+    @keyframes twinkle {
+        0%,100% { opacity: .35; }
+        50%     { opacity: .65; }
+    }
 
-        body {
-            font-family: var(--font-body);
-            background:
-                radial-gradient(ellipse at 15% 40%, rgba(139,26,26,0.07) 0%, transparent 55%),
-                radial-gradient(ellipse at 85% 20%, rgba(124,58,237,0.06) 0%, transparent 50%),
-                linear-gradient(160deg, #05080f 0%, #0d1120 50%, #060a14 100%);
-            background-attachment: fixed;
-            color: var(--text-primary);
-            min-height: 100vh;
-        }
+    /* ─── Layout ─────────────────────────────────── */
+    .page {
+        position: relative; z-index: 1;
+        max-width: 780px;
+        margin: 0 auto;
+        padding: 0 18px 100px;
+    }
 
-        /* Stars */
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            background-image:
-                radial-gradient(1.5px 1.5px at 15% 25%, rgba(255,255,255,0.6), transparent),
-                radial-gradient(1px 1px at 55% 65%, rgba(255,255,255,0.4), transparent),
-                radial-gradient(2px 2px at 80% 10%, rgba(255,255,255,0.5), transparent),
-                radial-gradient(1px 1px at 35% 80%, rgba(255,255,255,0.3), transparent),
-                radial-gradient(1.5px 1.5px at 70% 50%, rgba(255,255,255,0.4), transparent),
-                radial-gradient(1px 1px at 90% 75%, rgba(255,255,255,0.3), transparent);
-            background-size: 300% 300%;
-            animation: twinkle 9s ease-in-out infinite;
-            opacity: 0.55;
-            pointer-events: none;
-            z-index: 0;
-        }
-        @keyframes twinkle {
-            0%, 100% { opacity: 0.35; }
-            50%       { opacity: 0.65; }
-        }
+    /* ─── Header ─────────────────────────────────── */
+    .hdr {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 26px 0 22px;
+        border-bottom: 1px solid var(--gold-line);
+        margin-bottom: 28px;
+    }
+    .btn-back {
+        width: 36px; height: 36px; border-radius: 50%;
+        border: 1px solid var(--gold-line);
+        background: rgba(255,255,255,.04);
+        color: var(--text-2); font-size: 17px;
+        cursor: pointer; display: flex;
+        align-items: center; justify-content: center;
+        text-decoration: none;
+        transition: border-color .2s, background .2s, color .2s;
+        flex-shrink: 0;
+    }
+    .btn-back:hover { border-color: var(--gold); background: var(--gold-dim); color: var(--gold); }
 
-        /* ── Layout ── */
-        .page {
-            position: relative;
-            z-index: 1;
-            max-width: 960px;
-            margin: 0 auto;
-            padding: 0 20px 80px;
-        }
+    .hdr-titles { flex: 1; min-width: 0; }
+    .hdr-title {
+        font-family: var(--font-title);
+        font-size: clamp(20px, 3.5vw, 30px);
+        font-weight: 600;
+        letter-spacing: .04em;
+        background: linear-gradient(130deg, #f0c040 0%, #c9a227 55%, #9a7220 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1.1;
+    }
+    .hdr-sub {
+        font-family: var(--font-nums);
+        font-style: italic;
+        font-size: 13px;
+        color: var(--text-3);
+        margin-top: 2px;
+        letter-spacing: .06em;
+    }
 
-        /* ── Header ── */
-        .inv-header {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            padding: 28px 0 24px;
-            border-bottom: 1px solid var(--border);
-            margin-bottom: 32px;
-        }
-        .inv-back {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            border: 1px solid var(--border);
-            background: rgba(255,255,255,0.04);
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 18px;
-            transition: border-color 0.2s, background 0.2s, color 0.2s;
-            flex-shrink: 0;
-        }
-        .inv-back:hover {
-            border-color: var(--gold);
-            background: var(--gold-dim);
-            color: var(--gold);
-        }
-        .inv-title-wrap { flex: 1; }
-        .inv-title {
-            font-family: var(--font-heading);
-            font-size: clamp(22px, 4vw, 34px);
-            font-weight: 600;
-            letter-spacing: 0.04em;
-            background: linear-gradient(135deg, #f0c040 0%, #c9a227 50%, #a07820 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-            line-height: 1.1;
-        }
-        .inv-subtitle {
-            font-family: var(--font-display);
-            font-size: 14px;
-            font-style: italic;
-            color: var(--text-muted);
-            margin-top: 3px;
-            letter-spacing: 0.06em;
-        }
-        .inv-meta {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 4px;
-        }
-        .inv-count {
-            font-family: var(--font-display);
-            font-size: 28px;
-            font-weight: 600;
-            color: var(--gold);
-            line-height: 1;
-        }
-        .inv-count-label {
-            font-size: 11px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-        .inv-save-status {
-            font-size: 11px;
-            color: var(--text-muted);
-            font-style: italic;
-            min-height: 14px;
-            text-align: right;
-        }
+    .hdr-right { text-align: right; flex-shrink: 0; }
+    .hdr-count {
+        font-family: var(--font-nums);
+        font-size: 30px; font-weight: 600;
+        color: var(--gold); line-height: 1;
+    }
+    .hdr-count-lbl { font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: .1em; }
+    .save-status { font-size: 11px; color: var(--text-3); font-style: italic; min-height: 15px; margin-top: 2px; }
 
-        /* ── Add form ── */
-        .add-card {
-            background: linear-gradient(135deg, rgba(201,162,39,0.07) 0%, rgba(12,16,32,0.95) 100%);
-            border: 1px solid var(--gold-border);
-            border-radius: 14px;
-            padding: 20px 22px;
-            margin-bottom: 24px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.04);
-        }
-        .add-card-title {
-            font-family: var(--font-heading);
-            font-size: 11px;
-            letter-spacing: 0.15em;
-            text-transform: uppercase;
-            color: var(--gold);
-            margin-bottom: 14px;
-        }
-        .add-row {
-            display: flex;
-            gap: 10px;
-            align-items: stretch;
-        }
-        .add-input {
-            flex: 1;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 8px;
-            color: var(--text-primary);
-            padding: 11px 14px;
-            font-size: 14px;
-            font-family: var(--font-body);
-            transition: border-color 0.18s, background 0.18s, box-shadow 0.18s;
-            min-width: 0;
-        }
-        .add-input::placeholder { color: var(--text-muted); }
-        .add-input:focus {
-            outline: none;
-            border-color: var(--gold);
-            background: rgba(201,162,39,0.06);
-            box-shadow: 0 0 0 3px rgba(201,162,39,0.12);
-        }
-        .add-qty {
-            flex: 0 0 88px;
-            text-align: center;
-        }
-        .btn-add {
-            padding: 11px 22px;
-            background: linear-gradient(135deg, rgba(201,162,39,0.28) 0%, rgba(160,120,32,0.18) 100%);
-            border: 1px solid var(--gold-border);
-            border-radius: 8px;
-            color: var(--gold-bright);
-            font-family: var(--font-body);
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            letter-spacing: 0.04em;
-            white-space: nowrap;
-            transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.15s;
-        }
-        .btn-add:hover {
-            background: linear-gradient(135deg, rgba(201,162,39,0.42) 0%, rgba(160,120,32,0.28) 100%);
-            border-color: var(--gold);
-            box-shadow: 0 4px 20px rgba(201,162,39,0.25);
-            transform: translateY(-1px);
-        }
-        .btn-add:active { transform: scale(0.97); }
+    /* ─── Add form ───────────────────────────────── */
+    .add-panel {
+        background: linear-gradient(135deg, rgba(201,162,39,.07) 0%, rgba(12,16,30,.96) 100%);
+        border: 1px solid var(--gold-line);
+        border-radius: 14px;
+        padding: 18px 20px 20px;
+        margin-bottom: 22px;
+        box-shadow: 0 6px 30px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.04);
+    }
+    .add-panel-label {
+        font-family: var(--font-title);
+        font-size: 10px; letter-spacing: .16em;
+        text-transform: uppercase; color: var(--gold);
+        margin-bottom: 14px;
+    }
 
-        /* ── Search & toolbar ── */
-        .toolbar {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        .search-wrap {
-            position: relative;
-            flex: 1;
-        }
-        .search-icon {
-            position: absolute;
-            left: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-            font-size: 15px;
-            pointer-events: none;
-        }
-        .search-input {
-            width: 100%;
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 8px;
-            color: var(--text-primary);
-            padding: 10px 12px 10px 36px;
-            font-size: 14px;
-            font-family: var(--font-body);
-            transition: border-color 0.18s, background 0.18s;
-        }
-        .search-input::placeholder { color: var(--text-muted); }
-        .search-input:focus {
-            outline: none;
-            border-color: var(--gold);
-            background: rgba(201,162,39,0.04);
-        }
-        .sort-select {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 8px;
-            color: var(--text-secondary);
-            padding: 10px 12px;
-            font-size: 13px;
-            font-family: var(--font-body);
-            cursor: pointer;
-        }
-        .sort-select:focus { outline: none; border-color: var(--gold); }
+    .add-main-row {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+    }
 
-        /* ── Item grid ── */
-        .inv-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-            gap: 14px;
-        }
+    /* image picker */
+    .add-img-btn {
+        width: 48px; height: 48px;
+        border-radius: 10px;
+        border: 1px dashed rgba(201,162,39,.35);
+        background: rgba(201,162,39,.06);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        overflow: hidden;
+        position: relative;
+        transition: border-color .2s, background .2s;
+    }
+    .add-img-btn:hover { border-color: var(--gold); background: rgba(201,162,39,.14); }
+    .add-img-btn img {
+        width: 100%; height: 100%; object-fit: cover;
+        position: absolute; inset: 0; border-radius: 9px;
+    }
+    .add-img-icon { font-size: 20px; color: var(--text-3); pointer-events: none; }
+    #addImgInput { display: none; }
 
-        .item-card {
-            position: relative;
-            background: linear-gradient(160deg, rgba(18,22,40,0.95) 0%, rgba(10,14,26,0.98) 100%);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 12px;
-            padding: 18px 16px 14px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
-            animation: cardIn 0.28s var(--ease-out) both;
-        }
-        @keyframes cardIn {
-            from { opacity: 0; transform: translateY(10px) scale(0.97); }
-            to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-        .item-card:hover {
-            border-color: var(--gold-border);
-            box-shadow: 0 8px 28px rgba(0,0,0,0.5), 0 0 0 1px rgba(201,162,39,0.1);
-            transform: translateY(-2px);
-        }
+    .add-fields { flex: 1; display: flex; gap: 8px; min-width: 0; }
+    .inp {
+        background: rgba(255,255,255,.05);
+        border: 1px solid rgba(255,255,255,.11);
+        border-radius: 8px;
+        color: var(--text);
+        padding: 11px 12px;
+        font-size: 14px;
+        font-family: var(--font-body);
+        transition: border-color .18s, background .18s, box-shadow .18s;
+        min-width: 0;
+    }
+    .inp::placeholder { color: var(--text-3); }
+    .inp:focus { outline: none; border-color: var(--gold); background: rgba(201,162,39,.05); box-shadow: 0 0 0 3px rgba(201,162,39,.11); }
+    .inp-name { flex: 1; }
+    .inp-qty  { width: 80px; text-align: center; flex-shrink: 0; }
+    .btn-add {
+        padding: 11px 18px;
+        background: linear-gradient(135deg, rgba(201,162,39,.28) 0%, rgba(160,120,32,.16) 100%);
+        border: 1px solid var(--gold-line);
+        border-radius: 8px;
+        color: var(--gold-bright);
+        font-family: var(--font-body);
+        font-size: 13px; font-weight: 600;
+        cursor: pointer; white-space: nowrap; flex-shrink: 0;
+        transition: background .2s, border-color .2s, box-shadow .2s, transform .12s;
+    }
+    .btn-add:hover {
+        background: linear-gradient(135deg, rgba(201,162,39,.42) 0%, rgba(160,120,32,.28) 100%);
+        border-color: var(--gold);
+        box-shadow: 0 4px 18px rgba(201,162,39,.24);
+        transform: translateY(-1px);
+    }
+    .btn-add:active { transform: scale(.97); }
 
-        .item-del {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            border: none;
-            background: transparent;
-            color: var(--text-muted);
-            font-size: 13px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.18s, background 0.18s, color 0.18s;
-        }
-        .item-card:hover .item-del { opacity: 1; }
-        .item-del:hover {
-            background: rgba(200,50,50,0.18);
-            color: #ff6666;
-        }
+    /* ─── Toolbar ────────────────────────────────── */
+    .toolbar { display: flex; gap: 8px; margin-bottom: 14px; align-items: center; }
+    .search-wrap { position: relative; flex: 1; }
+    .search-ico { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); color: var(--text-3); font-size: 15px; pointer-events: none; }
+    .search-inp {
+        width: 100%;
+        background: rgba(255,255,255,.04);
+        border: 1px solid rgba(255,255,255,.09);
+        border-radius: 8px; color: var(--text);
+        padding: 9px 10px 9px 34px;
+        font-size: 13px; font-family: var(--font-body);
+        transition: border-color .18s, background .18s;
+    }
+    .search-inp::placeholder { color: var(--text-3); }
+    .search-inp:focus { outline: none; border-color: var(--gold); background: rgba(201,162,39,.04); }
+    .sort-sel {
+        background: rgba(255,255,255,.04);
+        border: 1px solid rgba(255,255,255,.09);
+        border-radius: 8px; color: var(--text-2);
+        padding: 9px 10px; font-size: 12px;
+        font-family: var(--font-body); cursor: pointer;
+        flex-shrink: 0;
+    }
+    .sort-sel:focus { outline: none; border-color: var(--gold); }
 
-        .item-name {
-            font-size: 14px;
-            font-weight: 500;
-            color: var(--text-primary);
-            line-height: 1.3;
-            padding-right: 20px;
-            word-break: break-word;
-        }
+    /* ─── Item list ──────────────────────────────── */
+    .inv-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+        background: linear-gradient(160deg, rgba(14,18,32,.96) 0%, rgba(10,13,24,.98) 100%);
+        border: 1px solid rgba(255,255,255,.07);
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 8px 40px rgba(0,0,0,.5);
+    }
 
-        .item-qty-section {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-        }
-        .item-qty-num {
-            font-family: var(--font-display);
-            font-size: 42px;
-            font-weight: 600;
-            color: var(--gold);
-            line-height: 1;
-            letter-spacing: -0.02em;
-            text-shadow: 0 0 20px rgba(201,162,39,0.3);
-        }
-        .item-qty-label {
-            font-size: 10px;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.12em;
-        }
-        .item-qty-controls {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            width: 100%;
-        }
-        .qty-btn {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            border: 1px solid rgba(255,255,255,0.14);
-            background: rgba(255,255,255,0.06);
-            color: var(--text-primary);
-            font-size: 17px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.15s, border-color 0.15s, transform 0.1s;
-            line-height: 1;
-            flex-shrink: 0;
-        }
-        .qty-btn:hover {
-            background: rgba(201,162,39,0.2);
-            border-color: var(--gold);
-        }
-        .qty-btn:active { transform: scale(0.9); }
-        .qty-input {
-            flex: 1;
-            text-align: center;
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 6px;
-            color: var(--text-primary);
-            font-family: var(--font-display);
-            font-size: 16px;
-            font-weight: 600;
-            padding: 5px 4px;
-            transition: border-color 0.15s;
-        }
-        .qty-input:focus {
-            outline: none;
-            border-color: var(--gold);
-        }
+    .item-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 13px 16px;
+        border-bottom: 1px solid rgba(255,255,255,.05);
+        transition: background .18s;
+        animation: rowIn .24s var(--ease) both;
+        position: relative;
+    }
+    @keyframes rowIn {
+        from { opacity: 0; transform: translateX(-8px); }
+        to   { opacity: 1; transform: translateX(0); }
+    }
+    .item-row:last-child { border-bottom: none; }
+    .item-row:hover { background: rgba(201,162,39,.05); }
 
-        /* ── Empty state ── */
-        .empty-state {
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 64px 24px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 12px;
-        }
-        .empty-icon {
-            font-size: 56px;
-            opacity: 0.35;
-            line-height: 1;
-        }
-        .empty-title {
-            font-family: var(--font-heading);
-            font-size: 18px;
-            color: var(--text-muted);
-            letter-spacing: 0.05em;
-        }
-        .empty-sub {
-            font-size: 13px;
-            color: var(--text-muted);
-            font-style: italic;
-            opacity: 0.7;
-        }
+    /* thumbnail */
+    .item-thumb {
+        width: 44px; height: 44px; border-radius: 8px;
+        flex-shrink: 0; overflow: hidden;
+        background: rgba(255,255,255,.06);
+        border: 1px solid rgba(255,255,255,.08);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 22px; color: var(--text-3);
+        cursor: pointer;
+        transition: border-color .2s;
+        position: relative;
+    }
+    .item-thumb:hover { border-color: var(--gold); }
+    .item-thumb img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
+    .item-thumb-input { display: none; }
 
-        /* ── Loading skeleton ── */
-        .skeleton-card {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 12px;
-            height: 160px;
-            animation: shimmer 1.6s infinite;
-            background: linear-gradient(
-                90deg,
-                rgba(255,255,255,0.03) 25%,
-                rgba(255,255,255,0.07) 50%,
-                rgba(255,255,255,0.03) 75%
-            );
-            background-size: 200% 100%;
-        }
-        @keyframes shimmer {
-            0%   { background-position: -200% 0; }
-            100% { background-position:  200% 0; }
-        }
+    /* name */
+    .item-name { flex: 1; font-size: 14px; font-weight: 500; color: var(--text); min-width: 0; word-break: break-word; line-height: 1.35; }
 
-        /* ── Save status snack ── */
-        .snack {
-            position: fixed;
-            bottom: 24px;
-            left: 50%;
-            transform: translateX(-50%) translateY(60px);
-            background: rgba(12,16,30,0.95);
-            border: 1px solid var(--gold-border);
-            border-radius: 24px;
-            padding: 9px 20px;
-            font-size: 13px;
-            color: var(--gold);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-            transition: transform 0.3s var(--ease-out), opacity 0.3s;
-            opacity: 0;
-            z-index: 100;
-            white-space: nowrap;
-        }
-        .snack.visible {
-            transform: translateX(-50%) translateY(0);
-            opacity: 1;
-        }
+    /* stepper */
+    .item-stepper { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+    .step-btn {
+        width: 28px; height: 28px; border-radius: 50%;
+        border: 1px solid rgba(255,255,255,.13);
+        background: rgba(255,255,255,.06);
+        color: var(--text); font-size: 16px;
+        cursor: pointer; display: flex;
+        align-items: center; justify-content: center;
+        transition: background .15s, border-color .15s, transform .1s;
+        line-height: 1; flex-shrink: 0;
+    }
+    .step-btn:hover { background: rgba(201,162,39,.22); border-color: var(--gold); }
+    .step-btn:active { transform: scale(.88); }
+    .step-qty {
+        font-family: var(--font-nums);
+        font-size: 18px; font-weight: 600;
+        color: var(--gold);
+        background: rgba(255,255,255,.05);
+        border: 1px solid rgba(255,255,255,.1);
+        border-radius: 7px;
+        text-align: center;
+        padding: 3px 6px;
+        min-width: 52px;
+        width: auto;
+        max-width: 90px;
+        transition: border-color .15s;
+    }
+    .step-qty:focus { outline: none; border-color: var(--gold); }
 
-        /* ── Responsive ── */
-        @media (max-width: 500px) {
-            .inv-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
-            .add-row { flex-wrap: wrap; }
-            .add-qty { flex: 0 0 70px; }
-            .btn-add { width: 100%; justify-content: center; }
-        }
+    /* delete */
+    .item-del {
+        width: 28px; height: 28px; border-radius: 50%;
+        border: none; background: transparent;
+        color: var(--text-3); font-size: 14px;
+        cursor: pointer; display: flex;
+        align-items: center; justify-content: center;
+        opacity: 0; flex-shrink: 0;
+        transition: opacity .18s, background .18s, color .18s;
+    }
+    .item-row:hover .item-del { opacity: 1; }
+    .item-del:hover { background: rgba(190,50,50,.18); color: #ff7777; }
 
-        /* ── Scrollbar ── */
-        ::-webkit-scrollbar { width: 5px; }
-        ::-webkit-scrollbar-thumb { background: rgba(201,162,39,0.2); border-radius: 3px; }
-        ::-webkit-scrollbar-track { background: transparent; }
+    /* ─── Empty / loading ────────────────────────── */
+    .empty {
+        padding: 64px 24px; text-align: center;
+        display: flex; flex-direction: column;
+        align-items: center; gap: 12px;
+    }
+    .empty-ico  { font-size: 52px; opacity: .3; }
+    .empty-title { font-family: var(--font-title); font-size: 16px; color: var(--text-3); letter-spacing: .05em; }
+    .empty-hint  { font-size: 13px; color: var(--text-3); font-style: italic; opacity: .7; }
 
-        /* ── Divider ── */
-        .section-divider {
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--border), transparent);
-            margin: 8px 0 20px;
-        }
+    .skel-row {
+        height: 72px;
+        background: linear-gradient(90deg, rgba(255,255,255,.03) 25%, rgba(255,255,255,.07) 50%, rgba(255,255,255,.03) 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+        border-bottom: 1px solid rgba(255,255,255,.04);
+    }
+    .skel-row:last-child { border-bottom: none; }
+    @keyframes shimmer { 0%{background-position:-200% 0;} 100%{background-position:200% 0;} }
+
+    /* ─── Snack ──────────────────────────────────── */
+    .snack {
+        position: fixed; bottom: 22px; left: 50%;
+        transform: translateX(-50%) translateY(60px);
+        background: rgba(10,14,28,.95);
+        border: 1px solid var(--gold-line);
+        border-radius: 20px;
+        padding: 8px 18px; font-size: 13px;
+        color: var(--gold);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 6px 24px rgba(0,0,0,.5);
+        transition: transform .28s var(--ease), opacity .28s;
+        opacity: 0; z-index: 100; white-space: nowrap;
+    }
+    .snack.on { transform: translateX(-50%) translateY(0); opacity: 1; }
+
+    /* ─── Scrollbar ──────────────────────────────── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-thumb { background: rgba(201,162,39,.2); border-radius: 2px; }
     </style>
 </head>
 <body>
-    <div class="page">
+<div class="page">
 
-        <!-- Header -->
-        <header class="inv-header">
-            <a href="index.html" class="inv-back" title="Volver">←</a>
-            <div class="inv-title-wrap">
-                <h1 class="inv-title">Bolso de Hermione</h1>
-                <p class="inv-subtitle">Inventario del grupo · Todo cabe aquí dentro</p>
-            </div>
-            <div class="inv-meta">
-                <span class="inv-count" id="itemCount">—</span>
-                <span class="inv-count-label">objetos</span>
-                <span class="inv-save-status" id="saveStatus"></span>
-            </div>
-        </header>
+    <!-- Header -->
+    <header class="hdr">
+        <a href="index.html" class="btn-back" title="Volver al inicio">&#8592;</a>
+        <div class="hdr-titles">
+            <h1 class="hdr-title">Bolso de Hermione</h1>
+            <p class="hdr-sub">Inventario del grupo &middot; Todo cabe aquí dentro</p>
+        </div>
+        <div class="hdr-right">
+            <div class="hdr-count" id="itemCount">—</div>
+            <div class="hdr-count-lbl">objetos</div>
+            <div class="save-status" id="saveStatus"></div>
+        </div>
+    </header>
 
-        <!-- Add form -->
-        <div class="add-card">
-            <div class="add-card-title">✦ Añadir objeto</div>
-            <div class="add-row">
-                <input type="text" id="addName" class="add-input" placeholder="Nombre del objeto…" maxlength="80"
+    <!-- Add form -->
+    <div class="add-panel">
+        <div class="add-panel-label">✦ Añadir objeto</div>
+        <div class="add-main-row">
+            <!-- Image picker -->
+            <div class="add-img-btn" id="addImgBtn" title="Añadir imagen (opcional)" onclick="document.getElementById('addImgInput').click()">
+                <img id="addImgPreview" src="" alt="" style="display:none">
+                <span class="add-img-icon" id="addImgIcon">📷</span>
+            </div>
+            <input type="file" id="addImgInput" accept="image/*" onchange="onAddImgChange(this)">
+
+            <div class="add-fields">
+                <input type="text" id="addName" class="inp inp-name" placeholder="Nombre del objeto…" maxlength="80"
                     onkeydown="if(event.key==='Enter') addItem()">
-                <input type="number" id="addQty" class="add-input add-qty" placeholder="Cant." min="1" value="1"
+                <input type="number" id="addQty" class="inp inp-qty" placeholder="Cant." min="1" value="1"
                     onkeydown="if(event.key==='Enter') addItem()">
-                <button class="btn-add" onclick="addItem()">+ Añadir</button>
             </div>
+            <button class="btn-add" onclick="addItem()">+ Añadir</button>
         </div>
-
-        <!-- Toolbar -->
-        <div class="toolbar">
-            <div class="search-wrap">
-                <span class="search-icon">⌕</span>
-                <input type="text" id="searchInput" class="search-input" placeholder="Buscar objeto…" oninput="renderGrid()">
-            </div>
-            <select id="sortSelect" class="sort-select" onchange="renderGrid()">
-                <option value="name">A → Z</option>
-                <option value="name-desc">Z → A</option>
-                <option value="qty-desc">Mayor cantidad</option>
-                <option value="qty-asc">Menor cantidad</option>
-                <option value="recent">Más reciente</option>
-            </select>
-        </div>
-
-        <div class="section-divider"></div>
-
-        <!-- Item grid -->
-        <div class="inv-grid" id="invGrid">
-            <!-- skeletons while loading -->
-            <div class="skeleton-card"></div>
-            <div class="skeleton-card"></div>
-            <div class="skeleton-card"></div>
-            <div class="skeleton-card"></div>
-        </div>
-
     </div>
 
-    <!-- Snack toast -->
-    <div class="snack" id="snack"></div>
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <div class="search-wrap">
+            <span class="search-ico">⌕</span>
+            <input type="text" id="searchInput" class="search-inp" placeholder="Buscar objeto…" oninput="render()">
+        </div>
+        <select id="sortSel" class="sort-sel" onchange="render()">
+            <option value="recent">Más recientes</option>
+            <option value="name">A → Z</option>
+            <option value="name-desc">Z → A</option>
+            <option value="qty-desc">Mayor cantidad</option>
+            <option value="qty-asc">Menor cantidad</option>
+        </select>
+    </div>
 
-    <script>
-    // ── Config ──
-    const CHAR_ID = '__bolso_hermione__';
-    const BASE_URL = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
-        ? 'http://localhost:3001'
-        : location.origin;
+    <!-- List -->
+    <div class="inv-list" id="invList">
+        <div class="skel-row"></div>
+        <div class="skel-row"></div>
+        <div class="skel-row"></div>
+    </div>
 
-    // ── State ──
-    let items = [];       // [{ id, nombre, cantidad, ts }]
-    let saveTimer = null;
-    let snackTimer = null;
+</div>
+<div class="snack" id="snack"></div>
 
-    // ── Boot ──
-    window.addEventListener('DOMContentLoaded', load);
+<script>
+const CHAR_ID  = '__bolso_hermione__';
+const BASE_URL = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+    ? 'http://localhost:3001' : location.origin;
 
-    async function load() {
-        try {
-            const res  = await fetch(`${BASE_URL}/api/player-characters`);
-            const json = await res.json();
-            const entry = (json.characters || []).find(c => c.charId === CHAR_ID);
-            items = entry?.data?.items ?? [];
-        } catch(e) {
-            items = [];
-            showSnack('Error al cargar el inventario');
-        }
-        renderGrid();
+let items     = [];
+let saveTimer = null;
+let snackTmr  = null;
+let pendingImg = null; // base64 for the next item to add
+
+// ── Boot ──
+window.addEventListener('DOMContentLoaded', load);
+
+async function load() {
+    try {
+        const res  = await fetch(`${BASE_URL}/api/player-characters`);
+        const json = await res.json();
+        const entry = (json.characters || []).find(c => c.charId === CHAR_ID);
+        items = entry?.data?.items ?? [];
+    } catch(e) {
+        items = [];
+        showSnack('Error al cargar el inventario');
+    }
+    render();
+}
+
+// ── Render ──
+function render() {
+    const list  = document.getElementById('invList');
+    const query = document.getElementById('searchInput').value.toLowerCase();
+    const sort  = document.getElementById('sortSel').value;
+
+    let rows = query ? items.filter(it => it.nombre.toLowerCase().includes(query)) : [...items];
+
+    if (sort === 'name')      rows.sort((a,b) => a.nombre.localeCompare(b.nombre));
+    if (sort === 'name-desc') rows.sort((a,b) => b.nombre.localeCompare(a.nombre));
+    if (sort === 'qty-desc')  rows.sort((a,b) => b.cantidad - a.cantidad);
+    if (sort === 'qty-asc')   rows.sort((a,b) => a.cantidad - b.cantidad);
+    if (sort === 'recent')    rows.sort((a,b) => (b.ts||0) - (a.ts||0));
+
+    document.getElementById('itemCount').textContent = items.length;
+
+    if (!rows.length) {
+        list.innerHTML = `<div class="empty">
+            <div class="empty-ico">👜</div>
+            <div class="empty-title">${query ? 'Sin resultados' : 'El bolso está vacío'}</div>
+            <div class="empty-hint">${query ? 'Prueba otra búsqueda' : 'Añade el primer objeto usando el formulario de arriba'}</div>
+        </div>`;
+        return;
     }
 
-    // ── Render ──
-    function renderGrid() {
-        const grid   = document.getElementById('invGrid');
-        const query  = document.getElementById('searchInput').value.toLowerCase();
-        const sort   = document.getElementById('sortSelect').value;
+    list.innerHTML = rows.map(it => {
+        const thumb = it.img
+            ? `<img src="${it.img}" alt="${esc(it.nombre)}">`
+            : `<span>📦</span>`;
+        return `
+        <div class="item-row" id="row-${it.id}">
+            <div class="item-thumb" title="Cambiar imagen" onclick="pickItemImg('${it.id}')">
+                ${thumb}
+                <input type="file" class="item-thumb-input" id="img-input-${it.id}" accept="image/*"
+                    onchange="onItemImgChange(this,'${it.id}')">
+            </div>
+            <div class="item-name">${esc(it.nombre)}</div>
+            <div class="item-stepper">
+                <button class="step-btn" onclick="changeQty('${it.id}',-1)" aria-label="Reducir">−</button>
+                <input class="step-qty" type="number" min="0" value="${it.cantidad}"
+                    onchange="setQty('${it.id}',this.value)"
+                    onclick="this.select()"
+                    style="width:${Math.max(52, String(it.cantidad).length * 12 + 24)}px"
+                    aria-label="Cantidad">
+                <button class="step-btn" onclick="changeQty('${it.id}',1)" aria-label="Aumentar">+</button>
+            </div>
+            <button class="item-del" onclick="deleteItem('${it.id}')" title="Eliminar" aria-label="Eliminar ${esc(it.nombre)}">✕</button>
+        </div>`;
+    }).join('');
+}
 
-        let filtered = query
-            ? items.filter(it => it.nombre.toLowerCase().includes(query))
-            : [...items];
+// ── Add ──
+function onAddImgChange(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        pendingImg = e.target.result;
+        const preview = document.getElementById('addImgPreview');
+        const icon    = document.getElementById('addImgIcon');
+        preview.src = pendingImg;
+        preview.style.display = 'block';
+        icon.style.display    = 'none';
+    };
+    reader.readAsDataURL(file);
+}
 
-        if (sort === 'name')      filtered.sort((a,b) => a.nombre.localeCompare(b.nombre));
-        if (sort === 'name-desc') filtered.sort((a,b) => b.nombre.localeCompare(a.nombre));
-        if (sort === 'qty-desc')  filtered.sort((a,b) => b.cantidad - a.cantidad);
-        if (sort === 'qty-asc')   filtered.sort((a,b) => a.cantidad - b.cantidad);
-        if (sort === 'recent')    filtered.sort((a,b) => (b.ts||0) - (a.ts||0));
+function addItem() {
+    const nameEl = document.getElementById('addName');
+    const qtyEl  = document.getElementById('addQty');
+    const nombre   = nameEl.value.trim();
+    const cantidad = Math.max(1, parseInt(qtyEl.value) || 1);
+    if (!nombre) { nameEl.focus(); return; }
 
-        // Count
-        document.getElementById('itemCount').textContent = items.length;
-
-        if (!filtered.length) {
-            grid.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-icon">👜</div>
-                    <div class="empty-title">${query ? 'Ningún objeto coincide' : 'El bolso está vacío'}</div>
-                    <div class="empty-sub">${query ? 'Prueba otra búsqueda' : 'Añade el primer objeto usando el formulario de arriba'}</div>
-                </div>`;
-            return;
-        }
-
-        grid.innerHTML = filtered.map(it => `
-            <div class="item-card" id="card-${it.id}">
-                <button class="item-del" onclick="deleteItem('${it.id}')" title="Eliminar objeto" aria-label="Eliminar ${esc(it.nombre)}">✕</button>
-                <div class="item-name">${esc(it.nombre)}</div>
-                <div class="item-qty-section">
-                    <div class="item-qty-num" id="num-${it.id}">${it.cantidad}</div>
-                    <div class="item-qty-label">unidades</div>
-                    <div class="item-qty-controls">
-                        <button class="qty-btn" onclick="changeQty('${it.id}',-1)" aria-label="Reducir cantidad">−</button>
-                        <input class="qty-input" type="number" min="0" value="${it.cantidad}"
-                            onchange="setQty('${it.id}',this.value)"
-                            onclick="this.select()"
-                            aria-label="Cantidad de ${esc(it.nombre)}">
-                        <button class="qty-btn" onclick="changeQty('${it.id}',1)" aria-label="Aumentar cantidad">+</button>
-                    </div>
-                </div>
-            </div>`).join('');
+    const existing = items.find(it => it.nombre.toLowerCase() === nombre.toLowerCase());
+    if (existing) {
+        existing.cantidad += cantidad;
+        if (pendingImg && !existing.img) existing.img = pendingImg;
+    } else {
+        items = [{ id: `i${Date.now()}`, nombre, cantidad, ts: Date.now(), img: pendingImg || null }, ...items];
     }
 
-    // ── Mutations ──
-    function addItem() {
-        const nameEl = document.getElementById('addName');
-        const qtyEl  = document.getElementById('addQty');
-        const nombre   = nameEl.value.trim();
-        const cantidad = Math.max(1, parseInt(qtyEl.value) || 1);
-        if (!nombre) { nameEl.focus(); return; }
+    // reset form
+    nameEl.value = ''; qtyEl.value = 1;
+    pendingImg = null;
+    const preview = document.getElementById('addImgPreview');
+    const icon    = document.getElementById('addImgIcon');
+    preview.src = ''; preview.style.display = 'none'; icon.style.display = '';
+    document.getElementById('addImgInput').value = '';
+    nameEl.focus();
 
-        const existing = items.find(it => it.nombre.toLowerCase() === nombre.toLowerCase());
-        if (existing) {
-            existing.cantidad += cantidad;
-        } else {
-            items = [{ id: `i${Date.now()}`, nombre, cantidad, ts: Date.now() }, ...items];
-        }
+    render();
+    scheduleSave();
+}
 
-        nameEl.value = '';
-        qtyEl.value  = 1;
-        nameEl.focus();
-        renderGrid();
-        scheduleSave();
-    }
+// ── Item image ──
+function pickItemImg(id) {
+    const input = document.getElementById(`img-input-${id}`);
+    if (input) input.click();
+}
 
-    function changeQty(id, delta) {
+function onItemImgChange(input, id) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
         const it = items.find(i => i.id === id);
-        if (!it) return;
-        const next = it.cantidad + delta;
-        if (next <= 0) { deleteItem(id); return; }
-        it.cantidad = next;
-        // Update DOM without full re-render for snappiness
-        const numEl = document.getElementById(`num-${id}`);
-        const card  = document.getElementById(`card-${id}`);
-        if (numEl) numEl.textContent = next;
-        if (card) {
-            const inp = card.querySelector('.qty-input');
-            if (inp) inp.value = next;
-        }
+        if (it) it.img = e.target.result;
+        render();
         scheduleSave();
-    }
+    };
+    reader.readAsDataURL(file);
+}
 
-    function setQty(id, raw) {
-        const val = parseInt(raw);
-        if (isNaN(val) || val < 0) return;
-        if (val === 0) { deleteItem(id); return; }
-        const it = items.find(i => i.id === id);
-        if (it) it.cantidad = val;
-        const numEl = document.getElementById(`num-${id}`);
-        if (numEl) numEl.textContent = val;
-        scheduleSave();
+// ── Mutations ──
+function changeQty(id, delta) {
+    const it = items.find(i => i.id === id);
+    if (!it) return;
+    const next = it.cantidad + delta;
+    if (next <= 0) { deleteItem(id); return; }
+    it.cantidad = next;
+    // patch DOM
+    const row = document.getElementById(`row-${id}`);
+    if (row) {
+        const inp = row.querySelector('.step-qty');
+        if (inp) { inp.value = next; inp.style.width = Math.max(52, String(next).length * 12 + 24) + 'px'; }
     }
+    scheduleSave();
+}
 
-    function deleteItem(id) {
-        const card = document.getElementById(`card-${id}`);
-        if (card) {
-            card.style.transition = 'opacity 0.2s, transform 0.2s';
-            card.style.opacity = '0';
-            card.style.transform = 'scale(0.92)';
-            setTimeout(() => {
-                items = items.filter(i => i.id !== id);
-                renderGrid();
-                scheduleSave();
-            }, 200);
-        }
-    }
+function setQty(id, raw) {
+    const val = parseInt(raw);
+    if (isNaN(val) || val < 0) return;
+    if (val === 0) { deleteItem(id); return; }
+    const it = items.find(i => i.id === id);
+    if (it) { it.cantidad = val; }
+    scheduleSave();
+}
 
-    // ── Persistence ──
-    function scheduleSave() {
-        clearTimeout(saveTimer);
-        setSaveStatus('Guardando…');
-        saveTimer = setTimeout(save, 800);
+function deleteItem(id) {
+    const row = document.getElementById(`row-${id}`);
+    if (row) {
+        row.style.transition = 'opacity .2s, transform .2s';
+        row.style.opacity = '0'; row.style.transform = 'translateX(8px)';
+        setTimeout(() => { items = items.filter(i => i.id !== id); render(); scheduleSave(); }, 200);
     }
+}
 
-    async function save() {
-        try {
-            await fetch(`${BASE_URL}/api/player-characters/${CHAR_ID}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ data: { items } }),
-            });
-            setSaveStatus('Guardado ✓');
-            setTimeout(() => setSaveStatus(''), 2500);
-        } catch(e) {
-            setSaveStatus('Error al guardar');
-        }
-    }
+// ── Save ──
+function scheduleSave() {
+    clearTimeout(saveTimer);
+    setSaveStatus('Guardando…');
+    saveTimer = setTimeout(save, 800);
+}
 
-    function setSaveStatus(msg) {
-        document.getElementById('saveStatus').textContent = msg;
+async function save() {
+    try {
+        await fetch(`${BASE_URL}/api/player-characters/${CHAR_ID}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ data: { items } }),
+        });
+        setSaveStatus('Guardado ✓');
+        setTimeout(() => setSaveStatus(''), 2500);
+    } catch(e) {
+        setSaveStatus('Error al guardar');
+        showSnack('No se pudo guardar el inventario');
     }
+}
 
-    function showSnack(msg, duration = 3500) {
-        const el = document.getElementById('snack');
-        el.textContent = msg;
-        el.classList.add('visible');
-        clearTimeout(snackTimer);
-        snackTimer = setTimeout(() => el.classList.remove('visible'), duration);
-    }
+function setSaveStatus(t) { document.getElementById('saveStatus').textContent = t; }
 
-    // ── Utils ──
-    function esc(str) {
-        return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-    </script>
+function showSnack(msg, ms = 3500) {
+    const el = document.getElementById('snack');
+    el.textContent = msg; el.classList.add('on');
+    clearTimeout(snackTmr);
+    snackTmr = setTimeout(() => el.classList.remove('on'), ms);
+}
+
+function esc(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+</script>
 </body>
 </html>

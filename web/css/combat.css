@@ -2407,12 +2407,12 @@ body.role-jugador .master-only { display: none !important; }
 .bolso-hud-link {
     display: flex;
     align-items: center;
-    gap: 6px;
+    justify-content: center;
     text-decoration: none;
     background: linear-gradient(135deg, rgba(201,162,39,0.14) 0%, rgba(201,162,39,0.06) 100%);
     border: 1px solid var(--border-color);
     border-radius: 10px;
-    padding: 5px 10px 5px 8px;
+    padding: 4px 8px;
     transition: background 0.2s, border-color 0.2s, box-shadow 0.2s, transform 0.15s;
     cursor: pointer;
 }
@@ -2423,16 +2423,8 @@ body.role-jugador .master-only { display: none !important; }
     transform: translateY(-1px);
 }
 .bolso-hud-icon {
-    font-size: 22px;
+    font-size: 28px;
     line-height: 1;
-}
-.bolso-hud-label {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--accent-gold);
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
-    font-family: var(--font-body);
 }
 
 /* --- Role indicator badge in HUD --- */
