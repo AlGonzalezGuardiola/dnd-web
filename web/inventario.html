@@ -552,6 +552,43 @@
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-thumb { background: rgba(201,162,39,.2); border-radius: 2px; }
 
+    /* ─── Lightbox ──────────────────────────────── */
+    #lightboxDialog {
+        border: none;
+        background: transparent;
+        padding: 0;
+        margin: auto;
+        max-width: 100vw;
+        max-height: 100vh;
+        overflow: visible;
+    }
+    #lightboxDialog::backdrop {
+        background: rgba(0,0,0,.88);
+        backdrop-filter: blur(6px);
+    }
+    #lightboxImg {
+        display: block;
+        max-width: min(90vw, 700px);
+        max-height: 85vh;
+        border-radius: 10px;
+        box-shadow: 0 24px 80px rgba(0,0,0,.8);
+        object-fit: contain;
+    }
+    #lightboxClose {
+        position: fixed;
+        top: 18px; right: 18px;
+        width: 38px; height: 38px;
+        border-radius: 50%;
+        border: 1px solid rgba(255,255,255,.22);
+        background: rgba(10,12,24,.85);
+        color: var(--text-2); font-size: 16px;
+        cursor: pointer; display: flex;
+        align-items: center; justify-content: center;
+        transition: background .15s, color .15s;
+        backdrop-filter: blur(8px);
+    }
+    #lightboxClose:hover { background: rgba(255,255,255,.12); color: var(--text); }
+
     /* ─── Responsive / Mobile ───────────────────── */
     @media (max-width: 560px) {
         .page { padding: 0 12px 80px; }
@@ -712,6 +749,12 @@
     </div>
 </dialog>
 
+<!-- Lightbox -->
+<dialog id="lightboxDialog">
+    <img id="lightboxImg" src="" alt="">
+    <button id="lightboxClose" title="Cerrar">✕</button>
+</dialog>
+
 <div class="snack" id="snack"></div>
 
 <script>
@@ -768,6 +811,11 @@ window.addEventListener('DOMContentLoaded', () => {
 
     // After close, clear currentInfoId
     dialog.addEventListener('close', () => { currentInfoId = null; });
+
+    // Lightbox wiring
+    const lb = document.getElementById('lightboxDialog');
+    document.getElementById('lightboxClose').addEventListener('click', () => lb.close());
+    lb.addEventListener('click', e => { if (e.target === lb) lb.close(); });
 
     // Event delegation — catch clicks on any .item-info button
     document.addEventListener('click', e => {
@@ -874,15 +922,17 @@ function renderRow(it) {
     }
 
     // Normal mode
-    const thumb = it.img
+    const hasImg = !!it.img;
+    const thumb = hasImg
         ? `<img src="${it.img}" alt="${esc(it.nombre)}">`
         : `<span>📦</span>`;
+    const thumbClick = hasImg
+        ? `onclick="openLightbox('${it.id}')" title="Ver imagen" style="cursor:zoom-in"`
+        : `style="cursor:default"`;
     return `
     <div class="item-row" id="row-${it.id}">
-        <div class="item-thumb" title="Cambiar imagen" onclick="pickItemImg('${it.id}')">
+        <div class="item-thumb" ${thumbClick}>
             ${thumb}
-            <input type="file" class="item-thumb-input" id="img-input-${it.id}" accept="image/*"
-                onchange="onItemImgChange(this,'${it.id}')">
         </div>
         <div class="item-name">${esc(it.nombre)}</div>
         <button class="item-info${it.desc ? ' active' : ''}" data-iid="${it.id}"
@@ -949,6 +999,14 @@ function addItem() {
 
     render();
     scheduleSave();
+}
+
+// ── Lightbox ──
+function openLightbox(id) {
+    const it = items.find(i => i.id === id);
+    if (!it || !it.img) return;
+    document.getElementById('lightboxImg').src = it.img;
+    document.getElementById('lightboxDialog').showModal();
 }
 
 // ── Item image ──
