@@ -233,6 +233,19 @@ window.characterData = {
         ],
         "conjuros": [
             {
+                "nombre": "Prestidigitación",
+                "nivel": "Truco",
+                "desc": "Efectos mágicos menores: efecto sensorial (chispas, viento, música suave, olor), encender/apagar fuego, limpiar/ensuciar objeto, enfriar/calentar o dar sabor a material inerte, añadir color/marca/símbolo a objeto, o crear una baratija o ilusión menor.<br><em>Transmutación · Componentes:</em> V, S · <em>Lanzamiento:</em> 1 acción · <em>Alcance:</em> 10 pies · <em>Duración:</em> 1 hora"
+            },
+            {
+                "nombre": "Toque Gélido",
+                "nivel": "Truco",
+                "atk": "1d20+7",
+                "dado": "1d8",
+                "tipo_dano": "necrótico",
+                "desc": "Ataque de conjuro a distancia (120ft). Impacto: 1d8 necrótico; la criatura no puede recuperar PG hasta el inicio de tu siguiente turno.<br><em>Nigromancia · Componentes:</em> V, S · <em>Lanzamiento:</em> 1 acción · <em>Alcance:</em> 120 pies · <em>Duración:</em> 1 asalto<br><strong>Escala:</strong> Nv5 → 2d8 · Nv11 → 3d8 · Nv17 → 4d8"
+            },
+            {
                 "nombre": "Infligir Heridas",
                 "nivel": 1,
                 "desc": "3d10 necrótico + INT (Melee/20ft)."
@@ -295,8 +308,8 @@ window.characterData = {
             },
             {
                 "nombre": "Susurros del Olvido",
-                "nivel": "Esp",
-                "desc": "3d6 psíquico + Huir (SAB)."
+                "nivel": 2,
+                "desc": "Tirada de salvación de Sabiduría. Fallo: 3d6 psíquico + huye usando su reacción. Éxito: mitad del daño. La criatura olvida todo lo ocurrido en las últimas 24 horas."
             },
             {
                 "nombre": "🩸 Dagas de Sangre (Bonus)",
