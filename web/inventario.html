@@ -250,6 +250,38 @@
     }
     .edit-cancel-btn:hover { border-color: rgba(255,255,255,.28); color: var(--text); }
 
+    /* ─── Media widget (photo / emoji toggle) ───── */
+    .add-media-widget,
+    .edit-media-widget {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        flex-shrink: 0;
+    }
+    .media-tabs {
+        display: flex;
+        gap: 2px;
+        background: rgba(255,255,255,.06);
+        border-radius: 6px;
+        padding: 2px;
+    }
+    .mtab {
+        width: 22px; height: 22px;
+        border: none;
+        background: transparent;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background .15s;
+        line-height: 1;
+    }
+    .mtab.active { background: rgba(201,162,39,.28); }
+    .mtab:hover:not(.active) { background: rgba(255,255,255,.09); }
+
     /* image picker */
     .add-img-btn {
         width: 48px; height: 48px;
@@ -272,6 +304,19 @@
     }
     .add-img-icon { font-size: 20px; color: var(--text-3); pointer-events: none; }
     #addImgInput { display: none; }
+
+    /* emoji input (shared by add form and edit form) */
+    .add-emoji-inp {
+        width: 48px; height: 48px;
+        text-align: center;
+        font-size: 26px;
+        padding: 4px 2px;
+        border-radius: 10px;
+        cursor: text;
+        line-height: 1;
+        display: none;
+    }
+    .emoji-thumb-display { font-size: 26px; line-height: 1; }
 
     .add-fields { flex: 1; display: flex; gap: 8px; min-width: 0; }
     .inp {
@@ -601,8 +646,9 @@
         /* Add form */
         .add-panel { padding: 14px 14px 16px; margin-bottom: 16px; }
         .add-main-row { flex-direction: column; gap: 10px; }
-        .add-img-btn { width: 100%; height: 52px; border-radius: 8px; flex-direction: row; gap: 8px; }
-        .add-img-btn img { border-radius: 7px; }
+        .add-media-widget { flex-direction: row; align-items: center; gap: 8px; width: 100%; }
+        .add-img-btn { width: 52px; height: 52px; border-radius: 8px; flex-shrink: 0; }
+        .add-emoji-inp { width: 52px; height: 52px; border-radius: 8px; }
         .add-fields { flex-direction: column; }
         .inp-qty { width: 100%; text-align: left; }
         .btn-add { width: 100%; justify-content: center; display: flex; }
@@ -683,12 +729,20 @@
     <div class="add-panel">
         <div class="add-panel-label">✦ Añadir objeto</div>
         <div class="add-main-row">
-            <!-- Image picker -->
-            <div class="add-img-btn" id="addImgBtn" title="Añadir imagen (opcional)" onclick="document.getElementById('addImgInput').click()">
-                <img id="addImgPreview" src="" alt="" style="display:none">
-                <span class="add-img-icon" id="addImgIcon">📷</span>
+            <!-- Media widget: photo or emoji -->
+            <div class="add-media-widget">
+                <div class="media-tabs">
+                    <button class="mtab active" id="mmt-photo" onclick="setAddMode('photo')" title="Foto">📷</button>
+                    <button class="mtab" id="mmt-emoji" onclick="setAddMode('emoji')" title="Emoji">😀</button>
+                </div>
+                <div class="add-img-btn" id="addImgBtn" title="Elegir imagen" onclick="document.getElementById('addImgInput').click()">
+                    <img id="addImgPreview" src="" alt="" style="display:none">
+                    <span class="add-img-icon" id="addImgIcon">🖼</span>
+                </div>
+                <input type="text" id="addEmojiInput" class="add-emoji-inp inp" placeholder="😀" maxlength="8"
+                    oninput="pendingEmoji=this.value.trim()">
             </div>
-            <input type="file" id="addImgInput" accept="image/*" onchange="onAddImgChange(this)">
+            <input type="file" id="addImgInput" accept="image/*" onchange="onAddImgChange(this)" style="display:none">
 
             <div class="add-fields">
                 <input type="text" id="addName" class="inp inp-name" placeholder="Nombre del objeto…" maxlength="80"
@@ -778,7 +832,29 @@ let items      = [];
 let saveTimer  = null;
 let snackTmr   = null;
 let pendingImg = null;
+let pendingEmoji = '';
+let addMode    = 'photo';
 let editingId  = null;
+
+function setAddMode(mode) {
+    addMode = mode;
+    document.getElementById('mmt-photo').classList.toggle('active', mode === 'photo');
+    document.getElementById('mmt-emoji').classList.toggle('active', mode === 'emoji');
+    document.getElementById('addImgBtn').style.display   = mode === 'photo' ? 'flex' : 'none';
+    document.getElementById('addEmojiInput').style.display = mode === 'emoji' ? 'flex' : 'none';
+    if (mode === 'photo') { pendingEmoji = ''; document.getElementById('addEmojiInput').value = ''; }
+    else { pendingImg = null; document.getElementById('addImgPreview').style.display = 'none'; document.getElementById('addImgIcon').style.display = ''; }
+}
+
+function setEditMode(id, mode) {
+    const widget  = document.querySelector(`#row-${id} .edit-media-widget`);
+    if (!widget) return;
+    widget.querySelectorAll('.mtab').forEach((b, i) => b.classList.toggle('active', (i === 0) === (mode === 'photo')));
+    const thumb   = document.getElementById(`edit-thumb-${id}`);
+    const emojiInp = document.getElementById(`edit-emoji-${id}`);
+    if (thumb)    thumb.style.display    = mode === 'photo' ? 'flex' : 'none';
+    if (emojiInp) emojiInp.style.display = mode === 'emoji' ? 'flex' : 'none';
+}
 
 // collapsed state persisted in localStorage
 const collapsedSections = new Set(
@@ -904,16 +980,28 @@ function renderRow(it) {
         const catOptions = CATEGORIAS.map(c =>
             `<option value="${c.id}"${c.id === (it.categoria||'otras') ? ' selected' : ''}>${c.icon} ${c.label}</option>`
         ).join('');
-        const thumb = it.img
+        const initEditMode = it.emoji && !it.img ? 'emoji' : 'photo';
+        const thumbContent = it.img
             ? `<img src="${it.img}" alt="${esc(it.nombre)}">`
-            : `<span>📦</span>`;
+            : `<span class="add-img-icon">🖼</span>`;
         return `
         <div class="item-row item-row--editing" id="row-${it.id}">
             <div class="edit-row">
-                <div class="item-thumb" title="Cambiar imagen" onclick="pickItemImg('${it.id}')">
-                    ${thumb}
-                    <input type="file" class="item-thumb-input" id="img-input-${it.id}" accept="image/*"
-                        onchange="onItemImgChange(this,'${it.id}')">
+                <div class="edit-media-widget">
+                    <div class="media-tabs">
+                        <button class="mtab${initEditMode === 'photo' ? ' active' : ''}" onclick="setEditMode('${it.id}','photo')" title="Foto">📷</button>
+                        <button class="mtab${initEditMode === 'emoji' ? ' active' : ''}" onclick="setEditMode('${it.id}','emoji')" title="Emoji">😀</button>
+                    </div>
+                    <div class="item-thumb" id="edit-thumb-${it.id}" title="Cambiar imagen"
+                         style="display:${initEditMode === 'photo' ? 'flex' : 'none'}"
+                         onclick="pickItemImg('${it.id}')">
+                        ${thumbContent}
+                        <input type="file" class="item-thumb-input" id="img-input-${it.id}" accept="image/*"
+                            onchange="onItemImgChange(this,'${it.id}')">
+                    </div>
+                    <input type="text" class="add-emoji-inp inp" id="edit-emoji-${it.id}"
+                        placeholder="😀" maxlength="8" value="${esc(it.emoji||'')}"
+                        style="display:${initEditMode === 'emoji' ? 'flex' : 'none'}">
                 </div>
                 <input class="inp edit-inp-name" id="edit-name-${it.id}" value="${esc(it.nombre)}" maxlength="80"
                     onkeydown="if(event.key==='Enter') saveEdit('${it.id}'); if(event.key==='Escape') cancelEdit();">
@@ -930,13 +1018,19 @@ function renderRow(it) {
     }
 
     // Normal mode
-    const hasImg = !!it.img;
-    const thumb = hasImg
-        ? `<img src="${it.img}" alt="${esc(it.nombre)}">`
-        : `<span>📦</span>`;
-    const thumbClick = hasImg
-        ? `onclick="openLightbox('${it.id}')" title="Ver imagen" style="cursor:zoom-in"`
-        : `style="cursor:default"`;
+    const hasImg   = !!it.img;
+    const hasEmoji = !!it.emoji;
+    let thumb, thumbClick;
+    if (hasImg) {
+        thumb     = `<img src="${it.img}" alt="${esc(it.nombre)}">`;
+        thumbClick = `onclick="openLightbox('${it.id}')" title="Ver imagen" style="cursor:zoom-in"`;
+    } else if (hasEmoji) {
+        thumb     = `<span class="emoji-thumb-display">${esc(it.emoji)}</span>`;
+        thumbClick = `style="cursor:default"`;
+    } else {
+        thumb     = `<span>📦</span>`;
+        thumbClick = `style="cursor:default"`;
+    }
     return `
     <div class="item-row" id="row-${it.id}">
         <div class="item-thumb" ${thumbClick}>
@@ -987,22 +1081,28 @@ function addItem() {
     const categoria = catEl.value;
     if (!nombre) { nameEl.focus(); return; }
 
+    const useEmoji = addMode === 'emoji' && pendingEmoji;
     const existing = items.find(it => it.nombre.toLowerCase() === nombre.toLowerCase());
     if (existing) {
         existing.cantidad += cantidad;
-        if (pendingImg && !existing.img) existing.img = pendingImg;
-        if (desc && !existing.desc) existing.desc = desc;
+        if (pendingImg && !existing.img)   existing.img   = pendingImg;
+        if (useEmoji && !existing.emoji)   existing.emoji = pendingEmoji;
+        if (desc && !existing.desc)        existing.desc  = desc;
     } else {
-        items = [{ id: `i${Date.now()}`, nombre, cantidad, categoria, desc: desc || null, ts: Date.now(), img: pendingImg || null }, ...items];
+        items = [{ id: `i${Date.now()}`, nombre, cantidad, categoria, desc: desc || null, ts: Date.now(),
+                   img: useEmoji ? null : (pendingImg || null),
+                   emoji: useEmoji ? pendingEmoji : null }, ...items];
     }
 
     // reset form
     nameEl.value = ''; qtyEl.value = 1; descEl.value = '';
-    pendingImg = null;
+    pendingImg = null; pendingEmoji = '';
     const preview = document.getElementById('addImgPreview');
     const icon    = document.getElementById('addImgIcon');
     preview.src = ''; preview.style.display = 'none'; icon.style.display = '';
     document.getElementById('addImgInput').value = '';
+    document.getElementById('addEmojiInput').value = '';
+    setAddMode('photo');
     nameEl.focus();
 
     render();
@@ -1090,8 +1190,16 @@ function saveEdit(id) {
     const desc     = document.getElementById(`edit-desc-${id}`)?.value.trim() || null;
     if (!nombre) { document.getElementById(`edit-name-${id}`)?.focus(); return; }
 
+    const emojiInp   = document.getElementById(`edit-emoji-${id}`);
+    const isEmojiMode = emojiInp && emojiInp.style.display !== 'none';
+    const emoji      = isEmojiMode ? (emojiInp.value.trim() || null) : null;
+
     const it = items.find(i => i.id === id);
-    if (it) { it.nombre = nombre; it.cantidad = cantidad; it.categoria = categoria; it.desc = desc; }
+    if (it) {
+        it.nombre = nombre; it.cantidad = cantidad; it.categoria = categoria; it.desc = desc;
+        if (isEmojiMode) { it.emoji = emoji; it.img = null; }
+        else             { it.emoji = null; /* img already updated live by onItemImgChange */ }
+    }
 
     editingId = null;
     render();
