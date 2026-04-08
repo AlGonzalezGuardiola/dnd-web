@@ -152,6 +152,16 @@
         gap: 8px;
         align-items: flex-start;
     }
+    .add-desc-row {
+        margin-top: 8px;
+    }
+    .inp-desc {
+        width: 100%;
+        resize: none;
+        height: 60px;
+        line-height: 1.45;
+        font-size: 13px;
+    }
 
     /* image picker */
     .add-img-btn {
@@ -314,6 +324,68 @@
     }
     .step-qty:focus { outline: none; border-color: var(--gold); }
 
+    /* info button */
+    .item-info {
+        width: 28px; height: 28px; border-radius: 50%;
+        border: 1px solid rgba(255,255,255,.12);
+        background: rgba(255,255,255,.05);
+        color: var(--text-3); font-size: 13px; font-weight: 600;
+        cursor: pointer; display: flex;
+        align-items: center; justify-content: center;
+        flex-shrink: 0;
+        transition: border-color .18s, background .18s, color .18s;
+        font-style: italic; font-family: Georgia, serif;
+        line-height: 1;
+    }
+    .item-info:hover,
+    .item-info.active {
+        border-color: var(--gold);
+        background: rgba(201,162,39,.16);
+        color: var(--gold);
+    }
+
+    /* popover */
+    .info-popover {
+        position: fixed;
+        z-index: 500;
+        width: 280px;
+        background: linear-gradient(155deg, rgba(16,20,38,.98) 0%, rgba(10,13,26,.99) 100%);
+        border: 1px solid var(--gold-line);
+        border-radius: 12px;
+        box-shadow: 0 16px 48px rgba(0,0,0,.7), 0 0 0 1px rgba(201,162,39,.08);
+        padding: 14px 16px 16px;
+        display: none;
+        flex-direction: column;
+        gap: 10px;
+        backdrop-filter: blur(14px);
+        animation: popIn .2s var(--ease) both;
+    }
+    .info-popover.visible { display: flex; }
+    @keyframes popIn {
+        from { opacity: 0; transform: scale(.94) translateY(-4px); }
+        to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .popover-name {
+        font-family: var(--font-title);
+        font-size: 12px; letter-spacing: .08em;
+        color: var(--gold); text-transform: uppercase;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .popover-desc {
+        background: rgba(255,255,255,.05);
+        border: 1px solid rgba(255,255,255,.1);
+        border-radius: 8px;
+        color: var(--text);
+        font-family: var(--font-body);
+        font-size: 13px; line-height: 1.55;
+        padding: 9px 11px;
+        resize: none; height: 90px; width: 100%;
+        transition: border-color .15s;
+    }
+    .popover-desc::placeholder { color: var(--text-3); font-style: italic; }
+    .popover-desc:focus { outline: none; border-color: var(--gold); background: rgba(201,162,39,.04); }
+    .popover-hint { font-size: 11px; color: var(--text-3); font-style: italic; }
+
     /* delete */
     .item-del {
         width: 28px; height: 28px; border-radius: 50%;
@@ -404,6 +476,9 @@
             </div>
             <button class="btn-add" onclick="addItem()">+ Añadir</button>
         </div>
+        <div class="add-desc-row">
+            <textarea id="addDesc" class="inp inp-desc" placeholder="Descripción breve (opcional)…" maxlength="400"></textarea>
+        </div>
     </div>
 
     <!-- Toolbar -->
@@ -429,6 +504,13 @@
     </div>
 
 </div>
+<!-- Info popover -->
+<div class="info-popover" id="infoPopover">
+    <div class="popover-name" id="popoverName"></div>
+    <textarea class="popover-desc" id="popoverDesc" placeholder="Sin descripción aún… escribe algo aquí" maxlength="400"></textarea>
+    <div class="popover-hint">Se guarda automáticamente</div>
+</div>
+
 <div class="snack" id="snack"></div>
 
 <script>
@@ -436,13 +518,22 @@ const CHAR_ID  = '__bolso_hermione__';
 const BASE_URL = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
     ? 'http://localhost:3001' : location.origin;
 
-let items     = [];
-let saveTimer = null;
-let snackTmr  = null;
-let pendingImg = null; // base64 for the next item to add
+let items      = [];
+let saveTimer  = null;
+let snackTmr   = null;
+let pendingImg = null;
+let popoverId  = null; // id of item whose popover is open
 
 // ── Boot ──
-window.addEventListener('DOMContentLoaded', load);
+window.addEventListener('DOMContentLoaded', () => {
+    load();
+    // Close popover clicking outside
+    document.addEventListener('click', e => {
+        const pop = document.getElementById('infoPopover');
+        if (!pop.contains(e.target) && !e.target.closest('.item-info')) closePopover();
+    });
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closePopover(); });
+});
 
 async function load() {
     try {
@@ -494,6 +585,7 @@ function render() {
                     onchange="onItemImgChange(this,'${it.id}')">
             </div>
             <div class="item-name">${esc(it.nombre)}</div>
+            <button class="item-info${it.desc ? ' active' : ''}" onclick="togglePopover(event,'${it.id}')" title="${it.desc ? 'Ver descripción' : 'Añadir descripción'}" aria-label="Descripción de ${esc(it.nombre)}">i</button>
             <div class="item-stepper">
                 <button class="step-btn" onclick="changeQty('${it.id}',-1)" aria-label="Reducir">−</button>
                 <input class="step-qty" type="number" min="0" value="${it.cantidad}"
@@ -527,20 +619,23 @@ function onAddImgChange(input) {
 function addItem() {
     const nameEl = document.getElementById('addName');
     const qtyEl  = document.getElementById('addQty');
+    const descEl   = document.getElementById('addDesc');
     const nombre   = nameEl.value.trim();
     const cantidad = Math.max(1, parseInt(qtyEl.value) || 1);
+    const desc     = descEl.value.trim();
     if (!nombre) { nameEl.focus(); return; }
 
     const existing = items.find(it => it.nombre.toLowerCase() === nombre.toLowerCase());
     if (existing) {
         existing.cantidad += cantidad;
         if (pendingImg && !existing.img) existing.img = pendingImg;
+        if (desc && !existing.desc) existing.desc = desc;
     } else {
-        items = [{ id: `i${Date.now()}`, nombre, cantidad, ts: Date.now(), img: pendingImg || null }, ...items];
+        items = [{ id: `i${Date.now()}`, nombre, cantidad, desc: desc || null, ts: Date.now(), img: pendingImg || null }, ...items];
     }
 
     // reset form
-    nameEl.value = ''; qtyEl.value = 1;
+    nameEl.value = ''; qtyEl.value = 1; descEl.value = '';
     pendingImg = null;
     const preview = document.getElementById('addImgPreview');
     const icon    = document.getElementById('addImgIcon');
@@ -603,6 +698,60 @@ function deleteItem(id) {
         row.style.opacity = '0'; row.style.transform = 'translateX(8px)';
         setTimeout(() => { items = items.filter(i => i.id !== id); render(); scheduleSave(); }, 200);
     }
+}
+
+// ── Popover ──
+function togglePopover(e, id) {
+    e.stopPropagation();
+    if (popoverId === id) { closePopover(); return; }
+    closePopover();
+
+    const it  = items.find(i => i.id === id);
+    if (!it) return;
+    popoverId = id;
+
+    const pop  = document.getElementById('infoPopover');
+    const desc = document.getElementById('popoverDesc');
+    document.getElementById('popoverName').textContent = it.nombre;
+    desc.value = it.desc || '';
+
+    // Position below the button, keeping within viewport
+    const btn  = e.currentTarget;
+    const rect = btn.getBoundingClientRect();
+    pop.style.display = 'flex'; // measure first
+    const pw = pop.offsetWidth;
+    let left = rect.left + rect.width / 2 - pw / 2;
+    let top  = rect.bottom + 8;
+    if (left + pw > window.innerWidth - 10) left = window.innerWidth - pw - 10;
+    if (left < 10) left = 10;
+    if (top + pop.offsetHeight > window.innerHeight - 10) top = rect.top - pop.offsetHeight - 8;
+    pop.style.left = left + 'px';
+    pop.style.top  = top  + 'px';
+    pop.classList.add('visible');
+
+    // highlight btn
+    btn.classList.add('active');
+
+    // save on blur of textarea
+    desc.oninput = () => {
+        const item = items.find(i => i.id === popoverId);
+        if (item) {
+            item.desc = desc.value.trim() || null;
+            // update info btn highlight
+            const infoBtn = document.querySelector(`#row-${id} .item-info`);
+            if (infoBtn) infoBtn.classList.toggle('active', !!item.desc);
+            scheduleSave();
+        }
+    };
+    desc.focus();
+}
+
+function closePopover() {
+    if (!popoverId) return;
+    const pop = document.getElementById('infoPopover');
+    pop.classList.remove('visible');
+    pop.style.display = 'none';
+    popoverId = null;
 }
 
 // ── Save ──
