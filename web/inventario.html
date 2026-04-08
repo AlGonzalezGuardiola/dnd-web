@@ -551,6 +551,78 @@
     /* ─── Scrollbar ──────────────────────────────── */
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-thumb { background: rgba(201,162,39,.2); border-radius: 2px; }
+
+    /* ─── Responsive / Mobile ───────────────────── */
+    @media (max-width: 560px) {
+        .page { padding: 0 12px 80px; }
+
+        /* Header */
+        .hdr { padding: 18px 0 16px; margin-bottom: 18px; gap: 10px; }
+        .hdr-sub { display: none; }
+        .hdr-count { font-size: 24px; }
+
+        /* Add form */
+        .add-panel { padding: 14px 14px 16px; margin-bottom: 16px; }
+        .add-main-row { flex-direction: column; gap: 10px; }
+        .add-img-btn { width: 100%; height: 52px; border-radius: 8px; flex-direction: row; gap: 8px; }
+        .add-img-btn img { border-radius: 7px; }
+        .add-fields { flex-direction: column; }
+        .inp-qty { width: 100%; text-align: left; }
+        .btn-add { width: 100%; justify-content: center; display: flex; }
+        .add-desc-row { flex-direction: column; }
+        .inp-cat { flex: none; width: 100%; }
+        .inp-desc { height: 48px; }
+
+        /* Toolbar */
+        .toolbar { flex-wrap: wrap; }
+        .search-wrap { min-width: 0; }
+        .sort-sel { flex: 1; }
+
+        /* Item rows — two-line layout */
+        .item-row {
+            flex-wrap: wrap;
+            gap: 8px;
+            padding: 11px 12px;
+            row-gap: 8px;
+        }
+        .item-thumb { width: 38px; height: 38px; }
+        .item-name { font-size: 13px; }
+
+        /* Always show edit + delete on touch (no hover) */
+        .item-edit-btn { opacity: 1; }
+        .item-del      { opacity: 1; }
+
+        /* Action buttons row: push to right side of name line */
+        .item-info,
+        .item-edit-btn,
+        .item-del { width: 32px; height: 32px; font-size: 14px; }
+
+        /* Stepper: full width second line */
+        .item-stepper {
+            flex: 0 0 100%;
+            order: 10;
+            justify-content: flex-end;
+            gap: 6px;
+        }
+        .step-btn { width: 32px; height: 32px; font-size: 18px; }
+        .step-qty { font-size: 16px; min-width: 46px; }
+
+        /* Edit form */
+        .edit-row { flex-wrap: wrap; }
+        .edit-inp-name { flex: 1 1 100%; }
+        .edit-inp-qty  { width: 80px; }
+        .edit-inp-cat  { flex: 1 1 auto; }
+        .edit-actions  { flex-direction: row; }
+        .edit-save-btn, .edit-cancel-btn { flex: 1; text-align: center; }
+
+        /* Dialog positioning: center on screen on mobile */
+        #infoDialog {
+            left: 50% !important;
+            top: 50% !important;
+            transform: translate(-50%, -50%);
+            width: calc(100vw - 32px);
+        }
+    }
     </style>
 </head>
 <body>
