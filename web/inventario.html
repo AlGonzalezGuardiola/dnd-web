@@ -169,6 +169,17 @@
         cursor: pointer;
         font-size: 13px;
     }
+    .add-cat-col {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex: 0 0 160px;
+    }
+    .edit-cat-col {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+    }
 
     /* ─── Category sections ──────────────────────── */
     .cat-section { margin-bottom: 20px; }
@@ -754,15 +765,27 @@
         </div>
         <div class="add-desc-row">
             <textarea id="addDesc" class="inp inp-desc" placeholder="Descripción breve (opcional)…" maxlength="400"></textarea>
-            <select id="addCat" class="inp inp-cat">
-                <option value="otras">📦 Otras cosas</option>
-                <option value="oro">🪙 Oro</option>
-                <option value="comida">🍖 Comida</option>
-                <option value="armas">⚔️ Armas</option>
-                <option value="importante">💎 Importante</option>
-                <option value="pociones">🧪 Pociones</option>
-                <option value="pergaminos">📜 Pergaminos</option>
-            </select>
+            <div class="add-cat-col">
+                <select id="addCat" class="inp inp-cat" onchange="onAddCatChange(this.value)">
+                    <option value="otras">📦 Otras cosas</option>
+                    <option value="oro">🪙 Oro</option>
+                    <option value="comida">🍖 Comida</option>
+                    <option value="armas">⚔️ Armas</option>
+                    <option value="armadura">🛡️ Armadura</option>
+                    <option value="importante">💎 Importante</option>
+                    <option value="pociones">🧪 Pociones</option>
+                    <option value="pergaminos">📜 Pergaminos</option>
+                </select>
+                <select id="addSubclase" class="inp inp-cat" style="display:none">
+                    <option value="cabeza">🪖 Cabeza</option>
+                    <option value="cuello">📿 Cuello</option>
+                    <option value="torso">👕 Torso</option>
+                    <option value="brazos">💪 Brazos</option>
+                    <option value="piernas">🦵 Piernas</option>
+                    <option value="pies">👟 Pies</option>
+                    <option value="dedos">💍 Dedos</option>
+                </select>
+            </div>
         </div>
     </div>
 
@@ -822,10 +845,21 @@ const CATEGORIAS = [
     { id: 'oro',        label: 'Oro',              icon: '🪙' },
     { id: 'comida',     label: 'Comida',            icon: '🍖' },
     { id: 'armas',      label: 'Armas',             icon: '⚔️' },
+    { id: 'armadura',   label: 'Armadura',          icon: '🛡️' },
     { id: 'importante', label: 'Cosas Importantes', icon: '💎' },
     { id: 'pociones',   label: 'Pociones',          icon: '🧪' },
     { id: 'pergaminos', label: 'Pergaminos',        icon: '📜' },
     { id: 'otras',      label: 'Otras Cosas',       icon: '📦' },
+];
+
+const SUBCLASES = [
+    { id: 'cabeza',  label: 'Cabeza',  icon: '🪖' },
+    { id: 'cuello',  label: 'Cuello',  icon: '📿' },
+    { id: 'torso',   label: 'Torso',   icon: '👕' },
+    { id: 'brazos',  label: 'Brazos',  icon: '💪' },
+    { id: 'piernas', label: 'Piernas', icon: '🦵' },
+    { id: 'pies',    label: 'Pies',    icon: '👟' },
+    { id: 'dedos',   label: 'Dedos',   icon: '💍' },
 ];
 
 let items      = [];
@@ -835,6 +869,10 @@ let pendingImg = null;
 let pendingEmoji = '';
 let addMode    = 'photo';
 let editingId  = null;
+
+function onAddCatChange(val) {
+    document.getElementById('addSubclase').style.display = val === 'armadura' ? '' : 'none';
+}
 
 function setAddMode(mode) {
     addMode = mode;
@@ -1007,7 +1045,16 @@ function renderRow(it) {
                     onkeydown="if(event.key==='Enter') saveEdit('${it.id}'); if(event.key==='Escape') cancelEdit();">
                 <input class="inp edit-inp-qty" id="edit-qty-${it.id}" type="number" value="${it.cantidad}" min="1">
             </div>
-            <select class="inp edit-inp-cat" id="edit-cat-${it.id}">${catOptions}</select>
+            <div class="edit-cat-col">
+                <select class="inp edit-inp-cat" id="edit-cat-${it.id}"
+                    onchange="document.getElementById('edit-subclase-${it.id}').style.display=this.value==='armadura'?'':'none'">
+                    ${catOptions}
+                </select>
+                <select class="inp edit-inp-cat" id="edit-subclase-${it.id}"
+                    style="display:${(it.categoria||'')==='armadura'?'':'none'}">
+                    ${SUBCLASES.map(s=>`<option value="${s.id}"${s.id===(it.subclase||'torso')?' selected':''}>${s.icon} ${s.label}</option>`).join('')}
+                </select>
+            </div>
             <textarea class="inp edit-inp-desc" id="edit-desc-${it.id}" maxlength="400"
                 placeholder="Descripción breve (opcional)…">${esc(it.desc||'')}</textarea>
             <div class="edit-actions">
@@ -1079,6 +1126,7 @@ function addItem() {
     const cantidad = Math.max(1, parseInt(qtyEl.value) || 1);
     const desc     = descEl.value.trim();
     const categoria = catEl.value;
+    const subclase  = categoria === 'armadura' ? (document.getElementById('addSubclase').value || 'torso') : null;
     if (!nombre) { nameEl.focus(); return; }
 
     const useEmoji = addMode === 'emoji' && pendingEmoji;
@@ -1089,7 +1137,8 @@ function addItem() {
         if (useEmoji && !existing.emoji)   existing.emoji = pendingEmoji;
         if (desc && !existing.desc)        existing.desc  = desc;
     } else {
-        items = [{ id: `i${Date.now()}`, nombre, cantidad, categoria, desc: desc || null, ts: Date.now(),
+        items = [{ id: `i${Date.now()}`, nombre, cantidad, categoria, subclase: subclase || null,
+                   desc: desc || null, ts: Date.now(),
                    img: useEmoji ? null : (pendingImg || null),
                    emoji: useEmoji ? pendingEmoji : null }, ...items];
     }
@@ -1187,6 +1236,9 @@ function saveEdit(id) {
     const nombre   = document.getElementById(`edit-name-${id}`)?.value.trim();
     const cantidad = parseInt(document.getElementById(`edit-qty-${id}`)?.value) || 1;
     const categoria = document.getElementById(`edit-cat-${id}`)?.value || 'otras';
+    const subclase  = categoria === 'armadura'
+        ? (document.getElementById(`edit-subclase-${id}`)?.value || 'torso')
+        : null;
     const desc     = document.getElementById(`edit-desc-${id}`)?.value.trim() || null;
     if (!nombre) { document.getElementById(`edit-name-${id}`)?.focus(); return; }
 
@@ -1196,9 +1248,10 @@ function saveEdit(id) {
 
     const it = items.find(i => i.id === id);
     if (it) {
-        it.nombre = nombre; it.cantidad = cantidad; it.categoria = categoria; it.desc = desc;
+        it.nombre = nombre; it.cantidad = cantidad; it.categoria = categoria;
+        it.subclase = subclase; it.desc = desc;
         if (isEmojiMode) { it.emoji = emoji; it.img = null; }
-        else             { it.emoji = null; /* img already updated live by onItemImgChange */ }
+        else             { it.emoji = null; }
     }
 
     editingId = null;
