@@ -53,37 +53,14 @@
         </div>
         <div id="breadcrumbs" class="breadcrumbs" aria-live="polite">Mundo</div>
 
-        <div style="display:flex; gap:8px; align-items:center;">
-            <button id="bolsoToggleBtn" class="hud-btn bolso-toggle-hud-btn" onclick="bolsoTogglePanel()" title="Bolso de Hermione">👜</button>
-<button id="roleIndicator" class="role-indicator master" onclick="showRoleSelectionOverlay()" title="Cambiar rol">🎲 Master</button>
+        <div class="hud-right-stack">
+            <button id="roleIndicator" class="role-indicator master" onclick="showRoleSelectionOverlay()" title="Cambiar rol">🎲 Master</button>
+            <a href="inventario.html" target="_blank" class="bolso-hud-link" title="Abrir Bolso de Hermione">
+                <span class="bolso-hud-icon">👜</span>
+                <span class="bolso-hud-label">Inventario</span>
+            </a>
         </div>
     </div>
-
-    <!-- Bolso de Hermione — panel lateral derecho -->
-    <aside id="bolsoPanel" class="bolso-panel" aria-label="Bolso de Hermione">
-        <div class="bolso-panel-header">
-            <div class="bolso-panel-title">
-                <span class="bolso-panel-icon">👜</span>
-                <span>Bolso de Hermione</span>
-            </div>
-            <div class="bolso-panel-subtitle">Inventario del grupo</div>
-            <span class="bolso-status" id="bolsoStatus"></span>
-            <button class="bolso-panel-close" onclick="bolsoTogglePanel()" title="Cerrar">✕</button>
-        </div>
-        <div class="bolso-panel-add">
-            <div class="bolso-add-inputs">
-                <input type="text" id="bolsoNombre" class="bolso-input" placeholder="Nombre del objeto…" maxlength="80"
-                    onkeydown="if(event.key==='Enter') bolsoAddItem()">
-                <input type="number" id="bolsoCantidad" class="bolso-input bolso-qty" placeholder="Cant." min="1" value="1"
-                    onkeydown="if(event.key==='Enter') bolsoAddItem()">
-            </div>
-            <button class="bolso-add-btn" onclick="bolsoAddItem()">+ Añadir</button>
-        </div>
-        <div class="bolso-panel-search">
-            <input type="text" id="bolsoSearch" class="bolso-input bolso-search-input" placeholder="🔍 Buscar…" oninput="bolsoRender()">
-        </div>
-        <div id="bolsoList" class="bolso-list"></div>
-    </aside>
 
     <!-- Landing Page -->
     <section id="landingPage" class="landing-page">
