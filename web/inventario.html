@@ -154,13 +154,41 @@
     }
     .add-desc-row {
         margin-top: 8px;
+        display: flex;
+        gap: 8px;
     }
     .inp-desc {
-        width: 100%;
+        flex: 1;
         resize: none;
-        height: 60px;
+        height: 56px;
         line-height: 1.45;
         font-size: 13px;
+    }
+    .inp-cat {
+        flex: 0 0 160px;
+        cursor: pointer;
+        font-size: 13px;
+    }
+
+    /* ─── Category sections ──────────────────────── */
+    .cat-section { margin-bottom: 20px; }
+    .cat-hdr {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 0 4px 8px;
+    }
+    .cat-hdr-icon { font-size: 18px; line-height: 1; }
+    .cat-hdr-label {
+        font-family: var(--font-title);
+        font-size: 12px; letter-spacing: .12em;
+        text-transform: uppercase; color: var(--gold);
+    }
+    .cat-hdr-line { flex: 1; height: 1px; background: var(--gold-line); }
+    .cat-hdr-count {
+        font-family: var(--font-nums);
+        font-size: 13px; color: var(--text-3);
+        font-style: italic;
     }
 
     /* image picker */
@@ -478,6 +506,15 @@
         </div>
         <div class="add-desc-row">
             <textarea id="addDesc" class="inp inp-desc" placeholder="Descripción breve (opcional)…" maxlength="400"></textarea>
+            <select id="addCat" class="inp inp-cat">
+                <option value="otras">📦 Otras cosas</option>
+                <option value="oro">🪙 Oro</option>
+                <option value="comida">🍖 Comida</option>
+                <option value="armas">⚔️ Armas</option>
+                <option value="importante">💎 Importante</option>
+                <option value="pociones">🧪 Pociones</option>
+                <option value="pergaminos">📜 Pergaminos</option>
+            </select>
         </div>
     </div>
 
@@ -496,11 +533,13 @@
         </select>
     </div>
 
-    <!-- List -->
-    <div class="inv-list" id="invList">
-        <div class="skel-row"></div>
-        <div class="skel-row"></div>
-        <div class="skel-row"></div>
+    <!-- List (rendered by JS) -->
+    <div id="invRoot">
+        <div class="inv-list">
+            <div class="skel-row"></div>
+            <div class="skel-row"></div>
+            <div class="skel-row"></div>
+        </div>
     </div>
 
 </div>
@@ -518,11 +557,21 @@ const CHAR_ID  = '__bolso_hermione__';
 const BASE_URL = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
     ? 'http://localhost:3001' : location.origin;
 
+const CATEGORIAS = [
+    { id: 'oro',        label: 'Oro',              icon: '🪙' },
+    { id: 'comida',     label: 'Comida',            icon: '🍖' },
+    { id: 'armas',      label: 'Armas',             icon: '⚔️' },
+    { id: 'importante', label: 'Cosas Importantes', icon: '💎' },
+    { id: 'pociones',   label: 'Pociones',          icon: '🧪' },
+    { id: 'pergaminos', label: 'Pergaminos',        icon: '📜' },
+    { id: 'otras',      label: 'Otras Cosas',       icon: '📦' },
+];
+
 let items      = [];
 let saveTimer  = null;
 let snackTmr   = null;
 let pendingImg = null;
-let popoverId  = null; // id of item whose popover is open
+let popoverId  = null;
 
 // ── Boot ──
 window.addEventListener('DOMContentLoaded', () => {
@@ -550,7 +599,7 @@ async function load() {
 
 // ── Render ──
 function render() {
-    const list  = document.getElementById('invList');
+    const root  = document.getElementById('invRoot');
     const query = document.getElementById('searchInput').value.toLowerCase();
     const sort  = document.getElementById('sortSel').value;
 
@@ -565,39 +614,66 @@ function render() {
     document.getElementById('itemCount').textContent = items.length;
 
     if (!rows.length) {
-        list.innerHTML = `<div class="empty">
+        root.innerHTML = `<div class="inv-list"><div class="empty">
             <div class="empty-ico">👜</div>
             <div class="empty-title">${query ? 'Sin resultados' : 'El bolso está vacío'}</div>
             <div class="empty-hint">${query ? 'Prueba otra búsqueda' : 'Añade el primer objeto usando el formulario de arriba'}</div>
-        </div>`;
+        </div></div>`;
         return;
     }
 
-    list.innerHTML = rows.map(it => {
-        const thumb = it.img
-            ? `<img src="${it.img}" alt="${esc(it.nombre)}">`
-            : `<span>📦</span>`;
+    // Group by category, preserving CATEGORIAS order
+    const grouped = new Map(CATEGORIAS.map(c => [c.id, []]));
+    rows.forEach(it => {
+        const cat = it.categoria || 'otras';
+        if (!grouped.has(cat)) grouped.set(cat, []);
+        grouped.get(cat).push(it);
+    });
+
+    root.innerHTML = CATEGORIAS.map(cat => {
+        const catRows = grouped.get(cat.id) || [];
+        if (!catRows.length) return '';
         return `
-        <div class="item-row" id="row-${it.id}">
-            <div class="item-thumb" title="Cambiar imagen" onclick="pickItemImg('${it.id}')">
-                ${thumb}
-                <input type="file" class="item-thumb-input" id="img-input-${it.id}" accept="image/*"
-                    onchange="onItemImgChange(this,'${it.id}')">
+        <div class="cat-section">
+            <div class="cat-hdr">
+                <span class="cat-hdr-icon">${cat.icon}</span>
+                <span class="cat-hdr-label">${cat.label}</span>
+                <div class="cat-hdr-line"></div>
+                <span class="cat-hdr-count">${catRows.length} objeto${catRows.length !== 1 ? 's' : ''}</span>
             </div>
-            <div class="item-name">${esc(it.nombre)}</div>
-            <button class="item-info${it.desc ? ' active' : ''}" onclick="togglePopover(event,'${it.id}')" title="${it.desc ? 'Ver descripción' : 'Añadir descripción'}" aria-label="Descripción de ${esc(it.nombre)}">i</button>
-            <div class="item-stepper">
-                <button class="step-btn" onclick="changeQty('${it.id}',-1)" aria-label="Reducir">−</button>
-                <input class="step-qty" type="number" min="0" value="${it.cantidad}"
-                    onchange="setQty('${it.id}',this.value)"
-                    onclick="this.select()"
-                    style="width:${Math.max(52, String(it.cantidad).length * 12 + 24)}px"
-                    aria-label="Cantidad">
-                <button class="step-btn" onclick="changeQty('${it.id}',1)" aria-label="Aumentar">+</button>
+            <div class="inv-list">
+                ${catRows.map(it => renderRow(it)).join('')}
             </div>
-            <button class="item-del" onclick="deleteItem('${it.id}')" title="Eliminar" aria-label="Eliminar ${esc(it.nombre)}">✕</button>
         </div>`;
     }).join('');
+}
+
+function renderRow(it) {
+    const thumb = it.img
+        ? `<img src="${it.img}" alt="${esc(it.nombre)}">`
+        : `<span>📦</span>`;
+    return `
+    <div class="item-row" id="row-${it.id}">
+        <div class="item-thumb" title="Cambiar imagen" onclick="pickItemImg('${it.id}')">
+            ${thumb}
+            <input type="file" class="item-thumb-input" id="img-input-${it.id}" accept="image/*"
+                onchange="onItemImgChange(this,'${it.id}')">
+        </div>
+        <div class="item-name">${esc(it.nombre)}</div>
+        <button class="item-info${it.desc ? ' active' : ''}" onclick="togglePopover(event,'${it.id}')"
+            title="${it.desc ? 'Ver descripción' : 'Añadir descripción'}"
+            aria-label="Descripción de ${esc(it.nombre)}">i</button>
+        <div class="item-stepper">
+            <button class="step-btn" onclick="changeQty('${it.id}',-1)" aria-label="Reducir">−</button>
+            <input class="step-qty" type="number" min="0" value="${it.cantidad}"
+                onchange="setQty('${it.id}',this.value)"
+                onclick="this.select()"
+                style="width:${Math.max(52, String(it.cantidad).length * 12 + 24)}px"
+                aria-label="Cantidad">
+            <button class="step-btn" onclick="changeQty('${it.id}',1)" aria-label="Aumentar">+</button>
+        </div>
+        <button class="item-del" onclick="deleteItem('${it.id}')" title="Eliminar" aria-label="Eliminar ${esc(it.nombre)}">✕</button>
+    </div>`;
 }
 
 // ── Add ──
@@ -620,9 +696,11 @@ function addItem() {
     const nameEl = document.getElementById('addName');
     const qtyEl  = document.getElementById('addQty');
     const descEl   = document.getElementById('addDesc');
+    const catEl    = document.getElementById('addCat');
     const nombre   = nameEl.value.trim();
     const cantidad = Math.max(1, parseInt(qtyEl.value) || 1);
     const desc     = descEl.value.trim();
+    const categoria = catEl.value;
     if (!nombre) { nameEl.focus(); return; }
 
     const existing = items.find(it => it.nombre.toLowerCase() === nombre.toLowerCase());
@@ -631,7 +709,7 @@ function addItem() {
         if (pendingImg && !existing.img) existing.img = pendingImg;
         if (desc && !existing.desc) existing.desc = desc;
     } else {
-        items = [{ id: `i${Date.now()}`, nombre, cantidad, desc: desc || null, ts: Date.now(), img: pendingImg || null }, ...items];
+        items = [{ id: `i${Date.now()}`, nombre, cantidad, categoria, desc: desc || null, ts: Date.now(), img: pendingImg || null }, ...items];
     }
 
     // reset form
