@@ -431,74 +431,73 @@
         color: var(--gold);
     }
 
-    /* info modal overlay */
-    .info-modal-overlay {
-        display: none;
+    /* ─── Info dialog (native <dialog>) ─────────── */
+    #infoDialog {
         position: fixed;
-        inset: 0;
-        z-index: 9000;
-        background: rgba(0,0,0,.55);
-        backdrop-filter: blur(4px);
-        align-items: center;
-        justify-content: center;
+        margin: 0;
+        padding: 0;
+        border: none;
+        background: transparent;
+        width: min(300px, calc(100vw - 24px));
+        overflow: visible;
     }
-    .info-modal-overlay.open {
-        display: flex;
+    #infoDialog::backdrop {
+        background: transparent;
     }
-    .info-modal {
-        width: min(320px, calc(100vw - 32px));
+    .dialog-inner-wrap {
+        background: linear-gradient(155deg, rgba(16,20,40,.99) 0%, rgba(10,13,26,1) 100%);
+        border: 1px solid var(--gold-line);
+        border-radius: 12px;
+        box-shadow: 0 12px 40px rgba(0,0,0,.75), 0 0 0 1px rgba(255,255,255,.04);
+        padding: 14px 16px 16px;
         display: flex;
         flex-direction: column;
-        gap: 12px;
-        background: linear-gradient(155deg, rgba(16,20,38,.99) 0%, rgba(10,13,26,1) 100%);
-        border: 1px solid var(--gold-line);
-        border-radius: 14px;
-        box-shadow: 0 20px 60px rgba(0,0,0,.8);
-        padding: 18px 18px 20px;
-        animation: modalIn .18s cubic-bezier(.22,1,.36,1) both;
+        gap: 10px;
+        animation: popIn .15s cubic-bezier(.22,1,.36,1) both;
     }
-    @keyframes modalIn {
-        from { opacity: 0; transform: scale(.92) translateY(10px); }
+    @keyframes popIn {
+        from { opacity: 0; transform: scale(.93) translateY(-6px); }
         to   { opacity: 1; transform: none; }
     }
-    .popover-hdr {
+    .dialog-hdr {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 8px;
     }
-    .popover-name {
+    .dialog-name {
         font-family: var(--font-title);
-        font-size: 12px; letter-spacing: .08em;
+        font-size: 11px; letter-spacing: .1em;
         color: var(--gold); text-transform: uppercase;
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         flex: 1;
     }
-    .popover-close-btn {
-        width: 26px; height: 26px; border-radius: 50%;
+    .dialog-close-btn {
+        width: 24px; height: 24px; border-radius: 50%;
         border: 1px solid rgba(255,255,255,.12);
         background: rgba(255,255,255,.05);
-        color: var(--text-3); font-size: 14px;
+        color: var(--text-3); font-size: 13px;
         cursor: pointer; display: flex;
         align-items: center; justify-content: center;
         flex-shrink: 0;
         transition: background .15s, color .15s;
+        line-height: 1;
     }
-    .popover-close-btn:hover { background: rgba(255,255,255,.12); color: var(--text); }
-    .popover-desc {
+    .dialog-close-btn:hover { background: rgba(255,255,255,.14); color: var(--text); }
+    .dialog-desc {
         background: rgba(255,255,255,.05);
-        border: 1px solid rgba(255,255,255,.1);
+        border: 1px solid rgba(255,255,255,.11);
         border-radius: 8px;
         color: var(--text);
         font-family: var(--font-body);
         font-size: 13px; line-height: 1.55;
         padding: 9px 11px;
-        resize: none; height: 100px; width: 100%;
+        resize: none; height: 90px; width: 100%;
         transition: border-color .15s;
     }
-    .popover-desc::placeholder { color: var(--text-3); font-style: italic; }
-    .popover-desc:focus { outline: none; border-color: var(--gold); background: rgba(201,162,39,.04); }
-    .popover-hint { font-size: 11px; color: var(--text-3); font-style: italic; }
+    .dialog-desc::placeholder { color: var(--text-3); font-style: italic; }
+    .dialog-desc:focus { outline: none; border-color: var(--gold); background: rgba(201,162,39,.04); }
+    .dialog-hint { font-size: 11px; color: var(--text-3); font-style: italic; }
 
     /* delete */
     .item-del {
@@ -629,17 +628,17 @@
     </div>
 
 </div>
-<!-- Info modal -->
-<div class="info-modal-overlay" id="infoModal" onclick="onModalOverlayClick(event)">
-    <div class="info-modal">
-        <div class="popover-hdr">
-            <div class="popover-name" id="popoverName"></div>
-            <button class="popover-close-btn" onclick="closePopover()" title="Cerrar">✕</button>
+<!-- Info popup (native dialog) -->
+<dialog id="infoDialog">
+    <div class="dialog-inner-wrap">
+        <div class="dialog-hdr">
+            <span class="dialog-name" id="dialogItemName"></span>
+            <button class="dialog-close-btn" id="dialogCloseBtn" title="Cerrar">✕</button>
         </div>
-        <textarea class="popover-desc" id="popoverDesc" placeholder="Sin descripción aún… escribe algo aquí" maxlength="400"></textarea>
-        <div class="popover-hint">Se guarda automáticamente · ESC para cerrar</div>
+        <textarea class="dialog-desc" id="dialogDesc" placeholder="Sin descripción aún… escribe algo aquí" maxlength="400"></textarea>
+        <p class="dialog-hint">Se guarda automáticamente · ESC para cerrar</p>
     </div>
-</div>
+</dialog>
 
 <div class="snack" id="snack"></div>
 
@@ -662,7 +661,6 @@ let items      = [];
 let saveTimer  = null;
 let snackTmr   = null;
 let pendingImg = null;
-let popoverId  = null;
 let editingId  = null;
 
 // collapsed state persisted in localStorage
@@ -679,7 +677,33 @@ function toggleSection(catId) {
 // ── Boot ──
 window.addEventListener('DOMContentLoaded', () => {
     load();
-    document.addEventListener('keydown', e => { if (e.key === 'Escape') closePopover(); });
+
+    // Info dialog wiring
+    const dialog  = document.getElementById('infoDialog');
+    const descEl  = document.getElementById('dialogDesc');
+
+    // Close button
+    document.getElementById('dialogCloseBtn').addEventListener('click', () => dialog.close());
+
+    // Click outside (on backdrop) closes dialog
+    dialog.addEventListener('click', e => {
+        const rect = dialog.getBoundingClientRect();
+        if (e.clientX < rect.left || e.clientX > rect.right ||
+            e.clientY < rect.top  || e.clientY > rect.bottom) {
+            dialog.close();
+        }
+    });
+
+    // After close, clear currentInfoId
+    dialog.addEventListener('close', () => { currentInfoId = null; });
+
+    // Event delegation — catch clicks on any .item-info button
+    document.addEventListener('click', e => {
+        const btn = e.target.closest('.item-info');
+        if (!btn) return;
+        const id = btn.dataset.iid;
+        openInfoDialog(btn, id);
+    });
 });
 
 async function load() {
@@ -789,7 +813,7 @@ function renderRow(it) {
                 onchange="onItemImgChange(this,'${it.id}')">
         </div>
         <div class="item-name">${esc(it.nombre)}</div>
-        <button class="item-info${it.desc ? ' active' : ''}" onclick="togglePopover(event,this,'${it.id}')"
+        <button class="item-info${it.desc ? ' active' : ''}" data-iid="${it.id}"
             title="${it.desc ? 'Ver descripción' : 'Añadir descripción'}"
             aria-label="Descripción de ${esc(it.nombre)}">i</button>
         <button class="item-edit-btn" onclick="editItem('${it.id}')" title="Editar objeto" aria-label="Editar ${esc(it.nombre)}">✏</button>
@@ -910,7 +934,8 @@ function deleteItem(id) {
 
 // ── Edit ──
 function editItem(id) {
-    closePopover();
+    const dialog = document.getElementById('infoDialog');
+    if (dialog.open) dialog.close();
     editingId = id;
     render();
     // focus name input after render
@@ -941,42 +966,46 @@ function cancelEdit() {
     render();
 }
 
-// ── Info modal ──
-function togglePopover(e, btn, id) {
-    e.stopPropagation();
-    if (popoverId === id) { closePopover(); return; }
-    closePopover();
+// ── Info dialog ──
+let currentInfoId = null;
+
+function openInfoDialog(btn, id) {
+    const dialog = document.getElementById('infoDialog');
+    const descEl = document.getElementById('dialogDesc');
+    const nameEl = document.getElementById('dialogItemName');
+
+    // If same button clicked again, close
+    if (dialog.open && currentInfoId === id) { dialog.close(); return; }
+    if (dialog.open) dialog.close();
 
     const it = items.find(i => i.id === id);
-    if (!it) return;
-    popoverId = id;
+    nameEl.textContent = it ? it.nombre : id;
+    descEl.value = it ? (it.desc || '') : '';
+    currentInfoId = id;
 
-    document.getElementById('popoverName').textContent = it.nombre;
-    const desc = document.getElementById('popoverDesc');
-    desc.value = it.desc || '';
+    // Position near the button
+    const rect = btn.getBoundingClientRect();
+    const dw = 300, dh = 180;
+    let left = rect.left + rect.width / 2 - dw / 2;
+    let top  = rect.bottom + 8;
+    if (left + dw > window.innerWidth - 12) left = window.innerWidth - dw - 12;
+    if (left < 12) left = 12;
+    if (top + dh > window.innerHeight - 12) top = rect.top - dh - 8;
+    dialog.style.left = left + 'px';
+    dialog.style.top  = top  + 'px';
 
-    document.getElementById('infoModal').classList.add('open');
+    dialog.showModal();
+    requestAnimationFrame(() => descEl.focus());
 
-    desc.oninput = () => {
-        const item = items.find(i => i.id === popoverId);
+    descEl.oninput = () => {
+        if (!currentInfoId) return;
+        const item = items.find(i => i.id === currentInfoId);
         if (!item) return;
-        item.desc = desc.value.trim() || null;
-        const infoBtn = document.querySelector(`#row-${id} .item-info`);
+        item.desc = descEl.value.trim() || null;
+        const infoBtn = document.querySelector(`[data-iid="${currentInfoId}"]`);
         if (infoBtn) infoBtn.classList.toggle('active', !!item.desc);
         scheduleSave();
     };
-    // Let the modal appear before focusing
-    requestAnimationFrame(() => desc.focus());
-}
-
-function closePopover() {
-    if (!popoverId) return;
-    document.getElementById('infoModal').classList.remove('open');
-    popoverId = null;
-}
-
-function onModalOverlayClick(e) {
-    if (e.target === document.getElementById('infoModal')) closePopover();
 }
 
 // ── Save ──
