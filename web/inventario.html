@@ -724,7 +724,7 @@
 
     <!-- Header -->
     <header class="hdr">
-        <a href="index.html" class="btn-back" title="Volver al inicio">&#8592;</a>
+        <a href="index.html" class="btn-back" id="btnBack" title="Volver">&#8592;</a>
         <div class="hdr-titles">
             <h1 class="hdr-title">Bolso de Hermione</h1>
             <p class="hdr-sub">Inventario del grupo &middot; Todo cabe aquí dentro</p>
@@ -907,8 +907,13 @@ function toggleSection(catId) {
 
 // ── Boot ──
 window.addEventListener('DOMContentLoaded', () => {
-    // Personalise header when viewing a character's inventory
+    // Back button: go to character sheet if coming from one
     if (CHAR_NAME) {
+        const backBtn = document.getElementById('btnBack');
+        backBtn.removeAttribute('href');
+        backBtn.style.cursor = 'pointer';
+        backBtn.addEventListener('click', e => { e.preventDefault(); history.back(); });
+
         document.title = `Inventario — ${CHAR_NAME}`;
         document.querySelector('.hdr-title').textContent = `Inventario de ${CHAR_NAME}`;
         document.querySelector('.hdr-sub').textContent = `Objetos personales de ${CHAR_NAME}`;

@@ -1129,11 +1129,11 @@ button, .card, .pin, .tab-btn, .hud-btn, .die-btn,
 .eq-body-icon { font-size: 14px; line-height: 1; }
 .eq-body-slots { display: flex; gap: 6px; }
 
-/* ── Weapons: 4-column grid ── */
+/* ── Weapons: 2-column compact grid ── */
 .eq-slots-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 5px;
 }
 
 /* ── Shared slot card ── */
@@ -1147,8 +1147,25 @@ button, .card, .pin, .tab-btn, .hud-btn, .die-btn,
     user-select: none;
     flex-shrink: 0;
 }
-/* Weapons grid: fill the column width */
-.eq-slots-grid .eq-slot { width: auto; aspect-ratio: 1; }
+/* Weapons grid: horizontal pill slots */
+.eq-slots-grid .eq-slot {
+    width: auto; height: 46px; aspect-ratio: unset;
+    flex-direction: row; gap: 8px;
+    padding: 0 10px; border-radius: 8px;
+}
+.eq-slots-grid .eq-slot.empty { justify-content: center; }
+.eq-slots-grid .eq-slot.filled { justify-content: flex-start; }
+.eq-slots-grid .eq-slot.filled .eq-slot-thumb-wrap {
+    width: 28px; height: 28px; border-radius: 5px; flex-shrink: 0;
+}
+.eq-slots-grid .eq-slot.filled .eq-slot-emoji { font-size: 18px; }
+.eq-slots-grid .eq-slot.filled .eq-slot-name {
+    font-size: 11px; text-align: left; flex: 1;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.eq-slots-grid .eq-slot-actions {
+    top: 50%; transform: translateY(-50%); right: 5px;
+}
 
 /* Empty slot */
 .eq-slot.empty {
