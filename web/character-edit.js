@@ -50,7 +50,10 @@ function renderCharacterSheet(charId) {
         <a href="inventario.html?char=inv_${charId}&name=${encodeURIComponent(data.nombre)}"
            class="char-inv-btn" title="Inventario de ${data.nombre}">
             🎒 Inventario
-        </a>` : ''}
+        </a>
+        <button class="char-equip-btn" onclick="openEquipPanel('${charId}','${data.nombre.replace(/'/g,"\\'")}')">
+            ⚔️ Equipamiento
+        </button>` : ''}
     `;
     statsContainer.innerHTML += portraitHTML;
 
