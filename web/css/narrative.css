@@ -612,226 +612,260 @@
         linear-gradient(170deg, #080503 0%, #0e0906 50%, #070402 100%);
 }
 
-/* ── Parchment scroll (chapter view) ── */
+/* ── Egyptian papyrus scroll ── */
 .narrative-view {
-    max-width: 760px;
-    margin: 30px auto 50px;
+    max-width: 780px;
+    margin: 40px auto 60px;
     position: relative;
+    padding: 72px 88px 64px;
 
     /*
-     * Layered parchment background:
-     * 1. Vignette (dark edges — aged, worn)
-     * 2. Random-ish stain spots (water damage / foxing)
-     * 3. Diagonal crack-lines at several angles
-     * 4. Horizontal fibre texture
-     * 5. Tonal gradient (uneven parchment colouring)
+     * Authentic Egyptian papyrus construction:
+     * Papyrus is made from the pith of the Cyperus papyrus plant.
+     * Strips are laid horizontally, then vertically (crosshatch).
+     * The result: strong horizontal + weaker vertical fiber lines.
+     * Color: warm golden ochre to dark amber, uneven due to age.
+     * Surface: flat but with visible fiber raised texture.
+     * Damage: dark water stains, cracking along fibers, foxing spots.
      */
     background:
-        /* Edge vignette — heavy darkening like old worn parchment */
-        radial-gradient(ellipse 90% 92% at 50% 50%,
-            transparent 55%, rgba(60,35,5,.45) 100%),
-        /* Left & right edge shadow (curl / roll look) */
+        /* Heavy vignette — papyrus darkens sharply at edges from handling */
+        radial-gradient(ellipse 82% 86% at 50% 50%,
+            transparent 45%, rgba(35,16,2,.62) 100%),
+        /* Top & bottom edge darker (rolled area) */
+        linear-gradient(180deg,
+            rgba(25,11,1,.4) 0%, transparent 7%,
+            transparent 93%, rgba(25,11,1,.4) 100%),
+        /* Left & right edge shadow */
         linear-gradient(90deg,
-            rgba(40,22,3,.22) 0%, transparent 8%,
-            transparent 92%, rgba(40,22,3,.22) 100%),
-        /* Stain spots (foxing / water marks) */
-        radial-gradient(ellipse 18% 12% at 12% 28%, rgba(90,55,8,.14) 0%, transparent 100%),
-        radial-gradient(ellipse 10% 20% at 88% 18%, rgba(75,45,6,.11) 0%, transparent 100%),
-        radial-gradient(ellipse 22% 9%  at 70% 72%, rgba(85,50,7,.12) 0%, transparent 100%),
-        radial-gradient(ellipse 14% 16% at 30% 88%, rgba(70,40,5,.10) 0%, transparent 100%),
-        radial-gradient(ellipse 8%  14% at 55% 45%, rgba(95,60,10,.08) 0%, transparent 100%),
-        /* Crack lines — thin diagonals at varied angles */
+            rgba(30,13,1,.35) 0%, transparent 5%,
+            transparent 95%, rgba(30,13,1,.35) 100%),
+        /* Water damage / age stains — irregular, brown-black */
+        radial-gradient(ellipse 28% 10% at  6% 38%, rgba(45,22,3,.32) 0%, transparent 100%),
+        radial-gradient(ellipse 12% 28% at 94% 22%, rgba(38,18,2,.26) 0%, transparent 100%),
+        radial-gradient(ellipse 20% 8%  at 55% 78%, rgba(50,24,3,.28) 0%, transparent 100%),
+        radial-gradient(ellipse 16% 12% at 25% 92%, rgba(42,20,2,.24) 0%, transparent 100%),
+        radial-gradient(ellipse 8%  18% at 80% 55%, rgba(35,16,2,.22) 0%, transparent 100%),
+        radial-gradient(ellipse 22% 6%  at 40%  8%, rgba(48,23,3,.3)  0%, transparent 100%),
+        radial-gradient(ellipse 6%  10% at 15% 60%, rgba(55,28,4,.2)  0%, transparent 100%),
+        /* Crack lines following fiber direction — horizontal */
         repeating-linear-gradient(
-            118deg,
-            transparent 0px, transparent 220px,
-            rgba(55,30,3,.055) 220px, rgba(55,30,3,.055) 221px,
-            transparent 221px, transparent 520px
+            181deg,
+            transparent 0px, transparent 38px,
+            rgba(40,18,2,.1) 38px, rgba(40,18,2,.1) 39px,
+            transparent 39px, transparent 95px,
+            rgba(35,16,2,.07) 95px, rgba(35,16,2,.07) 96px,
+            transparent 96px, transparent 180px
         ),
+        /* Crack lines — near-horizontal with slight drift */
         repeating-linear-gradient(
-            63deg,
-            transparent 0px, transparent 310px,
-            rgba(45,25,2,.045) 310px, rgba(45,25,2,.045) 311px,
-            transparent 311px, transparent 680px
+            178deg,
+            transparent 0px, transparent 60px,
+            rgba(45,20,3,.08) 60px, rgba(45,20,3,.08) 61px,
+            transparent 61px, transparent 140px
         ),
+        /* Vertical fiber layer (secondary, thinner) */
         repeating-linear-gradient(
-            145deg,
-            transparent 0px, transparent 170px,
-            rgba(60,32,4,.05)  170px, rgba(60,32,4,.05)  171px,
-            transparent 171px, transparent 400px
+            90deg,
+            transparent 0px, transparent 22px,
+            rgba(60,30,4,.05) 22px, rgba(60,30,4,.05) 23px,
+            transparent 23px, transparent 55px
         ),
+        /* Main horizontal fiber weave — the defining papyrus texture */
         repeating-linear-gradient(
-            28deg,
-            transparent 0px, transparent 260px,
-            rgba(40,20,2,.04)  260px, rgba(40,20,2,.04)  261px,
-            transparent 261px, transparent 600px
+            180deg,
+            rgba(100,55,8,.11) 0px,  rgba(100,55,8,.11) 1px,
+            rgba(140,80,12,.07) 1px, rgba(140,80,12,.07) 2px,
+            transparent 2px,         transparent 6px,
+            rgba(80,42,6,.09) 6px,  rgba(80,42,6,.09) 7px,
+            transparent 7px,         transparent 11px,
+            rgba(110,60,9,.08) 11px, rgba(110,60,9,.08) 12px,
+            transparent 12px,        transparent 18px
         ),
-        /* Horizontal fibre (paper grain) */
-        repeating-linear-gradient(
-            transparent 0px, transparent 26px,
-            rgba(100,65,15,.055) 26px, rgba(100,65,15,.055) 27px
-        ),
-        /* Base parchment gradient — warm, uneven, aged amber */
-        linear-gradient(158deg,
-            #f0dfa8 0%,  #e2cc88 8%,
-            #f5e8c0 18%, #ddc880 28%,
-            #f2e2aa 40%, #e0cc84 52%,
-            #f5e6b8 62%, #d8c07a 74%,
-            #ede0a6 84%, #f0e2b0 100%
+        /* Base color — warm golden ochre, uneven tone across surface */
+        linear-gradient(162deg,
+            #c8943a 0%,  #b8821e 6%,
+            #d4a84c 13%, #c09030 20%,
+            #dab655 27%, #c8962a 34%,
+            #d6ad4a 41%, #bc8820 48%,
+            #d2a840 55%, #c49230 62%,
+            #d8b24e 69%, #c69535 76%,
+            #d0a642 83%, #c49038 90%,
+            #ccaa44 100%
         );
 
-    /* Border: aged ink-stained edge */
-    border: 1.5px solid rgba(110,70,10,.35);
-    border-radius: 2px;
+    /* Border: fibrous, aged edge */
+    border: 2px solid rgba(80,40,5,.45);
+    outline: 1px solid rgba(200,150,50,.15);
+    outline-offset: -6px;
+    border-radius: 1px;
 
-    /* Shadow: depth, lift, and slight warm glow beneath */
+    /* Depth shadows */
     box-shadow:
-        0 1px 0   rgba(240,190,60,.2),
-        0 6px 24px rgba(0,0,0,.5),
-        0 24px 70px rgba(0,0,0,.45),
-        0 40px 100px rgba(0,0,0,.3),
-        inset 0 0 120px rgba(140,90,15,.06);
-
-    padding: 70px 80px 60px;
+        0 2px 0   rgba(220,160,40,.3),
+        0 8px 32px rgba(0,0,0,.6),
+        0 28px 80px rgba(0,0,0,.5),
+        0 50px 120px rgba(0,0,0,.35),
+        inset 0 0 100px rgba(100,55,8,.08),
+        inset 0 2px 8px rgba(0,0,0,.12),
+        inset 0 -2px 8px rgba(0,0,0,.12);
 }
 
-/* Top scroll rod */
+/* Top wooden rod — dried reed / dark acacia wood */
 .narrative-view::before {
     content: '';
     position: absolute;
-    top: 0; left: -14px; right: -14px;
-    height: 26px;
-    background: linear-gradient(180deg,
-        #2e1504 0%,
-        #7a3f0e 10%,
-        #c07828 24%,
-        #e8a840 36%,
-        #f5c058 46%,
-        #e8a840 56%,
-        #b86e20 68%,
-        #7a3f0e 80%,
-        #4a2206 90%,
-        #2e1504 100%
-    );
-    border-radius: 13px;
+    top: 0; left: -16px; right: -16px;
+    height: 28px;
+    background:
+        /* Wood grain lines */
+        repeating-linear-gradient(
+            90deg,
+            transparent 0px, transparent 28px,
+            rgba(0,0,0,.12) 28px, rgba(0,0,0,.12) 29px
+        ),
+        /* Rod cylinder shading */
+        linear-gradient(180deg,
+            #1a0a02 0%,
+            #3d1c06 8%,
+            #6b3510 18%,
+            #9e5820 30%,
+            #7a4012 42%,
+            #3a1808 55%,
+            #5a2a0a 65%,
+            #8c4818 75%,
+            #6a3210 85%,
+            #3a1806 93%,
+            #1a0a02 100%
+        );
+    border-radius: 14px;
     box-shadow:
-        0 5px 20px rgba(0,0,0,.8),
-        0 2px 6px  rgba(0,0,0,.6),
-        inset 0 2px 3px rgba(255,235,150,.4),
-        inset 0 -3px 5px rgba(0,0,0,.5);
+        0 6px 22px rgba(0,0,0,.85),
+        0 2px 8px  rgba(0,0,0,.7),
+        inset 0 2px 4px rgba(200,150,80,.3),
+        inset 0 -3px 6px rgba(0,0,0,.6);
     transform: translateY(-50%);
     z-index: 4;
 }
 
-/* Bottom scroll rod */
+/* Bottom wooden rod */
 .narrative-view::after {
     content: '';
     position: absolute;
-    bottom: 0; left: -14px; right: -14px;
-    height: 26px;
-    background: linear-gradient(180deg,
-        #2e1504 0%,
-        #7a3f0e 10%,
-        #c07828 24%,
-        #e8a840 36%,
-        #f5c058 46%,
-        #e8a840 56%,
-        #b86e20 68%,
-        #7a3f0e 80%,
-        #4a2206 90%,
-        #2e1504 100%
-    );
-    border-radius: 13px;
+    bottom: 0; left: -16px; right: -16px;
+    height: 28px;
+    background:
+        repeating-linear-gradient(
+            90deg,
+            transparent 0px, transparent 28px,
+            rgba(0,0,0,.12) 28px, rgba(0,0,0,.12) 29px
+        ),
+        linear-gradient(180deg,
+            #1a0a02 0%,
+            #3d1c06 8%,
+            #6b3510 18%,
+            #9e5820 30%,
+            #7a4012 42%,
+            #3a1808 55%,
+            #5a2a0a 65%,
+            #8c4818 75%,
+            #6a3210 85%,
+            #3a1806 93%,
+            #1a0a02 100%
+        );
+    border-radius: 14px;
     box-shadow:
-        0 5px 20px rgba(0,0,0,.8),
-        0 2px 6px  rgba(0,0,0,.6),
-        inset 0 2px 3px rgba(255,235,150,.4),
-        inset 0 -3px 5px rgba(0,0,0,.5);
+        0 6px 22px rgba(0,0,0,.85),
+        0 2px 8px  rgba(0,0,0,.7),
+        inset 0 2px 4px rgba(200,150,80,.3),
+        inset 0 -3px 6px rgba(0,0,0,.6);
     transform: translateY(50%);
     z-index: 4;
 }
 
-/* ── Text colours on parchment (dark ink) ── */
+/* ── Text: dark reed-ink on papyrus ── */
 .narrative-view .narrative-chapter-header {
-    margin-bottom: 32px;
+    margin-bottom: 36px;
     padding-top: 0;
 }
 .narrative-view .chapter-label {
-    color: #6b3e08;
+    color: #5c2e06;
     font-size: 9px;
-    letter-spacing: 0.42em;
-    text-shadow: 0 1px 0 rgba(255,220,140,.5);
+    letter-spacing: 0.46em;
+    text-shadow: 0 1px 0 rgba(240,200,100,.4);
 }
 .narrative-view .chapter-ornament {
-    background: linear-gradient(to right, transparent, rgba(90,55,10,.38), transparent);
+    background: linear-gradient(to right, transparent, rgba(80,42,6,.42), transparent);
 }
 
 .narrative-view .narrative-view-title {
-    color: #18080a;
+    color: #110604;
     font-size: 32px;
-    text-shadow: 0 1px 2px rgba(255,210,120,.3);
-    margin-bottom: 10px;
     line-height: 1.25;
+    margin-bottom: 12px;
+    text-shadow: 1px 1px 0 rgba(200,140,40,.2);
+    letter-spacing: .015em;
 }
 .narrative-view .narrative-view-date {
-    color: #7a4d14;
+    color: #6e3f0c;
     font-size: 12px;
-    letter-spacing: 0.07em;
-    margin-bottom: 26px;
+    letter-spacing: 0.08em;
+    margin-bottom: 28px;
 }
 .narrative-view .narrative-view-summary {
-    border-left: 3px solid rgba(90,50,8,.4);
-    background: rgba(100,62,10,.07);
-    color: #2e1506;
+    border-left: 3px solid rgba(70,35,5,.45);
+    background: rgba(80,40,6,.07);
+    color: #251205;
     font-size: 14.5px;
-    line-height: 1.75;
-    border-radius: 0 4px 4px 0;
-    padding: 14px 20px 14px 22px;
-    margin-bottom: 32px;
+    line-height: 1.8;
+    border-radius: 0 3px 3px 0;
+    padding: 16px 22px 16px 24px;
+    margin-bottom: 34px;
 }
 .narrative-view .narrative-view-divider {
-    background: linear-gradient(to right, rgba(90,55,10,.3), transparent);
-    margin-bottom: 32px;
+    background: linear-gradient(to right, rgba(80,42,6,.35), transparent);
+    margin-bottom: 34px;
 }
 .narrative-view .narrative-view-content {
-    color: #1c0d04;
+    color: #180b03;
     font-size: 15px;
-    line-height: 2;
-    margin-bottom: 40px;
+    line-height: 2.05;
+    margin-bottom: 44px;
 }
 .narrative-view .narrative-view-no-content {
-    color: #8a5e28;
+    color: #7a5018;
     font-style: italic;
 }
 .narrative-view .narrative-tags-row {
-    margin-bottom: 32px;
+    margin-bottom: 36px;
 }
 .narrative-view .narrative-tag-chip {
-    background: rgba(90,52,8,.09);
+    background: rgba(80,40,6,.1);
     opacity: 1;
-    border-color: rgba(90,52,8,.38);
-    color: #6a3c08;
+    border-color: rgba(80,40,6,.42);
+    color: #5c2e06;
     font-size: 11px;
 }
 .narrative-view .narrative-view-footer {
-    padding-top: 20px;
+    padding-top: 22px;
     padding-bottom: 0;
-    border-top-color: rgba(90,55,8,.22);
+    border-top-color: rgba(80,42,6,.25);
 }
 .narrative-view .narrative-edit-btn,
 .narrative-view .narrative-delete-btn {
-    background: rgba(90,52,8,.09) !important;
-    border-color: rgba(90,52,8,.32) !important;
-    color: #4e2806 !important;
+    background: rgba(80,42,6,.1) !important;
+    border-color: rgba(80,42,6,.35) !important;
+    color: #3e1e04 !important;
     min-height: 38px;
 }
 .narrative-view .narrative-edit-btn:hover {
-    background: rgba(90,52,8,.18) !important;
-    color: #2e1603 !important;
+    background: rgba(80,42,6,.2) !important;
+    color: #211002 !important;
 }
 .narrative-view .narrative-delete-btn:hover {
-    background: rgba(140,25,8,.12) !important;
-    border-color: rgba(160,30,8,.42) !important;
-    color: #7a1204 !important;
+    background: rgba(130,20,6,.12) !important;
+    border-color: rgba(150,25,6,.45) !important;
+    color: #780f03 !important;
 }
 
 /* ── Empty state on library theme ── */
