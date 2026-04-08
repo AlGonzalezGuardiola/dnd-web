@@ -365,7 +365,7 @@ function openPersonajesSection() {
 }
 
 function switchPersonajesTab(tab) {
-    ['principales', 'aliados', 'enemigos', 'npcgen', 'bolso'].forEach(t => {
+    ['principales', 'aliados', 'enemigos', 'npcgen'].forEach(t => {
         const panel = document.getElementById(`charTab${t.charAt(0).toUpperCase() + t.slice(1)}`);
         if (panel) panel.style.display = t === tab ? 'block' : 'none';
         const btn = document.querySelector(`.char-tab-btn[data-char-tab="${t}"]`);
@@ -374,7 +374,6 @@ function switchPersonajesTab(tab) {
     if (tab === 'principales') renderCharacterSelectionMenu();
     if (tab === 'aliados')  { renderAliadosCharacters(); loadSavedTemplates('aliado'); }
     if (tab === 'enemigos') loadSavedTemplates('enemigo');
-    if (tab === 'bolso') bolsoLoad();
 }
 
 function renderAliadosCharacters() {
@@ -860,6 +859,15 @@ function exportCharacters() {
 const BOLSO_CHAR_ID = '__bolso_hermione__';
 let _bolsoItems = []; // [{ id, nombre, cantidad }]
 let _bolsoSaveTimer = null;
+let _bolsoLoaded = false;
+
+function bolsoTogglePanel() {
+    const panel = document.getElementById('bolsoPanel');
+    const btn   = document.getElementById('bolsoToggleBtn');
+    const isOpen = panel.classList.toggle('bolso-panel--open');
+    btn.classList.toggle('active', isOpen);
+    if (isOpen && !_bolsoLoaded) bolsoLoad();
+}
 
 async function bolsoLoad() {
     bolsoSetStatus('Cargando...');
@@ -869,6 +877,7 @@ async function bolsoLoad() {
         const json = await res.json();
         const entry = (json.characters || []).find(c => c.charId === BOLSO_CHAR_ID);
         _bolsoItems = entry?.data?.items ?? [];
+        _bolsoLoaded = true;
     } catch (e) {
         _bolsoItems = [];
         bolsoSetStatus('Error al cargar');
