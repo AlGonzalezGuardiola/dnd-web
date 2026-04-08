@@ -1,15 +1,18 @@
 'use strict';
 /* ─── Character Equipment Panel ─────────────────────────────────────────────
- *  Opens a modal from the character sheet to mark inventory items as equipped
- *  in one of two slots:  armadura (max 8)  |  armas (max 8)
- *  State is persisted to /api/player-characters/inv_<charId> as data.equip
+ *  8 fixed armadura slots + 8 fixed armas slots.
+ *  Click empty slot → inventory picker.  Click item → assign.
+ *  State: equip.armadura / equip.armas  =  string[8]  (item id or null)
  * ─────────────────────────────────────────────────────────────────────────── */
 
 let _equipDialog    = null;
-let _equipCharId    = null;   // "inv_<charId>" — key in player-characters API
-let _equipItems     = [];     // current inventory items loaded from API
-let _equip          = { armadura: [], armas: [] };
+let _equipCharId    = null;
+let _equipItems     = [];
+let _equip          = { armadura: _emptySlots(), armas: _emptySlots() };
 let _equipSaveTimer = null;
+let _pickerTarget   = null;   // { slot, index }
+
+function _emptySlots() { return Array(8).fill(null); }
 
 // ── Public entry point ────────────────────────────────────────────────────
 function openEquipPanel(charId, charName) {
@@ -19,7 +22,7 @@ function openEquipPanel(charId, charName) {
     _loadData();
 }
 
-// ── Dialog bootstrap (created once, reused) ───────────────────────────────
+// ── Dialog bootstrap ──────────────────────────────────────────────────────
 function _ensureDialog(charName) {
     if (_equipDialog) {
         _equipDialog.querySelector('.eq-title').textContent = charName;
@@ -45,7 +48,6 @@ function _ensureDialog(charName) {
             </div>
         </div>
     `;
-    // close on backdrop click
     dlg.addEventListener('click', e => {
         const r = dlg.getBoundingClientRect();
         if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom) {
@@ -64,112 +66,202 @@ async function _loadData() {
         const json  = await res.json();
         const entry = (json.characters || []).find(c => c.charId === _equipCharId);
         _equipItems = entry?.data?.items ?? [];
+        const saved = entry?.data?.equip ?? {};
         _equip = {
-            armadura: [...(entry?.data?.equip?.armadura ?? [])],
-            armas:    [...(entry?.data?.equip?.armas    ?? [])],
+            armadura: _normalizeSlots(saved.armadura),
+            armas:    _normalizeSlots(saved.armas),
         };
     } catch (e) {
         _equipItems = [];
-        _equip = { armadura: [], armas: [] };
+        _equip = { armadura: _emptySlots(), armas: _emptySlots() };
     }
     _render();
+}
+
+function _normalizeSlots(arr) {
+    const out = _emptySlots();
+    if (!Array.isArray(arr)) return out;
+    // support old flat-id format (pre-slot migration): just fill from index 0
+    arr.slice(0, 8).forEach((v, i) => { out[i] = v || null; });
+    return out;
 }
 
 // ── Render ────────────────────────────────────────────────────────────────
 function _render() {
-    const body = document.getElementById('equipBody');
-    if (!_equipItems.length) {
-        body.innerHTML = `
-            <div class="eq-empty">
-                <div class="eq-empty-ico">🎒</div>
-                <div>El inventario está vacío.</div>
-                <div class="eq-empty-hint">Añade objetos en tu inventario personal primero.</div>
-            </div>`;
-        return;
-    }
-    body.innerHTML =
+    document.getElementById('equipBody').innerHTML =
         _renderSection('armadura', '🛡️ Armadura') +
-        _renderSection('armas',    '⚔️ Armas');
+        _renderSection('armas',    '⚔️ Armas') +
+        `<div class="eq-detail-bar" id="equipDetailBar" style="display:none">
+            <div class="eq-detail-thumb" id="equipDetailThumb"></div>
+            <div class="eq-detail-info">
+                <div class="eq-detail-name" id="equipDetailName"></div>
+                <div class="eq-detail-desc" id="equipDetailDesc"></div>
+            </div>
+            <button class="eq-detail-close" onclick="closeEquipDetail()">✕</button>
+        </div>`;
 }
 
 function _renderSection(slot, label) {
-    const MAX     = 8;
-    const equipped = _equip[slot];
-    const count   = equipped.length;
-
-    // Sort: equipped first, then rest alphabetically
-    const sorted = [..._equipItems].sort((a, b) => {
-        const aE = equipped.includes(a.id);
-        const bE = equipped.includes(b.id);
-        if (aE && !bE) return -1;
-        if (!aE && bE) return  1;
-        return a.nombre.localeCompare(b.nombre);
-    });
-
-    const rows = sorted.map(it => {
-        const isEquipped = equipped.includes(it.id);
-        const maxReached = !isEquipped && count >= MAX;
-        const uid = `${slot}-${it.id}`;
-
-        let thumb;
-        if (it.img)        thumb = `<img src="${it.img}" alt="" class="eq-item-img">`;
-        else if (it.emoji) thumb = `<span class="eq-item-emoji">${_esc(it.emoji)}</span>`;
-        else               thumb = `<span class="eq-item-emoji">📦</span>`;
-
-        const qtyLabel = it.cantidad > 1 ? `<span class="eq-item-qty">×${it.cantidad}</span>` : '';
-        const infoBtn  = it.desc
-            ? `<button class="eq-info-btn" onclick="toggleEquipDesc('${uid}',event)" title="Ver descripción">i</button>`
-            : '';
-        const descPanel = it.desc
-            ? `<div class="eq-item-desc" id="eq-desc-${uid}">${_esc(it.desc)}</div>`
-            : '';
-
-        return `
-        <div class="eq-item-wrap">
-            <div class="eq-item${isEquipped ? ' equipped' : ''}${maxReached ? ' maxed' : ''}"
-                 onclick="${maxReached ? '' : `toggleEquipSlot('${it.id}','${slot}')`}"
-                 title="${maxReached ? `Máximo ${MAX} objetos` : (isEquipped ? 'Quitar del equipamiento' : 'Equipar')}">
-                <div class="eq-item-thumb">${thumb}</div>
-                <div class="eq-item-name">${_esc(it.nombre)}${qtyLabel}</div>
-                ${infoBtn}
-                <div class="eq-check">${isEquipped ? '✓' : maxReached ? '—' : '+'}</div>
-            </div>
-            ${descPanel}
-        </div>`;
-    }).join('');
-
+    const slots = _equip[slot];
+    const filled = slots.filter(Boolean).length;
+    const grid = slots.map((itemId, i) => _renderSlot(slot, i, itemId)).join('');
     return `
     <div class="eq-section">
         <div class="eq-section-hdr">
             <span class="eq-section-label">${label}</span>
-            <span class="eq-section-count${count >= MAX ? ' full' : ''}">${count} / ${MAX}</span>
+            <span class="eq-section-count${filled >= 8 ? ' full' : ''}">${filled} / 8</span>
         </div>
-        <div class="eq-list">${rows}</div>
+        <div class="eq-slots-grid" id="eq-grid-${slot}">${grid}</div>
     </div>`;
 }
 
-// ── Description toggle ────────────────────────────────────────────────────
-function toggleEquipDesc(uid, event) {
-    event.stopPropagation(); // don't trigger equip/unequip on the row
-    const panel = document.getElementById(`eq-desc-${uid}`);
-    const btn   = event.currentTarget;
-    if (!panel) return;
-    const open = panel.classList.toggle('visible');
-    btn.classList.toggle('open', open);
+function _renderSlot(slot, index, itemId) {
+    if (!itemId) {
+        return `
+        <div class="eq-slot empty" onclick="openSlotPicker('${slot}',${index})" title="Asignar objeto">
+            <div class="eq-slot-plus">+</div>
+            <div class="eq-slot-num">${index + 1}</div>
+        </div>`;
+    }
+    const it = _equipItems.find(x => x.id === itemId);
+    if (!it) {
+        // item was deleted from inventory — render as empty
+        return `
+        <div class="eq-slot empty" onclick="openSlotPicker('${slot}',${index})" title="Asignar objeto">
+            <div class="eq-slot-plus">+</div>
+            <div class="eq-slot-num">${index + 1}</div>
+        </div>`;
+    }
+
+    let thumb;
+    if (it.img)        thumb = `<img src="${it.img}" alt="" class="eq-slot-img">`;
+    else if (it.emoji) thumb = `<span class="eq-slot-emoji">${_esc(it.emoji)}</span>`;
+    else               thumb = `<span class="eq-slot-emoji">📦</span>`;
+
+    const hasDesc = !!it.desc;
+
+    return `
+    <div class="eq-slot filled" title="${_esc(it.nombre)}">
+        <div class="eq-slot-thumb-wrap" onclick="openSlotPicker('${slot}',${index})">${thumb}</div>
+        <div class="eq-slot-name">${_esc(it.nombre)}</div>
+        <div class="eq-slot-actions">
+            ${hasDesc ? `<button class="eq-slot-btn eq-slot-info" onclick="showEquipDetail('${itemId}',event)" title="Ver descripción">i</button>` : ''}
+            <button class="eq-slot-btn eq-slot-del" onclick="clearSlot('${slot}',${index},event)" title="Quitar">✕</button>
+        </div>
+    </div>`;
 }
 
-// ── Equip slot toggle ─────────────────────────────────────────────────────
-function toggleEquipSlot(itemId, slot) {
-    const arr = _equip[slot];
-    const idx = arr.indexOf(itemId);
-    if (idx >= 0) {
-        arr.splice(idx, 1);
-    } else {
-        if (arr.length >= 8) return;
-        arr.push(itemId);
-    }
-    _render();
+// ── Slot interactions ─────────────────────────────────────────────────────
+function clearSlot(slot, index, event) {
+    event.stopPropagation();
+    _equip[slot][index] = null;
+    _refreshSection(slot);
     _scheduleSave();
+}
+
+function showEquipDetail(itemId, event) {
+    event.stopPropagation();
+    const it = _equipItems.find(x => x.id === itemId);
+    if (!it) return;
+
+    let thumb;
+    if (it.img)        thumb = `<img src="${it.img}" alt="" class="eq-detail-img">`;
+    else if (it.emoji) thumb = `<span class="eq-detail-emoji">${_esc(it.emoji)}</span>`;
+    else               thumb = `<span class="eq-detail-emoji">📦</span>`;
+
+    document.getElementById('equipDetailThumb').innerHTML = thumb;
+    document.getElementById('equipDetailName').textContent = it.nombre;
+    document.getElementById('equipDetailDesc').textContent = it.desc || '';
+    document.getElementById('equipDetailBar').style.display = 'flex';
+}
+
+function closeEquipDetail() {
+    const bar = document.getElementById('equipDetailBar');
+    if (bar) bar.style.display = 'none';
+}
+
+function _refreshSection(slot) {
+    const grid = document.getElementById(`eq-grid-${slot}`);
+    if (!grid) { _render(); return; }
+    grid.innerHTML = _equip[slot].map((id, i) => _renderSlot(slot, i, id)).join('');
+    // update count label
+    const filled = _equip[slot].filter(Boolean).length;
+    const hdr = grid.closest('.eq-section')?.querySelector('.eq-section-count');
+    if (hdr) { hdr.textContent = `${filled} / 8`; hdr.classList.toggle('full', filled >= 8); }
+}
+
+// ── Picker ────────────────────────────────────────────────────────────────
+function openSlotPicker(slot, index) {
+    _pickerTarget = { slot, index };
+    closeEquipDetail();
+
+    const body = document.getElementById('equipBody');
+    // remove existing picker if any
+    body.querySelector('.eq-picker')?.remove();
+
+    const picker = document.createElement('div');
+    picker.className = 'eq-picker';
+    picker.id = 'equipPicker';
+    picker.innerHTML = `
+        <div class="eq-picker-hdr">
+            <span class="eq-picker-title">Seleccionar objeto</span>
+            <input class="eq-picker-search" type="search" placeholder="Buscar…"
+                oninput="filterEquipPicker(this.value)" autocomplete="off">
+            <button class="eq-picker-close" onclick="closeEquipPicker()">✕</button>
+        </div>
+        <div class="eq-picker-list" id="equipPickerList"></div>
+    `;
+    body.appendChild(picker);
+    filterEquipPicker('');
+    picker.querySelector('.eq-picker-search').focus();
+}
+
+function filterEquipPicker(query) {
+    const q   = query.toLowerCase();
+    const list = document.getElementById('equipPickerList');
+    if (!list) return;
+
+    const filtered = q
+        ? _equipItems.filter(it => it.nombre.toLowerCase().includes(q))
+        : [..._equipItems];
+
+    if (!filtered.length) {
+        list.innerHTML = `<div class="eq-picker-empty">${q ? 'Sin resultados' : 'El inventario está vacío'}</div>`;
+        return;
+    }
+
+    list.innerHTML = filtered.map(it => {
+        let thumb;
+        if (it.img)        thumb = `<img src="${it.img}" alt="" class="eq-picker-img">`;
+        else if (it.emoji) thumb = `<span class="eq-picker-emoji">${_esc(it.emoji)}</span>`;
+        else               thumb = `<span class="eq-picker-emoji">📦</span>`;
+
+        const qty  = it.cantidad > 1 ? ` <span class="eq-picker-qty">×${it.cantidad}</span>` : '';
+        const desc = it.desc ? `<div class="eq-picker-desc">${_esc(it.desc)}</div>` : '';
+
+        return `
+        <div class="eq-picker-item" onclick="assignSlot('${it.id}')">
+            <div class="eq-picker-thumb">${thumb}</div>
+            <div class="eq-picker-info">
+                <div class="eq-picker-name">${_esc(it.nombre)}${qty}</div>
+                ${desc}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function assignSlot(itemId) {
+    if (!_pickerTarget) return;
+    const { slot, index } = _pickerTarget;
+    _equip[slot][index] = itemId;
+    closeEquipPicker();
+    _refreshSection(slot);
+    _scheduleSave();
+}
+
+function closeEquipPicker() {
+    document.getElementById('equipPicker')?.remove();
+    _pickerTarget = null;
 }
 
 // ── Persistence ───────────────────────────────────────────────────────────
@@ -190,7 +282,6 @@ async function _save() {
     }
 }
 
-// ── Util ──────────────────────────────────────────────────────────────────
 function _esc(s) {
     return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
