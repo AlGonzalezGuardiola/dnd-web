@@ -46,6 +46,11 @@ function renderCharacterSheet(charId) {
                     <input type="range" id="editImageScale" min="1.0" max="3.0" step="0.1" value="${imgScale}" title="Zoom de la imagen">
                 </div>` : ''}
         </div>
+        ${!isCharacterEditing ? `
+        <a href="inventario.html?char=inv_${charId}&name=${encodeURIComponent(data.nombre)}"
+           class="char-inv-btn" title="Inventario de ${data.nombre}">
+            🎒 Inventario
+        </a>` : ''}
     `;
     statsContainer.innerHTML += portraitHTML;
 

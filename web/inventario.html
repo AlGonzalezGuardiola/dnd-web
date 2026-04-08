@@ -758,7 +758,9 @@
 <div class="snack" id="snack"></div>
 
 <script>
-const CHAR_ID  = '__bolso_hermione__';
+const _params  = new URLSearchParams(location.search);
+const CHAR_ID  = _params.get('char') || '__bolso_hermione__';
+const CHAR_NAME = _params.get('name') ? decodeURIComponent(_params.get('name')) : null;
 const BASE_URL = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
     ? 'http://localhost:3001' : location.origin;
 
@@ -791,6 +793,12 @@ function toggleSection(catId) {
 
 // ── Boot ──
 window.addEventListener('DOMContentLoaded', () => {
+    // Personalise header when viewing a character's inventory
+    if (CHAR_NAME) {
+        document.title = `Inventario — ${CHAR_NAME}`;
+        document.querySelector('.hdr-title').textContent = `Inventario de ${CHAR_NAME}`;
+        document.querySelector('.hdr-sub').textContent = `Objetos personales de ${CHAR_NAME}`;
+    }
     load();
 
     // Info dialog wiring
