@@ -436,7 +436,11 @@
     }
 
     .narrative-main {
-        padding: 24px 16px 40px;
+        padding: 36px 12px 50px;
+    }
+    .narrative-view::before,
+    .narrative-view::after {
+        left: -6px; right: -6px;
     }
 
     .narrative-editor-top-row {
@@ -453,6 +457,325 @@
 
     .narrative-empty-icon { font-size: 56px; }
     .narrative-empty-state h3 { font-size: 18px; }
+}
+
+/* ============================================
+   LIBRARY & PARCHMENT REDESIGN
+   ============================================ */
+
+/* ── Outer shell: library room ── */
+.narrative-section {
+    background:
+        radial-gradient(ellipse at 30% 20%, rgba(100,55,10,.08) 0%, transparent 55%),
+        radial-gradient(ellipse at 75% 80%, rgba(60,30,5,.12) 0%, transparent 50%),
+        linear-gradient(170deg, #070503 0%, #0d0804 50%, #060402 100%);
+}
+
+/* ── Sidebar: dark library bookshelf ── */
+.narrative-sidebar {
+    background:
+        /* Horizontal shelf lines */
+        repeating-linear-gradient(
+            180deg,
+            transparent 0px, transparent 70px,
+            rgba(0,0,0,.25) 70px, rgba(0,0,0,.25) 72px
+        ),
+        /* Vertical wood grain */
+        repeating-linear-gradient(
+            91deg,
+            transparent 0px, transparent 18px,
+            rgba(255,255,255,.012) 18px, rgba(255,255,255,.012) 19px
+        ),
+        linear-gradient(180deg, #0e0806 0%, #110a05 35%, #0c0703 65%, #0e0805 100%);
+    border-right: 2px solid rgba(90,50,10,.55);
+    box-shadow: inset -3px 0 18px rgba(0,0,0,.65), 3px 0 12px rgba(0,0,0,.4);
+}
+
+.narrative-sidebar-header {
+    background: linear-gradient(180deg, rgba(30,16,4,.98) 0%, rgba(18,10,2,.92) 100%);
+    border-bottom: 1px solid rgba(130,80,15,.3);
+    box-shadow: 0 2px 12px rgba(0,0,0,.5);
+}
+
+.narrative-sidebar-title {
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    color: #c9a227;
+    text-shadow: 0 0 12px rgba(201,162,39,.35);
+}
+
+/* ── Session list: card catalog style ── */
+.narrative-session-list {
+    padding: 6px 0;
+}
+
+.narrative-list-item {
+    margin: 0;
+    border-radius: 0;
+    border-left: none;
+    padding: 10px 14px 10px 0;
+    background: transparent;
+    border-bottom: 1px solid rgba(255,255,255,.03);
+    position: relative;
+    gap: 0;
+    transition: background .18s;
+    overflow: hidden;
+}
+
+/* Book spine left edge */
+.narrative-list-item::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 5px;
+    background: linear-gradient(180deg,
+        #6b3d0e 0%, #a06020 20%, #c8882a 45%,
+        #a06020 70%, #6b3d0e 100%
+    );
+    transition: background .18s;
+}
+
+.narrative-list-item:hover {
+    background: rgba(150,90,15,.09);
+}
+.narrative-list-item:hover::before {
+    background: linear-gradient(180deg,
+        #8b5518 0%, #c08030 20%, #e8a840 45%,
+        #c08030 70%, #8b5518 100%
+    );
+}
+
+.narrative-list-item.active {
+    background: linear-gradient(90deg, rgba(180,120,25,.18) 0%, rgba(100,60,10,.06) 100%);
+    border-bottom-color: rgba(201,162,39,.12);
+}
+.narrative-list-item.active::before {
+    background: linear-gradient(180deg,
+        #a07818 0%, #e0b030 20%, #f5d050 45%,
+        #e0b030 70%, #a07818 100%
+    );
+    box-shadow: 0 0 8px rgba(201,162,39,.4);
+}
+
+.narrative-list-num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    min-width: 34px;
+    font-size: 9px;
+    font-weight: 900;
+    color: rgba(180,130,30,.7);
+    letter-spacing: 0.04em;
+    padding-left: 10px;
+    padding-top: 0;
+    line-height: 1;
+}
+.narrative-list-item.active .narrative-list-num {
+    color: #c9a227;
+    text-shadow: 0 0 8px rgba(201,162,39,.5);
+}
+
+.narrative-list-info {
+    padding-left: 6px;
+}
+
+.narrative-list-title {
+    font-size: 12.5px;
+    color: rgba(220,195,140,.85);
+    font-weight: 500;
+    letter-spacing: .01em;
+}
+.narrative-list-item.active .narrative-list-title {
+    color: #f0dca0;
+}
+.narrative-list-item:hover .narrative-list-title {
+    color: #e8cc88;
+}
+
+.narrative-list-date {
+    color: rgba(150,110,50,.7);
+    font-size: 10.5px;
+}
+
+/* ── Main area: reading room ── */
+.narrative-main {
+    padding: 56px 40px 80px; /* extra top/bottom for scroll rods to bleed in */
+    background:
+        radial-gradient(ellipse at 50% 0%, rgba(120,70,15,.07) 0%, transparent 60%),
+        radial-gradient(ellipse at 50% 100%, rgba(60,30,5,.08) 0%, transparent 50%),
+        linear-gradient(170deg, #080503 0%, #0e0906 50%, #070402 100%);
+}
+
+/* ── Parchment scroll (chapter view) ── */
+.narrative-view {
+    max-width: 720px;
+    margin: 0 auto;
+    position: relative;
+    /* Parchment paper */
+    background:
+        /* Vignette — darker at the very edges */
+        radial-gradient(ellipse 96% 98% at 50% 50%,
+            transparent 75%, rgba(80,50,10,.25) 100%),
+        /* Subtle horizontal ruled lines */
+        repeating-linear-gradient(
+            transparent 0px, transparent 31px,
+            rgba(120,80,20,.06) 31px, rgba(120,80,20,.06) 32px
+        ),
+        /* Parchment tonal gradient */
+        linear-gradient(165deg,
+            #f8edcc 0%, #f0e0b0 18%, #edd9a2 38%,
+            #f2e3b5 55%, #e8d498 72%, #ede0b0 88%, #f0e4be 100%
+        );
+    border: 1px solid rgba(140,95,20,.3);
+    border-radius: 3px;
+    /* Parchment shadow — depth + slight curl feeling */
+    box-shadow:
+        0 2px 0   rgba(200,150,40,.25),
+        0 8px 30px rgba(0,0,0,.55),
+        0 20px 60px rgba(0,0,0,.4),
+        inset 0 0 80px rgba(160,110,30,.05);
+}
+
+/* Top scroll rod */
+.narrative-view::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -12px; right: -12px;
+    height: 20px;
+    background: linear-gradient(180deg,
+        #3d1f05 0%,
+        #8b5015 12%,
+        #d4902a 28%,
+        #f0b84a 42%,
+        #e0a035 55%,
+        #b07020 68%,
+        #7a4510 82%,
+        #4a2408 100%
+    );
+    border-radius: 10px;
+    box-shadow:
+        0 4px 16px rgba(0,0,0,.75),
+        0 1px 0 rgba(255,220,120,.25),
+        inset 0 1px 0 rgba(255,230,140,.35),
+        inset 0 -2px 4px rgba(0,0,0,.4);
+    transform: translateY(-55%);
+    z-index: 3;
+}
+
+/* Bottom scroll rod */
+.narrative-view::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: -12px; right: -12px;
+    height: 20px;
+    background: linear-gradient(180deg,
+        #3d1f05 0%,
+        #8b5015 12%,
+        #d4902a 28%,
+        #f0b84a 42%,
+        #e0a035 55%,
+        #b07020 68%,
+        #7a4510 82%,
+        #4a2408 100%
+    );
+    border-radius: 10px;
+    box-shadow:
+        0 4px 16px rgba(0,0,0,.75),
+        0 1px 0 rgba(255,220,120,.25),
+        inset 0 1px 0 rgba(255,230,140,.35),
+        inset 0 -2px 4px rgba(0,0,0,.4);
+    transform: translateY(55%);
+    z-index: 3;
+}
+
+/* Parchment content padding */
+.narrative-view .narrative-chapter-header {
+    margin-bottom: 26px;
+    padding-top: 30px;
+}
+.narrative-view .chapter-label {
+    color: #7a4a08;
+    font-size: 9px;
+    letter-spacing: 0.38em;
+    text-shadow: none;
+}
+.narrative-view .chapter-ornament {
+    background: linear-gradient(to right, transparent, rgba(100,65,12,.35), transparent);
+}
+
+.narrative-view .narrative-view-title {
+    color: #1e0e03;
+    font-size: 30px;
+    text-shadow: 0 1px 0 rgba(255,220,150,.4);
+    margin-bottom: 8px;
+}
+.narrative-view .narrative-view-date {
+    color: #7a5018;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    margin-bottom: 20px;
+}
+.narrative-view .narrative-view-summary {
+    border-left: 3px solid rgba(100,60,10,.35);
+    background: rgba(120,75,12,.06);
+    color: #3a1e06;
+    font-size: 14px;
+    border-radius: 0 4px 4px 0;
+}
+.narrative-view .narrative-view-divider {
+    background: linear-gradient(to right, rgba(100,65,12,.3), transparent);
+}
+.narrative-view .narrative-view-content {
+    color: #261508;
+    font-size: 14.5px;
+    line-height: 1.9;
+}
+.narrative-view .narrative-view-no-content {
+    color: #8a6030;
+    font-style: italic;
+}
+.narrative-view .narrative-tags-row {
+    padding-bottom: 30px; /* room for bottom rod */
+}
+.narrative-view .narrative-tag-chip {
+    background: rgba(100,60,10,.08);
+    opacity: 1;
+    border-color: rgba(100,60,10,.4);
+    color: #7a4a10;
+    font-size: 11px;
+}
+.narrative-view .narrative-view-footer {
+    padding-bottom: 30px;
+    border-top-color: rgba(100,65,12,.25);
+}
+/* override button colors on parchment */
+.narrative-view .narrative-edit-btn,
+.narrative-view .narrative-delete-btn {
+    background: rgba(100,60,10,.1) !important;
+    border-color: rgba(100,60,10,.35) !important;
+    color: #5a3208 !important;
+}
+.narrative-view .narrative-edit-btn:hover {
+    background: rgba(100,60,10,.2) !important;
+    color: #3a1e04 !important;
+}
+.narrative-view .narrative-delete-btn:hover {
+    background: rgba(150,30,10,.12) !important;
+    border-color: rgba(180,40,10,.45) !important;
+    color: #8b1a06 !important;
+}
+
+/* ── Empty state on library theme ── */
+.narrative-empty-state h3 { color: rgba(200,165,85,.9); }
+.narrative-empty-state p  { color: rgba(150,110,55,.7); }
+.narrative-empty-icon {
+    filter: drop-shadow(0 0 30px rgba(201,162,39,.4));
+}
+
+/* ── Editor: keep dark, just warm it slightly ── */
+.narrative-editor .narrative-chapter-header {
+    margin-bottom: 20px;
 }
 
 /* btn-combat-secondary for less prominent actions */
