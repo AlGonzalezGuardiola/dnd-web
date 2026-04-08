@@ -495,8 +495,8 @@
         resize: none; height: 90px; width: 100%;
         transition: border-color .15s;
     }
-    .dialog-desc::placeholder { color: var(--text-3); font-style: italic; }
-    .dialog-desc:focus { outline: none; border-color: var(--gold); background: rgba(201,162,39,.04); }
+    .dialog-desc[readonly] { cursor: default; color: var(--text-2); }
+    .dialog-desc:focus { outline: none; }
     .dialog-hint { font-size: 11px; color: var(--text-3); font-style: italic; }
 
     /* delete */
@@ -635,8 +635,8 @@
             <span class="dialog-name" id="dialogItemName"></span>
             <button class="dialog-close-btn" id="dialogCloseBtn" title="Cerrar">✕</button>
         </div>
-        <textarea class="dialog-desc" id="dialogDesc" placeholder="Sin descripción aún… escribe algo aquí" maxlength="400"></textarea>
-        <p class="dialog-hint">Se guarda automáticamente · ESC para cerrar</p>
+        <textarea class="dialog-desc" id="dialogDesc" readonly></textarea>
+        <p class="dialog-hint">ESC para cerrar · usa ✏ para editar</p>
     </div>
 </dialog>
 
@@ -980,12 +980,12 @@ function openInfoDialog(btn, id) {
 
     const it = items.find(i => i.id === id);
     nameEl.textContent = it ? it.nombre : id;
-    descEl.value = it ? (it.desc || '') : '';
+    descEl.value = it ? (it.desc || 'Sin descripción') : 'Sin descripción';
     currentInfoId = id;
 
     // Position near the button
     const rect = btn.getBoundingClientRect();
-    const dw = 300, dh = 180;
+    const dw = 300, dh = 160;
     let left = rect.left + rect.width / 2 - dw / 2;
     let top  = rect.bottom + 8;
     if (left + dw > window.innerWidth - 12) left = window.innerWidth - dw - 12;
@@ -995,17 +995,6 @@ function openInfoDialog(btn, id) {
     dialog.style.top  = top  + 'px';
 
     dialog.showModal();
-    requestAnimationFrame(() => descEl.focus());
-
-    descEl.oninput = () => {
-        if (!currentInfoId) return;
-        const item = items.find(i => i.id === currentInfoId);
-        if (!item) return;
-        item.desc = descEl.value.trim() || null;
-        const infoBtn = document.querySelector(`[data-iid="${currentInfoId}"]`);
-        if (infoBtn) infoBtn.classList.toggle('active', !!item.desc);
-        scheduleSave();
-    };
 }
 
 // ── Save ──
