@@ -997,7 +997,7 @@ button, .card, .pin, .tab-btn, .hud-btn, .die-btn,
     gap: 6px;
     width: 100%;
     padding: 9px 0;
-    margin-bottom: 16px;
+    margin-bottom: 4px;
     background: linear-gradient(135deg, rgba(212,175,55,.15) 0%, rgba(150,120,30,.08) 100%);
     border: 1px solid rgba(212,175,55,.3);
     border-radius: 6px;
@@ -1174,6 +1174,36 @@ button, .card, .pin, .tab-btn, .hud-btn, .die-btn,
     font-size: 11px; color: rgba(212,175,55,.6);
     margin-left: 4px;
 }
+
+/* Info toggle button inside each eq-item */
+.eq-info-btn {
+    width: 20px; height: 20px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.14);
+    background: rgba(255,255,255,.05);
+    color: rgba(255,255,255,.35); font-size: 11px; font-weight: 600;
+    font-style: italic; font-family: Georgia, serif;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; line-height: 1;
+    transition: border-color .15s, background .15s, color .15s;
+}
+.eq-info-btn:hover,
+.eq-info-btn.open { border-color: rgba(212,175,55,.5); background: rgba(212,175,55,.12); color: #d4af37; }
+
+/* Description panel that expands below the item row */
+.eq-item-wrap { display: flex; flex-direction: column; }
+.eq-item-desc {
+    display: none;
+    font-size: 12px; line-height: 1.55;
+    color: rgba(232,220,200,.6);
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.07);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    padding: 8px 12px 10px 58px; /* indent to align under name */
+    margin-top: -4px;
+    font-style: italic;
+}
+.eq-item-desc.visible { display: block; }
 .eq-check {
     width: 22px; height: 22px;
     border-radius: 50%;

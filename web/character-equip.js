@@ -109,21 +109,32 @@ function _renderSection(slot, label) {
     const rows = sorted.map(it => {
         const isEquipped = equipped.includes(it.id);
         const maxReached = !isEquipped && count >= MAX;
+        const uid = `${slot}-${it.id}`;
 
         let thumb;
-        if (it.img)   thumb = `<img src="${it.img}" alt="" class="eq-item-img">`;
+        if (it.img)        thumb = `<img src="${it.img}" alt="" class="eq-item-img">`;
         else if (it.emoji) thumb = `<span class="eq-item-emoji">${_esc(it.emoji)}</span>`;
         else               thumb = `<span class="eq-item-emoji">📦</span>`;
 
         const qtyLabel = it.cantidad > 1 ? `<span class="eq-item-qty">×${it.cantidad}</span>` : '';
+        const infoBtn  = it.desc
+            ? `<button class="eq-info-btn" onclick="toggleEquipDesc('${uid}',event)" title="Ver descripción">i</button>`
+            : '';
+        const descPanel = it.desc
+            ? `<div class="eq-item-desc" id="eq-desc-${uid}">${_esc(it.desc)}</div>`
+            : '';
 
         return `
-        <div class="eq-item${isEquipped ? ' equipped' : ''}${maxReached ? ' maxed' : ''}"
-             onclick="${maxReached ? '' : `toggleEquipSlot('${it.id}','${slot}')`}"
-             title="${maxReached ? `Máximo ${MAX} objetos` : (isEquipped ? 'Quitar del equipamiento' : 'Equipar')}">
-            <div class="eq-item-thumb">${thumb}</div>
-            <div class="eq-item-name">${_esc(it.nombre)}${qtyLabel}</div>
-            <div class="eq-check">${isEquipped ? '✓' : maxReached ? '—' : '+'}</div>
+        <div class="eq-item-wrap">
+            <div class="eq-item${isEquipped ? ' equipped' : ''}${maxReached ? ' maxed' : ''}"
+                 onclick="${maxReached ? '' : `toggleEquipSlot('${it.id}','${slot}')`}"
+                 title="${maxReached ? `Máximo ${MAX} objetos` : (isEquipped ? 'Quitar del equipamiento' : 'Equipar')}">
+                <div class="eq-item-thumb">${thumb}</div>
+                <div class="eq-item-name">${_esc(it.nombre)}${qtyLabel}</div>
+                ${infoBtn}
+                <div class="eq-check">${isEquipped ? '✓' : maxReached ? '—' : '+'}</div>
+            </div>
+            ${descPanel}
         </div>`;
     }).join('');
 
@@ -137,7 +148,17 @@ function _renderSection(slot, label) {
     </div>`;
 }
 
-// ── Toggle ────────────────────────────────────────────────────────────────
+// ── Description toggle ────────────────────────────────────────────────────
+function toggleEquipDesc(uid, event) {
+    event.stopPropagation(); // don't trigger equip/unequip on the row
+    const panel = document.getElementById(`eq-desc-${uid}`);
+    const btn   = event.currentTarget;
+    if (!panel) return;
+    const open = panel.classList.toggle('visible');
+    btn.classList.toggle('open', open);
+}
+
+// ── Equip slot toggle ─────────────────────────────────────────────────────
 function toggleEquipSlot(itemId, slot) {
     const arr = _equip[slot];
     const idx = arr.indexOf(itemId);
