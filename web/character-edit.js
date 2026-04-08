@@ -365,7 +365,7 @@ function openPersonajesSection() {
 }
 
 function switchPersonajesTab(tab) {
-    ['principales', 'aliados', 'enemigos', 'npcgen'].forEach(t => {
+    ['principales', 'aliados', 'enemigos', 'npcgen', 'bolso'].forEach(t => {
         const panel = document.getElementById(`charTab${t.charAt(0).toUpperCase() + t.slice(1)}`);
         if (panel) panel.style.display = t === tab ? 'block' : 'none';
         const btn = document.querySelector(`.char-tab-btn[data-char-tab="${t}"]`);
@@ -374,6 +374,7 @@ function switchPersonajesTab(tab) {
     if (tab === 'principales') renderCharacterSelectionMenu();
     if (tab === 'aliados')  { renderAliadosCharacters(); loadSavedTemplates('aliado'); }
     if (tab === 'enemigos') loadSavedTemplates('enemigo');
+    if (tab === 'bolso') bolsoLoad();
 }
 
 function renderAliadosCharacters() {
@@ -850,4 +851,126 @@ function exportCharacters() {
     URL.revokeObjectURL(url);
 
     showNotification('Archivo characters.js descargado. Guárdalo en la carpeta del proyecto.', 5000);
+}
+
+// ============================================
+// Bolso de Hermione — inventario compartido
+// ============================================
+
+const BOLSO_CHAR_ID = '__bolso_hermione__';
+let _bolsoItems = []; // [{ id, nombre, cantidad }]
+let _bolsoSaveTimer = null;
+
+async function bolsoLoad() {
+    bolsoSetStatus('Cargando...');
+    try {
+        const base = window.location.hostname === 'localhost' ? 'http://localhost:3001' : window.location.origin;
+        const res = await fetch(`${base}/api/player-characters`);
+        const json = await res.json();
+        const entry = (json.characters || []).find(c => c.charId === BOLSO_CHAR_ID);
+        _bolsoItems = entry?.data?.items ?? [];
+    } catch (e) {
+        _bolsoItems = [];
+        bolsoSetStatus('Error al cargar');
+    }
+    bolsoRender();
+    bolsoSetStatus('');
+}
+
+function bolsoRender() {
+    const list = document.getElementById('bolsoList');
+    if (!list) return;
+    const query = (document.getElementById('bolsoSearch')?.value || '').toLowerCase();
+    const filtered = _bolsoItems.filter(it => it.nombre.toLowerCase().includes(query));
+    if (!filtered.length) {
+        list.innerHTML = `<p class="bolso-empty">${query ? 'Ningún objeto coincide.' : 'El bolso está vacío.'}</p>`;
+        return;
+    }
+    list.innerHTML = filtered.map(it => `
+        <div class="bolso-item-row" data-id="${it.id}">
+            <span class="bolso-item-name">${_escHtml(it.nombre)}</span>
+            <div class="bolso-item-controls">
+                <button class="bolso-qty-btn" onclick="bolsoChangeQty('${it.id}', -1)">−</button>
+                <input class="bolso-qty-input" type="number" min="0" value="${it.cantidad}"
+                    onchange="bolsoSetQty('${it.id}', this.value)"
+                    onclick="this.select()">
+                <button class="bolso-qty-btn" onclick="bolsoChangeQty('${it.id}', 1)">+</button>
+                <button class="bolso-del-btn" onclick="bolsoDeleteItem('${it.id}')" title="Eliminar">🗑</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function bolsoAddItem() {
+    const nameEl = document.getElementById('bolsoNombre');
+    const qtyEl  = document.getElementById('bolsoCantidad');
+    const nombre   = nameEl.value.trim();
+    const cantidad = parseInt(qtyEl.value) || 1;
+    if (!nombre) { nameEl.focus(); return; }
+    const existing = _bolsoItems.find(it => it.nombre.toLowerCase() === nombre.toLowerCase());
+    if (existing) {
+        existing.cantidad += cantidad;
+    } else {
+        _bolsoItems = [..._bolsoItems, { id: `item_${Date.now()}`, nombre, cantidad }];
+    }
+    nameEl.value = '';
+    qtyEl.value = 1;
+    nameEl.focus();
+    bolsoRender();
+    bolsoScheduleSave();
+}
+
+function bolsoChangeQty(id, delta) {
+    _bolsoItems = _bolsoItems.map(it => it.id === id ? { ...it, cantidad: Math.max(0, it.cantidad + delta) } : it)
+                             .filter(it => it.cantidad > 0);
+    bolsoRender();
+    bolsoScheduleSave();
+}
+
+function bolsoSetQty(id, raw) {
+    const cantidad = parseInt(raw);
+    if (isNaN(cantidad) || cantidad < 0) return;
+    if (cantidad === 0) {
+        _bolsoItems = _bolsoItems.filter(it => it.id !== id);
+    } else {
+        _bolsoItems = _bolsoItems.map(it => it.id === id ? { ...it, cantidad } : it);
+    }
+    bolsoRender();
+    bolsoScheduleSave();
+}
+
+function bolsoDeleteItem(id) {
+    _bolsoItems = _bolsoItems.filter(it => it.id !== id);
+    bolsoRender();
+    bolsoScheduleSave();
+}
+
+function bolsoScheduleSave() {
+    clearTimeout(_bolsoSaveTimer);
+    _bolsoSaveTimer = setTimeout(bolsoSave, 800);
+}
+
+async function bolsoSave() {
+    bolsoSetStatus('Guardando...');
+    try {
+        const base = window.location.hostname === 'localhost' ? 'http://localhost:3001' : window.location.origin;
+        await fetch(`${base}/api/player-characters/${BOLSO_CHAR_ID}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ data: { items: _bolsoItems } }),
+        });
+        bolsoSetStatus('Guardado ✓');
+        setTimeout(() => bolsoSetStatus(''), 2000);
+    } catch (e) {
+        bolsoSetStatus('Error al guardar');
+    }
+}
+
+function bolsoSetStatus(msg) {
+    const el = document.getElementById('bolsoStatus');
+    if (el) el.textContent = msg;
+}
+
+function _escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }

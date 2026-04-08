@@ -162,6 +162,7 @@
             <button class="char-tab-btn" data-char-tab="aliados" onclick="switchPersonajesTab('aliados')">💙 Aliados</button>
             <button class="char-tab-btn" data-char-tab="enemigos" onclick="switchPersonajesTab('enemigos')">💀 Enemigos</button>
             <button class="char-tab-btn" data-char-tab="npcgen" onclick="switchPersonajesTab('npcgen')">🎭 PNJ</button>
+            <button class="char-tab-btn" data-char-tab="bolso" onclick="switchPersonajesTab('bolso')">👜 Bolso de Hermione</button>
         </div>
 
         <!-- Tab: Principales -->
@@ -301,6 +302,25 @@
             </div>
             <div class="npc-saved-list" id="npcSavedList">
                 <p style="color:var(--text-muted);font-size:14px;text-align:center;padding:16px 0;">Ningún PNJ guardado todavía.</p>
+            </div>
+        </div>
+
+        <!-- Tab: Bolso de Hermione -->
+        <div id="charTabBolso" class="char-tab-panel" style="display:none;">
+            <div class="bolso-container">
+                <div class="bolso-header">
+                    <h2>👜 Bolso de Hermione</h2>
+                    <span class="bolso-status" id="bolsoStatus"></span>
+                </div>
+                <div class="bolso-add-row">
+                    <input type="text" id="bolsoNombre" class="bolso-input" placeholder="Nombre del objeto" maxlength="80">
+                    <input type="number" id="bolsoCantidad" class="bolso-input bolso-qty" placeholder="Cantidad" min="1" value="1">
+                    <button class="btn-combat-primary bolso-add-btn" onclick="bolsoAddItem()">➕ Añadir</button>
+                </div>
+                <div class="bolso-search-row">
+                    <input type="text" id="bolsoSearch" class="bolso-input" placeholder="🔍 Buscar objeto..." oninput="bolsoRender()">
+                </div>
+                <div id="bolsoList" class="bolso-list"></div>
             </div>
         </div>
     </section>
