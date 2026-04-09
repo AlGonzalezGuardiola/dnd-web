@@ -648,40 +648,37 @@ async function doForjar() {
 
 // ── Animación de forja + popup de obtención ───────────────────────────────
 function _playForjaAnimation(item) {
-    // Overlay con vídeo
     const overlay = document.createElement('div');
     overlay.id = 'forjaVideoOverlay';
     overlay.className = 'forge-video-overlay';
-    overlay.innerHTML = `
-        <video class="forge-video" id="forjaVideo" autoplay playsinline muted>
-            <source src="assets/videos/blacksmith-forging-video-game-style-741718.mp4" type="video/mp4">
-        </video>`;
     document.body.appendChild(overlay);
 
-    // Forzar reflow para que la transición de entrada funcione
-    requestAnimationFrame(() => overlay.classList.add('forge-video-overlay--visible'));
+    const video = document.createElement('video');
+    video.className   = 'forge-video';
+    video.id          = 'forjaVideo';
+    video.muted       = true;
+    video.playsInline = true;
+    video.setAttribute('playsinline', '');
+    video.src = 'assets/videos/blacksmith-forging-video-game-style-741718.mp4';
+    overlay.appendChild(video);
 
-    const video = document.getElementById('forjaVideo');
-
-    // Al terminar el vídeo → mostrar popup
-    video.addEventListener('ended', () => {
-        overlay.remove();
-        _showForjaObtainedPopup(item);
-    });
-
-    // Seguridad: si el vídeo falla o tarda más de 12 s, saltar al popup
-    const fallback = setTimeout(() => {
-        overlay.remove();
-        _showForjaObtainedPopup(item);
-    }, 12000);
-
-    video.addEventListener('ended', () => clearTimeout(fallback), { once: true });
-
-    // Click en el overlay omite el vídeo
-    overlay.addEventListener('click', () => {
+    const finish = () => {
         clearTimeout(fallback);
         overlay.remove();
         _showForjaObtainedPopup(item);
+    };
+
+    // Fallback si el vídeo no carga o tarda demasiado
+    const fallback = setTimeout(finish, 12000);
+
+    video.addEventListener('ended',  finish, { once: true });
+    video.addEventListener('error',  finish, { once: true });
+    overlay.addEventListener('click', finish);
+
+    // Fade in + reproducir
+    requestAnimationFrame(() => {
+        overlay.classList.add('forge-video-overlay--visible');
+        video.play().catch(finish); // si autoplay bloqueado, saltar al popup
     });
 }
 
