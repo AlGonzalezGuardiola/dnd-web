@@ -651,16 +651,15 @@ function _playForjaAnimation(item) {
     const overlay = document.createElement('div');
     overlay.id = 'forjaVideoOverlay';
     overlay.className = 'forge-video-overlay';
+    overlay.innerHTML = `
+        <video class="forge-video" id="forjaVideo" autoplay playsinline muted>
+            <source src="assets/videos/blacksmith-forging-video-game-style-741718.mp4" type="video/mp4">
+        </video>`;
     document.body.appendChild(overlay);
 
-    const video = document.createElement('video');
-    video.className   = 'forge-video';
-    video.id          = 'forjaVideo';
-    video.muted       = true;
-    video.playsInline = true;
-    video.setAttribute('playsinline', '');
-    video.src = 'assets/videos/blacksmith-forging-video-game-style-741718.mp4';
-    overlay.appendChild(video);
+    requestAnimationFrame(() => overlay.classList.add('forge-video-overlay--visible'));
+
+    const video = document.getElementById('forjaVideo');
 
     const finish = () => {
         clearTimeout(fallback);
@@ -668,18 +667,10 @@ function _playForjaAnimation(item) {
         _showForjaObtainedPopup(item);
     };
 
-    // Fallback si el vídeo no carga o tarda demasiado
     const fallback = setTimeout(finish, 12000);
 
-    video.addEventListener('ended',  finish, { once: true });
-    video.addEventListener('error',  finish, { once: true });
+    video.addEventListener('ended', finish, { once: true });
     overlay.addEventListener('click', finish);
-
-    // Fade in + reproducir
-    requestAnimationFrame(() => {
-        overlay.classList.add('forge-video-overlay--visible');
-        video.play().catch(finish); // si autoplay bloqueado, saltar al popup
-    });
 }
 
 function _showForjaObtainedPopup(item) {
