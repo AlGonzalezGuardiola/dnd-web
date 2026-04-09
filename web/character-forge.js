@@ -633,7 +633,7 @@ async function doForjar() {
         emoji:     r.emoji || '⚒️',
         cantidad:  1,
         desc:      r.desc || null,
-        categoria: 'otras',
+        categoria: 'forjado',
         ts:        Date.now(),
     };
     _forgeInventory = [..._forgeInventory, forgedItem];
