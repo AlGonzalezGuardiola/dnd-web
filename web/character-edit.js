@@ -457,12 +457,25 @@ async function initPlayerCharactersFromDB() {
                 // stats and resumen (CA, HP, Initiative, Speed, Proficiency) ARE
                 // user-editable, so DB wins for those.
                 const keepFromJs = {
-                    conjuros:     fresh.conjuros,
                     combateExtra: fresh.combateExtra,
                     ranuras:      fresh.ranuras,
                 };
+                const baseConjuros = fresh.conjuros;
                 Object.assign(fresh, c.data);
+                // Restore combateExtra / ranuras from JS (never from DB)
                 Object.assign(fresh, keepFromJs);
+                // Restore base conjuros from JS, then append any extra conjuros
+                // that were added dynamically (e.g. via Biblioteca "Usar")
+                fresh.conjuros = [...baseConjuros];
+                if (Array.isArray(c.data?.extraConjuros) && c.data.extraConjuros.length) {
+                    const existing = new Set(fresh.conjuros.map(s => s._extraId).filter(Boolean));
+                    c.data.extraConjuros.forEach(s => {
+                        if (!existing.has(s._extraId)) {
+                            fresh.conjuros.push(s);
+                            existing.add(s._extraId);
+                        }
+                    });
+                }
             }
         });
         renderCharacterSelectionMenu();

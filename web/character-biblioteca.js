@@ -852,27 +852,29 @@ async function _conjuradoConfirmar() {
         ? nivelRaw
         : parseInt(nivelRaw) || 1;
 
-    const spell = { nombre, nivel, desc: desc || '' };
+    // Attach a stable ID so we can deduplicate on page reload
+    const spell = { nombre, nivel, desc: desc || '', _extraId: _conjuradoModalItemId };
     if (atk)      spell.atk       = atk;
     if (dado)     spell.dado      = dado;
     if (tipoDano) spell.tipo_dano = tipoDano;
 
-    // Add to Zero's character sheet in memory
+    // Add to Zero's character sheet in memory (immediate effect)
     const charData = window.characterData?.['Zero'];
     if (!charData) { showNotification('❌ Datos de Zero no disponibles', 2500); return; }
     if (!Array.isArray(charData.conjuros)) charData.conjuros = [];
     charData.conjuros = [...charData.conjuros, spell];
 
     // Remove from Bolso de Hermione
-    _spellInventory = _spellInventory.filter(it => it.id !== _conjuradoModalItemId);
+    const usedItemId = _conjuradoModalItemId;
+    _spellInventory  = _spellInventory.filter(it => it.id !== usedItemId);
     _conjuradoModalItemId = null;
 
     // Close modal
     document.getElementById('conjuradoUsarModal')?.remove();
 
-    // Persist: character sheet + bolso
+    // Persist: extraConjuros in DB + bolso
     await Promise.all([
-        _conjuradoSaveChar(charData),
+        _conjuradoSaveExtraConjuro(spell),
         _spellPickerSave(),
     ]);
 
@@ -880,14 +882,20 @@ async function _conjuradoConfirmar() {
     showNotification(`✨ ${nombre} añadido a la hoja de Zero`, 2500);
 }
 
-async function _conjuradoSaveChar(charData) {
+async function _conjuradoSaveExtraConjuro(spell) {
     try {
+        const res   = await fetch(`${API_BASE}/api/player-characters`);
+        const json  = await res.json();
+        const entry = (json.characters || []).find(c => c.charId === 'Zero');
+        const cur   = entry?.data || {};
+        const extra = Array.isArray(cur.extraConjuros) ? [...cur.extraConjuros] : [];
+        if (!extra.find(e => e._extraId === spell._extraId)) extra.push(spell);
         await fetch(`${API_BASE}/api/player-characters/Zero`, {
             method:  'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify({ data: charData }),
+            body:    JSON.stringify({ data: { ...cur, extraConjuros: extra } }),
         });
     } catch (e) {
-        console.error('[biblioteca] Error guardando conjuro en hoja de Zero:', e);
+        console.error('[biblioteca] Error guardando extraConjuro de Zero:', e);
     }
 }
