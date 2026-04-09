@@ -3229,3 +3229,182 @@ button, .card, .pin, .tab-btn, .hud-btn, .die-btn,
     color: var(--text-secondary);
     border-color: var(--border-strong);
 }
+
+/* ── Aprendidos tab ──────────────────────────────────────────── */
+.sp-aprendidos-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 4px;
+    border-radius: 8px;
+    background: rgba(160,80,240,.7);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    line-height: 1;
+    margin-left: 4px;
+    vertical-align: middle;
+}
+
+.sp-aprendidos-hint {
+    font-size: 12px;
+    color: rgba(180,140,220,.65);
+    padding: 10px 14px 4px;
+    line-height: 1.6;
+}
+
+.sp-aprendido-card {
+    border-color: rgba(140,60,220,.25);
+}
+
+.sp-aprendido-meta {
+    font-size: 11px;
+    color: rgba(180,140,220,.7);
+    margin-top: 2px;
+}
+
+.sp-usar-btn {
+    flex-shrink: 0;
+    padding: 7px 14px !important;
+    font-size: 12px !important;
+    background: linear-gradient(135deg, rgba(140,60,220,.2), rgba(90,20,160,.14)) !important;
+    border-color: rgba(160,80,240,.5) !important;
+    color: rgba(200,150,255,.9) !important;
+}
+.sp-usar-btn:hover {
+    background: linear-gradient(135deg, rgba(140,60,220,.35), rgba(90,20,160,.25)) !important;
+    box-shadow: 0 2px 12px rgba(120,40,200,.25) !important;
+}
+
+/* ── Modal "Usar conjuro" ─────────────────────────────────────── */
+.conjurado-modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.78);
+    z-index: 4000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity .18s ease;
+}
+.conjurado-modal-overlay--visible { opacity: 1; }
+
+.conjurado-modal {
+    background: linear-gradient(160deg, #110a1e 0%, #0d0619 100%);
+    border: 1px solid rgba(160,80,240,.4);
+    border-radius: 12px;
+    width: min(580px, 94vw);
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 24px 80px rgba(80,0,160,.4), 0 0 0 1px rgba(160,80,240,.1);
+}
+
+.conjurado-modal-hdr {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(160,80,240,.2);
+    background: rgba(30,10,50,.5);
+    font-size: 14px;
+    font-weight: 700;
+    color: rgba(220,180,255,.9);
+    letter-spacing: .04em;
+    flex-shrink: 0;
+}
+
+.conjurado-close-btn {
+    background: none;
+    border: 1px solid rgba(160,80,240,.3);
+    color: rgba(180,140,220,.7);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 4px 9px;
+    border-radius: 5px;
+    transition: all .15s;
+    line-height: 1;
+}
+.conjurado-close-btn:hover {
+    border-color: rgba(160,80,240,.7);
+    color: rgba(200,150,255,.95);
+    background: rgba(160,80,240,.1);
+}
+
+.conjurado-modal-body {
+    padding: 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    overflow-y: auto;
+    flex: 1;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(160,80,240,.25) transparent;
+}
+
+.conjurado-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.conjurado-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    flex: 1;
+    min-width: 0;
+}
+
+.conjurado-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .16em;
+    color: rgba(180,130,240,.8);
+}
+
+.conjurado-hint {
+    font-size: 10px;
+    color: rgba(150,110,200,.55);
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 400;
+}
+
+.conjurado-textarea {
+    resize: vertical;
+    min-height: 90px;
+    line-height: 1.6;
+    font-size: 13px;
+}
+
+.conjurado-escuela {
+    font-size: 12px;
+    color: rgba(180,130,240,.6);
+    padding: 6px 10px;
+    background: rgba(160,80,240,.06);
+    border-radius: 6px;
+    border: 1px solid rgba(160,80,240,.15);
+}
+
+.conjurado-note {
+    font-size: 11px;
+    color: rgba(150,110,180,.55);
+    line-height: 1.55;
+    font-style: italic;
+}
+
+.conjurado-modal-footer {
+    display: flex;
+    gap: 10px;
+    padding: 14px 18px;
+    border-top: 1px solid rgba(160,80,240,.15);
+    background: rgba(20,8,35,.4);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}

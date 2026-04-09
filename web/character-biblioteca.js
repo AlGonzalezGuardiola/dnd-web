@@ -340,10 +340,15 @@ function arcanoSetSubTab(tab) {
 }
 
 function _renderArcano(panel) {
+    const aprendidosCount = _spellInventory.filter(it => it.categoria === 'conjurado').length;
+    const badge = aprendidosCount > 0
+        ? ` <span class="sp-aprendidos-badge">${aprendidosCount}</span>`
+        : '';
     const subTabs = `
     <div class="fg-sub-tabs sp-sub-tabs">
         <button class="fg-sub-tab${_arcanoSubTab==='catalogo'?' active':''}" onclick="arcanoSetSubTab('catalogo')">📖 Catálogo de Hechizos</button>
         <button class="fg-sub-tab${_arcanoSubTab==='conjurar'?' active':''}" onclick="arcanoSetSubTab('conjurar')">🔮 Conjurar</button>
+        <button class="fg-sub-tab${_arcanoSubTab==='aprendidos'?' active':''}  sp-aprendidos-tab" onclick="arcanoSetSubTab('aprendidos')">✨ Aprendidos${badge}</button>
     </div>`;
 
     panel.innerHTML = `
@@ -354,8 +359,9 @@ function _renderArcano(panel) {
         ${subTabs}
         <div id="arcanoSubContent" class="fg-herreria-sub"></div>`;
 
-    if (_arcanoSubTab === 'catalogo') _renderCatalogoHechizos();
-    else                               _renderConjurar();
+    if (_arcanoSubTab === 'catalogo')     _renderCatalogoHechizos();
+    else if (_arcanoSubTab === 'conjurar') _renderConjurar();
+    else                                   _renderAprendidos();
 
     panel.classList.toggle('sp-tab-active', _spellTab === 'arcano');
 }
@@ -715,4 +721,173 @@ function _showConjurarObtainedPopup(item) {
         popup.classList.remove('spell-obtained-popup--visible');
         setTimeout(() => popup.remove(), 400);
     }, 6000);
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// SUB-TAB: APRENDIDOS — conjuros del Bolso listos para usar en la hoja
+// ══════════════════════════════════════════════════════════════════════════
+function _renderAprendidos() {
+    const sub = document.getElementById('arcanoSubContent');
+    if (!sub) return;
+
+    const aprendidos = _spellInventory.filter(it => it.categoria === 'conjurado');
+
+    if (aprendidos.length === 0) {
+        sub.innerHTML = `
+            <div class="fg-empty">
+                Sin conjuros aprendidos en el inventario.<br>
+                <span style="font-size:11px;opacity:.6">Conjura hechizos en la pestaña "Conjurar" para que aparezcan aquí.</span>
+            </div>`;
+        return;
+    }
+
+    const cards = aprendidos.map(item => {
+        const h          = _spellHechizos.find(x => x.nombre === item.nombre);
+        const nivelText  = h?.nivel != null
+            ? (h.nivel === 'Truco' ? 'Truco' : h.nivel === 'Esp' ? 'Especial' : `Nivel ${h.nivel}`)
+            : '';
+        const escuela    = h?.escuela ? ` · ${_spEsc(h.escuela)}` : '';
+        const meta       = nivelText ? `<div class="fg-rec-desc sp-aprendido-meta">${nivelText}${escuela}</div>` : '';
+        return `
+        <div class="fg-rec-card sp-aprendido-card">
+            <div class="fg-rec-hdr">
+                <span class="fg-rec-emoji">${_spEsc(item.emoji || '✨')}</span>
+                <div class="fg-rec-info">
+                    <div class="fg-rec-name">${_spEsc(item.nombre)}</div>
+                    ${meta}
+                    ${item.desc ? `<div class="fg-rec-desc" style="opacity:.6;font-size:11px">${_spEsc(item.desc)}</div>` : ''}
+                </div>
+                <button class="fg-forge-btn sp-usar-btn" onclick="conjuradoAbrirModal('${_spEsc(item.id)}')">✨ Usar</button>
+            </div>
+        </div>`;
+    }).join('');
+
+    sub.innerHTML = `
+        <div class="sp-aprendidos-hint">
+            Pulsa <strong>Usar</strong> para añadir el conjuro a la hoja de personaje de Zero.
+        </div>
+        <div class="fg-section"><div class="fg-rec-list">${cards}</div></div>`;
+}
+
+// ── Modal "Usar conjuro" ───────────────────────────────────────────────────
+let _conjuradoModalItemId = null;
+
+function conjuradoAbrirModal(itemId) {
+    _conjuradoModalItemId = itemId;
+    const item = _spellInventory.find(it => it.id === itemId);
+    if (!item) return;
+
+    // Pre-fill from hechizo catalog if available
+    const h = _spellHechizos.find(x => x.nombre === item.nombre);
+
+    const nivelOptions = ['Truco', 1, 2, 3, 4, 5, 6, 7, 8, 9, 'Esp', 'Reac'].map(v => {
+        const label    = v === 'Truco' ? 'Truco' : v === 'Esp' ? 'Especial' : v === 'Reac' ? 'Reacción' : `Nivel ${v}`;
+        const selected = (String(h?.nivel) === String(v) || (!h?.nivel && v === 1)) ? ' selected' : '';
+        return `<option value="${v}"${selected}>${label}</option>`;
+    }).join('');
+
+    document.getElementById('conjuradoUsarModal')?.remove();
+    const modal = document.createElement('div');
+    modal.id        = 'conjuradoUsarModal';
+    modal.className = 'conjurado-modal-overlay';
+    modal.innerHTML = `
+        <div class="conjurado-modal">
+            <div class="conjurado-modal-hdr">
+                <span>${_spEsc(item.emoji || '✨')} Añadir a la hoja de Zero</span>
+                <button class="conjurado-close-btn" onclick="document.getElementById('conjuradoUsarModal').remove()">✕</button>
+            </div>
+            <div class="conjurado-modal-body">
+                <div class="conjurado-row">
+                    <div class="conjurado-field" style="flex:1">
+                        <label class="conjurado-label">Nombre</label>
+                        <input id="cuNombre" class="fg-input" value="${_spEsc(item.nombre)}" placeholder="Nombre del conjuro">
+                    </div>
+                    <div class="conjurado-field" style="flex:0 0 148px">
+                        <label class="conjurado-label">Nivel</label>
+                        <select id="cuNivel" class="fg-input">${nivelOptions}</select>
+                    </div>
+                </div>
+                <div class="conjurado-row">
+                    <div class="conjurado-field">
+                        <label class="conjurado-label">Tirada de ataque <span class="conjurado-hint">(opcional)</span></label>
+                        <input id="cuAtk" class="fg-input fg-input-sm" placeholder="ej: 1d20+7">
+                    </div>
+                    <div class="conjurado-field">
+                        <label class="conjurado-label">Dado de daño <span class="conjurado-hint">(opcional)</span></label>
+                        <input id="cuDado" class="fg-input fg-input-sm" placeholder="ej: 2d6">
+                    </div>
+                    <div class="conjurado-field">
+                        <label class="conjurado-label">Tipo de daño <span class="conjurado-hint">(opcional)</span></label>
+                        <input id="cuTipoDano" class="fg-input fg-input-sm" placeholder="ej: necrótico">
+                    </div>
+                </div>
+                <div class="conjurado-field">
+                    <label class="conjurado-label">Descripción</label>
+                    <textarea id="cuDesc" class="fg-input conjurado-textarea" rows="4"
+                        placeholder="Descripción del conjuro, efectos, alcance…">${_spEsc(item.desc || h?.desc || '')}</textarea>
+                </div>
+                ${h?.escuela ? `<div class="conjurado-escuela">📚 Escuela: ${_spEsc(h.escuela)}</div>` : ''}
+                <div class="conjurado-note">Este conjuro se eliminará del inventario y quedará en la hoja de personaje.</div>
+            </div>
+            <div class="conjurado-modal-footer">
+                <button class="fg-btn-confirm" onclick="_conjuradoConfirmar()">✨ Añadir a hoja de personaje</button>
+                <button class="fg-btn-cancel" onclick="document.getElementById('conjuradoUsarModal').remove()">Cancelar</button>
+            </div>
+        </div>`;
+    document.body.appendChild(modal);
+    requestAnimationFrame(() => modal.classList.add('conjurado-modal-overlay--visible'));
+}
+
+async function _conjuradoConfirmar() {
+    const nombre   = document.getElementById('cuNombre')?.value.trim();
+    const nivelRaw = document.getElementById('cuNivel')?.value;
+    const atk      = document.getElementById('cuAtk')?.value.trim();
+    const dado     = document.getElementById('cuDado')?.value.trim();
+    const tipoDano = document.getElementById('cuTipoDano')?.value.trim();
+    const desc     = document.getElementById('cuDesc')?.value.trim();
+
+    if (!nombre) { document.getElementById('cuNombre')?.focus(); return; }
+
+    const nivel = (nivelRaw === 'Truco' || nivelRaw === 'Esp' || nivelRaw === 'Reac')
+        ? nivelRaw
+        : parseInt(nivelRaw) || 1;
+
+    const spell = { nombre, nivel, desc: desc || '' };
+    if (atk)      spell.atk       = atk;
+    if (dado)     spell.dado      = dado;
+    if (tipoDano) spell.tipo_dano = tipoDano;
+
+    // Add to Zero's character sheet in memory
+    const charData = window.characterData?.['Zero'];
+    if (!charData) { showNotification('❌ Datos de Zero no disponibles', 2500); return; }
+    if (!Array.isArray(charData.conjuros)) charData.conjuros = [];
+    charData.conjuros = [...charData.conjuros, spell];
+
+    // Remove from Bolso de Hermione
+    _spellInventory = _spellInventory.filter(it => it.id !== _conjuradoModalItemId);
+    _conjuradoModalItemId = null;
+
+    // Close modal
+    document.getElementById('conjuradoUsarModal')?.remove();
+
+    // Persist: character sheet + bolso
+    await Promise.all([
+        _conjuradoSaveChar(charData),
+        _spellPickerSave(),
+    ]);
+
+    _renderArcano(document.getElementById('bibliotecaArcanoPanel'));
+    showNotification(`✨ ${nombre} añadido a la hoja de Zero`, 2500);
+}
+
+async function _conjuradoSaveChar(charData) {
+    try {
+        await fetch(`${API_BASE}/api/player-characters/Zero`, {
+            method:  'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ data: charData }),
+        });
+    } catch (e) {
+        console.error('[biblioteca] Error guardando conjuro en hoja de Zero:', e);
+    }
 }
