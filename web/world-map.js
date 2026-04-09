@@ -103,7 +103,7 @@ async function _wmLoadHotspots() {
 }
 
 async function _wmSave() {
-    const btn = document.querySelector('#worldMapSection .wm-btn-save');
+    const btn = document.getElementById('wmBtnSave');
     btn.disabled = true;
     btn.textContent = 'Guardando…';
 
