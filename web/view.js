@@ -607,8 +607,7 @@ function setView(viewName) {
 // Narrativa Hub helpers
 // ============================================
 function openWorldMap() {
-    setView('worldMap');
-    if (typeof initWorldMap === 'function') initWorldMap();
+    openWorldMapView();
 }
 
 // openCronicas() defined in narrative.js

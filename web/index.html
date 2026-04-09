@@ -858,20 +858,30 @@
     <section id="worldMapSection" style="display:none;" aria-label="Mapa del Mundo">
         <!-- Toolbar -->
         <div class="wm-toolbar">
-            <span class="wm-toolbar-title">🗺️ Mapa del Mundo</span>
-            <!-- Back button: only visible when viewing a region detail map -->
-            <button class="wm-btn-back" aria-label="Volver al mapa del mundo">← Volver al mundo</button>
+            <span class="wm-toolbar-title">
+                🗺️ Mapa del Mundo
+                <span class="wm-edit-badge">Modo edición</span>
+            </span>
+            <button class="wm-btn wm-btn-back"   onclick="wmGoBack()">← Volver al mundo</button>
+            <button class="wm-btn wm-btn-cancel"  onclick="_wmCancelEdit()">Cancelar</button>
+            <button class="wm-btn wm-btn-save"    onclick="_wmSave()">Guardar</button>
+            <button class="wm-btn wm-btn-edit"    onclick="_wmEnterEditMode()">✏️ Editar</button>
+        </div>
+
+        <!-- Edit mode hint -->
+        <div class="wm-edit-hint">
+            Haz clic en el mapa para añadir un nuevo punto de interés
         </div>
 
         <!-- Stage -->
         <div class="wm-stage">
             <!-- Canvas: this element gets scaled/translated during zoom -->
             <div class="wm-canvas">
-                <!-- World map image; hotspots are injected by world-map.js -->
+                <!-- World map base image -->
                 <img class="wm-map-img wm-world-img"
                      src="assets/mapas/Mundo.jpeg"
                      alt="Mapa del mundo">
-                <!-- Detail layers are injected lazily by world-map.js -->
+                <!-- Hotspots and detail layers are injected by world-map.js -->
             </div>
 
             <!-- Cinematic vignette overlay -->
@@ -880,6 +890,13 @@
             <!-- Region name shown mid-zoom -->
             <div class="wm-region-label" aria-live="polite">
                 <span></span>
+            </div>
+
+            <!-- Empty state hint (shown in edit mode when there are no hotspots) -->
+            <div class="wm-empty-hint">
+                <div class="wm-empty-hint-inner">
+                    Haz clic en cualquier punto del mapa para añadir un lugar
+                </div>
             </div>
         </div>
     </section>
