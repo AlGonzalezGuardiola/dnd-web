@@ -34,6 +34,7 @@
     <link rel="stylesheet" href="css/npc-generator.css?v=20260326b">
     <link rel="stylesheet" href="css/session-notes.css?v=20260326b">
     <link rel="stylesheet" href="css/narrative.css?v=20260403c">
+    <link rel="stylesheet" href="css/world-map.css?v=20260409a">
     <link rel="stylesheet" href="css/tv-mode.css?v=20260406a">
     <link rel="stylesheet" href="mobile.css?v=20260330a" media="screen and (max-width: 768px)">
     <!-- QR code library (used in waiting room) -->
@@ -853,6 +854,36 @@
         </div>
     </section>
 
+    <!-- World Map — Cinematic Zoom Viewer -->
+    <section id="worldMapSection" style="display:none;" aria-label="Mapa del Mundo">
+        <!-- Toolbar -->
+        <div class="wm-toolbar">
+            <span class="wm-toolbar-title">🗺️ Mapa del Mundo</span>
+            <!-- Back button: only visible when viewing a region detail map -->
+            <button class="wm-btn-back" aria-label="Volver al mapa del mundo">← Volver al mundo</button>
+        </div>
+
+        <!-- Stage -->
+        <div class="wm-stage">
+            <!-- Canvas: this element gets scaled/translated during zoom -->
+            <div class="wm-canvas">
+                <!-- World map image; hotspots are injected by world-map.js -->
+                <img class="wm-map-img wm-world-img"
+                     src="assets/mapas/Mundo.jpeg"
+                     alt="Mapa del mundo">
+                <!-- Detail layers are injected lazily by world-map.js -->
+            </div>
+
+            <!-- Cinematic vignette overlay -->
+            <div class="wm-vignette"></div>
+
+            <!-- Region name shown mid-zoom -->
+            <div class="wm-region-label" aria-live="polite">
+                <span></span>
+            </div>
+        </div>
+    </section>
+
     <!-- Narrative Images Gallery -->
     <section id="narrativeImagesSection" class="character-section" style="display:none;">
         <h1 class="landing-title">🖼️ Imágenes</h1>
@@ -1093,6 +1124,7 @@
     <script src="session-notes.js?v=20260330a"></script>
     <script src="narrative.js?v=20260326b"></script>
     <script src="narrative-images.js?v=20260330a"></script>
+    <script src="world-map.js?v=20260409a"></script>
     <script src="tv-mode.js?v=20260406a"></script>
     <script src="combat-maps.js?v=20260403a"></script>
 </body>

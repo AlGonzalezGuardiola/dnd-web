@@ -431,6 +431,8 @@ function setView(viewName) {
     if (encountersEl) encountersEl.style.display = 'none';
     const sessionNotesEl = document.getElementById('sessionNotesSection');
     if (sessionNotesEl) sessionNotesEl.style.display = 'none';
+    const worldMapEl = document.getElementById('worldMapSection');
+    if (worldMapEl) worldMapEl.style.display = 'none';
     const narrativaHubEl = document.getElementById('narrativaHubView');
     if (narrativaHubEl) narrativaHubEl.style.display = 'none';
     const narrativeEl = document.getElementById('narrativeSection');
@@ -536,6 +538,13 @@ function setView(viewName) {
             if (diceWidget) diceWidget.style.display = 'none';
             setBreadcrumb('📝 Notas de Sesión');
             break;
+        case 'worldMap':
+            document.getElementById('worldMapSection').style.display = 'flex';
+            if (editorToolbar) editorToolbar.style.display = 'none';
+            if (hud) hud.style.display = 'flex';
+            if (diceWidget) diceWidget.style.display = 'none';
+            setBreadcrumb('📜 Narrativa › Mapa del Mundo');
+            break;
         case 'narrativaHub':
             document.getElementById('narrativaHubView').style.display = 'flex';
             if (editorToolbar) editorToolbar.style.display = 'none';
@@ -598,12 +607,8 @@ function setView(viewName) {
 // Narrativa Hub helpers
 // ============================================
 function openWorldMap() {
-    if (state.currentMap) {
-        renderMap();
-        setView('map');
-    } else {
-        showNotification('No hay mapa inicial configurado', 3000);
-    }
+    setView('worldMap');
+    if (typeof initWorldMap === 'function') initWorldMap();
 }
 
 // openCronicas() defined in narrative.js
