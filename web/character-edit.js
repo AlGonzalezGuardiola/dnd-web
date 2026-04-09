@@ -54,12 +54,9 @@ function renderCharacterSheet(charId) {
         <button class="char-equip-btn" onclick="openEquipPanel('${charId}','${data.nombre.replace(/'/g,"\\'")}')">
             ⚔️ Equipamiento
         </button>
-        <button class="char-almacen-btn" onclick="openAlmacenPanel('${charId}','${data.nombre.replace(/'/g,"\\'")}')">
-            🪨 Almacén
-        </button>
         ${['Asthor'].includes(charId) ? `
-        <button class="char-herreria-btn" onclick="openHerreriaPanel('${charId}','${data.nombre.replace(/'/g,"\\'")}')">
-            🔨 Herrería
+        <button class="char-forja-btn" onclick="openForjaPanel('${charId}','${data.nombre.replace(/'/g,"\\'")}')">
+            ⚒️ Forja
         </button>` : ''}` : ''}
     `;
     statsContainer.innerHTML += portraitHTML;
