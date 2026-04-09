@@ -1,6 +1,6 @@
 'use strict';
 /* ─── Sistema de Forja (solo Asthor) ─────────────────────────────────────────
- *  Un único panel con dos pestañas:
+ *  Página completa con dos paneles:
  *    🪨 Almacén — materiales de forja
  *    🔨 Herrería — recetas y forjado
  * ─────────────────────────────────────────────────────────────────────────── */
@@ -14,7 +14,6 @@ let _forgeMats      = [];   // { id, emoji, nombre, cantidad, desc }
 let _forgeRecetas   = [];   // { id, emoji, nombre, ingredientes, desc, cd, forjadas }
 let _forgeSaveTimer = null;
 let _forgeTab       = 'almacen'; // 'almacen' | 'herreria'
-let _forgeDialog    = null;
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 function _fEsc(s) {
@@ -29,57 +28,31 @@ function openForjaPanel(charId, charName) {
     if (!FORGE_CHARS.includes(charId)) return;
     _forgeCharId   = charId;
     _forgeCharName = charName;
-    _ensureForjaDialog(charName);
-    _forgeDialog.showModal();
+    const titleEl = document.getElementById('forjaPageTitle');
+    if (titleEl) titleEl.textContent = charName;
+    // Restore default tab state
+    _forgeTab = 'almacen';
+    forjaSetTab('almacen');
+    setView('forja');
     _forgeLoadAndRender();
 }
 
-// ── Dialog bootstrap ──────────────────────────────────────────────────────
-function _ensureForjaDialog(charName) {
-    if (_forgeDialog) {
-        _forgeDialog.querySelector('.fg-title').textContent = charName;
-        return;
-    }
-    const dlg = document.createElement('dialog');
-    dlg.id = 'forjaDialog';
-    dlg.className = 'forge-dialog';
-    dlg.innerHTML = `
-        <div class="fg-inner">
-            <div class="fg-hdr">
-                <div class="fg-hdr-left">
-                    <span class="fg-hdr-icon">⚒️</span>
-                    <div>
-                        <div class="fg-label">Forja</div>
-                        <div class="fg-title">${_fEsc(charName)}</div>
-                    </div>
-                </div>
-                <button class="fg-close" onclick="document.getElementById('forjaDialog').close()">✕</button>
-            </div>
-            <div class="fg-tabs">
-                <button class="fg-tab active" id="fgTabAlmacen" onclick="forjaSetTab('almacen')">🪨 Almacén</button>
-                <button class="fg-tab" id="fgTabHerreria" onclick="forjaSetTab('herreria')">🔨 Herrería</button>
-            </div>
-            <div class="fg-body" id="forjaBody"></div>
-        </div>`;
-    dlg.addEventListener('click', e => {
-        const r = dlg.getBoundingClientRect();
-        if (e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom)
-            dlg.close();
-    });
-    document.body.appendChild(dlg);
-    _forgeDialog = dlg;
-}
-
+// ── Tab switching ─────────────────────────────────────────────────────────
 function forjaSetTab(tab) {
     _forgeTab = tab;
-    document.getElementById('fgTabAlmacen').classList.toggle('active', tab === 'almacen');
-    document.getElementById('fgTabHerreria').classList.toggle('active', tab === 'herreria');
-    _forgeRender();
+    document.getElementById('fgTabAlmacen')?.classList.toggle('active', tab === 'almacen');
+    document.getElementById('fgTabHerreria')?.classList.toggle('active', tab === 'herreria');
+    // Mobile: show only the active panel
+    document.getElementById('forjaAlmacenPanel')?.classList.toggle('fg-tab-active', tab === 'almacen');
+    document.getElementById('forjaHerreriaPanel')?.classList.toggle('fg-tab-active', tab === 'herreria');
 }
 
 // ── Carga / guardado ──────────────────────────────────────────────────────
 async function _forgeLoadAndRender() {
-    document.getElementById('forjaBody').innerHTML = '<div class="fg-loading">Cargando…</div>';
+    const almacenPanel = document.getElementById('forjaAlmacenPanel');
+    const herreriaPanel = document.getElementById('forjaHerreriaPanel');
+    if (almacenPanel) almacenPanel.innerHTML = '<div class="forja-panel-hdr"><span class="forja-panel-hdr-icon">🪨</span><span class="forja-panel-hdr-title">Almacén de Materiales</span></div><div class="fg-loading">Cargando…</div>';
+    if (herreriaPanel) herreriaPanel.innerHTML = '<div class="forja-panel-hdr"><span class="forja-panel-hdr-icon">🔨</span><span class="forja-panel-hdr-title">Herrería</span></div><div class="fg-loading">Cargando…</div>';
     try {
         const res   = await fetch(`${API_BASE}/api/player-characters`);
         const json  = await res.json();
@@ -119,14 +92,14 @@ function _forgeSched() {
 
 // ── Render principal ──────────────────────────────────────────────────────
 function _forgeRender() {
-    const body = document.getElementById('forjaBody');
-    if (!body) return;
-    if (_forgeTab === 'almacen') _renderAlmacen(body);
-    else                         _renderHerreria(body);
+    const almacenPanel  = document.getElementById('forjaAlmacenPanel');
+    const herreriaPanel = document.getElementById('forjaHerreriaPanel');
+    if (almacenPanel)  _renderAlmacen(almacenPanel);
+    if (herreriaPanel) _renderHerreria(herreriaPanel);
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// PESTAÑA: ALMACÉN DE MATERIALES
+// PANEL: ALMACÉN DE MATERIALES
 // ══════════════════════════════════════════════════════════════════════════
 function _renderAlmacen(body) {
     const rows = _forgeMats.map(m => `
@@ -148,6 +121,10 @@ function _renderAlmacen(body) {
         </div>`).join('');
 
     body.innerHTML = `
+        <div class="forja-panel-hdr">
+            <span class="forja-panel-hdr-icon">🪨</span>
+            <span class="forja-panel-hdr-title">Almacén de Materiales</span>
+        </div>
         <div class="fg-section">
             ${_forgeMats.length === 0
                 ? '<div class="fg-empty">Sin materiales. Añade el primero.</div>'
@@ -169,6 +146,9 @@ function _renderAlmacen(body) {
                 <button class="fg-btn-cancel"  onclick="almacenCancelForm()">Cancelar</button>
             </div>
         </div>`;
+
+    // Re-apply active tab class (lost on innerHTML rewrite)
+    body.classList.toggle('fg-tab-active', _forgeTab === 'almacen');
 }
 
 function almacenShowForm() {
@@ -211,7 +191,7 @@ function almacenSaveForm() {
         _forgeMats = [..._forgeMats, { id: _fId(), emoji, nombre, cantidad, desc }];
     }
     _forgeSched();
-    _renderAlmacen(document.getElementById('forjaBody'));
+    _renderAlmacen(document.getElementById('forjaAlmacenPanel'));
 }
 
 function almacenCancelForm() {
@@ -224,17 +204,17 @@ function almacenQty(id, delta) {
         m.id === id ? { ...m, cantidad: Math.max(0, (m.cantidad || 0) + delta) } : m
     );
     _forgeSched();
-    _renderAlmacen(document.getElementById('forjaBody'));
+    _renderAlmacen(document.getElementById('forjaAlmacenPanel'));
 }
 
 function almacenDel(id) {
     _forgeMats = _forgeMats.filter(m => m.id !== id);
     _forgeSched();
-    _renderAlmacen(document.getElementById('forjaBody'));
+    _renderAlmacen(document.getElementById('forjaAlmacenPanel'));
 }
 
 // ══════════════════════════════════════════════════════════════════════════
-// PESTAÑA: HERRERÍA
+// PANEL: HERRERÍA
 // ══════════════════════════════════════════════════════════════════════════
 let _herreriaIngCount = 0;
 
@@ -268,6 +248,10 @@ function _renderHerreria(body) {
     }).join('');
 
     body.innerHTML = `
+        <div class="forja-panel-hdr">
+            <span class="forja-panel-hdr-icon">🔨</span>
+            <span class="forja-panel-hdr-title">Herrería</span>
+        </div>
         <div class="fg-section">
             ${_forgeRecetas.length === 0
                 ? '<div class="fg-empty">Sin recetas. Añade la primera.</div>'
@@ -294,6 +278,9 @@ function _renderHerreria(body) {
                 <button class="fg-btn-cancel"  onclick="herreriaCancelForm()">Cancelar</button>
             </div>
         </div>`;
+
+    // Re-apply active tab class (lost on innerHTML rewrite)
+    body.classList.toggle('fg-tab-active', _forgeTab === 'herreria');
 }
 
 function herreriaShowForm() {
@@ -362,7 +349,7 @@ function herreriaSaveForm() {
         _forgeRecetas = [..._forgeRecetas, { id: _fId(), emoji, nombre, cd, desc, ingredientes: ings, forjadas: 0 }];
     }
     _forgeSched();
-    _renderHerreria(document.getElementById('forjaBody'));
+    _renderHerreria(document.getElementById('forjaHerreriaPanel'));
 }
 
 function herreriaCancelForm() {
@@ -373,7 +360,7 @@ function herreriaCancelForm() {
 function herreriaDel(id) {
     _forgeRecetas = _forgeRecetas.filter(r => r.id !== id);
     _forgeSched();
-    _renderHerreria(document.getElementById('forjaBody'));
+    _renderHerreria(document.getElementById('forjaHerreriaPanel'));
 }
 
 function herreriaForjar(id) {
@@ -381,5 +368,5 @@ function herreriaForjar(id) {
         r.id === id ? { ...r, forjadas: (r.forjadas || 0) + 1 } : r
     );
     _forgeSched();
-    _renderHerreria(document.getElementById('forjaBody'));
+    _renderHerreria(document.getElementById('forjaHerreriaPanel'));
 }

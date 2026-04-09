@@ -27,6 +27,7 @@ const _ROUTES = {
     map:             'mapa',
     npcGenerator:    'generador-npc',
     tvMode:          'mesa-tv',
+    forja:           'personaje/forja',
 };
 
 // Reverse map: path segment → viewName
@@ -438,6 +439,8 @@ function setView(viewName) {
     if (tvModeEl) tvModeEl.style.display = 'none';
     const combatMapsEl = document.getElementById('combatMapsView');
     if (combatMapsEl) combatMapsEl.style.display = 'none';
+    const forjaEl = document.getElementById('forjaSection');
+    if (forjaEl) forjaEl.style.display = 'none';
     // Also hide the character sheet if it was open
     const sheetContainer = document.getElementById('characterSheetContainer');
     if (sheetContainer) sheetContainer.style.display = 'none';
@@ -561,6 +564,13 @@ function setView(viewName) {
             if (hud) hud.style.display = 'flex';
             if (diceWidget) diceWidget.style.display = 'none';
             setBreadcrumb('🗺️ Mapas de Combate');
+            break;
+        case 'forja':
+            document.getElementById('forjaSection').style.display = 'flex';
+            if (editorToolbar) editorToolbar.style.display = 'none';
+            if (hud) hud.style.display = 'flex';
+            if (diceWidget) diceWidget.style.display = 'none';
+            setBreadcrumb(`⚒️ Forja › ${_forgeCharName || 'Asthor'}`);
             break;
     }
 }
