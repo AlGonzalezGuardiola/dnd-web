@@ -1,7 +1,7 @@
 'use strict';
 /* ─── Sistema de Forja (solo Asthor) ─────────────────────────────────────────
  *  Página completa con dos paneles:
- *    🪨 Almacén — materiales de forja
+ *    🪨 Almacén — materiales (se añaden desde el Bolso de Hermione)
  *    🔨 Herrería — recetas y forjado
  * ─────────────────────────────────────────────────────────────────────────── */
 
@@ -12,8 +12,12 @@ let _forgeCharId    = null;
 let _forgeCharName  = null;
 let _forgeMats      = [];   // { id, emoji, nombre, cantidad, desc }
 let _forgeRecetas   = [];   // { id, emoji, nombre, ingredientes, desc, cd, forjadas }
+let _forgeInventory = [];   // copia del inventario personal (Bolso de Hermione)
 let _forgeSaveTimer = null;
 let _forgeTab       = 'almacen'; // 'almacen' | 'herreria'
+
+// Estado del picker de inventario
+let _pickerSelected = new Set();  // IDs de items seleccionados en el picker
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 function _fEsc(s) {
@@ -30,7 +34,6 @@ function openForjaPanel(charId, charName) {
     _forgeCharName = charName;
     const titleEl = document.getElementById('forjaPageTitle');
     if (titleEl) titleEl.textContent = charName;
-    // Restore default tab state
     _forgeTab = 'almacen';
     forjaSetTab('almacen');
     setView('forja');
@@ -42,16 +45,15 @@ function forjaSetTab(tab) {
     _forgeTab = tab;
     document.getElementById('fgTabAlmacen')?.classList.toggle('active', tab === 'almacen');
     document.getElementById('fgTabHerreria')?.classList.toggle('active', tab === 'herreria');
-    // Mobile: show only the active panel
     document.getElementById('forjaAlmacenPanel')?.classList.toggle('fg-tab-active', tab === 'almacen');
     document.getElementById('forjaHerreriaPanel')?.classList.toggle('fg-tab-active', tab === 'herreria');
 }
 
-// ── Carga / guardado ──────────────────────────────────────────────────────
+// ── Carga y guardado ──────────────────────────────────────────────────────
 async function _forgeLoadAndRender() {
-    const almacenPanel = document.getElementById('forjaAlmacenPanel');
+    const almacenPanel  = document.getElementById('forjaAlmacenPanel');
     const herreriaPanel = document.getElementById('forjaHerreriaPanel');
-    if (almacenPanel) almacenPanel.innerHTML = '<div class="forja-panel-hdr"><span class="forja-panel-hdr-icon">🪨</span><span class="forja-panel-hdr-title">Almacén de Materiales</span></div><div class="fg-loading">Cargando…</div>';
+    if (almacenPanel)  almacenPanel.innerHTML  = '<div class="forja-panel-hdr"><span class="forja-panel-hdr-icon">🪨</span><span class="forja-panel-hdr-title">Almacén de Materiales</span></div><div class="fg-loading">Cargando…</div>';
     if (herreriaPanel) herreriaPanel.innerHTML = '<div class="forja-panel-hdr"><span class="forja-panel-hdr-icon">🔨</span><span class="forja-panel-hdr-title">Herrería</span></div><div class="fg-loading">Cargando…</div>';
     try {
         const res   = await fetch(`${API_BASE}/api/player-characters`);
@@ -59,11 +61,13 @@ async function _forgeLoadAndRender() {
         const key   = `inv_${_forgeCharId}`;
         const entry = (json.characters || []).find(c => c.charId === key);
         const forge = entry?.data?.forge || {};
-        _forgeMats    = Array.isArray(forge.materiales) ? forge.materiales : [];
-        _forgeRecetas = Array.isArray(forge.recetas)    ? forge.recetas    : [];
+        _forgeMats      = Array.isArray(forge.materiales) ? forge.materiales   : [];
+        _forgeRecetas   = Array.isArray(forge.recetas)    ? forge.recetas      : [];
+        _forgeInventory = Array.isArray(entry?.data?.items) ? entry.data.items : [];
     } catch {
-        _forgeMats    = [];
-        _forgeRecetas = [];
+        _forgeMats      = [];
+        _forgeRecetas   = [];
+        _forgeInventory = [];
     }
     _forgeRender();
 }
@@ -90,7 +94,31 @@ function _forgeSched() {
     }, 800);
 }
 
-// ── Render principal ──────────────────────────────────────────────────────
+// Guarda inventario + forja en una sola llamada (usado tras el picker)
+async function _forgePickerSave() {
+    try {
+        const key   = `inv_${_forgeCharId}`;
+        const res   = await fetch(`${API_BASE}/api/player-characters`);
+        const json  = await res.json();
+        const entry = (json.characters || []).find(c => c.charId === key);
+        const cur   = entry?.data || {};
+        await fetch(`${API_BASE}/api/player-characters/${key}`, {
+            method:  'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({
+                data: {
+                    ...cur,
+                    items: _forgeInventory,
+                    forge: { materiales: _forgeMats, recetas: _forgeRecetas },
+                }
+            }),
+        });
+    } catch (e) {
+        console.error('Error guardando picker:', e);
+    }
+}
+
+// ── Render principal (ambos paneles siempre) ──────────────────────────────
 function _forgeRender() {
     const almacenPanel  = document.getElementById('forjaAlmacenPanel');
     const herreriaPanel = document.getElementById('forjaHerreriaPanel');
@@ -101,7 +129,7 @@ function _forgeRender() {
 // ══════════════════════════════════════════════════════════════════════════
 // PANEL: ALMACÉN DE MATERIALES
 // ══════════════════════════════════════════════════════════════════════════
-function _renderAlmacen(body) {
+function _renderAlmacen(panel) {
     const rows = _forgeMats.map(m => `
         <div class="fg-mat-row">
             <span class="fg-mat-emoji">${_fEsc(m.emoji || '📦')}</span>
@@ -115,90 +143,154 @@ function _renderAlmacen(body) {
                 <button class="fg-qty-btn" onclick="almacenQty('${m.id}',+1)">+</button>
             </div>
             <div class="fg-mat-actions">
-                <button class="fg-row-btn fg-btn-edit" onclick="almacenEdit('${m.id}')" title="Editar">✏️</button>
-                <button class="fg-row-btn fg-btn-del"  onclick="almacenDel('${m.id}')"  title="Eliminar">✕</button>
+                <button class="fg-row-btn fg-btn-del" onclick="almacenDel('${m.id}')" title="Eliminar">✕</button>
             </div>
         </div>`).join('');
 
-    body.innerHTML = `
+    panel.innerHTML = `
         <div class="forja-panel-hdr">
             <span class="forja-panel-hdr-icon">🪨</span>
             <span class="forja-panel-hdr-title">Almacén de Materiales</span>
         </div>
         <div class="fg-section">
             ${_forgeMats.length === 0
-                ? '<div class="fg-empty">Sin materiales. Añade el primero.</div>'
+                ? '<div class="fg-empty">Sin materiales. Añade desde el inventario.</div>'
                 : `<div class="fg-mat-list">${rows}</div>`}
         </div>
         <div class="fg-add-wrap" id="almacenAddWrap">
-            <button class="fg-add-btn" onclick="almacenShowForm()">+ Añadir material</button>
-        </div>
-        <div class="fg-form" id="almacenForm" style="display:none">
-            <div class="fg-form-row">
-                <input class="fg-input fg-input-sm" id="almacenEmoji" placeholder="Emoji" maxlength="4">
-                <input class="fg-input" id="almacenNombre" placeholder="Nombre del material">
-                <input class="fg-input fg-input-sm" id="almacenCantidad" type="number" min="0" value="1" placeholder="Cant.">
-            </div>
-            <input class="fg-input" id="almacenDesc" placeholder="Descripción (opcional)">
-            <input type="hidden" id="almacenEditId">
-            <div class="fg-form-btns">
-                <button class="fg-btn-confirm" onclick="almacenSaveForm()">Guardar</button>
-                <button class="fg-btn-cancel"  onclick="almacenCancelForm()">Cancelar</button>
-            </div>
+            <button class="fg-add-btn" onclick="almacenOpenPicker()">🎒 Añadir desde inventario</button>
         </div>`;
 
-    // Re-apply active tab class (lost on innerHTML rewrite)
-    body.classList.toggle('fg-tab-active', _forgeTab === 'almacen');
+    panel.classList.toggle('fg-tab-active', _forgeTab === 'almacen');
 }
 
-function almacenShowForm() {
-    document.getElementById('almacenForm').style.display = 'flex';
-    document.getElementById('almacenAddWrap').style.display = 'none';
-    document.getElementById('almacenEmoji').value    = '';
-    document.getElementById('almacenNombre').value   = '';
-    document.getElementById('almacenCantidad').value = '1';
-    document.getElementById('almacenDesc').value     = '';
-    document.getElementById('almacenEditId').value   = '';
-    document.getElementById('almacenNombre').focus();
+// ── Picker del Bolso de Hermione ──────────────────────────────────────────
+function almacenOpenPicker() {
+    _pickerSelected = new Set();
+    const panel = document.getElementById('forjaAlmacenPanel');
+    if (!panel) return;
+    // Ocultar el botón de añadir mientras el picker está abierto
+    panel.querySelector('#almacenAddWrap')?.remove();
+    _appendAlmacenPicker(panel);
 }
 
-function almacenEdit(id) {
-    const m = _forgeMats.find(x => x.id === id);
-    if (!m) return;
-    document.getElementById('almacenForm').style.display = 'flex';
-    document.getElementById('almacenAddWrap').style.display = 'none';
-    document.getElementById('almacenEmoji').value    = m.emoji    || '';
-    document.getElementById('almacenNombre').value   = m.nombre   || '';
-    document.getElementById('almacenCantidad').value = m.cantidad ?? 1;
-    document.getElementById('almacenDesc').value     = m.desc     || '';
-    document.getElementById('almacenEditId').value   = id;
-    document.getElementById('almacenNombre').focus();
+function _appendAlmacenPicker(panel) {
+    panel.querySelector('.fg-inv-picker')?.remove();
+
+    const picker = document.createElement('div');
+    picker.className = 'fg-inv-picker';
+    picker.innerHTML = `
+        <div class="fg-inv-picker-hdr">
+            <span class="fg-inv-picker-title">🎒 Bolso de Hermione</span>
+            <input class="fg-input fg-inv-search" type="search" placeholder="Buscar…"
+                oninput="filterAlmacenPicker(this.value)" autocomplete="off">
+        </div>
+        <div class="fg-inv-picker-list" id="almacenPickerList"></div>
+        <div class="fg-inv-picker-footer">
+            <button class="fg-btn-confirm" id="almacenPickerConfirmBtn"
+                onclick="almacenPickerConfirm()">Añadir seleccionados</button>
+            <button class="fg-btn-cancel" onclick="almacenPickerCancel()">Cancelar</button>
+        </div>`;
+
+    picker._available = _forgeInventory.filter(it => it.nombre);
+    panel.appendChild(picker);
+    _renderAlmacenPickerList(picker._available, '');
+    picker.querySelector('.fg-inv-search').focus();
 }
 
-function almacenSaveForm() {
-    const nombre   = document.getElementById('almacenNombre').value.trim();
-    if (!nombre) { document.getElementById('almacenNombre').focus(); return; }
-    const emoji    = document.getElementById('almacenEmoji').value.trim() || '📦';
-    const cantidad = Math.max(0, parseInt(document.getElementById('almacenCantidad').value) || 0);
-    const desc     = document.getElementById('almacenDesc').value.trim();
-    const editId   = document.getElementById('almacenEditId').value;
+function filterAlmacenPicker(query) {
+    const picker = document.getElementById('forjaAlmacenPanel')?.querySelector('.fg-inv-picker');
+    if (!picker) return;
+    const q = query.toLowerCase();
+    _renderAlmacenPickerList(
+        q ? picker._available.filter(it => it.nombre.toLowerCase().includes(q)) : picker._available,
+        q
+    );
+}
 
-    if (editId) {
-        _forgeMats = _forgeMats.map(m =>
-            m.id === editId ? { ...m, emoji, nombre, cantidad, desc } : m
-        );
-    } else {
-        _forgeMats = [..._forgeMats, { id: _fId(), emoji, nombre, cantidad, desc }];
+function _renderAlmacenPickerList(items, query) {
+    const list = document.getElementById('almacenPickerList');
+    if (!list) return;
+    if (!items.length) {
+        list.innerHTML = `<div class="fg-picker-empty">${query ? 'Sin resultados' : 'El inventario está vacío'}</div>`;
+        return;
     }
-    _forgeSched();
+    list.innerHTML = items.map(it => {
+        const sel = _pickerSelected.has(it.id);
+        let thumb;
+        if (it.img)        thumb = `<img src="${_fEsc(it.img)}" alt="" class="fg-inv-thumb-img">`;
+        else if (it.emoji) thumb = `<span class="fg-inv-thumb-emoji">${_fEsc(it.emoji)}</span>`;
+        else               thumb = `<span class="fg-inv-thumb-emoji">📦</span>`;
+        const qty = it.cantidad > 1 ? `<span class="fg-inv-qty">×${it.cantidad}</span>` : '';
+        return `
+        <div class="fg-inv-item${sel ? ' selected' : ''}" data-iid="${_fEsc(it.id)}"
+             onclick="toggleAlmacenPick('${it.id}')">
+            <span class="fg-inv-check-icon">${sel ? '☑' : '☐'}</span>
+            <div class="fg-inv-thumb">${thumb}</div>
+            <div class="fg-inv-info">
+                <span class="fg-inv-name">${_fEsc(it.nombre)}${qty}</span>
+                ${it.desc ? `<span class="fg-inv-desc">${_fEsc(it.desc)}</span>` : ''}
+            </div>
+        </div>`;
+    }).join('');
+}
+
+function toggleAlmacenPick(itemId) {
+    if (_pickerSelected.has(itemId)) _pickerSelected.delete(itemId);
+    else                              _pickerSelected.add(itemId);
+
+    const panel = document.getElementById('forjaAlmacenPanel');
+    const list  = document.getElementById('almacenPickerList');
+    if (!list) return;
+
+    // Actualizar solo el item tocado (sin re-render completo)
+    const el = list.querySelector(`[data-iid="${itemId}"]`);
+    if (el) {
+        const sel = _pickerSelected.has(itemId);
+        el.classList.toggle('selected', sel);
+        const icon = el.querySelector('.fg-inv-check-icon');
+        if (icon) icon.textContent = sel ? '☑' : '☐';
+    }
+
+    // Actualizar label del botón confirmar
+    const btn = panel?.querySelector('#almacenPickerConfirmBtn');
+    if (btn) {
+        const n = _pickerSelected.size;
+        btn.textContent = n > 0 ? `Añadir ${n} objeto${n > 1 ? 's' : ''}` : 'Añadir seleccionados';
+    }
+}
+
+async function almacenPickerConfirm() {
+    if (_pickerSelected.size === 0) { almacenPickerCancel(); return; }
+
+    const selected = _forgeInventory.filter(it => _pickerSelected.has(it.id));
+
+    // Mover al almacén
+    const newMats = selected.map(it => ({
+        id:       _fId(),
+        emoji:    it.emoji || '📦',
+        nombre:   it.nombre,
+        cantidad: it.cantidad || 1,
+        desc:     it.desc || '',
+    }));
+    _forgeMats = [..._forgeMats, ...newMats];
+
+    // Quitar del inventario local
+    _forgeInventory = _forgeInventory.filter(it => !_pickerSelected.has(it.id));
+    _pickerSelected = new Set();
+
+    // Guardar ambos de una sola vez
+    await _forgePickerSave();
+
     _renderAlmacen(document.getElementById('forjaAlmacenPanel'));
 }
 
-function almacenCancelForm() {
-    document.getElementById('almacenForm').style.display = 'none';
-    document.getElementById('almacenAddWrap').style.display = 'flex';
+function almacenPickerCancel() {
+    _pickerSelected = new Set();
+    _renderAlmacen(document.getElementById('forjaAlmacenPanel'));
 }
 
+// ── Operaciones sobre el almacén ──────────────────────────────────────────
 function almacenQty(id, delta) {
     _forgeMats = _forgeMats.map(m =>
         m.id === id ? { ...m, cantidad: Math.max(0, (m.cantidad || 0) + delta) } : m
@@ -218,7 +310,7 @@ function almacenDel(id) {
 // ══════════════════════════════════════════════════════════════════════════
 let _herreriaIngCount = 0;
 
-function _renderHerreria(body) {
+function _renderHerreria(panel) {
     const cards = _forgeRecetas.map(r => {
         const ingHtml  = (r.ingredientes || []).map(i =>
             `<span class="fg-rec-ing">${_fEsc(i.nombre)} ×${i.cantidad}</span>`
@@ -247,7 +339,7 @@ function _renderHerreria(body) {
         </div>`;
     }).join('');
 
-    body.innerHTML = `
+    panel.innerHTML = `
         <div class="forja-panel-hdr">
             <span class="forja-panel-hdr-icon">🔨</span>
             <span class="forja-panel-hdr-title">Herrería</span>
@@ -279,8 +371,7 @@ function _renderHerreria(body) {
             </div>
         </div>`;
 
-    // Re-apply active tab class (lost on innerHTML rewrite)
-    body.classList.toggle('fg-tab-active', _forgeTab === 'herreria');
+    panel.classList.toggle('fg-tab-active', _forgeTab === 'herreria');
 }
 
 function herreriaShowForm() {

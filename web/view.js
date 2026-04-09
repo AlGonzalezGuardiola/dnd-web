@@ -568,9 +568,8 @@ function setView(viewName) {
         case 'forja':
             document.getElementById('forjaSection').style.display = 'flex';
             if (editorToolbar) editorToolbar.style.display = 'none';
-            if (hud) hud.style.display = 'flex';
+            if (hud) hud.style.display = 'none';   // la forja tiene su propio botón ← Volver
             if (diceWidget) diceWidget.style.display = 'none';
-            setBreadcrumb(`⚒️ Forja › ${_forgeCharName || 'Asthor'}`);
             break;
     }
 }

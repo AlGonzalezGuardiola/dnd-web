@@ -1634,6 +1634,69 @@ button, .card, .pin, .tab-btn, .hud-btn, .die-btn,
 }
 .fg-btn-cancel:hover { background: rgba(255,255,255,.1); color: rgba(255,255,255,.7); }
 
+/* ── Picker del Bolso de Hermione (Almacén) ── */
+.fg-inv-picker {
+    display: flex; flex-direction: column; gap: 10px;
+    background: rgba(212,175,55,.04);
+    border: 1px solid rgba(212,175,55,.18);
+    border-radius: 12px; padding: 14px;
+}
+.fg-inv-picker-hdr {
+    display: flex; align-items: center; gap: 10px;
+}
+.fg-inv-picker-title {
+    font-size: 13px; font-weight: 700; color: rgba(212,175,55,.9);
+    font-family: 'Cinzel', serif; flex-shrink: 0;
+}
+.fg-inv-search { flex: 1; min-width: 0; }
+
+.fg-inv-picker-list {
+    display: flex; flex-direction: column; gap: 3px;
+    max-height: 280px; overflow-y: auto;
+    scrollbar-width: thin; scrollbar-color: rgba(212,175,55,.15) transparent;
+}
+.fg-inv-picker-list::-webkit-scrollbar { width: 3px; }
+.fg-inv-picker-list::-webkit-scrollbar-thumb { background: rgba(212,175,55,.18); border-radius: 2px; }
+
+.fg-inv-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 10px; border-radius: 8px;
+    border: 1px solid rgba(255,255,255,.06);
+    background: rgba(255,255,255,.025);
+    cursor: pointer; user-select: none;
+    transition: background .12s, border-color .12s;
+}
+.fg-inv-item:hover { background: rgba(255,255,255,.055); border-color: rgba(255,255,255,.12); }
+.fg-inv-item.selected {
+    background: rgba(212,175,55,.1);
+    border-color: rgba(212,175,55,.32);
+}
+.fg-inv-check-icon {
+    font-size: 15px; line-height: 1; flex-shrink: 0;
+    color: rgba(212,175,55,.5); transition: color .1s;
+}
+.fg-inv-item.selected .fg-inv-check-icon { color: rgba(212,175,55,.95); }
+
+.fg-inv-thumb {
+    width: 32px; height: 32px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+}
+.fg-inv-thumb-img { width: 32px; height: 32px; object-fit: cover; border-radius: 6px; }
+.fg-inv-thumb-emoji { font-size: 20px; line-height: 1; }
+.fg-inv-info { flex: 1; min-width: 0; }
+.fg-inv-name { font-size: 13px; font-weight: 600; color: rgba(232,220,200,.9); }
+.fg-inv-qty { font-size: 12px; color: rgba(130,210,110,.85); margin-left: 4px; }
+.fg-inv-desc { font-size: 11px; color: rgba(255,255,255,.35); font-style: italic; display: block; margin-top: 2px; }
+
+.fg-inv-picker-footer {
+    display: flex; gap: 8px; justify-content: flex-end;
+    padding-top: 8px; border-top: 1px solid rgba(255,255,255,.07);
+}
+.fg-picker-empty {
+    text-align: center; padding: 20px 16px;
+    color: rgba(255,255,255,.28); font-size: 13px; font-style: italic;
+}
+
 .sheet-portrait-container {
     width: 100%;
     height: 300px;
