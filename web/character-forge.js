@@ -204,10 +204,7 @@ function almacenOpenPicker() {
 function _appendAlmacenPicker(panel) {
     panel.querySelector('.fg-inv-picker')?.remove();
 
-    // Solo mostrar pestañas de categorías que existan en el inventario
-    const presentCats = new Set(_forgeInventory.map(it => it.categoria || 'otras'));
     const catTabs = BOLSO_CATS
-        .filter(c => c.id === 'todas' || presentCats.has(c.id))
         .map(c => `<button class="fg-cat-tab${_pickerCatFilter === c.id ? ' active' : ''}"
             onclick="almacenSetCat('${c.id}')">${c.icon} ${c.label}</button>`)
         .join('');
