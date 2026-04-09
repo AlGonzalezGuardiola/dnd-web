@@ -29,6 +29,7 @@ const _ROUTES = {
     tvMode:          'mesa-tv',
     forja:           'personaje/forja',
     cocina:          'personaje/cocina',
+    biblioteca:      'personaje/biblioteca',
 };
 
 // Reverse map: path segment → viewName
@@ -444,6 +445,8 @@ function setView(viewName) {
     if (forjaEl) forjaEl.style.display = 'none';
     const cocinaEl = document.getElementById('cocinaSection');
     if (cocinaEl) cocinaEl.style.display = 'none';
+    const bibliotecaEl = document.getElementById('bibliotecaSection');
+    if (bibliotecaEl) bibliotecaEl.style.display = 'none';
     // Also hide the character sheet if it was open
     const sheetContainer = document.getElementById('characterSheetContainer');
     if (sheetContainer) sheetContainer.style.display = 'none';
@@ -578,6 +581,12 @@ function setView(viewName) {
             document.getElementById('cocinaSection').style.display = 'flex';
             if (editorToolbar) editorToolbar.style.display = 'none';
             if (hud) hud.style.display = 'none';   // la cocina tiene su propio botón ← Volver
+            if (diceWidget) diceWidget.style.display = 'none';
+            break;
+        case 'biblioteca':
+            document.getElementById('bibliotecaSection').style.display = 'flex';
+            if (editorToolbar) editorToolbar.style.display = 'none';
+            if (hud) hud.style.display = 'none';   // la biblioteca tiene su propio botón ← Volver
             if (diceWidget) diceWidget.style.display = 'none';
             break;
     }

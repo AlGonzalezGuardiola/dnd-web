@@ -591,6 +591,38 @@
         </div>
     </div>
 
+    <!-- Biblioteca de Hechizos Full Page (solo Zero) -->
+    <div id="bibliotecaSection" class="biblio-page" style="display:none">
+        <div class="biblio-page-hdr">
+            <button class="biblio-back-btn" onclick="navigateBack()">← Volver</button>
+            <div class="biblio-page-hdr-center">
+                <span class="biblio-page-icon">📚</span>
+                <div>
+                    <div class="biblio-page-subtitle">Biblioteca de Hechizos</div>
+                    <div class="biblio-page-title" id="bibliotecaPageTitle">Zero</div>
+                </div>
+            </div>
+        </div>
+        <div class="sp-tabs biblio-page-tabs">
+            <button class="sp-tab active" id="spTabComponentes" onclick="bibliotecaSetTab('componentes')">💎 Componentes</button>
+            <button class="sp-tab" id="spTabArcano" onclick="bibliotecaSetTab('arcano')">🔮 Arcano</button>
+        </div>
+        <div class="biblio-page-body" id="bibliotecaBody">
+            <div class="biblio-panel biblio-panel-componentes sp-tab-active" id="bibliotecaComponentesPanel">
+                <div class="biblio-panel-hdr">
+                    <span class="biblio-panel-hdr-icon">💎</span>
+                    <span class="biblio-panel-hdr-title">Componentes Mágicos</span>
+                </div>
+            </div>
+            <div class="biblio-panel biblio-panel-arcano" id="bibliotecaArcanoPanel">
+                <div class="biblio-panel-hdr">
+                    <span class="biblio-panel-hdr-icon">🔮</span>
+                    <span class="biblio-panel-hdr-title">Arcano</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Notification Banner -->
     <div id="notification" class="notification"></div>
 
@@ -1019,6 +1051,7 @@
     <script src="character-equip.js?v=20260408a"></script>
     <script src="character-forge.js?v=20260409a"></script>
     <script src="character-kitchen.js?v=20260409a"></script>
+    <script src="character-biblioteca.js?v=20260409a"></script>
     <script src="combat-setup.js?v=20260330a"></script>
     <script src="combat-manager.js?v=20260406a"></script>
     <script src="reactions.js?v=20260326c"></script>

@@ -219,6 +219,7 @@ function navigateBack() {
     if (view === 'narrativeImages') { setView('narrativaHub'); return; }
     if (view === 'forja') { setView('characters'); return; }
     if (view === 'cocina') { setView('characters'); return; }
+    if (view === 'biblioteca') { setView('characters'); return; }
     // Map navigation back
     if (state.history.length === 0) return;
     state.currentMap = state.history.pop();

@@ -61,6 +61,10 @@ function renderCharacterSheet(charId) {
         ${['Vel'].includes(charId) ? `
         <button class="char-cocina-btn" onclick="openCocinaPanel('${charId}','${data.nombre.replace(/'/g,"\\'")}')">
             🍳 Cocina
+        </button>` : ''}
+        ${['Zero'].includes(charId) ? `
+        <button class="char-biblioteca-btn" onclick="openBibliotecaPanel('${charId}','${data.nombre.replace(/'/g,"\\'")}')">
+            📚 Biblioteca
         </button>` : ''}` : ''}
     `;
     statsContainer.innerHTML += portraitHTML;

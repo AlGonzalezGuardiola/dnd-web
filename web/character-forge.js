@@ -35,6 +35,7 @@ const BOLSO_CATS = [
     { id: 'todas',        label: 'Todas',        icon: '✦'  },
     { id: 'materiales',   label: 'Materiales',   icon: '⛏️' },
     { id: 'ingredientes', label: 'Ingredientes', icon: '🥕' },
+    { id: 'componentes',  label: 'Componentes',  icon: '💎' },
     { id: 'oro',          label: 'Oro',          icon: '🪙' },
     { id: 'comida',       label: 'Comida',       icon: '🍖' },
     { id: 'armas',        label: 'Armas',        icon: '⚔️' },
@@ -44,6 +45,7 @@ const BOLSO_CATS = [
     { id: 'pergaminos',   label: 'Pergaminos',   icon: '📜' },
     { id: 'forjado',      label: 'Forjado',      icon: '⚒️' },
     { id: 'cocinado',     label: 'Cocinado',     icon: '🍽️' },
+    { id: 'conjurado',    label: 'Conjurado',    icon: '✨' },
     { id: 'otras',        label: 'Otras',        icon: '📦' },
 ];
 

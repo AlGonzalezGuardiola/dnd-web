@@ -43,7 +43,9 @@ const COOK_BOLSO_CATS = [
     { id: 'pociones',     label: 'Pociones',      icon: '🧪' },
     { id: 'pergaminos',   label: 'Pergaminos',    icon: '📜' },
     { id: 'cocinado',     label: 'Cocinado',      icon: '🍽️' },
+    { id: 'componentes',  label: 'Componentes',   icon: '💎' },
     { id: 'forjado',      label: 'Forjado',       icon: '⚒️' },
+    { id: 'conjurado',    label: 'Conjurado',     icon: '✨' },
     { id: 'otras',        label: 'Otras',         icon: '📦' },
 ];
 
