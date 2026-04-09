@@ -891,13 +891,21 @@
 
     <!-- ===== NARRATIVA ===== -->
     <section id="narrativeSection" class="narrative-section" style="display:none;" aria-label="Narrativa de Campaña">
+
+        <!-- Timeline bar (shown when timeline view is active) -->
+        <div id="narrativeTimelineBar" class="narrative-timeline-bar"></div>
+
         <div class="narrative-layout">
 
             <!-- Sidebar: chapter list -->
             <aside class="narrative-sidebar">
                 <div class="narrative-sidebar-header">
                     <span class="narrative-sidebar-title">📜 Crónicas</span>
-                    <button class="btn-combat-primary narrative-new-btn" onclick="narrativeNewSession()">+ Capítulo</button>
+                    <div class="narrative-sidebar-actions">
+                        <button class="narrative-timeline-toggle" id="narrativeTimelineToggleBtn"
+                                onclick="narrativeToggleTimeline()" title="Vista línea temporal">🗓️</button>
+                        <button class="btn-combat-primary narrative-new-btn" onclick="narrativeNewSession()">+ Capítulo</button>
+                    </div>
                 </div>
                 <div class="narrative-session-list" id="narrativeList">
                     <!-- rendered by narrative.js -->
@@ -910,6 +918,29 @@
             </main>
 
         </div>
+
+        <!-- Image picker modal -->
+        <div id="narrativeImagePickerModal" class="narrative-picker-overlay" style="display:none;">
+            <div class="narrative-picker-modal">
+                <div class="narrative-picker-header">
+                    <span>🖼️ Insertar imagen</span>
+                    <button onclick="narrativeCloseImagePicker()">✕</button>
+                </div>
+                <div class="narrative-picker-body" id="narrativeImagePickerBody"></div>
+            </div>
+        </div>
+
+        <!-- Link picker modal -->
+        <div id="narrativeLinkPickerModal" class="narrative-picker-overlay" style="display:none;">
+            <div class="narrative-picker-modal">
+                <div class="narrative-picker-header">
+                    <span>🔗 Vincular capítulo</span>
+                    <button onclick="narrativeCloseLinkPicker()">✕</button>
+                </div>
+                <div class="narrative-picker-body" id="narrativeLinkPickerBody"></div>
+            </div>
+        </div>
+
     </section>
 
     <!-- TV Mode / Mesa de Juego -->

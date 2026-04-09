@@ -21,10 +21,11 @@
     ];
 
     // ── State ──────────────────────────────────────────────────
-    let sessions      = [];
-    let currentId     = null;
-    let isEditMode    = false;
-    let autoSaveTimer = null;
+    let sessions        = [];
+    let currentId       = null;
+    let isEditMode      = false;
+    let autoSaveTimer   = null;
+    let timelineVisible = false;
 
     // ── API ────────────────────────────────────────────────────
     function apiBase() { return API_BASE + '/api/narrative-sessions'; }
@@ -175,6 +176,7 @@
         currentId  = id;
         isEditMode = false;
         renderSessionList();
+        if (timelineVisible) renderTimeline();
         const session = sessions.find(s => s.id === id);
         if (session) renderSessionView(session);
     };
@@ -323,7 +325,7 @@
         if (!main) return;
 
         const contentHtml = session.content
-            ? `<div class="narrative-view-content">${escHtml(session.content).replace(/\n/g, '<br>')}</div>`
+            ? `<div class="narrative-view-content">${renderContent(session.content)}</div>`
             : `<p class="narrative-view-no-content">Sin crónica todavía. Pulsa <em>Editar</em> para escribir.</p>`;
 
         main.innerHTML = `
@@ -405,6 +407,12 @@
 
                 <div class="narrative-editor-field narrative-content-field">
                     <label class="narrative-label" for="narrativeContentInput">Crónica</label>
+                    <div class="narrative-editor-toolbar">
+                        <button type="button" class="narrative-toolbar-btn"
+                                onclick="narrativeOpenImagePicker()" title="Insertar imagen de la galería">🖼️ Imagen</button>
+                        <button type="button" class="narrative-toolbar-btn"
+                                onclick="narrativeOpenLinkPicker()" title="Vincular a otro capítulo">🔗 Vincular</button>
+                    </div>
                     <textarea id="narrativeContentInput" class="narrative-textarea"
                               placeholder="Escribe aquí la narración completa de la sesión…"
                               oninput="narrativeAutoSave()">${escHtml(session.content)}</textarea>
@@ -424,6 +432,189 @@
                 </div>
             </div>
         `;
+    }
+
+
+    // ── Rich content rendering (images + links) ────────────────
+    function renderContent(text) {
+        if (!text) return '';
+        const TOKEN_RE = /(\[\[(?:img|link):[^\]]*\]\])/g;
+        const parts = text.split(TOKEN_RE);
+        return parts.map(part => {
+            const imgMatch = part.match(/^\[\[img:([^\]]*?)(?::([^\]]*))?\]\]$/);
+            if (imgMatch) {
+                const url     = (imgMatch[1] || '').replace(/"/g, '%22');
+                const caption = imgMatch[2] || '';
+                return `<figure class="narrative-img-embed">` +
+                    `<img src="${url}" alt="${escHtml(caption)}" loading="lazy"` +
+                    ` onclick="narrativeOpenImgLightbox(this.src)">` +
+                    (caption ? `<figcaption>${escHtml(caption)}</figcaption>` : '') +
+                    `</figure>`;
+            }
+            const linkMatch = part.match(/^\[\[link:([^\]]*?)(?::([^\]]*))?\]\]$/);
+            if (linkMatch) {
+                const id    = linkMatch[1] || '';
+                const title = linkMatch[2] || 'Ver capítulo';
+                return `<span class="narrative-inline-link"` +
+                    ` onclick="narrativeOpenSession('${escHtml(id)}')"` +
+                    ` title="Ir a este capítulo">📖 ${escHtml(title)}</span>`;
+            }
+            return escHtml(part).replace(/\n/g, '<br>');
+        }).join('');
+    }
+
+    window.narrativeOpenImgLightbox = function (src) {
+        const overlay = document.createElement('div');
+        overlay.className = 'narrative-lightbox-overlay';
+        overlay.onclick = () => overlay.remove();
+        const safeSrc = (src || '').replace(/"/g, '%22');
+        overlay.innerHTML = `<img src="${safeSrc}" class="narrative-lightbox-img" onclick="event.stopPropagation()">`;
+        document.body.appendChild(overlay);
+    };
+
+    // ── Timeline ───────────────────────────────────────────────
+    window.narrativeToggleTimeline = function () {
+        timelineVisible = !timelineVisible;
+        const bar = document.getElementById('narrativeTimelineBar');
+        const btn = document.getElementById('narrativeTimelineToggleBtn');
+        if (!bar) return;
+        if (timelineVisible) {
+            renderTimeline();
+            bar.style.display = 'block';
+            if (btn) btn.classList.add('active');
+        } else {
+            bar.style.display = 'none';
+            if (btn) btn.classList.remove('active');
+        }
+    };
+
+    function renderTimeline() {
+        const bar = document.getElementById('narrativeTimelineBar');
+        if (!bar) return;
+        if (sessions.length === 0) {
+            bar.innerHTML = '<div class="timeline-empty">Sin capítulos todavía.</div>';
+            return;
+        }
+        const nodesHtml = sessions.map((s, idx) => {
+            const tagDots = (s.tags || []).slice(0, 3).map(key => {
+                const def = PREDEFINED_TAGS.find(t => t.key === key);
+                return def
+                    ? `<span class="timeline-tag-dot" style="background:${def.color}" title="${def.label}"></span>`
+                    : '';
+            }).join('');
+            const isActive = s.id === currentId;
+            const connector = idx < sessions.length - 1
+                ? '<div class="timeline-connector"></div>'
+                : '';
+            return `
+                <div class="timeline-node${isActive ? ' active' : ''}" onclick="narrativeOpenSession('${s.id}')">
+                    <div class="timeline-dot-wrapper"><div class="timeline-dot"></div></div>
+                    <div class="timeline-node-label">
+                        <span class="timeline-node-num">${toRoman(s.number)}</span>
+                        <span class="timeline-node-title">${escHtml(s.title || 'Sin título')}</span>
+                        ${s.sessionDate ? `<span class="timeline-node-date">${fmtSessionDate(s.sessionDate)}</span>` : ''}
+                        ${tagDots ? `<div class="timeline-tag-dots">${tagDots}</div>` : ''}
+                    </div>
+                </div>${connector}`;
+        }).join('');
+
+        bar.innerHTML = `<div class="timeline-scroll-wrapper"><div class="timeline-track">${nodesHtml}</div></div>`;
+
+        setTimeout(() => {
+            const activeNode = bar.querySelector('.timeline-node.active');
+            if (activeNode) activeNode.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }, 80);
+    }
+
+    // ── Image picker ───────────────────────────────────────────
+    window.narrativeOpenImagePicker = function () {
+        const modal = document.getElementById('narrativeImagePickerModal');
+        const body  = document.getElementById('narrativeImagePickerBody');
+        if (!modal || !body) return;
+        body.innerHTML = '<p class="picker-loading">Cargando imágenes…</p>';
+        modal.style.display = 'flex';
+        fetch(API_BASE + '/api/narrative-images')
+            .then(r => r.json())
+            .then(images => {
+                if (!Array.isArray(images) || images.length === 0) {
+                    body.innerHTML = '<p class="picker-empty">Sin imágenes en la galería.<br>Añade imágenes desde la sección de Imágenes.</p>';
+                    return;
+                }
+                body.innerHTML = `<div class="picker-image-grid">${images.map(img => {
+                    const safeUrl  = (img.url  || '').replace(/"/g, '%22');
+                    const safeName = escHtml(img.name || '');
+                    return `<div class="picker-image-item" onclick="narrativePickImage('${safeUrl}','${safeName}')">
+                        <img src="${safeUrl}" alt="${safeName}" loading="lazy">
+                        <span>${safeName}</span>
+                    </div>`;
+                }).join('')}</div>`;
+            })
+            .catch(() => {
+                body.innerHTML = '<p class="picker-error">Error al cargar imágenes.</p>';
+            });
+    };
+
+    window.narrativeCloseImagePicker = function () {
+        const modal = document.getElementById('narrativeImagePickerModal');
+        if (modal) modal.style.display = 'none';
+    };
+
+    window.narrativePickImage = function (url, name) {
+        const textarea = document.getElementById('narrativeContentInput');
+        if (!textarea) return;
+        insertAtCursor(textarea, `[[img:${url}:${name}]]`);
+        narrativeAutoSave();
+        narrativeCloseImagePicker();
+    };
+
+    // ── Link picker ────────────────────────────────────────────
+    window.narrativeOpenLinkPicker = function () {
+        const modal = document.getElementById('narrativeLinkPickerModal');
+        const body  = document.getElementById('narrativeLinkPickerBody');
+        if (!modal || !body) return;
+        const others = sessions.filter(s => s.id !== currentId);
+        if (others.length === 0) {
+            body.innerHTML = '<p class="picker-empty">No hay otros capítulos para vincular.</p>';
+        } else {
+            body.innerHTML = `<ul class="picker-session-list">${others.map(s => {
+                const safeId    = escHtml(s.id);
+                const safeTitle = escHtml(s.title || 'Sin título');
+                return `<li class="picker-session-item" onclick="narrativePickLink('${safeId}','${safeTitle}')">
+                    <span class="picker-session-num">${toRoman(s.number)}</span>
+                    <div class="picker-session-info">
+                        <span class="picker-session-title">${safeTitle}</span>
+                        ${s.sessionDate ? `<span class="picker-session-date">${fmtSessionDate(s.sessionDate)}</span>` : ''}
+                    </div>
+                </li>`;
+            }).join('')}</ul>`;
+        }
+        modal.style.display = 'flex';
+    };
+
+    window.narrativeCloseLinkPicker = function () {
+        const modal = document.getElementById('narrativeLinkPickerModal');
+        if (modal) modal.style.display = 'none';
+    };
+
+    window.narrativePickLink = function (id, title) {
+        const textarea = document.getElementById('narrativeContentInput');
+        if (!textarea) return;
+        insertAtCursor(textarea, `[[link:${id}:${title}]]`);
+        narrativeAutoSave();
+        narrativeCloseLinkPicker();
+    };
+
+    // ── Cursor insertion helper ────────────────────────────────
+    function insertAtCursor(textarea, text) {
+        const start  = textarea.selectionStart;
+        const end    = textarea.selectionEnd;
+        const before = textarea.value.substring(0, start);
+        const after  = textarea.value.substring(end);
+        textarea.value = before + text + after;
+        const newPos = start + text.length;
+        textarea.selectionStart = newPos;
+        textarea.selectionEnd   = newPos;
+        textarea.focus();
     }
 
 }());
