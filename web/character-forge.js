@@ -626,7 +626,18 @@ async function doForjar() {
         r2.id === _forjarRecetaId ? { ...r2, forjadas: (r2.forjadas || 0) + 1 } : r2
     );
 
+    // Añadir el objeto forjado al Bolso de Hermione
+    _forgeInventory = [..._forgeInventory, {
+        id:        _fId(),
+        nombre:    r.nombre,
+        emoji:     r.emoji || '⚒️',
+        cantidad:  1,
+        desc:      r.desc || null,
+        categoria: 'otras',
+        ts:        Date.now(),
+    }];
+
     _forjarSlots = {};
-    _forgeSched();
-    _forgeRender();  // re-render ambos paneles (actualiza cantidades en Almacén)
+    await _forgePickerSave();  // guarda Bolso + forge en una sola pasada
+    _forgeRender();
 }
