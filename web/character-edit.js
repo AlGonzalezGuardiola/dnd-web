@@ -57,6 +57,10 @@ function renderCharacterSheet(charId) {
         ${['Asthor'].includes(charId) ? `
         <button class="char-forja-btn" onclick="openForjaPanel('${charId}','${data.nombre.replace(/'/g,"\\'")}')">
             ⚒️ Forja
+        </button>` : ''}
+        ${['Vel'].includes(charId) ? `
+        <button class="char-cocina-btn" onclick="openCocinaPanel('${charId}','${data.nombre.replace(/'/g,"\\'")}')">
+            🍳 Cocina
         </button>` : ''}` : ''}
     `;
     statsContainer.innerHTML += portraitHTML;

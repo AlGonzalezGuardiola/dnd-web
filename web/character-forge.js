@@ -32,16 +32,19 @@ let _forjarSlots    = {};          // { slotIdx: { matId, nombre, emoji } }
 const BOLSO_KEY = '__bolso_hermione__';
 
 const BOLSO_CATS = [
-    { id: 'todas',      label: 'Todas',       icon: '✦'  },
-    { id: 'materiales', label: 'Materiales',  icon: '⛏️' },
-    { id: 'oro',        label: 'Oro',         icon: '🪙' },
-    { id: 'comida',     label: 'Comida',      icon: '🍖' },
-    { id: 'armas',      label: 'Armas',       icon: '⚔️' },
-    { id: 'armadura',   label: 'Armadura',    icon: '🛡️' },
-    { id: 'importante', label: 'Importantes', icon: '💎' },
-    { id: 'pociones',   label: 'Pociones',    icon: '🧪' },
-    { id: 'pergaminos', label: 'Pergaminos',  icon: '📜' },
-    { id: 'otras',      label: 'Otras',       icon: '📦' },
+    { id: 'todas',        label: 'Todas',        icon: '✦'  },
+    { id: 'materiales',   label: 'Materiales',   icon: '⛏️' },
+    { id: 'ingredientes', label: 'Ingredientes', icon: '🥕' },
+    { id: 'oro',          label: 'Oro',          icon: '🪙' },
+    { id: 'comida',       label: 'Comida',       icon: '🍖' },
+    { id: 'armas',        label: 'Armas',        icon: '⚔️' },
+    { id: 'armadura',     label: 'Armadura',     icon: '🛡️' },
+    { id: 'importante',   label: 'Importantes',  icon: '💎' },
+    { id: 'pociones',     label: 'Pociones',     icon: '🧪' },
+    { id: 'pergaminos',   label: 'Pergaminos',   icon: '📜' },
+    { id: 'forjado',      label: 'Forjado',      icon: '⚒️' },
+    { id: 'cocinado',     label: 'Cocinado',     icon: '🍽️' },
+    { id: 'otras',        label: 'Otras',        icon: '📦' },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────

@@ -28,6 +28,7 @@ const _ROUTES = {
     npcGenerator:    'generador-npc',
     tvMode:          'mesa-tv',
     forja:           'personaje/forja',
+    cocina:          'personaje/cocina',
 };
 
 // Reverse map: path segment → viewName
@@ -441,6 +442,8 @@ function setView(viewName) {
     if (combatMapsEl) combatMapsEl.style.display = 'none';
     const forjaEl = document.getElementById('forjaSection');
     if (forjaEl) forjaEl.style.display = 'none';
+    const cocinaEl = document.getElementById('cocinaSection');
+    if (cocinaEl) cocinaEl.style.display = 'none';
     // Also hide the character sheet if it was open
     const sheetContainer = document.getElementById('characterSheetContainer');
     if (sheetContainer) sheetContainer.style.display = 'none';
@@ -569,6 +572,12 @@ function setView(viewName) {
             document.getElementById('forjaSection').style.display = 'flex';
             if (editorToolbar) editorToolbar.style.display = 'none';
             if (hud) hud.style.display = 'none';   // la forja tiene su propio botón ← Volver
+            if (diceWidget) diceWidget.style.display = 'none';
+            break;
+        case 'cocina':
+            document.getElementById('cocinaSection').style.display = 'flex';
+            if (editorToolbar) editorToolbar.style.display = 'none';
+            if (hud) hud.style.display = 'none';   // la cocina tiene su propio botón ← Volver
             if (diceWidget) diceWidget.style.display = 'none';
             break;
     }

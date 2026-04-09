@@ -559,6 +559,38 @@
         </div>
     </div>
 
+    <!-- Kitchen Full Page (solo Vel Rhazal) -->
+    <div id="cocinaSection" class="cocina-page" style="display:none">
+        <div class="cocina-page-hdr">
+            <button class="cocina-back-btn" onclick="navigateBack()">← Volver</button>
+            <div class="cocina-page-hdr-center">
+                <span class="cocina-page-icon">🍳</span>
+                <div>
+                    <div class="cocina-page-subtitle">Cocina</div>
+                    <div class="cocina-page-title" id="cocinaPageTitle">Vel Rhazal</div>
+                </div>
+            </div>
+        </div>
+        <div class="ck-tabs cocina-page-tabs">
+            <button class="ck-tab active" id="ckTabDespensa" onclick="cocinaSetTab('despensa')">🥕 Despensa</button>
+            <button class="ck-tab" id="ckTabCocina" onclick="cocinaSetTab('cocina')">🍳 Cocina</button>
+        </div>
+        <div class="cocina-page-body" id="cocinaBody">
+            <div class="cocina-panel cocina-panel-despensa ck-tab-active" id="cocinaDespensaPanel">
+                <div class="cocina-panel-hdr">
+                    <span class="cocina-panel-hdr-icon">🥕</span>
+                    <span class="cocina-panel-hdr-title">Despensa de Ingredientes</span>
+                </div>
+            </div>
+            <div class="cocina-panel cocina-panel-cocinas" id="cocinaCocinasPanel">
+                <div class="cocina-panel-hdr">
+                    <span class="cocina-panel-hdr-icon">🍳</span>
+                    <span class="cocina-panel-hdr-title">Cocina</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Notification Banner -->
     <div id="notification" class="notification"></div>
 
@@ -986,6 +1018,7 @@
     <script src="character-edit.js?v=20260330d"></script>
     <script src="character-equip.js?v=20260408a"></script>
     <script src="character-forge.js?v=20260409a"></script>
+    <script src="character-kitchen.js?v=20260409a"></script>
     <script src="combat-setup.js?v=20260330a"></script>
     <script src="combat-manager.js?v=20260406a"></script>
     <script src="reactions.js?v=20260326c"></script>
