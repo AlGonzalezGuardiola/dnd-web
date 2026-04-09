@@ -12,9 +12,12 @@ let _forgeCharId    = null;
 let _forgeCharName  = null;
 let _forgeMats      = [];   // { id, emoji, nombre, cantidad, desc }
 let _forgeRecetas   = [];   // { id, emoji, nombre, ingredientes, desc, cd, forjadas }
-let _forgeInventory = [];   // copia del inventario personal (Bolso de Hermione)
+let _forgeInventory = [];   // copia del Bolso de Hermione (inventario compartido)
 let _forgeSaveTimer = null;
 let _forgeTab       = 'almacen'; // 'almacen' | 'herreria'
+
+// El Bolso de Hermione es el inventario general (inventario.html sin ?char=)
+const BOLSO_KEY = '__bolso_hermione__';
 
 // Estado del picker de inventario
 let _pickerSelected = new Set();  // IDs de items seleccionados en el picker
@@ -61,9 +64,12 @@ async function _forgeLoadAndRender() {
         const key   = `inv_${_forgeCharId}`;
         const entry = (json.characters || []).find(c => c.charId === key);
         const forge = entry?.data?.forge || {};
-        _forgeMats      = Array.isArray(forge.materiales) ? forge.materiales   : [];
-        _forgeRecetas   = Array.isArray(forge.recetas)    ? forge.recetas      : [];
-        _forgeInventory = Array.isArray(entry?.data?.items) ? entry.data.items : [];
+        _forgeMats    = Array.isArray(forge.materiales) ? forge.materiales : [];
+        _forgeRecetas = Array.isArray(forge.recetas)    ? forge.recetas    : [];
+
+        // El inventario del picker es el Bolso de Hermione (clave fija)
+        const bolso = (json.characters || []).find(c => c.charId === BOLSO_KEY);
+        _forgeInventory = Array.isArray(bolso?.data?.items) ? bolso.data.items : [];
     } catch {
         _forgeMats      = [];
         _forgeRecetas   = [];
@@ -94,23 +100,30 @@ function _forgeSched() {
     }, 800);
 }
 
-// Guarda inventario + forja en una sola llamada (usado tras el picker)
+// Guarda el Bolso de Hermione (items actualizados) y la forja de Asthor por separado
 async function _forgePickerSave() {
     try {
-        const key   = `inv_${_forgeCharId}`;
-        const res   = await fetch(`${API_BASE}/api/player-characters`);
-        const json  = await res.json();
-        const entry = (json.characters || []).find(c => c.charId === key);
-        const cur   = entry?.data || {};
-        await fetch(`${API_BASE}/api/player-characters/${key}`, {
+        const res  = await fetch(`${API_BASE}/api/player-characters`);
+        const json = await res.json();
+
+        // 1. Actualizar Bolso de Hermione (quitar items transferidos)
+        const bolso    = (json.characters || []).find(c => c.charId === BOLSO_KEY);
+        const bolsoCur = bolso?.data || {};
+        await fetch(`${API_BASE}/api/player-characters/${BOLSO_KEY}`, {
+            method:  'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ data: { ...bolsoCur, items: _forgeInventory } }),
+        });
+
+        // 2. Guardar materiales de forja en inv_Asthor
+        const forjaKey   = `inv_${_forgeCharId}`;
+        const forjaEntry = (json.characters || []).find(c => c.charId === forjaKey);
+        const forjaCur   = forjaEntry?.data || {};
+        await fetch(`${API_BASE}/api/player-characters/${forjaKey}`, {
             method:  'PUT',
             headers: { 'Content-Type': 'application/json' },
             body:    JSON.stringify({
-                data: {
-                    ...cur,
-                    items: _forgeInventory,
-                    forge: { materiales: _forgeMats, recetas: _forgeRecetas },
-                }
+                data: { ...forjaCur, forge: { materiales: _forgeMats, recetas: _forgeRecetas } }
             }),
         });
     } catch (e) {
