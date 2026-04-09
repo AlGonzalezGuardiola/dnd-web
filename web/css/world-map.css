@@ -122,8 +122,15 @@
 /* ── Hotspot en MODO EDICIÓN ── */
 .wm-edit-mode .wm-hotspot {
     animation: none;
-    cursor: default;
+    cursor: grab;
     border-color: rgba(201, 162, 39, 0.5);
+}
+.wm-edit-mode .wm-hotspot.wm-dragging {
+    cursor: grabbing;
+    opacity: 0.85;
+    box-shadow: 0 0 0 3px rgba(201, 162, 39, 0.5), 0 4px 16px rgba(0,0,0,0.5);
+    z-index: 10;
+    transition: none; /* sin transición durante el drag */
 }
 .wm-hotspot-delete {
     display: none;

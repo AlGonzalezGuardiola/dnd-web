@@ -6,12 +6,13 @@
 // ── State ─────────────────────────────────────────────────────────────────────
 
 const _wm = {
-    hotspots:  [],
-    pending:   [],
-    editMode:  false,
-    zoomed:    false,
-    inited:    false,
-    currentHs: null,   // hotspot activo durante el zoom
+    hotspots:      [],
+    pending:       [],
+    editMode:      false,
+    zoomed:        false,
+    inited:        false,
+    currentHs:     null,  // hotspot activo durante el zoom
+    _dragJustEnded: false, // evita que pointerup→click abra el modal
 };
 
 // ── Config ────────────────────────────────────────────────────────────────────
@@ -154,7 +155,10 @@ function _wmCancelEdit() {
 
 function _wmOnStageClick(e) {
     if (!_wm.editMode) return;
+    // Ignore if click originated from a hotspot (drag or normal click on it)
     if (e.target.closest('.wm-hotspot')) return;
+    // Ignore if a drag just finished (pointerup sets this flag)
+    if (_wm._dragJustEnded) { _wm._dragJustEnded = false; return; }
 
     // Coordinates relative to the canvas (= rendered image dimensions)
     const canvas = document.querySelector('#worldMapSection .wm-canvas');
@@ -204,6 +208,10 @@ function _wmBuildHotspotEl(hs) {
     del.addEventListener('click', e => { e.stopPropagation(); _wmDeleteHotspot(hs.id); });
     el.appendChild(del);
 
+    // Drag to reposition in edit mode
+    _wmBindDrag(el, hs);
+
+    // Normal-mode click → zoom
     el.addEventListener('click', () => {
         if (_wm.editMode || _wm.zoomed) return;
         _wmZoomIn(hs);
@@ -213,6 +221,93 @@ function _wmBuildHotspotEl(hs) {
     });
 
     return el;
+}
+
+// ── Drag to reposition (edit mode only) ──────────────────────────────────────
+
+function _wmBindDrag(el, hs) {
+    let dragging  = false;
+    let hasMoved  = false;
+    let startPx   = null; // pointer position at drag start
+    let startPct  = null; // hotspot % position at drag start
+
+    el.addEventListener('pointerdown', e => {
+        if (!_wm.editMode) return;
+        if (e.target.closest('.wm-hotspot-delete')) return;
+
+        e.preventDefault();
+        e.stopPropagation(); // don't trigger stage-click (add hotspot)
+
+        dragging = true;
+        hasMoved = false;
+        el.setPointerCapture(e.pointerId);
+        el.classList.add('wm-dragging');
+
+        const canvas = document.querySelector('#worldMapSection .wm-canvas');
+        const rect   = canvas.getBoundingClientRect();
+
+        startPx  = { x: e.clientX, y: e.clientY };
+        startPct = { x: hs.x, y: hs.y };
+        // store rect so we don't requery during move
+        el._dragRect = rect;
+    });
+
+    el.addEventListener('pointermove', e => {
+        if (!dragging) return;
+        e.preventDefault();
+
+        const rect = el._dragRect;
+        const dx = e.clientX - startPx.x;
+        const dy = e.clientY - startPx.y;
+
+        // Only start visual move after a few px (avoids jitter on click)
+        if (!hasMoved && Math.hypot(dx, dy) < 4) return;
+        hasMoved = true;
+
+        const newX = Math.min(98, Math.max(2, startPct.x + (dx / rect.width)  * 100));
+        const newY = Math.min(98, Math.max(2, startPct.y + (dy / rect.height) * 100));
+
+        el.style.left = `${newX}%`;
+        el.style.top  = `${newY}%`;
+    });
+
+    el.addEventListener('pointerup', e => {
+        if (!dragging) return;
+        dragging = false;
+        el.classList.remove('wm-dragging');
+        el.releasePointerCapture(e.pointerId);
+
+        if (!hasMoved) return; // was just a click, don't update coords
+
+        const rect = el._dragRect;
+        const dx = e.clientX - startPx.x;
+        const dy = e.clientY - startPx.y;
+        const newX = Math.min(98, Math.max(2, startPct.x + (dx / rect.width)  * 100));
+        const newY = Math.min(98, Math.max(2, startPct.y + (dy / rect.height) * 100));
+
+        // Update the pending hotspot in place (no re-render needed)
+        const pending = _wm.pending.find(h => h.id === hs.id);
+        if (pending) {
+            pending.x = newX;
+            pending.y = newY;
+            hs.x = newX;
+            hs.y = newY;
+        }
+
+        // Tell stage-click handler to ignore the synthetic click that follows
+        _wm._dragJustEnded = true;
+        setTimeout(() => { _wm._dragJustEnded = false; }, 50);
+    });
+
+    // Cancel drag if pointer leaves window
+    el.addEventListener('pointercancel', () => {
+        if (!dragging) return;
+        dragging = false;
+        el.classList.remove('wm-dragging');
+        // Restore original position
+        el.style.left = `${hs.x}%`;
+        el.style.top  = `${hs.y}%`;
+    });
 }
 
 function _wmDeleteHotspot(id) {
