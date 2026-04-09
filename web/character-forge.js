@@ -170,7 +170,7 @@ function _renderAlmacen(panel) {
                 <button class="fg-qty-btn" onclick="almacenQty('${m.id}',+1)">+</button>
             </div>
             <div class="fg-mat-actions">
-                <button class="fg-row-btn fg-btn-del" onclick="almacenDel('${m.id}')" title="Eliminar">✕</button>
+                <button class="fg-row-btn fg-btn-return" onclick="almacenReturn('${m.id}')" title="Devolver al Bolso de Hermione">🎒</button>
             </div>
         </div>`).join('');
 
@@ -355,9 +355,21 @@ function almacenQty(id, delta) {
     _renderAlmacen(document.getElementById('forjaAlmacenPanel'));
 }
 
-function almacenDel(id) {
+async function almacenReturn(id) {
+    const mat = _forgeMats.find(m => m.id === id);
+    if (!mat) return;
+    // Devolver al Bolso de Hermione
+    _forgeInventory = [..._forgeInventory, {
+        id:        _fId(),
+        nombre:    mat.nombre,
+        emoji:     mat.emoji || '📦',
+        cantidad:  mat.cantidad || 1,
+        desc:      mat.desc || null,
+        categoria: 'materiales',
+        ts:        Date.now(),
+    }];
     _forgeMats = _forgeMats.filter(m => m.id !== id);
-    _forgeSched();
+    await _forgePickerSave();
     _renderAlmacen(document.getElementById('forjaAlmacenPanel'));
 }
 

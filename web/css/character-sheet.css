@@ -1567,8 +1567,9 @@ button, .card, .pin, .tab-btn, .hud-btn, .die-btn,
     cursor: pointer; display: flex; align-items: center; justify-content: center;
     transition: background .12s, color .12s;
 }
-.fg-btn-edit:hover { background: rgba(212,175,55,.2); color: #d4af37; border-color: rgba(212,175,55,.35); }
-.fg-btn-del:hover { background: rgba(190,50,50,.25); color: #ff7777; border-color: rgba(190,50,50,.35); }
+.fg-btn-edit:hover   { background: rgba(212,175,55,.2);  color: #d4af37; border-color: rgba(212,175,55,.35); }
+.fg-btn-del:hover    { background: rgba(190,50,50,.25);  color: #ff7777; border-color: rgba(190,50,50,.35); }
+.fg-btn-return:hover { background: rgba(80,160,220,.2);  color: #7cc4f0; border-color: rgba(80,160,220,.35); }
 
 /* ── Add wrap & form ── */
 .fg-add-wrap { display: flex; }
