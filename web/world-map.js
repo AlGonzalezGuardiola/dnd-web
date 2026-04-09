@@ -6,20 +6,21 @@
 // ── State ─────────────────────────────────────────────────────────────────────
 
 const _wm = {
-    hotspots:   [],   // loaded from / saved to API
-    pending:    [],   // unsaved changes during edit session
-    editMode:   false,
-    zoomed:     false,
-    inited:     false,
+    hotspots:  [],
+    pending:   [],
+    editMode:  false,
+    zoomed:    false,
+    inited:    false,
+    currentHs: null,   // hotspot activo durante el zoom
 };
 
 // ── Config ────────────────────────────────────────────────────────────────────
 
 const WM_ZOOM_SCALE  = 3.5;
-const WM_HOTSPOT_PCT = 2.8;   // default hotspot diameter as % of canvas width
-const WM_ZOOM_MS     = 1100;  // must match CSS transition duration
+const WM_ZOOM_MS     = 600;   // duración zoom in/out (debe coincidir con CSS)
+const WM_HOTSPOT_PCT = 2.8;   // diámetro del hotspot como % del ancho del canvas
 
-// ── Public API ────────────────────────────────────────────────────────────────
+// ── Entry point ───────────────────────────────────────────────────────────────
 
 function openWorldMapView() {
     setView('worldMap');
@@ -32,32 +33,25 @@ async function _wmInit() {
 
     if (!_wm.inited) {
         _wm.inited = true;
-        _wmBindStaticElements(section);
+        _wmBindButtons(section);
     }
 
-    // Always reload hotspots from server when opening the view
     await _wmLoadHotspots();
     _wmRenderHotspots();
 }
 
-// ── DOM helpers ───────────────────────────────────────────────────────────────
+// ── Button wiring (single source, no inline onclick) ─────────────────────────
 
-function _wmEl(id) { return document.getElementById(id); }
+function _wmBindButtons(section) {
+    section.querySelector('.wm-btn-edit')  .addEventListener('click', _wmEnterEditMode);
+    section.querySelector('.wm-btn-save')  .addEventListener('click', _wmSave);
+    section.querySelector('.wm-btn-cancel').addEventListener('click', _wmCancelEdit);
+    section.querySelector('.wm-btn-back')  .addEventListener('click', wmGoBack);
 
-function _wmBindStaticElements(section) {
-    const stage    = section.querySelector('.wm-stage');
-    const btnEdit  = section.querySelector('.wm-btn-edit');
-    const btnSave  = section.querySelector('.wm-btn-save');
-    const btnCancel = section.querySelector('.wm-btn-cancel');
+    // Stage click in edit mode → place hotspot
+    section.querySelector('.wm-stage').addEventListener('click', _wmOnStageClick);
 
-    btnEdit.addEventListener('click',   _wmEnterEditMode);
-    btnSave.addEventListener('click',   _wmSave);
-    btnCancel.addEventListener('click', _wmCancelEdit);
-
-    // Click on stage while in edit mode → place hotspot
-    stage.addEventListener('click', _wmOnStageClick);
-
-    // Reset state when navigating away
+    // Reset when navigating away
     new MutationObserver(() => {
         if (section.style.display === 'none') _wmReset();
     }).observe(section, { attributes: true, attributeFilter: ['style'] });
@@ -124,46 +118,33 @@ function _wmCancelEdit() {
     _wmExitEditMode();
 }
 
-// ── Stage click → place hotspot (edit mode only) ──────────────────────────────
+// ── Stage click → place hotspot ───────────────────────────────────────────────
 
 function _wmOnStageClick(e) {
     if (!_wm.editMode) return;
+    if (e.target.closest('.wm-hotspot')) return;
 
-    // Ignore clicks that originate from delete buttons
-    if (e.target.closest('.wm-hotspot-delete')) return;
-
+    // Coordinates relative to the canvas (= rendered image dimensions)
     const canvas = document.querySelector('#worldMapSection .wm-canvas');
     const rect   = canvas.getBoundingClientRect();
+    const x = Math.min(98, Math.max(2, ((e.clientX - rect.left)  / rect.width)  * 100));
+    const y = Math.min(98, Math.max(2, ((e.clientY - rect.top)   / rect.height) * 100));
 
-    // Convert to percentage relative to the canvas (= rendered image size)
-    const x = ((e.clientX - rect.left)  / rect.width)  * 100;
-    const y = ((e.clientY - rect.top)   / rect.height) * 100;
-
-    // Clamp to [2, 98] so the circle never overflows the image
-    const cx = Math.min(98, Math.max(2, x));
-    const cy = Math.min(98, Math.max(2, y));
-
-    _wmOpenAddModal(cx, cy);
+    _wmOpenAddModal(x, y);
 }
 
-// ── Render hotspots ───────────────────────────────────────────────────────────
+// ── Render ────────────────────────────────────────────────────────────────────
 
 function _wmRenderHotspots() {
-    const canvas   = document.querySelector('#worldMapSection .wm-canvas');
+    const canvas    = document.querySelector('#worldMapSection .wm-canvas');
     const emptyHint = document.querySelector('#worldMapSection .wm-empty-hint');
     if (!canvas) return;
 
-    // Remove existing dynamic hotspots
     canvas.querySelectorAll('.wm-hotspot').forEach(el => el.remove());
 
     const list = _wm.editMode ? _wm.pending : _wm.hotspots;
+    list.forEach(hs => canvas.appendChild(_wmBuildHotspotEl(hs)));
 
-    list.forEach(hs => {
-        const el = _wmBuildHotspotEl(hs);
-        canvas.appendChild(el);
-    });
-
-    // Empty state hint (only visible via CSS when in edit mode)
     if (emptyHint) {
         emptyHint.style.display = (list.length === 0 && _wm.editMode) ? 'flex' : 'none';
     }
@@ -172,36 +153,29 @@ function _wmRenderHotspots() {
 function _wmBuildHotspotEl(hs) {
     const el = document.createElement('div');
     el.className = 'wm-hotspot';
-    el.dataset.id    = hs.id;
-    el.dataset.label = hs.label;
+    el.dataset.id = hs.id;
+    el.setAttribute('data-label', hs.label);
     el.setAttribute('role', 'button');
     el.setAttribute('tabindex', '0');
     el.setAttribute('aria-label', hs.label);
 
-    const size = WM_HOTSPOT_PCT;
     el.style.left   = `${hs.x}%`;
     el.style.top    = `${hs.y}%`;
-    el.style.width  = `${size}%`;
-    el.style.height = `${size}%`;
-    // transform: translate(-50%,-50%) is in CSS so the x/y is the circle centre
+    el.style.width  = `${WM_HOTSPOT_PCT}%`;
+    el.style.height = `${WM_HOTSPOT_PCT}%`;
 
     // Delete button (visible only in edit mode via CSS)
-    const delBtn = document.createElement('button');
-    delBtn.className = 'wm-hotspot-delete';
-    delBtn.innerHTML = '✕';
-    delBtn.setAttribute('aria-label', `Eliminar ${hs.label}`);
-    delBtn.addEventListener('click', e => {
-        e.stopPropagation();
-        _wmDeleteHotspot(hs.id);
-    });
-    el.appendChild(delBtn);
+    const del = document.createElement('button');
+    del.className = 'wm-hotspot-delete';
+    del.innerHTML = '✕';
+    del.setAttribute('aria-label', `Eliminar ${hs.label}`);
+    del.addEventListener('click', e => { e.stopPropagation(); _wmDeleteHotspot(hs.id); });
+    el.appendChild(del);
 
-    // Normal-mode click → zoom
     el.addEventListener('click', () => {
         if (_wm.editMode || _wm.zoomed) return;
         _wmZoomIn(hs);
     });
-
     el.addEventListener('keydown', e => {
         if ((e.key === 'Enter' || e.key === ' ') && !_wm.editMode) _wmZoomIn(hs);
     });
@@ -217,7 +191,6 @@ function _wmDeleteHotspot(id) {
 // ── Add-hotspot modal ─────────────────────────────────────────────────────────
 
 function _wmOpenAddModal(x, y) {
-    // Remove any existing modal
     document.getElementById('wmAddModal')?.remove();
 
     const overlay = document.createElement('div');
@@ -226,12 +199,10 @@ function _wmOpenAddModal(x, y) {
     overlay.innerHTML = `
         <div class="wm-modal" role="dialog" aria-modal="true" aria-labelledby="wmModalTitle">
             <h3 id="wmModalTitle">📍 Nuevo punto de interés</h3>
-
             <div class="wm-modal-field">
                 <label for="wmHsLabel">Nombre del lugar</label>
                 <input type="text" id="wmHsLabel" placeholder="Ej: Grumak'thar" autocomplete="off" maxlength="60">
             </div>
-
             <div class="wm-modal-field">
                 <label for="wmHsFile">Mapa detallado (JPG · PNG · WebP · máx 20 MB)</label>
                 <input type="file" id="wmHsFile" accept="image/jpeg,image/png,image/webp">
@@ -240,7 +211,6 @@ function _wmOpenAddModal(x, y) {
                 </div>
                 <div class="wm-modal-progress" id="wmHsProgress">Subiendo imagen…</div>
             </div>
-
             <div class="wm-modal-actions">
                 <button class="wm-btn-dismiss" id="wmModalCancel">Cancelar</button>
                 <button class="wm-btn-confirm" id="wmModalConfirm">Añadir</button>
@@ -249,31 +219,23 @@ function _wmOpenAddModal(x, y) {
 
     document.body.appendChild(overlay);
 
-    // File preview
     overlay.querySelector('#wmHsFile').addEventListener('change', function() {
         const file = this.files[0];
         if (!file) return;
-        const preview   = overlay.querySelector('#wmHsPreview');
-        const previewImg = overlay.querySelector('#wmHsPreviewImg');
         const reader = new FileReader();
         reader.onload = e => {
-            previewImg.src = e.target.result;
-            preview.classList.add('visible');
+            overlay.querySelector('#wmHsPreviewImg').src = e.target.result;
+            overlay.querySelector('#wmHsPreview').classList.add('visible');
         };
         reader.readAsDataURL(file);
     });
 
-    // Close on backdrop click
-    overlay.addEventListener('click', e => {
-        if (e.target === overlay) overlay.remove();
-    });
-
+    overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
     overlay.querySelector('#wmModalCancel').addEventListener('click', () => overlay.remove());
     overlay.querySelector('#wmModalConfirm').addEventListener('click', () =>
         _wmConfirmAddHotspot(x, y, overlay)
     );
 
-    // Focus name input
     setTimeout(() => overlay.querySelector('#wmHsLabel')?.focus(), 50);
 }
 
@@ -290,23 +252,19 @@ async function _wmConfirmAddHotspot(x, y, overlay) {
         return;
     }
 
-    const file = fileInput.files[0];
-
     confirmBtn.disabled = true;
     confirmBtn.textContent = 'Añadiendo…';
 
-    let detailUrl      = '';
-    let detailFilename = '';
+    let detailUrl = '', detailFilename = '';
 
-    if (file) {
-        // Upload image first
+    if (fileInput.files[0]) {
         progress.classList.add('visible');
         try {
-            const fileData = await _wmReadFileAsDataURL(file);
+            const fileData = await _wmReadFileAsDataURL(fileInput.files[0]);
             const res = await fetch(`${API_BASE}/api/world-map/upload`, {
                 method:  'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body:    JSON.stringify({ filename: file.name, fileData }),
+                body:    JSON.stringify({ filename: fileInput.files[0].name, fileData }),
             });
             if (!res.ok) throw new Error((await res.json()).error);
             const data = await res.json();
@@ -322,30 +280,30 @@ async function _wmConfirmAddHotspot(x, y, overlay) {
         progress.classList.remove('visible');
     }
 
-    // Add hotspot to pending list
-    _wm.pending.push({
-        id:             `hs_${Date.now()}`,
-        label,
-        x,
-        y,
-        detailUrl,
-        detailFilename,
-    });
-
+    _wm.pending.push({ id: `hs_${Date.now()}`, label, x, y, detailUrl, detailFilename });
     overlay.remove();
     _wmRenderHotspots();
 }
 
 function _wmReadFileAsDataURL(file) {
     return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload  = e => resolve(e.target.result);
-        reader.onerror = () => reject(new Error('Error leyendo el archivo'));
-        reader.readAsDataURL(file);
+        const r = new FileReader();
+        r.onload  = e => resolve(e.target.result);
+        r.onerror = () => reject(new Error('Error leyendo archivo'));
+        r.readAsDataURL(file);
     });
 }
 
 // ── Cinematic zoom ────────────────────────────────────────────────────────────
+//
+// Arquitectura:
+//   .wm-stage
+//     .wm-canvas  ← solo esto se escala (solo contiene mapa base + hotspots)
+//     .wm-detail-layer  ← fuera del canvas, cubre todo el stage sin escala
+//     .wm-vignette
+//     .wm-region-label
+//
+// Así el detail map siempre se ve al 100%, nunca ampliado x3.5.
 
 function _wmZoomIn(hs) {
     if (_wm.zoomed || _wm.editMode) return;
@@ -354,109 +312,139 @@ function _wmZoomIn(hs) {
         return;
     }
 
-    _wm.zoomed = true;
+    _wm.zoomed    = true;
+    _wm.currentHs = hs;
 
-    const section    = document.getElementById('worldMapSection');
-    const canvas     = section.querySelector('.wm-canvas');
-    const vignette   = section.querySelector('.wm-vignette');
+    const section     = document.getElementById('worldMapSection');
+    const stage       = section.querySelector('.wm-stage');
+    const canvas      = section.querySelector('.wm-canvas');
+    const vignette    = section.querySelector('.wm-vignette');
     const regionLabel = section.querySelector('.wm-region-label');
-    const labelSpan  = regionLabel.querySelector('span');
 
-    // Set zoom origin to the hotspot centre
+    // Zoom origin = centro del hotspot
     canvas.style.transformOrigin = `${hs.x}% ${hs.y}%`;
 
-    // Hide hotspots
+    // Ocultar hotspots, activar vignette, arrancar zoom
     canvas.querySelectorAll('.wm-hotspot').forEach(h => h.classList.add('wm-hidden'));
-
-    // Vignette + zoom
     vignette.classList.add('wm-active');
     canvas.style.transform = `scale(${WM_ZOOM_SCALE})`;
 
-    // Region label at ~400ms
-    labelSpan.textContent = hs.label;
-    setTimeout(() => regionLabel.classList.add('wm-active'), 400);
+    // Nombre de la región a mitad del zoom
+    regionLabel.querySelector('span').textContent = hs.label;
+    setTimeout(() => regionLabel.classList.add('wm-active'), WM_ZOOM_MS * 0.4);
 
-    // After zoom completes: show detail map
+    // Al terminar el zoom → mostrar mapa detallado (en stage, sin escala)
     setTimeout(() => {
-        let layer = canvas.querySelector(`.wm-detail-layer[data-hs-id="${hs.id}"]`);
+        let layer = stage.querySelector(`.wm-detail-layer[data-hs-id="${hs.id}"]`);
         if (!layer) {
             layer = document.createElement('div');
             layer.className = 'wm-detail-layer';
             layer.dataset.hsId = hs.id;
             const img = document.createElement('img');
-            img.src = hs.detailUrl;
-            img.alt = `Mapa de ${hs.label}`;
+            img.src      = hs.detailUrl;
+            img.alt      = `Mapa de ${hs.label}`;
             img.draggable = false;
             layer.appendChild(img);
-            canvas.appendChild(layer);
+            // Insertar antes de la vignette para no tapar la UI
+            stage.insertBefore(layer, vignette);
         }
 
         layer.classList.add('wm-visible');
-        setTimeout(() => regionLabel.classList.remove('wm-active'), 500);
 
-        section.classList.add('wm-detail-open');
-        vignette.classList.remove('wm-active');
-    }, WM_ZOOM_MS + 200);
+        // Resetear escala del canvas en silencio (está oculto detrás del detail)
+        setTimeout(() => {
+            canvas.style.transition = 'none';
+            canvas.style.transform  = 'scale(1)';
+            canvas.style.transformOrigin = 'center center';
+            requestAnimationFrame(() => { canvas.style.transition = ''; });
+
+            regionLabel.classList.remove('wm-active');
+            vignette.classList.remove('wm-active');
+            section.classList.add('wm-detail-open');
+        }, 420);
+
+    }, WM_ZOOM_MS + 50);
+}
+
+function wmGoBack() {
+    if (!_wm.zoomed) return;
+    _wmZoomOut();
 }
 
 function _wmZoomOut() {
-    const section    = document.getElementById('worldMapSection');
-    const canvas     = section.querySelector('.wm-canvas');
-    const vignette   = section.querySelector('.wm-vignette');
-    const regionLabel = section.querySelector('.wm-region-label');
+    const hs = _wm.currentHs;
+    const section  = document.getElementById('worldMapSection');
+    const stage    = section.querySelector('.wm-stage');
+    const canvas   = section.querySelector('.wm-canvas');
+    const vignette = section.querySelector('.wm-vignette');
 
-    // Fade out detail layer fast
-    const layer = canvas.querySelector('.wm-detail-layer.wm-visible');
-    if (layer) {
-        layer.style.transition = 'opacity 0.3s ease';
-        layer.style.opacity = '0';
-    }
+    const layer = stage.querySelector('.wm-detail-layer.wm-visible');
 
-    vignette.classList.add('wm-active');
+    // 1. Teleportar canvas al estado zoom (sin transición) para que al revelar
+    //    el mapa base se vea ya ampliado → zoom out desde ahí
+    canvas.style.transition      = 'none';
+    canvas.style.transformOrigin = hs ? `${hs.x}% ${hs.y}%` : 'center center';
+    canvas.style.transform       = `scale(${WM_ZOOM_SCALE})`;
+
     section.classList.remove('wm-detail-open');
 
-    setTimeout(() => {
-        canvas.style.transform = 'scale(1)';
-        vignette.classList.remove('wm-active');
-    }, 350);
+    // 2. Fade out del mapa detallado (revela el mapa base ampliado)
+    if (layer) {
+        layer.style.transition = 'opacity 0.35s ease';
+        layer.style.opacity    = '0';
+    }
 
+    // 3. Tras el fade, restaurar transición y hacer zoom out
     setTimeout(() => {
-        if (layer) {
-            layer.classList.remove('wm-visible');
-            layer.style.transition = '';
-            layer.style.opacity = '';
-        }
-        canvas.querySelectorAll('.wm-hotspot').forEach(h => h.classList.remove('wm-hidden'));
-        _wm.zoomed = false;
-    }, 350 + WM_ZOOM_MS);
+        canvas.style.transition = '';
+        vignette.classList.add('wm-active');
+        canvas.style.transform = 'scale(1)';
+
+        setTimeout(() => {
+            // Limpiar
+            if (layer) {
+                layer.classList.remove('wm-visible');
+                layer.style.transition = '';
+                layer.style.opacity    = '';
+            }
+            canvas.style.transformOrigin = 'center center';
+            canvas.querySelectorAll('.wm-hotspot').forEach(h => h.classList.remove('wm-hidden'));
+            vignette.classList.remove('wm-active');
+            _wm.zoomed    = false;
+            _wm.currentHs = null;
+        }, WM_ZOOM_MS + 100);
+    }, 360);
 }
 
-// ── Reset on navigate away ────────────────────────────────────────────────────
+// ── Reset al navegar fuera ────────────────────────────────────────────────────
 
 function _wmReset() {
     const section = document.getElementById('worldMapSection');
     if (!section) return;
     const canvas = section.querySelector('.wm-canvas');
+    const stage  = section.querySelector('.wm-stage');
 
     if (canvas) {
-        canvas.style.transition   = 'none';
-        canvas.style.transform    = 'scale(1)';
+        canvas.style.transition      = 'none';
+        canvas.style.transform       = 'scale(1)';
         canvas.style.transformOrigin = 'center center';
-        canvas.querySelectorAll('.wm-detail-layer').forEach(l => l.classList.remove('wm-visible'));
         canvas.querySelectorAll('.wm-hotspot').forEach(h => h.classList.remove('wm-hidden'));
         requestAnimationFrame(() => { canvas.style.transition = ''; });
+    }
+    if (stage) {
+        stage.querySelectorAll('.wm-detail-layer').forEach(l => {
+            l.classList.remove('wm-visible');
+            l.style.transition = '';
+            l.style.opacity    = '';
+        });
     }
 
     section.querySelector('.wm-vignette')?.classList.remove('wm-active');
     section.querySelector('.wm-region-label')?.classList.remove('wm-active');
     section.classList.remove('wm-detail-open', 'wm-edit-mode');
 
-    _wm.zoomed   = false;
-    _wm.editMode = false;
+    _wm.zoomed    = false;
+    _wm.editMode  = false;
+    _wm.currentHs = null;
     document.getElementById('wmAddModal')?.remove();
-}
-
-// view.js calls this as the back button handler:
-function wmGoBack() {
-    if (_wm.zoomed) _wmZoomOut();
 }
