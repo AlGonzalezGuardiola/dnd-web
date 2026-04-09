@@ -1634,6 +1634,27 @@ button, .card, .pin, .tab-btn, .hud-btn, .die-btn,
 }
 .fg-btn-cancel:hover { background: rgba(255,255,255,.1); color: rgba(255,255,255,.7); }
 
+/* ── Category tabs en el picker del almacén ── */
+.fg-cat-tabs {
+    display: flex; flex-wrap: wrap; gap: 5px;
+    padding: 4px 0 6px;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+}
+.fg-cat-tab {
+    padding: 4px 10px; border-radius: 20px;
+    border: 1px solid rgba(255,255,255,.1);
+    background: rgba(255,255,255,.04);
+    color: rgba(255,255,255,.4); font-size: 11px;
+    cursor: pointer; white-space: nowrap;
+    transition: background .12s, color .12s, border-color .12s;
+}
+.fg-cat-tab:hover { background: rgba(255,255,255,.08); color: rgba(255,255,255,.75); }
+.fg-cat-tab.active {
+    background: rgba(212,175,55,.15);
+    border-color: rgba(212,175,55,.45);
+    color: rgba(212,175,55,.95);
+}
+
 /* ── Picker del Bolso de Hermione (Almacén) ── */
 .fg-inv-picker {
     display: flex; flex-direction: column; gap: 10px;

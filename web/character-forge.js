@@ -21,6 +21,20 @@ const BOLSO_KEY = '__bolso_hermione__';
 
 // Estado del picker de inventario
 let _pickerSelected = new Set();  // IDs de items seleccionados en el picker
+let _pickerCatFilter = 'todas';   // filtro de categoría activo en el picker
+
+const BOLSO_CATS = [
+    { id: 'todas',      label: 'Todas',            icon: '✦'  },
+    { id: 'materiales', label: 'Materiales',        icon: '⛏️' },
+    { id: 'oro',        label: 'Oro',              icon: '🪙' },
+    { id: 'comida',     label: 'Comida',            icon: '🍖' },
+    { id: 'armas',      label: 'Armas',             icon: '⚔️' },
+    { id: 'armadura',   label: 'Armadura',          icon: '🛡️' },
+    { id: 'importante', label: 'Importantes',       icon: '💎' },
+    { id: 'pociones',   label: 'Pociones',          icon: '🧪' },
+    { id: 'pergaminos', label: 'Pergaminos',        icon: '📜' },
+    { id: 'otras',      label: 'Otras',             icon: '📦' },
+];
 
 // ── Helpers ───────────────────────────────────────────────────────────────
 function _fEsc(s) {
@@ -179,10 +193,10 @@ function _renderAlmacen(panel) {
 
 // ── Picker del Bolso de Hermione ──────────────────────────────────────────
 function almacenOpenPicker() {
-    _pickerSelected = new Set();
+    _pickerSelected  = new Set();
+    _pickerCatFilter = 'todas';
     const panel = document.getElementById('forjaAlmacenPanel');
     if (!panel) return;
-    // Ocultar el botón de añadir mientras el picker está abierto
     panel.querySelector('#almacenAddWrap')?.remove();
     _appendAlmacenPicker(panel);
 }
@@ -190,14 +204,23 @@ function almacenOpenPicker() {
 function _appendAlmacenPicker(panel) {
     panel.querySelector('.fg-inv-picker')?.remove();
 
+    // Solo mostrar pestañas de categorías que existan en el inventario
+    const presentCats = new Set(_forgeInventory.map(it => it.categoria || 'otras'));
+    const catTabs = BOLSO_CATS
+        .filter(c => c.id === 'todas' || presentCats.has(c.id))
+        .map(c => `<button class="fg-cat-tab${_pickerCatFilter === c.id ? ' active' : ''}"
+            onclick="almacenSetCat('${c.id}')">${c.icon} ${c.label}</button>`)
+        .join('');
+
     const picker = document.createElement('div');
     picker.className = 'fg-inv-picker';
     picker.innerHTML = `
         <div class="fg-inv-picker-hdr">
             <span class="fg-inv-picker-title">🎒 Bolso de Hermione</span>
-            <input class="fg-input fg-inv-search" type="search" placeholder="Buscar…"
-                oninput="filterAlmacenPicker(this.value)" autocomplete="off">
+            <input class="fg-input fg-inv-search" id="almacenPickerSearch" type="search"
+                placeholder="Buscar…" oninput="filterAlmacenPicker(this.value)" autocomplete="off">
         </div>
+        <div class="fg-cat-tabs" id="almacenCatTabs">${catTabs}</div>
         <div class="fg-inv-picker-list" id="almacenPickerList"></div>
         <div class="fg-inv-picker-footer">
             <button class="fg-btn-confirm" id="almacenPickerConfirmBtn"
@@ -207,18 +230,41 @@ function _appendAlmacenPicker(panel) {
 
     picker._available = _forgeInventory.filter(it => it.nombre);
     panel.appendChild(picker);
-    _renderAlmacenPickerList(picker._available, '');
-    picker.querySelector('.fg-inv-search').focus();
+    _refreshPickerList();
+    picker.querySelector('.fg-inv-search')?.focus();
+}
+
+function almacenSetCat(catId) {
+    _pickerCatFilter = catId;
+    // Actualizar estado activo de las pestañas
+    document.querySelectorAll('#almacenCatTabs .fg-cat-tab').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.trim().startsWith(
+            BOLSO_CATS.find(c => c.id === catId)?.icon || ''
+        ));
+    });
+    // Re-render usando onclick para identificar la tab activa correctamente
+    document.querySelectorAll('#almacenCatTabs .fg-cat-tab').forEach(btn => {
+        const match = btn.getAttribute('onclick')?.match(/almacenSetCat\('([^']+)'\)/);
+        if (match) btn.classList.toggle('active', match[1] === catId);
+    });
+    _refreshPickerList();
 }
 
 function filterAlmacenPicker(query) {
+    _refreshPickerList(query);
+}
+
+function _refreshPickerList(query) {
+    const search = query ?? document.getElementById('almacenPickerSearch')?.value ?? '';
     const picker = document.getElementById('forjaAlmacenPanel')?.querySelector('.fg-inv-picker');
     if (!picker) return;
-    const q = query.toLowerCase();
-    _renderAlmacenPickerList(
-        q ? picker._available.filter(it => it.nombre.toLowerCase().includes(q)) : picker._available,
-        q
-    );
+    const q = search.toLowerCase();
+    let items = picker._available;
+    if (_pickerCatFilter !== 'todas') {
+        items = items.filter(it => (it.categoria || 'otras') === _pickerCatFilter);
+    }
+    if (q) items = items.filter(it => it.nombre.toLowerCase().includes(q));
+    _renderAlmacenPickerList(items, q);
 }
 
 function _renderAlmacenPickerList(items, query) {
