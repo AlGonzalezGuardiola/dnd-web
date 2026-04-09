@@ -1325,6 +1325,243 @@ button, .card, .pin, .tab-btn, .hud-btn, .die-btn,
     color: rgba(255,255,255,.3); font-size: 14px;
 }
 
+/* ─── Forge Buttons ──────────────────────────────────────────────────────── */
+.char-almacen-btn, .char-herreria-btn {
+    display: flex; align-items: center; justify-content: center;
+    gap: 6px; width: 100%; margin-top: 8px;
+    padding: 9px 14px; border-radius: 8px;
+    font-size: 13px; font-weight: 600; font-family: 'Cinzel', serif;
+    letter-spacing: .04em; cursor: pointer;
+    transition: background .2s, border-color .2s, box-shadow .2s;
+}
+.char-almacen-btn {
+    background: linear-gradient(135deg, rgba(60,100,60,.18) 0%, rgba(30,60,30,.12) 100%);
+    border: 1px solid rgba(80,160,80,.28);
+    color: rgba(140,210,120,.9);
+}
+.char-almacen-btn:hover {
+    background: linear-gradient(135deg, rgba(60,130,60,.28) 0%, rgba(30,80,30,.18) 100%);
+    border-color: rgba(80,200,80,.5);
+    box-shadow: 0 3px 14px rgba(60,160,60,.18);
+}
+.char-herreria-btn {
+    background: linear-gradient(135deg, rgba(120,60,20,.22) 0%, rgba(80,30,10,.15) 100%);
+    border: 1px solid rgba(200,100,30,.32);
+    color: rgba(220,140,70,.9);
+}
+.char-herreria-btn:hover {
+    background: linear-gradient(135deg, rgba(150,70,20,.32) 0%, rgba(100,40,10,.2) 100%);
+    border-color: rgba(220,120,40,.55);
+    box-shadow: 0 3px 14px rgba(180,90,20,.22);
+}
+
+/* ─── Forge Dialog ───────────────────────────────────────────────────────── */
+.forge-dialog {
+    border: none; background: transparent;
+    padding: 0; margin: auto;
+    width: min(520px, calc(100vw - 24px));
+    max-height: calc(100vh - 48px);
+    overflow: visible;
+}
+.forge-dialog::backdrop { background: rgba(0,0,0,.72); backdrop-filter: blur(4px); }
+
+.fg-inner {
+    background: linear-gradient(155deg, rgba(14,18,36,.99) 0%, rgba(8,11,22,1) 100%);
+    border: 1px solid rgba(212,175,55,.22);
+    border-radius: 14px;
+    box-shadow: 0 24px 80px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.04);
+    overflow: hidden; display: flex; flex-direction: column;
+    max-height: calc(100vh - 48px);
+}
+.fg-hdr {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 12px; padding: 16px 20px;
+    border-bottom: 1px solid rgba(80,160,80,.18);
+    flex-shrink: 0;
+}
+.fg-hdr-herreria { border-bottom-color: rgba(200,100,30,.22); }
+.fg-hdr-left { display: flex; align-items: center; gap: 12px; }
+.fg-hdr-icon { font-size: 22px; line-height: 1; }
+.fg-label {
+    font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+    color: rgba(140,210,120,.55); font-family: 'Cinzel', serif;
+}
+.fg-hdr-herreria .fg-label { color: rgba(220,140,70,.55); }
+.fg-title {
+    font-size: 16px; font-weight: 700;
+    background: linear-gradient(130deg,#f0c040,#c9a227);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    font-family: 'Cinzel', serif; letter-spacing: .04em;
+}
+.fg-close {
+    width: 30px; height: 30px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.05);
+    color: rgba(255,255,255,.4); font-size: 13px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    transition: background .15s, color .15s;
+}
+.fg-close:hover { background: rgba(255,255,255,.12); color: rgba(255,255,255,.9); }
+
+.fg-body {
+    overflow-y: auto; padding: 18px 20px 20px;
+    display: flex; flex-direction: column; gap: 16px;
+}
+.fg-section { display: flex; flex-direction: column; gap: 8px; }
+.fg-empty {
+    text-align: center; padding: 28px 16px;
+    color: rgba(255,255,255,.25); font-size: 13px; font-style: italic;
+}
+.fg-loading {
+    text-align: center; padding: 40px 20px;
+    color: rgba(255,255,255,.3); font-size: 14px;
+}
+
+/* ── Materiales list ── */
+.fg-mat-list { display: flex; flex-direction: column; gap: 6px; }
+.fg-mat-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: 9px;
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.07);
+    transition: background .15s;
+}
+.fg-mat-row:hover { background: rgba(255,255,255,.05); }
+.fg-mat-emoji { font-size: 20px; line-height: 1; flex-shrink: 0; }
+.fg-mat-info { flex: 1; min-width: 0; }
+.fg-mat-name { font-size: 13px; font-weight: 600; color: rgba(232,220,200,.9); }
+.fg-mat-desc { font-size: 11px; color: rgba(255,255,255,.35); font-style: italic; margin-top: 2px; display: block; }
+.fg-mat-qty-wrap {
+    display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+}
+.fg-mat-qty { font-size: 14px; font-weight: 700; color: rgba(140,210,120,.9); min-width: 24px; text-align: center; }
+.fg-qty-btn {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.15);
+    background: rgba(255,255,255,.06);
+    color: rgba(255,255,255,.6); font-size: 14px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background .12s;
+}
+.fg-qty-btn:hover { background: rgba(255,255,255,.14); color: #fff; }
+.fg-mat-actions { display: flex; gap: 4px; flex-shrink: 0; }
+
+/* ── Recetas list ── */
+.fg-rec-list { display: flex; flex-direction: column; gap: 10px; }
+.fg-rec-card {
+    padding: 12px 14px; border-radius: 10px;
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(200,100,30,.18);
+    display: flex; flex-direction: column; gap: 8px;
+}
+.fg-rec-hdr { display: flex; align-items: flex-start; gap: 10px; }
+.fg-rec-emoji { font-size: 24px; line-height: 1; flex-shrink: 0; margin-top: 2px; }
+.fg-rec-info { flex: 1; min-width: 0; }
+.fg-rec-name { font-size: 14px; font-weight: 700; color: rgba(220,140,70,.95); }
+.fg-rec-desc { font-size: 11px; color: rgba(255,255,255,.4); font-style: italic; margin-top: 3px; }
+.fg-rec-actions { display: flex; gap: 4px; flex-shrink: 0; }
+.fg-rec-ings { display: flex; flex-wrap: wrap; gap: 5px; }
+.fg-rec-ing {
+    padding: 3px 8px; border-radius: 12px;
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.1);
+    font-size: 11px; color: rgba(232,220,200,.7);
+}
+.fg-rec-footer { display: flex; align-items: center; gap: 8px; margin-top: 2px; }
+.fg-rec-cd {
+    font-size: 11px; font-weight: 700; padding: 2px 7px; border-radius: 8px;
+    background: rgba(180,60,60,.2); border: 1px solid rgba(180,60,60,.3);
+    color: rgba(255,120,120,.8); font-family: 'Cinzel', serif;
+}
+.fg-rec-count { font-size: 11px; color: rgba(255,255,255,.3); font-style: italic; flex: 1; }
+.fg-forge-btn {
+    padding: 5px 12px; border-radius: 7px;
+    background: linear-gradient(135deg, rgba(160,80,20,.35), rgba(120,50,10,.25));
+    border: 1px solid rgba(220,130,50,.4);
+    color: rgba(220,150,80,.95); font-size: 12px; font-weight: 600;
+    cursor: pointer; font-family: 'Cinzel', serif; letter-spacing: .04em;
+    transition: background .15s, box-shadow .15s;
+}
+.fg-forge-btn:hover {
+    background: linear-gradient(135deg, rgba(190,100,25,.45), rgba(140,60,15,.32));
+    box-shadow: 0 2px 10px rgba(200,120,30,.2);
+}
+
+/* ── Shared row buttons ── */
+.fg-row-btn {
+    width: 24px; height: 24px; border-radius: 6px;
+    border: 1px solid rgba(255,255,255,.12);
+    background: rgba(255,255,255,.04);
+    color: rgba(255,255,255,.35); font-size: 11px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: background .12s, color .12s;
+}
+.fg-btn-edit:hover { background: rgba(212,175,55,.2); color: #d4af37; border-color: rgba(212,175,55,.35); }
+.fg-btn-del:hover { background: rgba(190,50,50,.25); color: #ff7777; border-color: rgba(190,50,50,.35); }
+
+/* ── Add wrap & form ── */
+.fg-add-wrap { display: flex; }
+.fg-add-btn {
+    width: 100%; padding: 9px; border-radius: 8px;
+    border: 1.5px dashed rgba(212,175,55,.22);
+    background: rgba(212,175,55,.04);
+    color: rgba(212,175,55,.5); font-size: 13px;
+    cursor: pointer; transition: border-color .15s, color .15s, background .15s;
+}
+.fg-add-btn:hover { border-color: rgba(212,175,55,.45); color: rgba(212,175,55,.8); background: rgba(212,175,55,.07); }
+
+.fg-form {
+    display: flex; flex-direction: column; gap: 8px;
+    padding: 14px; border-radius: 10px;
+    background: rgba(212,175,55,.05);
+    border: 1px solid rgba(212,175,55,.15);
+}
+.fg-form-row { display: flex; gap: 8px; }
+.fg-input {
+    width: 100%; padding: 8px 10px; border-radius: 7px;
+    border: 1px solid rgba(255,255,255,.12);
+    background: rgba(255,255,255,.06);
+    color: rgba(232,220,200,.9); font-size: 13px;
+    outline: none; box-sizing: border-box;
+    transition: border-color .15s;
+}
+.fg-input:focus { border-color: rgba(212,175,55,.4); }
+.fg-input-sm { width: 80px; flex-shrink: 0; }
+.fg-form-row .fg-input { width: auto; flex: 1; }
+.fg-form-row .fg-input-sm { flex: 0 0 80px; }
+
+.fg-ing-section { display: flex; flex-direction: column; gap: 6px; }
+.fg-ing-label { font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: rgba(212,175,55,.5); }
+.fg-ing-row { display: flex; gap: 6px; align-items: center; }
+.fg-ing-row .fg-input { flex: 1; }
+.fg-ing-row .fg-input-sm { flex: 0 0 70px; }
+.fg-add-ing-btn {
+    padding: 6px 10px; border-radius: 6px;
+    border: 1px dashed rgba(212,175,55,.22);
+    background: transparent; color: rgba(212,175,55,.45);
+    font-size: 12px; cursor: pointer; align-self: flex-start;
+    transition: color .15s, border-color .15s;
+}
+.fg-add-ing-btn:hover { color: rgba(212,175,55,.8); border-color: rgba(212,175,55,.45); }
+
+.fg-form-btns { display: flex; gap: 8px; justify-content: flex-end; margin-top: 4px; }
+.fg-btn-confirm {
+    padding: 7px 16px; border-radius: 7px;
+    background: linear-gradient(135deg, rgba(212,175,55,.25), rgba(180,140,30,.18));
+    border: 1px solid rgba(212,175,55,.4);
+    color: rgba(212,175,55,.95); font-size: 13px; font-weight: 600;
+    cursor: pointer; font-family: 'Cinzel', serif;
+    transition: background .15s;
+}
+.fg-btn-confirm:hover { background: linear-gradient(135deg, rgba(212,175,55,.35), rgba(180,140,30,.25)); }
+.fg-btn-cancel {
+    padding: 7px 14px; border-radius: 7px;
+    border: 1px solid rgba(255,255,255,.12);
+    background: rgba(255,255,255,.05);
+    color: rgba(255,255,255,.4); font-size: 13px;
+    cursor: pointer; transition: background .15s;
+}
+.fg-btn-cancel:hover { background: rgba(255,255,255,.1); color: rgba(255,255,255,.7); }
+
 .sheet-portrait-container {
     width: 100%;
     height: 300px;
