@@ -56,6 +56,13 @@
 
         <div class="hud-right-stack">
             <button id="roleIndicator" class="role-indicator master" onclick="showRoleSelectionOverlay()" title="Cambiar rol">🎲 Master</button>
+            <!-- World-map controls: injected here, hidden by default -->
+            <div id="wmHudControls" style="display:none;" class="wm-hud-controls">
+                <button id="wmBtnBack"   class="wm-hud-btn">← Mundo</button>
+                <button id="wmBtnEdit"   class="wm-hud-btn wm-hud-btn--primary">✏️ Editar</button>
+                <button id="wmBtnCancel" class="wm-hud-btn" style="display:none;">Cancelar</button>
+                <button id="wmBtnSave"   class="wm-hud-btn wm-hud-btn--gold" style="display:none;">Guardar</button>
+            </div>
         </div>
     </div>
 
@@ -856,23 +863,6 @@
 
     <!-- World Map — Cinematic Zoom Viewer -->
     <section id="worldMapSection" style="display:none;" aria-label="Mapa del Mundo">
-        <!-- Toolbar -->
-        <div class="wm-toolbar">
-            <span class="wm-toolbar-title">
-                🗺️ Mapa del Mundo
-                <span class="wm-edit-badge">Modo edición</span>
-            </span>
-            <button class="wm-btn wm-btn-back">← Volver al mundo</button>
-            <button class="wm-btn wm-btn-cancel">Cancelar</button>
-            <button class="wm-btn wm-btn-save">Guardar</button>
-            <button class="wm-btn wm-btn-edit">✏️ Editar</button>
-        </div>
-
-        <!-- Edit mode hint -->
-        <div class="wm-edit-hint">
-            Haz clic en el mapa para añadir un nuevo punto de interés
-        </div>
-
         <!-- Stage -->
         <div class="wm-stage">
             <!-- Canvas: this element gets scaled/translated during zoom -->
@@ -892,8 +882,13 @@
                 <span></span>
             </div>
 
+            <!-- Edit mode hint bar (bottom of screen) -->
+            <div class="wm-edit-hint" id="wmEditHint">
+                Haz clic en el mapa para añadir un nuevo punto de interés
+            </div>
+
             <!-- Empty state hint (shown in edit mode when there are no hotspots) -->
-            <div class="wm-empty-hint">
+            <div class="wm-empty-hint" id="wmEmptyHint">
                 <div class="wm-empty-hint-inner">
                     Haz clic en cualquier punto del mapa para añadir un lugar
                 </div>

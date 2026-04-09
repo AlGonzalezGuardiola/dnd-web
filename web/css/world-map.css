@@ -2,7 +2,7 @@
    World Map — Cinematic Zoom Viewer + Edit Mode
    ============================================ */
 
-/* ── Section wrapper ── */
+/* ── Section wrapper (ocupa todo el viewport, el HUD flota encima) ── */
 #worldMapSection {
     display: flex;
     flex-direction: column;
@@ -13,74 +13,7 @@
     position: relative;
 }
 
-/* ── Top toolbar ── */
-.wm-toolbar {
-    flex-shrink: 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 10px 20px;
-    background: var(--bg-glass);
-    border-bottom: 1px solid var(--border-color);
-    backdrop-filter: blur(var(--blur-glass));
-    z-index: 10;
-}
-
-.wm-toolbar-title {
-    font-family: var(--font-heading);
-    color: var(--accent-gold);
-    font-size: 1rem;
-    letter-spacing: 0.05em;
-    flex: 1;
-}
-
-/* Edit mode indicator in title */
-.wm-toolbar-title .wm-edit-badge {
-    display: none;
-    font-family: var(--font-body);
-    font-size: 0.75rem;
-    color: var(--accent-gold-bright);
-    background: rgba(201, 162, 39, 0.15);
-    border: 1px solid var(--border-color);
-    border-radius: 4px;
-    padding: 2px 8px;
-    margin-left: 10px;
-    vertical-align: middle;
-    letter-spacing: 0.04em;
-}
-.wm-edit-mode .wm-edit-badge { display: inline; }
-
-/* Toolbar buttons */
-.wm-btn {
-    padding: 6px 14px;
-    border: 1px solid var(--border-color);
-    border-radius: 6px;
-    background: transparent;
-    color: var(--text-primary);
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: background var(--transition-fast), border-color var(--transition-fast);
-    white-space: nowrap;
-}
-.wm-btn:hover {
-    background: rgba(201, 162, 39, 0.12);
-    border-color: var(--border-strong);
-}
-
-.wm-btn-back   { display: none; }
-.wm-btn-edit   { }
-.wm-btn-save   { display: none; color: var(--accent-gold-bright); border-color: var(--border-strong); }
-.wm-btn-cancel { display: none; }
-
-/* Show/hide buttons based on mode */
-.wm-edit-mode .wm-btn-edit   { display: none; }
-.wm-edit-mode .wm-btn-save   { display: inline-block; }
-.wm-edit-mode .wm-btn-cancel { display: inline-block; }
-/* Back button only when viewing detail */
-.wm-detail-open .wm-btn-back { display: inline-block; }
-.wm-detail-open .wm-btn-edit { display: none; }
-
-/* ── Stage ── */
+/* ── Stage (todo el viewport) ── */
 .wm-stage {
     flex: 1;
     position: relative;
@@ -89,13 +22,9 @@
     align-items: center;
     justify-content: center;
 }
+.wm-edit-mode .wm-stage { cursor: crosshair; }
 
-/* Edit mode: crosshair cursor on the stage */
-.wm-edit-mode .wm-stage {
-    cursor: crosshair;
-}
-
-/* ── Canvas (gets scaled/translated on zoom) ── */
+/* ── Canvas (solo esto se escala en el zoom) ── */
 .wm-canvas {
     position: relative;
     transform-origin: center center;
@@ -110,27 +39,24 @@
     .wm-hotspot      { animation: none !important; }
 }
 
-/* ── Detail map (vive en .wm-stage, NO en .wm-canvas) ── */
-
-/* ── World map image ── */
+/* ── Imagen base ── */
 .wm-map-img {
     display: block;
     max-width: 100%;
-    max-height: calc(100vh - 56px);
+    max-height: 100vh;
     object-fit: contain;
     user-select: none;
     -webkit-user-drag: none;
     pointer-events: none;
 }
 
-/* ── Detail map layer (hijo directo de .wm-stage, no del canvas) ── */
+/* ── Detail map layer (hermano del canvas en .wm-stage, NO dentro del canvas) ── */
 .wm-detail-layer {
     position: absolute;
     inset: 0;
     opacity: 0;
     pointer-events: none;
     z-index: 1;
-    /* fade in al terminar el zoom; el delay coincide con WM_ZOOM_MS en JS */
     transition: opacity 0.4s ease;
 }
 .wm-detail-layer img {
@@ -145,27 +71,24 @@
     pointer-events: auto;
 }
 
-/* ── Hotspot (normal mode) ── */
+/* ── Hotspot (modo normal) ── */
 .wm-hotspot {
     position: absolute;
     cursor: pointer;
     border-radius: 50%;
     border: 2px solid var(--accent-gold);
-    box-shadow: 0 0 0 0 rgba(201, 162, 39, 0.6);
     animation: wm-pulse 2.4s ease-in-out infinite;
     transition: transform var(--transition-fast), box-shadow var(--transition-fast), opacity 0.3s ease;
-    /* centre on the x/y percentage point */
     transform: translate(-50%, -50%);
 }
 .wm-hotspot:hover {
     transform: translate(-50%, -50%) scale(1.15);
     box-shadow: 0 0 16px 4px rgba(201, 162, 39, 0.55);
 }
-
 @keyframes wm-pulse {
-    0%   { box-shadow: 0 0 0 0   rgba(201, 162, 39, 0.55); }
-    70%  { box-shadow: 0 0 0 12px rgba(201, 162, 39, 0);   }
-    100% { box-shadow: 0 0 0 0   rgba(201, 162, 39, 0);    }
+    0%   { box-shadow: 0 0 0 0    rgba(201, 162, 39, 0.55); }
+    70%  { box-shadow: 0 0 0 12px rgba(201, 162, 39, 0);    }
+    100% { box-shadow: 0 0 0 0    rgba(201, 162, 39, 0);    }
 }
 
 /* Tooltip */
@@ -196,14 +119,12 @@
     pointer-events: none;
 }
 
-/* ── Hotspot in EDIT MODE ── */
+/* ── Hotspot en MODO EDICIÓN ── */
 .wm-edit-mode .wm-hotspot {
     animation: none;
     cursor: default;
     border-color: rgba(201, 162, 39, 0.5);
 }
-
-/* Delete button inside hotspot (edit mode only) */
 .wm-hotspot-delete {
     display: none;
     position: absolute;
@@ -224,19 +145,7 @@
 }
 .wm-edit-mode .wm-hotspot-delete { display: block; }
 
-/* Ghost hotspot (preview while positioning in edit mode) */
-.wm-hotspot-ghost {
-    position: absolute;
-    border-radius: 50%;
-    border: 2px dashed var(--accent-gold-bright);
-    pointer-events: none;
-    opacity: 0.7;
-    transform: translate(-50%, -50%);
-    width: 32px;
-    height: 32px;
-}
-
-/* ── Vignette (sobre el detail layer) ── */
+/* ── Vignette ── */
 .wm-vignette {
     position: absolute;
     inset: 0;
@@ -248,7 +157,7 @@
 }
 .wm-vignette.wm-active { opacity: 1; }
 
-/* ── Region name overlay ── */
+/* ── Nombre de región (mid-zoom) ── */
 .wm-region-label {
     position: absolute;
     inset: 0;
@@ -270,20 +179,81 @@
 }
 .wm-region-label.wm-active { opacity: 1; }
 
-/* ── Edit mode hint bar (below toolbar) ── */
-.wm-edit-hint {
-    display: none;
-    flex-shrink: 0;
-    padding: 6px 20px;
-    background: rgba(201, 162, 39, 0.08);
-    border-bottom: 1px solid rgba(201, 162, 39, 0.2);
+/* ── Edit hint flotante (bottom center) ── */
+#wmEditHint {
+    display: none; /* JS lo muestra/oculta */
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5;
+    padding: 7px 20px;
+    background: var(--bg-glass);
+    border: 1px dashed rgba(201, 162, 39, 0.4);
+    border-radius: 20px;
     color: var(--text-secondary);
     font-size: 0.8rem;
+    backdrop-filter: blur(8px);
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+/* ── Empty state (edición, sin hotspots) ── */
+#wmEmptyHint {
+    position: absolute;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 1;
+}
+.wm-empty-hint-inner {
+    padding: 12px 24px;
+    background: var(--bg-glass);
+    border: 1px dashed var(--border-color);
+    border-radius: 8px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    backdrop-filter: blur(8px);
     text-align: center;
 }
-.wm-edit-mode .wm-edit-hint { display: block; }
 
-/* ── Add-hotspot modal ── */
+/* ── Controles del mapa en el HUD (hud-right-stack) ── */
+.wm-hud-controls {
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.wm-hud-btn {
+    padding: 5px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-glass);
+    color: var(--text-primary);
+    font-size: 0.78rem;
+    cursor: pointer;
+    white-space: nowrap;
+    backdrop-filter: blur(6px);
+    transition: background var(--transition-fast), border-color var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+.wm-hud-btn:hover {
+    background: rgba(201, 162, 39, 0.15);
+    border-color: var(--border-strong);
+}
+.wm-hud-btn--gold {
+    color: var(--accent-gold-bright);
+    border-color: var(--border-strong);
+}
+
+/* ── Modal add-hotspot ── */
 .wm-modal-overlay {
     position: fixed;
     inset: 0;
@@ -291,7 +261,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 1000;
+    z-index: 2000;
     backdrop-filter: blur(4px);
 }
 .wm-modal {
@@ -309,15 +279,12 @@
     font-size: 1.1rem;
     letter-spacing: 0.05em;
 }
-.wm-modal-field {
-    margin-bottom: 16px;
-}
+.wm-modal-field { margin-bottom: 16px; }
 .wm-modal-field label {
     display: block;
     color: var(--text-secondary);
     font-size: 0.82rem;
     margin-bottom: 5px;
-    letter-spacing: 0.03em;
 }
 .wm-modal-field input[type="text"] {
     width: 100%;
@@ -331,16 +298,12 @@
     outline: none;
     transition: border-color var(--transition-fast);
 }
-.wm-modal-field input[type="text"]:focus {
-    border-color: var(--border-strong);
-}
+.wm-modal-field input[type="text"]:focus { border-color: var(--border-strong); }
 .wm-modal-field input[type="file"] {
     color: var(--text-secondary);
     font-size: 0.85rem;
     width: 100%;
 }
-
-/* Image preview inside modal */
 .wm-modal-preview {
     display: none;
     margin-top: 10px;
@@ -356,8 +319,6 @@
     display: block;
 }
 .wm-modal-preview.visible { display: block; }
-
-/* Upload progress */
 .wm-modal-progress {
     display: none;
     color: var(--text-secondary);
@@ -365,7 +326,6 @@
     margin-top: 6px;
 }
 .wm-modal-progress.visible { display: block; }
-
 .wm-modal-actions {
     display: flex;
     gap: 10px;
@@ -382,13 +342,8 @@
     cursor: pointer;
     transition: background var(--transition-fast);
 }
-.wm-modal-actions .wm-btn-confirm:hover {
-    background: rgba(201, 162, 39, 0.35);
-}
-.wm-modal-actions .wm-btn-confirm:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
+.wm-modal-actions .wm-btn-confirm:hover  { background: rgba(201, 162, 39, 0.35); }
+.wm-modal-actions .wm-btn-confirm:disabled { opacity: 0.5; cursor: not-allowed; }
 .wm-modal-actions .wm-btn-dismiss {
     padding: 8px 16px;
     background: transparent;
@@ -399,30 +354,7 @@
     cursor: pointer;
 }
 
-/* ── Empty-state overlay (no hotspots, edit mode) ── */
-.wm-empty-hint {
-    position: absolute;
-    inset: 0;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    pointer-events: none;
-    z-index: 1;
-}
-.wm-edit-mode .wm-empty-hint { display: flex; }
-.wm-empty-hint-inner {
-    padding: 12px 24px;
-    background: var(--bg-glass);
-    border: 1px dashed var(--border-color);
-    border-radius: 8px;
-    color: var(--text-secondary);
-    font-size: 0.85rem;
-    backdrop-filter: blur(8px);
-    text-align: center;
-}
-
 @media (max-width: 480px) {
-    .wm-toolbar { padding: 8px 12px; }
-    .wm-toolbar-title { font-size: 0.85rem; }
     .wm-modal { padding: 20px 18px; }
+    .wm-hud-btn { font-size: 0.72rem; padding: 4px 8px; }
 }

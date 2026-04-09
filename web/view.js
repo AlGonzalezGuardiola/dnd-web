@@ -433,6 +433,8 @@ function setView(viewName) {
     if (sessionNotesEl) sessionNotesEl.style.display = 'none';
     const worldMapEl = document.getElementById('worldMapSection');
     if (worldMapEl) worldMapEl.style.display = 'none';
+    const wmHudCtrl = document.getElementById('wmHudControls');
+    if (wmHudCtrl) wmHudCtrl.style.display = 'none';
     const narrativaHubEl = document.getElementById('narrativaHubView');
     if (narrativaHubEl) narrativaHubEl.style.display = 'none';
     const narrativeEl = document.getElementById('narrativeSection');
@@ -540,6 +542,7 @@ function setView(viewName) {
             break;
         case 'worldMap':
             document.getElementById('worldMapSection').style.display = 'flex';
+            document.getElementById('wmHudControls').style.display = 'flex';
             if (editorToolbar) editorToolbar.style.display = 'none';
             if (hud) hud.style.display = 'flex';
             if (diceWidget) diceWidget.style.display = 'none';

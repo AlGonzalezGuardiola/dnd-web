@@ -38,15 +38,17 @@ async function _wmInit() {
 
     await _wmLoadHotspots();
     _wmRenderHotspots();
+    _wmUpdateButtons();
+    _wmShowEditHint(false);
 }
 
-// ── Button wiring (single source, no inline onclick) ─────────────────────────
+// ── Button wiring (buttons live in #wmHudControls inside the HUD) ────────────
 
 function _wmBindButtons(section) {
-    section.querySelector('.wm-btn-edit')  .addEventListener('click', _wmEnterEditMode);
-    section.querySelector('.wm-btn-save')  .addEventListener('click', _wmSave);
-    section.querySelector('.wm-btn-cancel').addEventListener('click', _wmCancelEdit);
-    section.querySelector('.wm-btn-back')  .addEventListener('click', wmGoBack);
+    document.getElementById('wmBtnEdit')  .addEventListener('click', _wmEnterEditMode);
+    document.getElementById('wmBtnSave')  .addEventListener('click', _wmSave);
+    document.getElementById('wmBtnCancel').addEventListener('click', _wmCancelEdit);
+    document.getElementById('wmBtnBack')  .addEventListener('click', wmGoBack);
 
     // Stage click in edit mode → place hotspot
     section.querySelector('.wm-stage').addEventListener('click', _wmOnStageClick);
@@ -55,6 +57,32 @@ function _wmBindButtons(section) {
     new MutationObserver(() => {
         if (section.style.display === 'none') _wmReset();
     }).observe(section, { attributes: true, attributeFilter: ['style'] });
+}
+
+// Show/hide HUD buttons based on current state
+function _wmUpdateButtons() {
+    const btnBack   = document.getElementById('wmBtnBack');
+    const btnEdit   = document.getElementById('wmBtnEdit');
+    const btnCancel = document.getElementById('wmBtnCancel');
+    const btnSave   = document.getElementById('wmBtnSave');
+    if (!btnBack) return;
+
+    const show = el => { el.style.display = 'inline-flex'; };
+    const hide = el => { el.style.display = 'none'; };
+
+    if (_wm.editMode) {
+        // Edit mode: Volver (if zoomed) + Cancelar + Guardar
+        _wm.zoomed ? show(btnBack) : hide(btnBack);
+        hide(btnEdit);
+        show(btnCancel);
+        show(btnSave);
+    } else {
+        // Normal mode: Volver (if zoomed) + Editar
+        _wm.zoomed ? show(btnBack) : hide(btnBack);
+        show(btnEdit);
+        hide(btnCancel);
+        hide(btnSave);
+    }
 }
 
 // ── Load / Save ───────────────────────────────────────────────────────────────
@@ -105,12 +133,16 @@ function _wmEnterEditMode() {
     _wm.pending  = _wm.hotspots.map(h => ({ ...h }));
     document.getElementById('worldMapSection').classList.add('wm-edit-mode');
     _wmRenderHotspots();
+    _wmUpdateButtons();
+    _wmShowEditHint(true);
 }
 
 function _wmExitEditMode() {
     _wm.editMode = false;
     document.getElementById('worldMapSection').classList.remove('wm-edit-mode');
     _wmRenderHotspots();
+    _wmUpdateButtons();
+    _wmShowEditHint(false);
 }
 
 function _wmCancelEdit() {
@@ -137,7 +169,7 @@ function _wmOnStageClick(e) {
 
 function _wmRenderHotspots() {
     const canvas    = document.querySelector('#worldMapSection .wm-canvas');
-    const emptyHint = document.querySelector('#worldMapSection .wm-empty-hint');
+    const emptyHint = document.getElementById('wmEmptyHint');
     if (!canvas) return;
 
     canvas.querySelectorAll('.wm-hotspot').forEach(el => el.remove());
@@ -333,6 +365,8 @@ function _wmZoomIn(hs) {
     regionLabel.querySelector('span').textContent = hs.label;
     setTimeout(() => regionLabel.classList.add('wm-active'), WM_ZOOM_MS * 0.4);
 
+    _wmUpdateButtons();
+
     // Al terminar el zoom → mostrar mapa detallado (en stage, sin escala)
     setTimeout(() => {
         let layer = stage.querySelector(`.wm-detail-layer[data-hs-id="${hs.id}"]`);
@@ -361,6 +395,7 @@ function _wmZoomIn(hs) {
             regionLabel.classList.remove('wm-active');
             vignette.classList.remove('wm-active');
             section.classList.add('wm-detail-open');
+            _wmUpdateButtons();
         }, 420);
 
     }, WM_ZOOM_MS + 50);
@@ -412,8 +447,17 @@ function _wmZoomOut() {
             vignette.classList.remove('wm-active');
             _wm.zoomed    = false;
             _wm.currentHs = null;
+            section.classList.remove('wm-detail-open');
+            _wmUpdateButtons();
         }, WM_ZOOM_MS + 100);
     }, 360);
+}
+
+// ── Edit hint helper ──────────────────────────────────────────────────────────
+
+function _wmShowEditHint(visible) {
+    const hint = document.getElementById('wmEditHint');
+    if (hint) hint.style.display = visible ? 'block' : 'none';
 }
 
 // ── Reset al navegar fuera ────────────────────────────────────────────────────
@@ -447,4 +491,5 @@ function _wmReset() {
     _wm.editMode  = false;
     _wm.currentHs = null;
     document.getElementById('wmAddModal')?.remove();
+    _wmShowEditHint(false);
 }
