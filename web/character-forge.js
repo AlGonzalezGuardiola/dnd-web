@@ -627,7 +627,7 @@ async function doForjar() {
     );
 
     // Añadir el objeto forjado al Bolso de Hermione
-    _forgeInventory = [..._forgeInventory, {
+    const forgedItem = {
         id:        _fId(),
         nombre:    r.nombre,
         emoji:     r.emoji || '⚒️',
@@ -635,9 +635,85 @@ async function doForjar() {
         desc:      r.desc || null,
         categoria: 'otras',
         ts:        Date.now(),
-    }];
+    };
+    _forgeInventory = [..._forgeInventory, forgedItem];
 
     _forjarSlots = {};
-    await _forgePickerSave();  // guarda Bolso + forge en una sola pasada
+    await _forgePickerSave();
     _forgeRender();
+
+    // Animación de forja → popup de obtención
+    _playForjaAnimation(forgedItem);
+}
+
+// ── Animación de forja + popup de obtención ───────────────────────────────
+function _playForjaAnimation(item) {
+    // Overlay con vídeo
+    const overlay = document.createElement('div');
+    overlay.id = 'forjaVideoOverlay';
+    overlay.className = 'forge-video-overlay';
+    overlay.innerHTML = `
+        <video class="forge-video" id="forjaVideo" autoplay playsinline muted>
+            <source src="assets/videos/blacksmith-forging-video-game-style-741718.mp4" type="video/mp4">
+        </video>`;
+    document.body.appendChild(overlay);
+
+    // Forzar reflow para que la transición de entrada funcione
+    requestAnimationFrame(() => overlay.classList.add('forge-video-overlay--visible'));
+
+    const video = document.getElementById('forjaVideo');
+
+    // Al terminar el vídeo → mostrar popup
+    video.addEventListener('ended', () => {
+        overlay.remove();
+        _showForjaObtainedPopup(item);
+    });
+
+    // Seguridad: si el vídeo falla o tarda más de 12 s, saltar al popup
+    const fallback = setTimeout(() => {
+        overlay.remove();
+        _showForjaObtainedPopup(item);
+    }, 12000);
+
+    video.addEventListener('ended', () => clearTimeout(fallback), { once: true });
+
+    // Click en el overlay omite el vídeo
+    overlay.addEventListener('click', () => {
+        clearTimeout(fallback);
+        overlay.remove();
+        _showForjaObtainedPopup(item);
+    });
+}
+
+function _showForjaObtainedPopup(item) {
+    // Eliminar popup previo si existe
+    document.getElementById('forjaObtainedPopup')?.remove();
+
+    const popup = document.createElement('div');
+    popup.id = 'forjaObtainedPopup';
+    popup.className = 'forge-obtained-popup';
+    popup.innerHTML = `
+        <div class="forge-obtained-inner">
+            <div class="forge-obtained-sparks" aria-hidden="true">
+                ${Array.from({ length: 12 }, (_, i) =>
+                    `<span class="fo-spark fo-spark-${i}" style="--i:${i}"></span>`
+                ).join('')}
+            </div>
+            <div class="forge-obtained-icon">${_fEsc(item.emoji)}</div>
+            <div class="forge-obtained-label">Has obtenido</div>
+            <div class="forge-obtained-name">${_fEsc(item.nombre)}</div>
+            <button class="forge-obtained-btn" onclick="document.getElementById('forjaObtainedPopup').remove()">
+                ¡Genial!
+            </button>
+        </div>`;
+    document.body.appendChild(popup);
+
+    // Animar entrada
+    requestAnimationFrame(() => popup.classList.add('forge-obtained-popup--visible'));
+
+    // Auto-cerrar tras 6 s
+    setTimeout(() => {
+        popup.classList.remove('forge-obtained-popup--visible');
+        setTimeout(() => popup.remove(), 400);
+    }, 6000);
 }
