@@ -217,6 +217,14 @@ function navigateBack() {
     if (view === 'narrativaHub') { setView('landing'); return; }
     if (view === 'narrative') { setView('narrativaHub'); return; }
     if (view === 'narrativeImages') { setView('narrativaHub'); return; }
+    if (view === 'worldMap') {
+        if (typeof _wm !== 'undefined' && _wm.zoomed) {
+            wmGoBack(); // zoom-out al mapa del mundo
+        } else {
+            setView('narrativaHub');
+        }
+        return;
+    }
     if (view === 'forja') { setView('characters'); return; }
     if (view === 'cocina') { setView('characters'); return; }
     if (view === 'biblioteca') { setView('characters'); return; }
