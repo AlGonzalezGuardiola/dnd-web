@@ -23,6 +23,7 @@ const _ROUTES = {
     narrativaHub:     'narrativa',
     narrative:        'narrativa/cronicas',
     narrativeImages:  'narrativa/imagenes',
+    bolaMundo:        'narrativa/bola-del-mundo',
     sessionNotes:  'notas',
     map:             'mapa',
     npcGenerator:    'generador-npc',
@@ -441,6 +442,8 @@ function setView(viewName) {
     if (narrativeEl) narrativeEl.style.display = 'none';
     const narrativeImagesEl = document.getElementById('narrativeImagesSection');
     if (narrativeImagesEl) narrativeImagesEl.style.display = 'none';
+    const bolaMundoEl = document.getElementById('bolaMundoSection');
+    if (bolaMundoEl) bolaMundoEl.style.display = 'none';
     const tvModeEl = document.getElementById('tvModeSection');
     if (tvModeEl) tvModeEl.style.display = 'none';
     const combatMapsEl = document.getElementById('combatMapsView');
@@ -569,6 +572,13 @@ function setView(viewName) {
             if (diceWidget) diceWidget.style.display = 'none';
             setBreadcrumb('📜 Narrativa › Imágenes');
             break;
+        case 'bolaMundo':
+            document.getElementById('bolaMundoSection').style.display = 'flex';
+            if (editorToolbar) editorToolbar.style.display = 'none';
+            if (hud) hud.style.display = 'flex';
+            if (diceWidget) diceWidget.style.display = 'none';
+            setBreadcrumb('📜 Narrativa › Bola del Mundo');
+            break;
         case 'tvMode':
             document.getElementById('tvModeSection').style.display = 'flex';
             if (editorToolbar) editorToolbar.style.display = 'none';
@@ -614,6 +624,10 @@ function openWorldMap() {
 }
 
 // openCronicas() defined in narrative.js
+
+function openBolaMundo() {
+    setView('bolaMundo');
+}
 
 // ============================================
 // Fullscreen
