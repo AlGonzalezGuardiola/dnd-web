@@ -202,51 +202,6 @@
   );
   worldPivot.add(atmosMesh);
 
-  // ── ANILLOS orbitales ────────────────────────────────────
-  // Anillo ecuatorial turquesa (tubo cuadrado: radiusSegments = 3)
-  const ring1 = new THREE.Mesh(
-    new THREE.TorusGeometry(1.52, 0.028, 3, 48),
-    new THREE.MeshToonMaterial({
-      color: 0x33ddcc, gradientMap: rampTex,
-      emissive: 0x33ddcc, emissiveIntensity: 0.5,
-    })
-  );
-  ring1.rotation.x = Math.PI / 2;
-  worldPivot.add(ring1);
-
-  // Anillo orbital inclinado dorado
-  const ring2 = new THREE.Mesh(
-    new THREE.TorusGeometry(1.88, 0.018, 3, 36),
-    new THREE.MeshToonMaterial({
-      color: 0xffbb22, gradientMap: rampTex,
-      emissive: 0xffbb22, emissiveIntensity: 0.4,
-    })
-  );
-  ring2.rotation.x = Math.PI / 2.5;
-  ring2.rotation.z = Math.PI / 5;
-  worldPivot.add(ring2);
-
-  // ── ROCAS FLOTANTES ──────────────────────────────────────
-  // Cada roca: IcosahedronGeometry detail=0 (20 caras triangulares puras)
-  const rockDefs = [
-    { pos: [ 2.3,  0.5,  0.2], r: 0.18, color: 0xffaa44 },
-    { pos: [-2.1, -0.3,  0.6], r: 0.14, color: 0xaa55ff },
-    { pos: [ 0.5,  2.0, -1.1], r: 0.12, color: 0x44ddbb },
-    { pos: [-0.7,  0.8,  2.1], r: 0.16, color: 0xff6677 },
-    { pos: [ 1.9, -1.4, -0.7], r: 0.11, color: 0xffee44 },
-  ];
-
-  const rocks = rockDefs.map(({ pos, r, color }, i) => {
-    const mesh = new THREE.Mesh(
-      new THREE.IcosahedronGeometry(r, 0),
-      new THREE.MeshToonMaterial({ color, gradientMap: rampTex, flatShading: true })
-    );
-    mesh.position.set(...pos);
-    // Orientación inicial aleatoria pero determinista
-    mesh.rotation.set(i * 0.9, i * 1.4, i * 0.6);
-    scene.add(mesh);
-    return mesh;
-  });
 
   // ── CARGA DE TEXTURA ─────────────────────────────────────
   // Aplica una textura cargada desde un src (data URL o ruta HTTP)
@@ -316,18 +271,6 @@
     // Mundo: rotación lenta en Y + flotación senoidal en Y
     world.rotation.y     = t * 0.18;
     worldPivot.position.y = Math.sin(t * 0.45) * 0.14;
-
-    // Anillos contra-rotan levemente para dar vida
-    ring1.rotation.z =  t * 0.05;
-    ring2.rotation.y =  t * 0.04;
-
-    // Rocas: giran y flotan con fase distinta cada una
-    rocks.forEach((rock, i) => {
-      rock.rotation.x += 0.006;
-      rock.rotation.y += 0.009;
-      // Flotación independiente de la del mundo
-      rock.position.y  = rockDefs[i].pos[1] + Math.sin(t * 0.55 + i * 1.1) * 0.12;
-    });
 
     controls.update();
     renderer.render(scene, camera);
