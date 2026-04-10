@@ -4,7 +4,11 @@ const mongoose = require('mongoose');
 const poiSchema = new mongoose.Schema({
     id:             { type: String, required: true },
     label:          { type: String, required: true, trim: true, maxlength: 80 },
-    // Coordenadas esféricas (escenas glb3d)
+    // Posición local exacta en el modelo 3D (espacio local del pivot, sin rotación)
+    lx:             { type: Number, default: null },
+    ly:             { type: Number, default: null },
+    lz:             { type: Number, default: null },
+    // Coordenadas esféricas (legacy / fallback)
     theta:          { type: Number, default: 0 },
     phi:            { type: Number, default: 1.5708 },
     // Coordenadas porcentuales (escenas image2d)

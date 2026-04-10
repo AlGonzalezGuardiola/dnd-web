@@ -334,12 +334,16 @@
 
   // ── Marcador 3D proyectado ────────────────────────────
   function _buildMarker3D(poi) {
-    // Posición esférica → cartesiana local
-    poi._localPos = new THREE.Vector3(
-      modelRadius * Math.sin(poi.phi) * Math.cos(poi.theta),
-      modelRadius * Math.cos(poi.phi),
-      modelRadius * Math.sin(poi.phi) * Math.sin(poi.theta)
-    );
+    // Usar posición local exacta si está disponible; si no, reconstruir desde esféricas
+    if (poi.lx != null && poi.ly != null && poi.lz != null) {
+      poi._localPos = new THREE.Vector3(poi.lx, poi.ly, poi.lz);
+    } else {
+      poi._localPos = new THREE.Vector3(
+        modelRadius * Math.sin(poi.phi) * Math.cos(poi.theta),
+        modelRadius * Math.cos(poi.phi),
+        modelRadius * Math.sin(poi.phi) * Math.sin(poi.theta)
+      );
+    }
 
     var el = document.createElement('div');
     el.className    = 'm3d-poi-marker';
@@ -468,13 +472,11 @@
         return;
       }
 
+      // Convertir punto mundial → espacio local del pivot (sin la rotación Y)
       var invRotY    = new THREE.Matrix4().makeRotationY(-modelPivot.rotation.y);
       var localPoint = point.clone().applyMatrix4(invRotY);
-      var r          = localPoint.length();
-      var phi        = Math.acos(Math.max(-1, Math.min(1, localPoint.y / r)));
-      var theta      = Math.atan2(localPoint.z, localPoint.x);
 
-      _openModal3D(theta, phi);
+      _openModal3D(localPoint.x, localPoint.y, localPoint.z);
     });
   }
 
@@ -499,7 +501,7 @@
   //  MODAL — AÑADIR POI
   // ════════════════════════════════════════════════════════
 
-  function _openModal3D(theta, phi) { _openModal({ theta: theta, phi: phi }, 'glb3d'); }
+  function _openModal3D(lx, ly, lz) { _openModal({ lx: lx, ly: ly, lz: lz }, 'glb3d'); }
   function _openModal2D(x, y)       { _openModal({ x: x, y: y }, 'image2d'); }
 
   function _openModal(coords, coordType) {
@@ -595,10 +597,12 @@
 
     // Copiar coordenadas según tipo de escena
     if (coordType === 'glb3d') {
-      poi.theta = coords.theta; poi.phi = coords.phi;
+      poi.lx = coords.lx; poi.ly = coords.ly; poi.lz = coords.lz;
+      poi.theta = 0; poi.phi = 1.5708;  // valores de relleno no usados
       poi.x = 50; poi.y = 50;
     } else {
       poi.x = coords.x; poi.y = coords.y;
+      poi.lx = 0; poi.ly = 0; poi.lz = 0;
       poi.theta = 0; poi.phi = 1.5708;
     }
 
