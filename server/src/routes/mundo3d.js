@@ -70,51 +70,51 @@ router.put('/', async (req, res) => {
     }
 });
 
-// POST /api/mundo3d/upload — { filename, fileData (base64 data-URL), fileType: 'image'|'glb' }
-router.post('/upload', async (req, res) => {
-    try {
-        const { filename: originalName, fileData, fileType } = req.body;
-        if (!fileData?.startsWith('data:')) {
-            return res.status(400).json({ error: 'fileData inválido (debe ser data-URL)' });
-        }
+// POST /api/mundo3d/upload — binario en body, fileType y filename en query
+// Content-Type: application/octet-stream
+// ?fileType=image|glb  &filename=original.glb
+router.post('/upload',
+    express.raw({ type: 'application/octet-stream', limit: '210mb' }),
+    async (req, res) => {
+        try {
+            const { fileType, filename: originalName } = req.query;
+            const buffer = req.body;  // Buffer raw
 
-        const match = fileData.match(/^data:([^;]+);base64,(.+)$/s);
-        if (!match) return res.status(400).json({ error: 'Formato de data-URL inválido' });
-
-        const [, mime, b64] = match;
-        const buffer = Buffer.from(b64, 'base64');
-
-        if (fileType === 'image') {
-            if (!ALLOWED_IMG_MIME.has(mime)) {
-                return res.status(400).json({ error: 'Solo se aceptan JPG, PNG o WebP' });
+            if (!Buffer.isBuffer(buffer) || buffer.length === 0) {
+                return res.status(400).json({ error: 'Cuerpo vacío o formato incorrecto' });
             }
-            if (buffer.length > MAX_IMG_BYTES) {
-                return res.status(400).json({ error: 'La imagen supera los 20 MB' });
-            }
-            const ext      = IMG_EXT[mime] || '.jpg';
-            const base     = safeBasename(originalName, 'imagen');
-            const filename = `${Date.now()}-${base}${ext}`;
-            ensureDir(MAPS_DIR);
-            fs.writeFileSync(path.join(MAPS_DIR, filename), buffer);
-            return res.status(201).json({ filename, url: `assets/mapas-mundo/${filename}` });
-        }
 
-        if (fileType === 'glb') {
-            if (buffer.length > MAX_GLB_BYTES) {
-                return res.status(400).json({ error: 'El GLB supera los 200 MB' });
+            if (fileType === 'image') {
+                if (buffer.length > MAX_IMG_BYTES) {
+                    return res.status(400).json({ error: 'La imagen supera los 20 MB' });
+                }
+                // Detectar extensión por nombre original
+                const origExt = path.extname(originalName || '').toLowerCase();
+                const ext     = ['.jpg', '.jpeg', '.png', '.webp'].includes(origExt) ? origExt : '.jpg';
+                const base    = safeBasename(originalName, 'imagen');
+                const filename = `${Date.now()}-${base}${ext}`;
+                ensureDir(MAPS_DIR);
+                fs.writeFileSync(path.join(MAPS_DIR, filename), buffer);
+                return res.status(201).json({ filename, url: `assets/mapas-mundo/${filename}` });
             }
-            const base     = safeBasename(originalName, 'modelo');
-            const filename = `${Date.now()}-${base}.glb`;
-            ensureDir(GLBS_DIR);
-            fs.writeFileSync(path.join(GLBS_DIR, filename), buffer);
-            return res.status(201).json({ filename, url: `assets/3D/${filename}` });
-        }
 
-        return res.status(400).json({ error: 'fileType debe ser "image" o "glb"' });
-    } catch (err) {
-        console.error('[POST /api/mundo3d/upload]', err);
-        res.status(500).json({ error: 'Error subiendo archivo', detail: err.message });
+            if (fileType === 'glb') {
+                if (buffer.length > MAX_GLB_BYTES) {
+                    return res.status(400).json({ error: 'El GLB supera los 200 MB' });
+                }
+                const base     = safeBasename(originalName, 'modelo');
+                const filename = `${Date.now()}-${base}.glb`;
+                ensureDir(GLBS_DIR);
+                fs.writeFileSync(path.join(GLBS_DIR, filename), buffer);
+                return res.status(201).json({ filename, url: `assets/3D/${filename}` });
+            }
+
+            return res.status(400).json({ error: 'fileType debe ser "image" o "glb"' });
+        } catch (err) {
+            console.error('[POST /api/mundo3d/upload]', err);
+            res.status(500).json({ error: 'Error subiendo archivo', detail: err.message });
+        }
     }
-});
+);
 
 module.exports = router;

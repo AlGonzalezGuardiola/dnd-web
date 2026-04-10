@@ -659,16 +659,25 @@
       var fileType = detailType;
       progressEl.classList.add('visible');
 
-      _readFileAsDataURL(file)
-        .then(function (fileData) {
-          return fetch(API_BASE + '/api/mundo3d/upload', {
-            method:  'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify({ filename: file.name, fileData: fileData, fileType: fileType }),
-          }).then(function (r) {
-            if (!r.ok) return r.json().then(function (d) { throw new Error(d.error || r.statusText); });
-            return r.json();
-          });
+      // Subida binaria directa (sin base64) — evita problemas con JSON y tamaño
+      var uploadUrl = API_BASE + '/api/mundo3d/upload'
+        + '?fileType=' + encodeURIComponent(fileType)
+        + '&filename=' + encodeURIComponent(file.name);
+
+      fetch(uploadUrl, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/octet-stream' },
+        body:    file,
+      })
+        .then(function (r) {
+          if (!r.ok) {
+            return r.text().then(function (txt) {
+              var msg = txt;
+              try { msg = JSON.parse(txt).error || txt; } catch (e) { /* mantener txt */ }
+              throw new Error(msg);
+            });
+          }
+          return r.json();
         })
         .then(function (data) {
           poi.detailUrl      = data.url;
@@ -691,15 +700,6 @@
     _m3d.pending.push(poi);
     overlay.remove();
     _renderAllMarkers();
-  }
-
-  function _readFileAsDataURL(file) {
-    return new Promise(function (resolve, reject) {
-      var r = new FileReader();
-      r.onload  = function (e) { resolve(e.target.result); };
-      r.onerror = function ()  { reject(new Error('Error leyendo archivo')); };
-      r.readAsDataURL(file);
-    });
   }
 
   // ════════════════════════════════════════════════════════
