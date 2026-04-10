@@ -417,7 +417,6 @@
     if (_m3d.sceneType !== 'glb3d') return;
 
     var list = _m3d.editMode ? _m3d.pending : _m3d.pois;
-    var camPos = camera.position;
 
     list.forEach(function (poi) {
       if (!poi._anchor || !poi._el) return;
@@ -425,34 +424,16 @@
       // Posición mundial exacta usando el transform completo del anchor
       poi._anchor.getWorldPosition(_wPos);
 
-      // Visibilidad: mostrar siempre, pero ocultar si está muy detrás
-      // (normal del punto desde el centro del pivot hacia la cámara)
-      var pivotCenter = modelPivot.position;
-      var surfaceNorm = _wPos.clone().sub(pivotCenter).normalize();
-      var toCam       = camPos.clone().sub(pivotCenter).normalize();
-      var dot         = surfaceNorm.dot(toCam);
-
-      if (dot < -0.25) {
-        poi._el.style.display   = 'none';
-        return;
-      }
-
-      // Proyección 3D → 2D
+      // Proyección 3D → 2D (siempre visible, independiente de si está detrás)
       var proj = _wPos.clone().project(camera);
-
-      // Descartar si está fuera del frustum
-      if (proj.z > 1) { poi._el.style.display = 'none'; return; }
 
       var x = (proj.x * 0.5 + 0.5) * _W();
       var y = (-proj.y * 0.5 + 0.5) * _H();
 
-      // Opacidad reducida si está en el borde trasero
-      var opacity = dot < 0.1 ? (0.35 + (dot + 0.25) / 0.35 * 0.65) : 1;
-
       poi._el.style.display  = 'flex';
       poi._el.style.left     = x + 'px';
       poi._el.style.top      = y + 'px';
-      poi._el.style.opacity  = opacity.toFixed(2);
+      poi._el.style.opacity  = '1';
     });
   }
 
