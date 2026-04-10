@@ -21,6 +21,7 @@ const _ROUTES = {
     combatManager: 'combate/activo',
     combatLogView: 'combate/registro',
     narrativaHub:     'narrativa',
+    mundoHub:         'narrativa/mundo',
     narrative:        'narrativa/cronicas',
     narrativeImages:  'narrativa/imagenes',
     bolaMundo:        'narrativa/bola-del-mundo',
@@ -439,6 +440,8 @@ function setView(viewName) {
     if (wmHudCtrl) wmHudCtrl.style.display = 'none';
     const narrativaHubEl = document.getElementById('narrativaHubView');
     if (narrativaHubEl) narrativaHubEl.style.display = 'none';
+    const mundoHubEl = document.getElementById('mundoHubView');
+    if (mundoHubEl) mundoHubEl.style.display = 'none';
     const narrativeEl = document.getElementById('narrativeSection');
     if (narrativeEl) narrativeEl.style.display = 'none';
     const narrativeImagesEl = document.getElementById('narrativeImagesSection');
@@ -558,7 +561,7 @@ function setView(viewName) {
             if (editorToolbar) editorToolbar.style.display = 'none';
             if (hud) hud.style.display = 'flex';
             if (diceWidget) diceWidget.style.display = 'none';
-            setBreadcrumb('📜 Narrativa › Mapa del Mundo');
+            setBreadcrumb('📜 Narrativa › Mundo › Mundo Plano');
             break;
         case 'narrativaHub':
             document.getElementById('narrativaHubView').style.display = 'flex';
@@ -566,6 +569,13 @@ function setView(viewName) {
             if (hud) hud.style.display = 'flex';
             if (diceWidget) diceWidget.style.display = 'none';
             setBreadcrumb('📜 Narrativa');
+            break;
+        case 'mundoHub':
+            document.getElementById('mundoHubView').style.display = 'flex';
+            if (editorToolbar) editorToolbar.style.display = 'none';
+            if (hud) hud.style.display = 'flex';
+            if (diceWidget) diceWidget.style.display = 'none';
+            setBreadcrumb('📜 Narrativa › Mundo');
             break;
         case 'narrative':
             document.getElementById('narrativeSection').style.display = 'flex';
@@ -594,7 +604,7 @@ function setView(viewName) {
             if (editorToolbar) editorToolbar.style.display = 'none';
             if (hud) hud.style.display = 'flex';
             if (diceWidget) diceWidget.style.display = 'none';
-            setBreadcrumb('📜 Narrativa › Mundo 3D');
+            setBreadcrumb('📜 Narrativa › Mundo › Mundo 3D');
             document.getElementById('m3dModeToggle').style.display = 'inline-block';
             document.getElementById('m3dRotateToggle').style.display = 'inline-block';
             document.getElementById('m3dHudControls').style.display = 'flex';
@@ -640,6 +650,10 @@ function setView(viewName) {
 // ============================================
 // Narrativa Hub helpers
 // ============================================
+function openMundoHub() {
+    setView('mundoHub');
+}
+
 function openWorldMap() {
     openWorldMapView();
 }

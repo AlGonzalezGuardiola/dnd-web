@@ -855,17 +855,11 @@
     <section id="narrativaHubView" class="character-section" style="display:none;">
         <h1 class="landing-title">📜 Narrativa</h1>
         <div class="online-lobby">
-            <div class="online-lobby-card" onclick="openWorldMap()" role="button" tabindex="0" aria-label="Mundo">
+            <div class="online-lobby-card" onclick="openMundoHub()" role="button" tabindex="0" aria-label="Mundo">
                 <div class="online-lobby-icon">🗺️</div>
                 <div class="online-lobby-title">Mundo</div>
-                <div class="online-lobby-desc">Explora el mapa interactivo del mundo, regiones y puntos de interés.</div>
-                <button class="btn-combat-primary" style="margin-top:16px">Abrir mapa</button>
-            </div>
-            <div class="online-lobby-card" onclick="openMundo3D()" role="button" tabindex="0" aria-label="Mundo 3D">
-                <div class="online-lobby-icon">🌍</div>
-                <div class="online-lobby-title">Mundo 3D</div>
-                <div class="online-lobby-desc">Explora el mundo en tres dimensiones con rotación y zoom interactivos.</div>
-                <button class="btn-combat-primary" style="margin-top:16px">Abrir</button>
+                <div class="online-lobby-desc">Explora el mapa del mundo en 2D o en tres dimensiones interactivas.</div>
+                <button class="btn-combat-primary" style="margin-top:16px">Abrir mundo</button>
             </div>
             <div class="online-lobby-card" onclick="openCronicas()" role="button" tabindex="0" aria-label="Crónicas">
                 <div class="online-lobby-icon">📜</div>
@@ -878,6 +872,25 @@
                 <div class="online-lobby-title">Imágenes</div>
                 <div class="online-lobby-desc">Galería de imágenes de la campaña: ilustraciones, mapas, personajes y momentos épicos.</div>
                 <button class="btn-combat-primary" style="margin-top:16px">Abrir galería</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ===== MUNDO HUB ===== -->
+    <section id="mundoHubView" class="character-section" style="display:none;">
+        <h1 class="landing-title">🗺️ Mundo</h1>
+        <div class="online-lobby">
+            <div class="online-lobby-card" onclick="openWorldMap()" role="button" tabindex="0" aria-label="Mundo Plano">
+                <div class="online-lobby-icon">🗺️</div>
+                <div class="online-lobby-title">Mundo Plano</div>
+                <div class="online-lobby-desc">Explora el mapa interactivo del mundo, regiones y puntos de interés.</div>
+                <button class="btn-combat-primary" style="margin-top:16px">Abrir mapa</button>
+            </div>
+            <div class="online-lobby-card" onclick="openMundo3D()" role="button" tabindex="0" aria-label="Mundo 3D">
+                <div class="online-lobby-icon">🌍</div>
+                <div class="online-lobby-title">Mundo 3D</div>
+                <div class="online-lobby-desc">Explora el mundo en tres dimensiones con rotación y zoom interactivos.</div>
+                <button class="btn-combat-primary" style="margin-top:16px">Abrir</button>
             </div>
         </div>
     </section>
