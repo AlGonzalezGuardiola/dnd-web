@@ -435,6 +435,12 @@
     box-shadow: 0 0 14px 4px rgba(201, 162, 39, 0.6);
 }
 
+/* POIs con detalle (link) tienen un anillo extra para distinguirlos */
+.m3d-poi-dot--link {
+    border: 2px solid rgba(255, 255, 255, 0.85);
+    box-shadow: 0 0 10px 3px rgba(255, 220, 80, 0.5), inset 0 0 6px rgba(255,255,255,0.3);
+}
+
 .m3d-poi-marker:hover .m3d-poi-label {
     opacity: 1;
     transform: translateX(0);
