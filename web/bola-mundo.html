@@ -175,7 +175,7 @@
 
 <div id="loader">
   <div class="loader-ring"></div>
-  <div class="loader-text">Cargando</div>
+  <div class="loader-text" id="loaderText">Cargando Three.js…</div>
 </div>
 
 <div id="title">🔮 Bola del Mundo</div>
@@ -189,6 +189,26 @@
   <div class="ctrl-sep"></div>
   <button class="ctrl-btn" id="btnWireframe">⬡&nbsp; Wireframe</button>
 </div>
+
+<!-- Script NORMAL (no módulo): controla el loader independientemente del módulo -->
+<script>
+  function hideLoader() {
+    const el = document.getElementById('loader');
+    if (!el) return;
+    el.classList.add('hidden');
+    setTimeout(() => el.remove(), 700);
+  }
+  window.hideLoader = hideLoader;
+
+  // Captura errores globales y los muestra en el loader
+  window.addEventListener('error', (e) => {
+    const t = document.getElementById('loaderText');
+    if (t) t.textContent = 'Error: ' + e.message;
+  });
+
+  // Timeout de emergencia: si en 10 s no carga nada, oculta el loader
+  setTimeout(hideLoader, 10000);
+</script>
 
 <script type="module">
   import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
@@ -284,15 +304,8 @@
   const sphere = new THREE.Mesh(sphereGeo, sphereMaterial);
   scene.add(sphere);
 
-  function hideLoader() {
-    const loaderEl = document.getElementById('loader');
-    if (!loaderEl) return;
-    loaderEl.classList.add('hidden');
-    setTimeout(() => loaderEl.remove(), 700);
-  }
-
-  // Timeout de seguridad: si la textura no carga en 6 s, oculta el loader igualmente
-  const loaderTimeout = setTimeout(hideLoader, 6000);
+  // Timeout de seguridad adicional para la textura
+  const loaderTimeout = setTimeout(window.hideLoader, 6000);
 
   // Carga con HTMLImageElement — funciona tanto en file:// como en http://
   const img = new Image();
@@ -307,15 +320,17 @@
     texture.colorSpace = THREE.SRGBColorSpace;
     sphereMaterial = buildMaterial(texture);
     sphere.material = sphereMaterial;
-    hideLoader();
+    window.hideLoader();
   };
   img.onerror = () => {
     clearTimeout(loaderTimeout);
     console.warn('No se pudo cargar BolaMundo.jpg — usando color de sustitución.');
     sphereMaterial = buildMaterial(null);
     sphere.material = sphereMaterial;
-    hideLoader();
+    window.hideLoader();
   };
+  const lt = document.getElementById('loaderText');
+  if (lt) lt.textContent = 'Cargando textura…';
   img.src = 'assets/mapas/BolaMundo.jpg';
 
   // ── Halo atmosférico ───────────────────────────────────
