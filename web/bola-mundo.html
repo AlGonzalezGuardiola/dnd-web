@@ -340,45 +340,62 @@
   scene.add(new THREE.Points(starGeo, starMat));
 
   // ── Esfera principal ───────────────────────────────────
-  // 128 segmentos para un borde suave sin escalonados visibles
-  const sphereGeo = new THREE.SphereGeometry(1, 128, 128);
+  // 256 segmentos: más vértices = desplazamiento más detallado
+  const sphereGeo = new THREE.SphereGeometry(1, 256, 256);
 
-  // Función para construir el material una vez que la textura esté lista
-  function buildMaterial(map) {
-    if (map) {
-      // Corrección de inversión horizontal (si la textura aparece espejada)
-      map.wrapS = THREE.RepeatWrapping;
-      map.repeat.x = -1;
-      map.offset.x = 1;
-      map.colorSpace = THREE.SRGBColorSpace;
+  // Máxima anisotropía disponible en la GPU (mejora calidad en ángulos oblicuos)
+  const maxAnisotropy = renderer.capabilities.getMaxAnisotropy();
+
+  // Configura una textura con la máxima calidad posible
+  function setupTexture(tex, isColor) {
+    tex.wrapS          = THREE.RepeatWrapping;
+    tex.repeat.x       = -1;
+    tex.offset.x       = 1;
+    tex.minFilter      = THREE.LinearMipmapLinearFilter;
+    tex.magFilter      = THREE.LinearFilter;
+    tex.anisotropy     = maxAnisotropy;
+    tex.generateMipmaps = true;
+    if (isColor) tex.colorSpace = THREE.SRGBColorSpace;
+    tex.needsUpdate    = true;
+    return tex;
+  }
+
+  // Construye el material con color + bump + displacement desde la misma imagen
+  function buildMaterial(colorTex) {
+    if (!colorTex) {
+      return new THREE.MeshStandardMaterial({ color: 0x3366aa, roughness: 0.8 });
     }
+    // Reutilizamos la misma textura para bump y displacement
+    // (Three.js admite el mismo objeto en varios slots)
+    const dispTex = colorTex.clone();
+    dispTex.needsUpdate = true;
 
     return new THREE.MeshStandardMaterial({
-      map: map ?? null,
-      color: map ? 0xffffff : 0x3366aa, // color de sustitución si no carga
-      roughness: 0.78,
-      metalness: 0.04,
+      map:              colorTex,
+      // Bump: truco de iluminación que da sensación de relieve sin mover vértices
+      bumpMap:          dispTex,
+      bumpScale:        0.025,
+      // Displacement: desplaza vértices reales — crea montañas geométricas visibles
+      displacementMap:  dispTex,
+      displacementScale: 0.10,   // ±10% del radio = montañas claramente visibles
+      displacementBias: -0.05,   // centra el desplazamiento en el radio base
+      roughness:        0.80,
+      metalness:        0.03,
     });
   }
 
-  // Material de espera (azul oscuro) mientras carga la textura
+  // Material de espera mientras carga
   let sphereMaterial = new THREE.MeshStandardMaterial({ color: 0x1a2a4a, roughness: 0.8 });
   const sphere = new THREE.Mesh(sphereGeo, sphereMaterial);
   scene.add(sphere);
 
-  // Construye y aplica la textura desde un data URL (sin restricciones CORS)
+  // Aplica la textura desde un data URL o src directo
   function applyTextureFromSrc(src) {
     const img = new Image();
     img.onload = () => {
-      const texture = new THREE.Texture(img);
-      texture.needsUpdate = true;
-      texture.wrapS = THREE.RepeatWrapping;
-      texture.repeat.x = -1;
-      texture.offset.x = 1;
-      texture.colorSpace = THREE.SRGBColorSpace;
-      sphereMaterial = buildMaterial(texture);
+      const colorTex = setupTexture(new THREE.Texture(img), true);
+      sphereMaterial  = buildMaterial(colorTex);
       sphere.material = sphereMaterial;
-      // Ocultar el file picker si estaba visible
       const fp = document.getElementById('filePicker');
       if (fp) fp.classList.add('hidden');
       window.hideLoader();
@@ -388,10 +405,9 @@
 
   if (window.isFileProtocol) {
     // ── file:// : Chrome bloquea texturas WebGL locales ──
-    // Mostramos el selector; FileReader genera un data URL que sí funciona
+    // FileReader genera un data URL que sí puede usarse en WebGL
     window.hideLoader();
-    const filePicker = document.getElementById('filePicker');
-    filePicker.classList.remove('hidden');
+    document.getElementById('filePicker').classList.remove('hidden');
 
     document.getElementById('texInput').addEventListener('change', (e) => {
       const file = e.target.files[0];
@@ -401,22 +417,17 @@
       reader.readAsDataURL(file);
     });
   } else {
-    // ── HTTP : carga directa sin restricciones ──
-    const texLoader = new THREE.TextureLoader();
-    texLoader.load(
+    // ── HTTP : TextureLoader estándar ──
+    new THREE.TextureLoader().load(
       'assets/mapas/BolaMundo.jpg',
-      (texture) => {
-        texture.wrapS = THREE.RepeatWrapping;
-        texture.repeat.x = -1;
-        texture.offset.x = 1;
-        texture.colorSpace = THREE.SRGBColorSpace;
-        sphereMaterial = buildMaterial(texture);
+      (tex) => {
+        sphereMaterial  = buildMaterial(setupTexture(tex, true));
         sphere.material = sphereMaterial;
         window.hideLoader();
       },
       undefined,
       () => {
-        sphereMaterial = buildMaterial(null);
+        sphereMaterial  = buildMaterial(null);
         sphere.material = sphereMaterial;
         window.hideLoader();
       }
