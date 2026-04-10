@@ -24,6 +24,7 @@ const _ROUTES = {
     narrative:        'narrativa/cronicas',
     narrativeImages:  'narrativa/imagenes',
     bolaMundo:        'narrativa/bola-del-mundo',
+    mundo3D:          'narrativa/mundo-3d',
     sessionNotes:  'notas',
     map:             'mapa',
     npcGenerator:    'generador-npc',
@@ -444,6 +445,8 @@ function setView(viewName) {
     if (narrativeImagesEl) narrativeImagesEl.style.display = 'none';
     const bolaMundoEl = document.getElementById('bolaMundoSection');
     if (bolaMundoEl) bolaMundoEl.style.display = 'none';
+    const mundo3DEl = document.getElementById('mundo3DSection');
+    if (mundo3DEl) mundo3DEl.style.display = 'none';
     const tvModeEl = document.getElementById('tvModeSection');
     if (tvModeEl) tvModeEl.style.display = 'none';
     const combatMapsEl = document.getElementById('combatMapsView');
@@ -578,8 +581,15 @@ function setView(viewName) {
             if (hud) hud.style.display = 'flex';
             if (diceWidget) diceWidget.style.display = 'none';
             setBreadcrumb('📜 Narrativa › Bola del Mundo');
-            // Inicializa Three.js la primera vez (el módulo lo expone en window)
             if (typeof window.initBolaMundo === 'function') window.initBolaMundo();
+            break;
+        case 'mundo3D':
+            document.getElementById('mundo3DSection').style.display = 'flex';
+            if (editorToolbar) editorToolbar.style.display = 'none';
+            if (hud) hud.style.display = 'flex';
+            if (diceWidget) diceWidget.style.display = 'none';
+            setBreadcrumb('📜 Narrativa › Mundo 3D');
+            if (typeof window.initMundo3D === 'function') window.initMundo3D();
             break;
         case 'tvMode':
             document.getElementById('tvModeSection').style.display = 'flex';
@@ -629,6 +639,10 @@ function openWorldMap() {
 
 function openBolaMundo() {
     setView('bolaMundo');
+}
+
+function openMundo3D() {
+    setView('mundo3D');
 }
 
 // ============================================
