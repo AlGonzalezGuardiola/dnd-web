@@ -449,6 +449,8 @@ function setView(viewName) {
     if (mundo3DEl) mundo3DEl.style.display = 'none';
     const m3dToggle = document.getElementById('m3dModeToggle');
     if (m3dToggle) m3dToggle.style.display = 'none';
+    const m3dBtnSalir = document.getElementById('m3dBtnSalir');
+    if (m3dBtnSalir) m3dBtnSalir.style.display = 'none';
     const tvModeEl = document.getElementById('tvModeSection');
     if (tvModeEl) tvModeEl.style.display = 'none';
     const combatMapsEl = document.getElementById('combatMapsView');
