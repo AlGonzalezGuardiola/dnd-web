@@ -173,6 +173,9 @@
 
 <canvas id="canvas"></canvas>
 
+<!-- Imagen cargada por el navegador (funciona en file://) — Three.js la consume como textura -->
+<img id="texImg" src="assets/mapas/BolaMundo.jpg" style="display:none" alt="">
+
 <div id="loader">
   <div class="loader-ring"></div>
   <div class="loader-text" id="loaderText">Cargando Three.js…</div>
@@ -313,14 +316,9 @@
   const sphere = new THREE.Mesh(sphereGeo, sphereMaterial);
   scene.add(sphere);
 
-  // Timeout de seguridad adicional para la textura
-  const loaderTimeout = setTimeout(window.hideLoader, 6000);
-
-  // Carga con HTMLImageElement — funciona tanto en file:// como en http://
-  const img = new Image();
-  img.onload = () => {
-    clearTimeout(loaderTimeout);
-    const texture = new THREE.Texture(img);
+  // Aplica la textura a partir del <img> del HTML (cargado por el navegador, funciona en file://)
+  function applyTexture(imgEl) {
+    const texture = new THREE.Texture(imgEl);
     texture.needsUpdate = true;
     // Corrección de inversión horizontal
     texture.wrapS = THREE.RepeatWrapping;
@@ -330,17 +328,22 @@
     sphereMaterial = buildMaterial(texture);
     sphere.material = sphereMaterial;
     window.hideLoader();
-  };
-  img.onerror = () => {
-    clearTimeout(loaderTimeout);
-    console.warn('No se pudo cargar BolaMundo.jpg — usando color de sustitución.');
-    sphereMaterial = buildMaterial(null);
-    sphere.material = sphereMaterial;
-    window.hideLoader();
-  };
-  const lt = document.getElementById('loaderText');
-  if (lt) lt.textContent = 'Cargando textura…';
-  img.src = 'assets/mapas/BolaMundo.jpg';
+  }
+
+  const texImg = document.getElementById('texImg');
+
+  if (texImg.complete && texImg.naturalWidth > 0) {
+    // Ya cargó antes de que llegara el JS (caché o fichero rápido)
+    applyTexture(texImg);
+  } else {
+    texImg.onload  = () => applyTexture(texImg);
+    texImg.onerror = () => {
+      console.warn('No se pudo cargar BolaMundo.jpg — usando color de sustitución.');
+      sphereMaterial = buildMaterial(null);
+      sphere.material = sphereMaterial;
+      window.hideLoader();
+    };
+  }
 
   // ── Halo atmosférico ───────────────────────────────────
   // Esfera ligeramente mayor, semitransparente, azulada
