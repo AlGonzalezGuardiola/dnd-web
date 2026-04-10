@@ -15,14 +15,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
-    <script type="importmap">
-    {
-      "imports": {
-        "three":         "vendor/three.module.js",
-        "three/addons/": "vendor/jsm/"
-      }
-    }
-    </script>
     <title>Mapas DnD - Gestor Interactivo</title>
     <meta name="description" content="Gestor interactivo de mapas para campañas de Dungeons & Dragons">
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1161,7 +1153,9 @@
     <script src="world-map.js?v=20260409a"></script>
     <script src="tv-mode.js?v=20260406a"></script>
     <script src="combat-maps.js?v=20260403a"></script>
-    <script type="module" src="bola-mundo-scene.js"></script>
+    <script src="vendor/three.min.js"></script>
+    <script src="vendor/OrbitControls.js"></script>
+    <script src="bola-mundo-scene.js"></script>
 </body>
 
 </html>
