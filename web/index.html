@@ -55,10 +55,13 @@
         <div id="breadcrumbs" class="breadcrumbs" aria-live="polite">Mundo</div>
 
         <div class="hud-right-stack">
-            <button id="m3dBtnSalir" onclick="window.m3dZoomOut && window.m3dZoomOut()"
-                style="display:none;background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:5px 12px;border-radius:16px;font-size:12px;letter-spacing:1px;cursor:pointer;">
-                ← Salir
-            </button>
+            <!-- Mundo 3D controls -->
+            <div id="m3dHudControls" style="display:none;" class="wm-hud-controls">
+                <button id="m3dBtnSalir"  class="wm-hud-btn">← Salir</button>
+                <button id="m3dBtnEdit"   class="wm-hud-btn wm-hud-btn--primary">✏️ Editar</button>
+                <button id="m3dBtnCancel" class="wm-hud-btn" style="display:none;">Cancelar</button>
+                <button id="m3dBtnSave"   class="wm-hud-btn wm-hud-btn--gold" style="display:none;">Guardar</button>
+            </div>
             <button id="m3dModeToggle" onclick="window.toggleMundo3DMode && window.toggleMundo3DMode()"
                 style="display:none;background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:5px 12px;border-radius:16px;font-size:12px;letter-spacing:1px;cursor:pointer;">
                 🌙 Noche
@@ -892,6 +895,23 @@
     <!-- Mundo 3D -->
     <section id="mundo3DSection" class="character-section" style="display:none;padding:0;overflow:hidden;position:relative;" aria-label="Mundo 3D">
         <canvas id="m3dCanvas" style="width:100%;height:100%;display:block;"></canvas>
+
+        <!-- Overlay 2D (imagen de detalle) -->
+        <div id="m3dImageOverlay" style="display:none;position:absolute;inset:0;z-index:5;background:#000;opacity:0;transition:opacity 0.4s ease;">
+            <div id="m3dImgStage" style="position:relative;width:100%;height:100%;overflow:hidden;">
+                <img id="m3dOverlayImg" src="" alt="" style="width:100%;height:100%;object-fit:fill;display:block;">
+                <!-- Marcadores 2D inyectados por JS -->
+            </div>
+            <div id="m3dEditHint2D" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.7);color:#c9a227;padding:12px 24px;border-radius:8px;font-size:13px;letter-spacing:1px;pointer-events:none;text-align:center;">
+                Haz clic en la imagen para añadir un punto de interés
+            </div>
+        </div>
+
+        <!-- Hint modo edición 3D -->
+        <div id="m3dEditHint3D" style="display:none;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.7);color:#c9a227;padding:12px 24px;border-radius:8px;font-size:13px;letter-spacing:1px;pointer-events:none;text-align:center;">
+            Haz clic en el modelo para añadir un punto de interés
+        </div>
+
         <div style="position:absolute;bottom:18px;left:50%;transform:translateX(-50%);font-size:11px;letter-spacing:1px;color:rgba(200,190,220,0.35);pointer-events:none;white-space:nowrap;">
             Arrastra para rotar &nbsp;·&nbsp; Rueda para hacer zoom
         </div>
