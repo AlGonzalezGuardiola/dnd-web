@@ -82,7 +82,7 @@
     section.appendChild(fadeEl);
 
     _setupThree();
-    applyMode('dia');
+    applyMode('noche');
     _bindHudButtons();
     _bindCanvasClick();
     _bindImgOverlayClick();
@@ -284,7 +284,8 @@
     } else {
       imgOverlay.style.opacity = '0';
       setTimeout(function () { imgOverlay.style.display = 'none'; }, 400);
-      if (_m3d.sceneStack.length === 0) autoRotate = true;
+      autoRotate     = true;
+      rotationOffset = modelPivot.rotation.y - performance.now() / 1000 * 0.12;
     }
   }
 
