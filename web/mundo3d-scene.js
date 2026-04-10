@@ -31,8 +31,8 @@
 
     // ── Escena ──────────────────────────────────────────
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x06021a);
-    scene.fog        = new THREE.FogExp2(0x06021a, 0.018);
+    scene.background = new THREE.Color(0x0a8fd4);
+    scene.fog        = new THREE.FogExp2(0x0a8fd4, 0.012);
 
     // ── Cámara ──────────────────────────────────────────
     const camera = new THREE.PerspectiveCamera(48, W() / H(), 0.1, 500);
@@ -47,29 +47,13 @@
     controls.enablePan     = false;
 
     // ── Luces ───────────────────────────────────────────
-    scene.add(new THREE.AmbientLight(0xffeedd, 0.7));
+    scene.add(new THREE.AmbientLight(0xd0eeff, 1.2));
 
-    var sun = new THREE.DirectionalLight(0xffffff, 2.0);
-    sun.position.set(4, 8, 5);
+    var sun = new THREE.DirectionalLight(0xfff5cc, 2.5);
+    sun.position.set(6, 10, 5);
     scene.add(sun);
 
-    var fillA = new THREE.PointLight(0x33ddcc, 1.2, 40);
-    fillA.position.set(-8, 3, -5);
-    scene.add(fillA);
-
-    var fillB = new THREE.PointLight(0xffaa33, 0.6, 20);
-    fillB.position.set(2, -6, 3);
-    scene.add(fillB);
-
-    // ── Estrellas ───────────────────────────────────────
-    var starBuf = new Float32Array(3000 * 3);
-    for (var i = 0; i < starBuf.length; i++) starBuf[i] = (Math.random() - 0.5) * 200;
-    var starGeo = new THREE.BufferGeometry();
-    starGeo.setAttribute('position', new THREE.BufferAttribute(starBuf, 3));
-    scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({
-      color: 0xffffff, size: 0.12, sizeAttenuation: true,
-      transparent: true, opacity: 0.8,
-    })));
+    scene.add(new THREE.HemisphereLight(0x87ceeb, 0x1a6b9e, 0.8));
 
     // ── Carga del modelo GLB ─────────────────────────────
     var modelPivot = new THREE.Group();
