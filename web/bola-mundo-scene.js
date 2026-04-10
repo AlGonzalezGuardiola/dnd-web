@@ -2,12 +2,22 @@
 (function () {
   'use strict';
 
+  function dbg(msg) {
+    var el = document.getElementById('bmDebug');
+    if (el) el.textContent += msg + '\n';
+    console.log('[BolaMundo]', msg);
+  }
+
+  // Marca que el script cargó
+  dbg('script cargado. THREE=' + (typeof THREE));
+
   let initialized = false;
 
   window.initBolaMundo = function () {
-    if (initialized) return;
+    dbg('initBolaMundo() llamado');
+    if (initialized) { dbg('ya inicializado'); return; }
     if (typeof THREE === 'undefined') {
-      console.error('Three.js no está cargado');
+      dbg('ERROR: THREE no definido');
       return;
     }
     initialized = true;
@@ -18,10 +28,21 @@
     const W = () => section.clientWidth  || window.innerWidth;
     const H = () => section.clientHeight || window.innerHeight;
 
+    dbg('section: ' + W() + 'x' + H());
+    dbg('canvas el: ' + (canvas ? 'ok' : 'NULL'));
+
     // ── Renderer ────────────────────────────────────────
-    const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+    var renderer;
+    try {
+      renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
+      dbg('WebGLRenderer: ok');
+    } catch(e) {
+      dbg('ERROR WebGLRenderer: ' + e.message);
+      return;
+    }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(W(), H());
+    dbg('renderer size: ' + W() + 'x' + H());
 
     // ── Escena ──────────────────────────────────────────
     const scene = new THREE.Scene();
@@ -82,10 +103,13 @@
       })
     ));
 
+    dbg('escena lista, cargando textura...');
+
     // ── Textura ─────────────────────────────────────────
     new THREE.TextureLoader().load(
-      'assets/mapas/BolaMundo.jpg',
+      'BolaMundo.jpg',
       function (tex) {
+        dbg('textura cargada OK');
         var mat = new THREE.MeshStandardMaterial({
           map: tex, roughness: 0.8, metalness: 0.02,
         });
@@ -93,7 +117,7 @@
         worldMat = mat;
       },
       undefined,
-      function (err) { console.warn('Textura no cargada:', err); }
+      function (err) { dbg('ERROR textura: ' + (err && err.message || 'desconocido')); }
     );
 
     // ── Resize ──────────────────────────────────────────
