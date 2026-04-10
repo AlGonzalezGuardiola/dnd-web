@@ -309,7 +309,7 @@
   }
 
   // Material de espera (azul oscuro) mientras carga la textura
-  sphereMaterial = new THREE.MeshStandardMaterial({ color: 0x1a2a4a, roughness: 0.8 });
+  let sphereMaterial = new THREE.MeshStandardMaterial({ color: 0x1a2a4a, roughness: 0.8 });
   const sphere = new THREE.Mesh(sphereGeo, sphereMaterial);
   scene.add(sphere);
 
