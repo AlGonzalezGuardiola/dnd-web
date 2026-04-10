@@ -169,6 +169,13 @@
 
   window.toggleMundo3DMode = function () { applyMode(currentMode === 'dia' ? 'noche' : 'dia'); };
 
+  window.toggleMundo3DRotation = function () {
+    autoRotate = !autoRotate;
+    if (autoRotate) rotationOffset = modelPivot.rotation.y - performance.now() / 1000 * 0.12;
+    var btn = document.getElementById('m3dRotateToggle');
+    if (btn) btn.textContent = autoRotate ? '⏸ Pausa' : '▶ Play';
+  };
+
   // ════════════════════════════════════════════════════════
   //  CARGA DE ESCENAS
   // ════════════════════════════════════════════════════════

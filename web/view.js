@@ -449,6 +449,8 @@ function setView(viewName) {
     if (mundo3DEl) mundo3DEl.style.display = 'none';
     const m3dToggle = document.getElementById('m3dModeToggle');
     if (m3dToggle) m3dToggle.style.display = 'none';
+    const m3dRotateToggle = document.getElementById('m3dRotateToggle');
+    if (m3dRotateToggle) m3dRotateToggle.style.display = 'none';
     const m3dHud = document.getElementById('m3dHudControls');
     if (m3dHud) m3dHud.style.display = 'none';
     const tvModeEl = document.getElementById('tvModeSection');
@@ -594,6 +596,7 @@ function setView(viewName) {
             if (diceWidget) diceWidget.style.display = 'none';
             setBreadcrumb('📜 Narrativa › Mundo 3D');
             document.getElementById('m3dModeToggle').style.display = 'inline-block';
+            document.getElementById('m3dRotateToggle').style.display = 'inline-block';
             document.getElementById('m3dHudControls').style.display = 'flex';
             if (typeof window.initMundo3D === 'function') window.initMundo3D();
             break;
