@@ -261,8 +261,6 @@
   // 128 segmentos para un borde suave sin escalonados visibles
   const sphereGeo = new THREE.SphereGeometry(1, 128, 128);
 
-  const texLoader = new THREE.TextureLoader();
-
   // Función para construir el material una vez que la textura esté lista
   function buildMaterial(map) {
     if (map) {
@@ -281,32 +279,44 @@
     });
   }
 
-  let sphereMaterial;
-  const sphere = new THREE.Mesh(sphereGeo, new THREE.MeshStandardMaterial()); // placeholder
+  // Material de espera (azul oscuro) mientras carga la textura
+  sphereMaterial = new THREE.MeshStandardMaterial({ color: 0x1a2a4a, roughness: 0.8 });
+  const sphere = new THREE.Mesh(sphereGeo, sphereMaterial);
   scene.add(sphere);
 
-  // Carga la textura; oculta el loader cuando termina
-  texLoader.load(
-    'assets/mapas/BolaMundo.jpg',
-    (texture) => {
-      sphereMaterial = buildMaterial(texture);
-      sphere.material = sphereMaterial;
-      hideLoader();
-    },
-    undefined, // onProgress no es útil para imágenes individuales
-    (err) => {
-      console.warn('No se pudo cargar BolaMundo.jpg. Usando color por defecto.', err);
-      sphereMaterial = buildMaterial(null);
-      sphere.material = sphereMaterial;
-      hideLoader();
-    }
-  );
-
   function hideLoader() {
-    const loader = document.getElementById('loader');
-    loader.classList.add('hidden');
-    setTimeout(() => loader.remove(), 700);
+    const loaderEl = document.getElementById('loader');
+    if (!loaderEl) return;
+    loaderEl.classList.add('hidden');
+    setTimeout(() => loaderEl.remove(), 700);
   }
+
+  // Timeout de seguridad: si la textura no carga en 6 s, oculta el loader igualmente
+  const loaderTimeout = setTimeout(hideLoader, 6000);
+
+  // Carga con HTMLImageElement — funciona tanto en file:// como en http://
+  const img = new Image();
+  img.onload = () => {
+    clearTimeout(loaderTimeout);
+    const texture = new THREE.Texture(img);
+    texture.needsUpdate = true;
+    // Corrección de inversión horizontal
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.repeat.x = -1;
+    texture.offset.x = 1;
+    texture.colorSpace = THREE.SRGBColorSpace;
+    sphereMaterial = buildMaterial(texture);
+    sphere.material = sphereMaterial;
+    hideLoader();
+  };
+  img.onerror = () => {
+    clearTimeout(loaderTimeout);
+    console.warn('No se pudo cargar BolaMundo.jpg — usando color de sustitución.');
+    sphereMaterial = buildMaterial(null);
+    sphere.material = sphereMaterial;
+    hideLoader();
+  };
+  img.src = 'assets/mapas/BolaMundo.jpg';
 
   // ── Halo atmosférico ───────────────────────────────────
   // Esfera ligeramente mayor, semitransparente, azulada
