@@ -50,6 +50,10 @@
   // ── Anchors 3D activos (Object3D hijos de modelPivot) ───
   var _activeAnchors = [];
 
+  // ── Caché de GLBs precargados: URL → gltf object ────────
+  var _glbCache   = {};
+  var _glbLoading = {}; // URL → Promise<gltf|null>
+
   // ── Fade overlay ────────────────────────────────────────
   var fadeEl = null;
 
@@ -215,63 +219,93 @@
     modelPivot.children.forEach(function (c) {
       if (!c._isPOIAnchor) toRemove.push(c);
     });
-    toRemove.forEach(function (c) {
-      modelPivot.remove(c);
-      if (c.geometry) c.geometry.dispose();
-      if (c.material) { [].concat(c.material).forEach(function (m) { m.dispose(); }); }
-    });
+    toRemove.forEach(function (c) { modelPivot.remove(c); });
 
-    // Placeholder
+    // Placeholder mientras carga (o instantáneo si ya está en caché)
     var phGeo = new THREE.SphereGeometry(1, 12, 8);
     var phMat = new THREE.MeshStandardMaterial({ color: 0x332255, wireframe: true, opacity: 0.25, transparent: true });
     var ph    = new THREE.Mesh(phGeo, phMat);
     modelPivot.add(ph);
 
-    new THREE.GLTFLoader().load(url,
-      function (gltf) {
-        modelPivot.remove(ph); phGeo.dispose(); phMat.dispose();
+    function _applyGltf(gltf) {
+      if (!gltf) { showNotification('Error cargando modelo', 3000); return; }
+      modelPivot.remove(ph); phGeo.dispose(); phMat.dispose();
 
-        var model  = gltf.scene;
-        var box    = new THREE.Box3().setFromObject(model);
-        var center = box.getCenter(new THREE.Vector3());
-        var size   = box.getSize(new THREE.Vector3());
-        var maxDim = Math.max(size.x, size.y, size.z);
-        var scale  = 2.5 / maxDim;
+      // Clonar la escena del gltf cacheado para poder reutilizarlo
+      var model  = gltf.scene.clone(true);
+      var box    = new THREE.Box3().setFromObject(model);
+      var center = box.getCenter(new THREE.Vector3());
+      var size   = box.getSize(new THREE.Vector3());
+      var maxDim = Math.max(size.x, size.y, size.z);
+      var scale  = 2.5 / maxDim;
 
-        model.position.sub(center.multiplyScalar(scale));
-        model.scale.setScalar(scale);
-        modelPivot.add(model);
+      model.position.sub(center.multiplyScalar(scale));
+      model.scale.setScalar(scale);
+      modelPivot.add(model);
 
-        modelRadius = maxDim * scale * 0.52;
-        groundY     = (box.min.y - center.y) * scale;
+      modelRadius = maxDim * scale * 0.52;
+      groundY     = (box.min.y - center.y) * scale;
 
-        var defaultDist = maxDim * scale * 2.5;
-        var cosMax      = Math.max(-0.85, Math.min(0, groundY / defaultDist));
-        controls.maxPolarAngle = Math.acos(cosMax);
+      var defaultDist = maxDim * scale * 2.5;
+      var cosMax      = Math.max(-0.85, Math.min(0, groundY / defaultDist));
+      controls.maxPolarAngle = Math.acos(cosMax);
 
-        if (isRoot) {
-          defaultCamPos.set(0, size.y * scale * 0.3, defaultDist);
-          camera.position.copy(defaultCamPos);
-          controls.minDistance = maxDim * scale * 1.0;
-          controls.maxDistance = maxDim * scale * 8.0;
-          controls.target.set(0, 0, 0);
-          controls.update();
-        } else {
-          // Escena de detalle (POI): cámara cenital (~80° desde el suelo), distancia media
-          var detailDist = maxDim * scale * 2.0;
-          camera.position.set(0, detailDist * 0.34, detailDist * 0.94);
-          controls.minDistance = maxDim * scale * 0.8;
-          controls.maxDistance = maxDim * scale * 6.0;
-          controls.target.set(0, 0, 0);
-          controls.update();
+      if (isRoot) {
+        defaultCamPos.set(0, size.y * scale * 0.3, defaultDist);
+        camera.position.copy(defaultCamPos);
+        controls.minDistance = maxDim * scale * 1.0;
+        controls.maxDistance = maxDim * scale * 8.0;
+        controls.target.set(0, 0, 0);
+        controls.update();
+      } else {
+        // Escena de detalle (POI): cámara cenital (~80° desde el suelo), distancia media
+        var detailDist = maxDim * scale * 2.0;
+        camera.position.set(0, detailDist * 0.34, detailDist * 0.94);
+        controls.minDistance = maxDim * scale * 0.8;
+        controls.maxDistance = maxDim * scale * 6.0;
+        controls.target.set(0, 0, 0);
+        controls.update();
+      }
+
+      // Re-renderizar marcadores ahora que el modelo está listo
+      _renderAllMarkers();
+    }
+
+    if (_glbCache[url]) {
+      // Instantáneo: usar caché directamente
+      _applyGltf(_glbCache[url]);
+    } else if (_glbLoading[url]) {
+      // En tránsito: esperar a que termine la carga en background
+      _glbLoading[url].then(_applyGltf);
+    } else {
+      // No estaba precargado: cargar ahora
+      _preloadGlb(url).then(_applyGltf);
+    }
+  }
+
+  // Precargar un GLB en background y guardarlo en caché
+  function _preloadGlb(url) {
+    if (_glbCache[url])   return Promise.resolve(_glbCache[url]);
+    if (_glbLoading[url]) return _glbLoading[url];
+
+    var p = new Promise(function (resolve) {
+      new THREE.GLTFLoader().load(
+        url,
+        function (gltf) {
+          _glbCache[url] = gltf;
+          delete _glbLoading[url];
+          resolve(gltf);
+        },
+        null,
+        function (err) {
+          console.warn('[m3d preload] Error precargando GLB:', url, err);
+          delete _glbLoading[url];
+          resolve(null);
         }
-
-        // Re-renderizar marcadores ahora que el modelo está listo
-        _renderAllMarkers();
-      },
-      function (xhr) { if (xhr.total) console.log('GLB: ' + Math.round(xhr.loaded / xhr.total * 100) + '%'); },
-      function (err) { console.error('Error cargando GLB:', err); showNotification('Error cargando modelo', 3000); }
-    );
+      );
+    });
+    _glbLoading[url] = p;
+    return p;
   }
 
   function _showImageOverlay(visible, url) {
@@ -299,6 +333,10 @@
       .then(function (data) {
         _m3d.pois    = data.hotspots || [];
         _m3d.pending = _m3d.pois.map(function (p) { return Object.assign({}, p); });
+        // Precargar en background todos los GLBs enlazados desde esta escena
+        _m3d.pois.forEach(function (poi) {
+          if (poi.detailType === 'glb' && poi.detailUrl) _preloadGlb(poi.detailUrl);
+        });
       })
       .catch(function (err) {
         console.warn('[mundo3d] load:', err);
