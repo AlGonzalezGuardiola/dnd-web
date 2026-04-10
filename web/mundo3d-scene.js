@@ -1,4 +1,4 @@
-/* Bola del Mundo — Three.js r134 (global build, sin ES modules) */
+/* Mundo 3D — modelo GLB con Three.js r134 (global build) */
 (function () {
   'use strict';
 
@@ -7,6 +7,7 @@
   window.initMundo3D = function () {
     if (initialized) return;
     if (typeof THREE === 'undefined') return;
+    if (typeof THREE.GLTFLoader === 'undefined') return;
     initialized = true;
 
     const section = document.getElementById('mundo3DSection');
@@ -25,78 +26,106 @@
     }
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.setSize(W(), H());
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.shadowMap.enabled = false;
 
     // ── Escena ──────────────────────────────────────────
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x06021a);
-    scene.fog        = new THREE.FogExp2(0x06021a, 0.025);
+    scene.fog        = new THREE.FogExp2(0x06021a, 0.018);
 
     // ── Cámara ──────────────────────────────────────────
-    const camera = new THREE.PerspectiveCamera(48, W() / H(), 0.1, 100);
-    camera.position.set(0, 1.2, 5.5);
+    const camera = new THREE.PerspectiveCamera(48, W() / H(), 0.1, 500);
+    camera.position.set(0, 1.5, 6);
 
     // ── OrbitControls ───────────────────────────────────
     const controls = new THREE.OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
-    controls.minDistance   = 2.5;
-    controls.maxDistance   = 14;
+    controls.minDistance   = 2;
+    controls.maxDistance   = 30;
     controls.enablePan     = false;
 
     // ── Luces ───────────────────────────────────────────
-    scene.add(new THREE.AmbientLight(0xffeedd, 0.6));
+    scene.add(new THREE.AmbientLight(0xffeedd, 0.7));
 
-    var sun = new THREE.DirectionalLight(0xffffff, 1.8);
-    sun.position.set(4, 6, 3);
+    var sun = new THREE.DirectionalLight(0xffffff, 2.0);
+    sun.position.set(4, 8, 5);
     scene.add(sun);
 
-    var fillA = new THREE.PointLight(0x33ddcc, 1.0, 18);
-    fillA.position.set(-5, 2, -3);
+    var fillA = new THREE.PointLight(0x33ddcc, 1.2, 40);
+    fillA.position.set(-8, 3, -5);
     scene.add(fillA);
 
-    var fillB = new THREE.PointLight(0xffaa33, 0.5, 12);
-    fillB.position.set(1, -4, 2);
+    var fillB = new THREE.PointLight(0xffaa33, 0.6, 20);
+    fillB.position.set(2, -6, 3);
     scene.add(fillB);
 
     // ── Estrellas ───────────────────────────────────────
-    var starBuf = new Float32Array(2400 * 3);
-    for (var i = 0; i < starBuf.length; i++) starBuf[i] = (Math.random() - 0.5) * 90;
+    var starBuf = new Float32Array(3000 * 3);
+    for (var i = 0; i < starBuf.length; i++) starBuf[i] = (Math.random() - 0.5) * 200;
     var starGeo = new THREE.BufferGeometry();
     starGeo.setAttribute('position', new THREE.BufferAttribute(starBuf, 3));
     scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({
-      color: 0xffffff, size: 0.07, sizeAttenuation: true,
-      transparent: true, opacity: 0.85,
+      color: 0xffffff, size: 0.12, sizeAttenuation: true,
+      transparent: true, opacity: 0.8,
     })));
 
-    // ── Mundo low-poly ───────────────────────────────────
-    var worldGeo = new THREE.SphereGeometry(1, 12, 8);
-    var worldMat = new THREE.MeshStandardMaterial({ color: 0x6644cc, roughness: 0.8 });
-    var worldPivot = new THREE.Group();
-    scene.add(worldPivot);
-    var world = new THREE.Mesh(worldGeo, worldMat);
-    worldPivot.add(world);
+    // ── Carga del modelo GLB ─────────────────────────────
+    var modelPivot = new THREE.Group();
+    scene.add(modelPivot);
+    var loadedModel = null;
 
-    // Halo atmosférico
-    worldPivot.add(new THREE.Mesh(
-      new THREE.SphereGeometry(1.06, 32, 32),
-      new THREE.MeshStandardMaterial({
-        color: 0x8855ff, transparent: true, opacity: 0.06,
-        side: THREE.FrontSide, depthWrite: false,
-      })
-    ));
+    // Mostrar placeholder mientras carga
+    var placeholderGeo = new THREE.SphereGeometry(1, 12, 8);
+    var placeholderMat = new THREE.MeshStandardMaterial({ color: 0x332255, wireframe: true, opacity: 0.3, transparent: true });
+    var placeholder = new THREE.Mesh(placeholderGeo, placeholderMat);
+    modelPivot.add(placeholder);
 
-    // ── Textura ─────────────────────────────────────────
-    new THREE.TextureLoader().load(
-      'BolaMundo.jpg',
-      function (tex) {
-        var mat = new THREE.MeshStandardMaterial({
-          map: tex, roughness: 0.8, metalness: 0.02,
-        });
-        world.material = mat;
-        worldMat = mat;
+    var loader = new THREE.GLTFLoader();
+    loader.load(
+      'assets/3D/Meshy_AI_Bola_del_Mundo_0410111440_texture.glb',
+      function (gltf) {
+        // Eliminar placeholder
+        modelPivot.remove(placeholder);
+        placeholder.geometry.dispose();
+        placeholder.material.dispose();
+
+        var model = gltf.scene;
+
+        // Centrar y escalar el modelo
+        var box = new THREE.Box3().setFromObject(model);
+        var center = box.getCenter(new THREE.Vector3());
+        var size   = box.getSize(new THREE.Vector3());
+        var maxDim = Math.max(size.x, size.y, size.z);
+        var scale  = 2.5 / maxDim;
+
+        model.position.sub(center.multiplyScalar(scale));
+        model.scale.setScalar(scale);
+
+        modelPivot.add(model);
+        loadedModel = model;
+
+        // Ajustar cámara al tamaño del modelo
+        camera.position.set(0, size.y * scale * 0.5, maxDim * scale * 2.5);
+        controls.minDistance = maxDim * scale * 1.0;
+        controls.maxDistance = maxDim * scale * 8.0;
+        controls.update();
+
+        console.log('Modelo 3D cargado:', gltf);
       },
-      undefined,
-      function (err) { console.warn('Textura no cargada:', err); }
+      function (xhr) {
+        if (xhr.total) {
+          console.log('Cargando modelo: ' + Math.round(xhr.loaded / xhr.total * 100) + '%');
+        }
+      },
+      function (err) {
+        console.error('Error cargando GLB:', err);
+        // Dejar placeholder visible en caso de error
+        placeholder.material.opacity = 0.6;
+        placeholder.material.wireframe = false;
+        placeholder.material.color.set(0x441122);
+      }
     );
 
     // ── Resize ──────────────────────────────────────────
@@ -118,8 +147,8 @@
     function animate() {
       requestAnimationFrame(animate);
       var t = clock.getElapsedTime();
-      world.rotation.y      = t * 0.18;
-      worldPivot.position.y = Math.sin(t * 0.45) * 0.14;
+      modelPivot.rotation.y = t * 0.12;
+      modelPivot.position.y = Math.sin(t * 0.4) * 0.08;
       controls.update();
       renderer.render(scene, camera);
     }
