@@ -578,9 +578,8 @@ function setView(viewName) {
             if (hud) hud.style.display = 'flex';
             if (diceWidget) diceWidget.style.display = 'none';
             setBreadcrumb('📜 Narrativa › Bola del Mundo');
-            // Carga el iframe la primera vez que se abre (diferido para que tenga dimensiones reales)
-            const bmFrame = document.getElementById('bolaMundoFrame');
-            if (bmFrame && !bmFrame.src) bmFrame.src = 'bola-mundo.html';
+            // Inicializa Three.js la primera vez (el módulo lo expone en window)
+            if (typeof window.initBolaMundo === 'function') window.initBolaMundo();
             break;
         case 'tvMode':
             document.getElementById('tvModeSection').style.display = 'flex';
