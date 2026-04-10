@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🔮 Bola del Mundo</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #080810;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: #e0d9c8;
+      overflow: hidden;
+      height: 100dvh;
+      width: 100dvw;
+    }
+
+    /* Canvas fijo, ocupa toda la pantalla */
+    #canvas {
+      display: block;
+      position: fixed;
+      inset: 0;
+    }
+
+    /* ── Título superior ─────────────────────────────── */
+    #title {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 20px;
+      font-weight: 300;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: rgba(201, 169, 110, 0.85);
+      pointer-events: none;
+      z-index: 10;
+      white-space: nowrap;
+    }
+
+    /* ── Instrucciones ───────────────────────────────── */
+    #hint {
+      position: fixed;
+      top: 58px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      letter-spacing: 1px;
+      color: rgba(224, 217, 200, 0.35);
+      pointer-events: none;
+      z-index: 10;
+      white-space: nowrap;
+    }
+
+    /* ── Panel de controles ──────────────────────────── */
+    #controls {
+      position: fixed;
+      bottom: 28px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 22px;
+      background: rgba(8, 8, 20, 0.72);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      z-index: 10;
+    }
+
+    .ctrl-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      color: #e0d9c8;
+      cursor: pointer;
+      font-size: 12px;
+      padding: 6px 14px;
+      transition: background 0.18s, border-color 0.18s;
+      white-space: nowrap;
+      user-select: none;
+    }
+    .ctrl-btn:hover {
+      background: rgba(255, 255, 255, 0.13);
+      border-color: rgba(201, 169, 110, 0.4);
+    }
+    .ctrl-btn:active {
+      background: rgba(201, 169, 110, 0.15);
+    }
+
+    .ctrl-label {
+      font-size: 11px;
+      color: rgba(224, 217, 200, 0.45);
+      white-space: nowrap;
+      letter-spacing: 0.5px;
+    }
+
+    /* Slider personalizado */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 90px;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.12);
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 13px;
+      height: 13px;
+      border-radius: 50%;
+      background: #c9a96e;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+    input[type="range"]::-moz-range-thumb {
+      width: 13px;
+      height: 13px;
+      border: none;
+      border-radius: 50%;
+      background: #c9a96e;
+      cursor: pointer;
+    }
+
+    /* Separador vertical */
+    .ctrl-sep {
+      width: 1px;
+      height: 22px;
+      background: rgba(255, 255, 255, 0.08);
+      flex-shrink: 0;
+    }
+
+    /* ── Indicador de carga ──────────────────────────── */
+    #loader {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      background: #080810;
+      z-index: 20;
+      transition: opacity 0.6s ease;
+    }
+    #loader.hidden { opacity: 0; pointer-events: none; }
+
+    .loader-ring {
+      width: 40px;
+      height: 40px;
+      border: 2px solid rgba(201, 169, 110, 0.2);
+      border-top-color: #c9a96e;
+      border-radius: 50%;
+      animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loader-text {
+      font-size: 12px;
+      letter-spacing: 2px;
+      color: rgba(201, 169, 110, 0.6);
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+
+<canvas id="canvas"></canvas>
+
+<div id="loader">
+  <div class="loader-ring"></div>
+  <div class="loader-text">Cargando</div>
+</div>
+
+<div id="title">🔮 Bola del Mundo</div>
+<div id="hint">Arrastra para rotar &nbsp;·&nbsp; Rueda para zoom</div>
+
+<div id="controls">
+  <button class="ctrl-btn" id="btnPlayPause">⏸&nbsp; Pausar</button>
+  <div class="ctrl-sep"></div>
+  <span class="ctrl-label">Velocidad</span>
+  <input type="range" id="sliderSpeed" min="0" max="100" value="25" />
+  <div class="ctrl-sep"></div>
+  <button class="ctrl-btn" id="btnWireframe">⬡&nbsp; Wireframe</button>
+</div>
+
+<script type="module">
+  import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
+  import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+
+  // ── Escena ─────────────────────────────────────────────
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x080810);
+
+  // ── Cámara ─────────────────────────────────────────────
+  const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 100);
+  camera.position.set(0, 0, 3.2);
+
+  // ── Renderer ───────────────────────────────────────────
+  const canvas = document.getElementById('canvas');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.1;
+
+  // ── OrbitControls ──────────────────────────────────────
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.04;
+  controls.minDistance = 1.6;
+  controls.maxDistance = 8;
+  controls.enablePan = false;
+  controls.rotateSpeed = 0.6;
+  controls.zoomSpeed = 0.8;
+
+  // ── Luces ──────────────────────────────────────────────
+
+  // Ambiente muy suave (rellena sombras totales)
+  scene.add(new THREE.AmbientLight(0xffffff, 0.25));
+
+  // Luz principal — simula el sol
+  const sunLight = new THREE.DirectionalLight(0xfff5e0, 2.0);
+  sunLight.position.set(5, 3, 4);
+  scene.add(sunLight);
+
+  // Luz de relleno fría (lado oscuro del globo)
+  const fillLight = new THREE.DirectionalLight(0x334477, 0.5);
+  fillLight.position.set(-4, -2, -3);
+  scene.add(fillLight);
+
+  // Luz de borde cálida (da sensación de profundidad)
+  const rimLight = new THREE.PointLight(0xc9a96e, 0.6, 12);
+  rimLight.position.set(-3, 4, -3);
+  scene.add(rimLight);
+
+  // ── Partículas de fondo (estrellas) ────────────────────
+  const starCount = 1800;
+  const starPositions = new Float32Array(starCount * 3);
+  for (let i = 0; i < starCount * 3; i++) {
+    starPositions[i] = (Math.random() - 0.5) * 60;
+  }
+  const starGeo = new THREE.BufferGeometry();
+  starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+  const starMat = new THREE.PointsMaterial({
+    color: 0xffffff,
+    size: 0.05,
+    sizeAttenuation: true,
+    transparent: true,
+    opacity: 0.55,
+  });
+  scene.add(new THREE.Points(starGeo, starMat));
+
+  // ── Esfera principal ───────────────────────────────────
+  // 128 segmentos para un borde suave sin escalonados visibles
+  const sphereGeo = new THREE.SphereGeometry(1, 128, 128);
+
+  const texLoader = new THREE.TextureLoader();
+
+  // Función para construir el material una vez que la textura esté lista
+  function buildMaterial(map) {
+    if (map) {
+      // Corrección de inversión horizontal (si la textura aparece espejada)
+      map.wrapS = THREE.RepeatWrapping;
+      map.repeat.x = -1;
+      map.offset.x = 1;
+      map.colorSpace = THREE.SRGBColorSpace;
+    }
+
+    return new THREE.MeshStandardMaterial({
+      map: map ?? null,
+      color: map ? 0xffffff : 0x3366aa, // color de sustitución si no carga
+      roughness: 0.78,
+      metalness: 0.04,
+    });
+  }
+
+  let sphereMaterial;
+  const sphere = new THREE.Mesh(sphereGeo, new THREE.MeshStandardMaterial()); // placeholder
+  scene.add(sphere);
+
+  // Carga la textura; oculta el loader cuando termina
+  texLoader.load(
+    'assets/mapas/BolaMundo.jpg',
+    (texture) => {
+      sphereMaterial = buildMaterial(texture);
+      sphere.material = sphereMaterial;
+      hideLoader();
+    },
+    undefined, // onProgress no es útil para imágenes individuales
+    (err) => {
+      console.warn('No se pudo cargar BolaMundo.jpg. Usando color por defecto.', err);
+      sphereMaterial = buildMaterial(null);
+      sphere.material = sphereMaterial;
+      hideLoader();
+    }
+  );
+
+  function hideLoader() {
+    const loader = document.getElementById('loader');
+    loader.classList.add('hidden');
+    setTimeout(() => loader.remove(), 700);
+  }
+
+  // ── Halo atmosférico ───────────────────────────────────
+  // Esfera ligeramente mayor, semitransparente, azulada
+  const atmosMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(1.018, 64, 64),
+    new THREE.MeshStandardMaterial({
+      color: 0x4488cc,
+      transparent: true,
+      opacity: 0.045,
+      side: THREE.FrontSide,
+      depthWrite: false,
+    })
+  );
+  scene.add(atmosMesh);
+
+  // ── Estado de la UI ────────────────────────────────────
+  let autoRotate  = true;
+  let rotSpeed    = speedFromSlider(25);  // rad / frame
+  let wireframe   = false;
+
+  // Convierte el valor del slider (0–100) a rad/frame
+  function speedFromSlider(val) {
+    return (val / 100) * 0.012;
+  }
+
+  // Botón Play / Pause
+  document.getElementById('btnPlayPause').addEventListener('click', () => {
+    autoRotate = !autoRotate;
+    document.getElementById('btnPlayPause').textContent =
+      autoRotate ? '⏸\u00A0 Pausar' : '▶\u00A0 Rotar';
+  });
+
+  // Slider de velocidad
+  document.getElementById('sliderSpeed').addEventListener('input', (e) => {
+    rotSpeed = speedFromSlider(Number(e.target.value));
+  });
+
+  // Botón Wireframe
+  document.getElementById('btnWireframe').addEventListener('click', () => {
+    wireframe = !wireframe;
+    if (sphereMaterial) sphereMaterial.wireframe = wireframe;
+    document.getElementById('btnWireframe').textContent =
+      wireframe ? '◉\u00A0 Sólido' : '⬡\u00A0 Wireframe';
+  });
+
+  // ── Resize ─────────────────────────────────────────────
+  window.addEventListener('resize', () => {
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+  });
+
+  // ── Loop de animación ──────────────────────────────────
+  function animate() {
+    requestAnimationFrame(animate);
+
+    if (autoRotate) {
+      sphere.rotation.y  += rotSpeed;
+      atmosMesh.rotation.y += rotSpeed * 0.8; // halo rota un poco más lento
+    }
+
+    controls.update(); // requerido por el damping
+    renderer.render(scene, camera);
+  }
+
+  animate();
+</script>
+</body>
+</html>
