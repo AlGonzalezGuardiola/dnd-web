@@ -241,7 +241,7 @@
   } else {
     // HTTP — carga directa con TextureLoader
     new THREE.TextureLoader().load(
-      'image.jpg',
+      'assets/mapas/BolaMundo.jpg',
       tex => {
         tex.colorSpace  = THREE.SRGBColorSpace;
         tex.anisotropy  = renderer.capabilities.getMaxAnisotropy();
@@ -249,7 +249,9 @@
           map: tex, gradientMap: rampTex, flatShading: true,
         });
         world.material = worldMat;
-      }
+      },
+      undefined,
+      err => console.error('Error cargando textura:', err)
     );
   }
 
