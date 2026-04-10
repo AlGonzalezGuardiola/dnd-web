@@ -4,6 +4,25 @@
 
   let initialized = false;
 
+  var MODES = {
+    dia: {
+      bg:      0x0a8fd4,
+      fog:     { color: 0x0a8fd4, density: 0.012 },
+      ambient: { color: 0xd0eeff, intensity: 1.2 },
+      sun:     { color: 0xfff5cc, intensity: 2.5 },
+      hemi:    { sky: 0x87ceeb, ground: 0x1a6b9e, intensity: 0.8 },
+      stars:   false,
+    },
+    noche: {
+      bg:      0x06021a,
+      fog:     { color: 0x06021a, density: 0.018 },
+      ambient: { color: 0xffeedd, intensity: 0.6 },
+      sun:     { color: 0xffffff, intensity: 1.8 },
+      hemi:    null,
+      stars:   true,
+    },
+  };
+
   window.initMundo3D = function () {
     if (initialized) return;
     if (typeof THREE === 'undefined') return;
@@ -12,6 +31,7 @@
 
     const section = document.getElementById('mundo3DSection');
     const canvas  = document.getElementById('m3dCanvas');
+    const btn     = document.getElementById('m3dModeToggle');
 
     const W = () => section.clientWidth  || window.innerWidth;
     const H = () => section.clientHeight || window.innerHeight;
@@ -31,8 +51,6 @@
 
     // ── Escena ──────────────────────────────────────────
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a8fd4);
-    scene.fog        = new THREE.FogExp2(0x0a8fd4, 0.012);
 
     // ── Cámara ──────────────────────────────────────────
     const camera = new THREE.PerspectiveCamera(48, W() / H(), 0.1, 500);
@@ -46,21 +64,81 @@
     controls.maxDistance   = 30;
     controls.enablePan     = false;
 
-    // ── Luces ───────────────────────────────────────────
-    scene.add(new THREE.AmbientLight(0xd0eeff, 1.2));
+    // ── Luces (referencias para actualizar) ─────────────
+    var ambientLight = new THREE.AmbientLight(0xffffff, 1);
+    scene.add(ambientLight);
 
-    var sun = new THREE.DirectionalLight(0xfff5cc, 2.5);
-    sun.position.set(6, 10, 5);
-    scene.add(sun);
+    var sunLight = new THREE.DirectionalLight(0xffffff, 1);
+    sunLight.position.set(6, 10, 5);
+    scene.add(sunLight);
 
-    scene.add(new THREE.HemisphereLight(0x87ceeb, 0x1a6b9e, 0.8));
+    var hemiLight = new THREE.HemisphereLight(0xffffff, 0xffffff, 0);
+    scene.add(hemiLight);
+
+    var fillA = new THREE.PointLight(0x33ddcc, 0, 40);
+    fillA.position.set(-8, 3, -5);
+    scene.add(fillA);
+
+    var fillB = new THREE.PointLight(0xffaa33, 0, 20);
+    fillB.position.set(2, -6, 3);
+    scene.add(fillB);
+
+    // ── Estrellas ───────────────────────────────────────
+    var starBuf = new Float32Array(3000 * 3);
+    for (var i = 0; i < starBuf.length; i++) starBuf[i] = (Math.random() - 0.5) * 200;
+    var starGeo = new THREE.BufferGeometry();
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starBuf, 3));
+    var stars = new THREE.Points(starGeo, new THREE.PointsMaterial({
+      color: 0xffffff, size: 0.12, sizeAttenuation: true,
+      transparent: true, opacity: 0.8,
+    }));
+    scene.add(stars);
+
+    // ── Aplicar modo ────────────────────────────────────
+    var currentMode = 'dia';
+
+    function applyMode(modeKey) {
+      var m = MODES[modeKey];
+      scene.background = new THREE.Color(m.bg);
+      scene.fog = new THREE.FogExp2(m.fog.color, m.fog.density);
+
+      ambientLight.color.set(m.ambient.color);
+      ambientLight.intensity = m.ambient.intensity;
+
+      sunLight.color.set(m.sun.color);
+      sunLight.intensity = m.sun.intensity;
+
+      if (m.hemi) {
+        hemiLight.color.set(m.hemi.sky);
+        hemiLight.groundColor.set(m.hemi.ground);
+        hemiLight.intensity = m.hemi.intensity;
+        fillA.intensity = 0;
+        fillB.intensity = 0;
+      } else {
+        hemiLight.intensity = 0;
+        fillA.intensity = 1.2;
+        fillB.intensity = 0.6;
+      }
+
+      stars.visible = m.stars;
+
+      if (btn) {
+        btn.textContent = modeKey === 'dia' ? '🌙 Noche' : '☀️ Día';
+      }
+
+      currentMode = modeKey;
+    }
+
+    applyMode('dia');
+
+    window.toggleMundo3DMode = function () {
+      applyMode(currentMode === 'dia' ? 'noche' : 'dia');
+    };
 
     // ── Carga del modelo GLB ─────────────────────────────
     var modelPivot = new THREE.Group();
     scene.add(modelPivot);
-    var loadedModel = null;
 
-    // Mostrar placeholder mientras carga
     var placeholderGeo = new THREE.SphereGeometry(1, 12, 8);
     var placeholderMat = new THREE.MeshStandardMaterial({ color: 0x332255, wireframe: true, opacity: 0.3, transparent: true });
     var placeholder = new THREE.Mesh(placeholderGeo, placeholderMat);
@@ -70,15 +148,12 @@
     loader.load(
       'assets/3D/Meshy_AI_Bola_del_Mundo_0410111440_texture.glb',
       function (gltf) {
-        // Eliminar placeholder
         modelPivot.remove(placeholder);
         placeholder.geometry.dispose();
         placeholder.material.dispose();
 
         var model = gltf.scene;
-
-        // Centrar y escalar el modelo
-        var box = new THREE.Box3().setFromObject(model);
+        var box    = new THREE.Box3().setFromObject(model);
         var center = box.getCenter(new THREE.Vector3());
         var size   = box.getSize(new THREE.Vector3());
         var maxDim = Math.max(size.x, size.y, size.z);
@@ -86,26 +161,18 @@
 
         model.position.sub(center.multiplyScalar(scale));
         model.scale.setScalar(scale);
-
         modelPivot.add(model);
-        loadedModel = model;
 
-        // Ajustar cámara al tamaño del modelo
         camera.position.set(0, size.y * scale * 0.5, maxDim * scale * 2.5);
         controls.minDistance = maxDim * scale * 1.0;
         controls.maxDistance = maxDim * scale * 8.0;
         controls.update();
-
-        console.log('Modelo 3D cargado:', gltf);
       },
       function (xhr) {
-        if (xhr.total) {
-          console.log('Cargando modelo: ' + Math.round(xhr.loaded / xhr.total * 100) + '%');
-        }
+        if (xhr.total) console.log('Cargando modelo: ' + Math.round(xhr.loaded / xhr.total * 100) + '%');
       },
       function (err) {
         console.error('Error cargando GLB:', err);
-        // Dejar placeholder visible en caso de error
         placeholder.material.opacity = 0.6;
         placeholder.material.wireframe = false;
         placeholder.material.color.set(0x441122);
