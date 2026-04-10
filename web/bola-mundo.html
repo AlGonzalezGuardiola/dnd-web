@@ -136,6 +136,45 @@
       flex-shrink: 0;
     }
 
+    /* ── Selector de archivo (solo en file://) ──────── */
+    #filePicker {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      background: #080810;
+      z-index: 25;
+    }
+    #filePicker.hidden { display: none; }
+
+    .picker-title {
+      font-size: 16px;
+      font-weight: 300;
+      letter-spacing: 2px;
+      color: rgba(201, 169, 110, 0.9);
+    }
+    .picker-desc {
+      font-size: 12px;
+      color: rgba(224, 217, 200, 0.45);
+      text-align: center;
+      line-height: 1.7;
+    }
+    .picker-btn {
+      background: rgba(201, 169, 110, 0.12);
+      border: 1px solid rgba(201, 169, 110, 0.4);
+      border-radius: 10px;
+      color: #c9a96e;
+      cursor: pointer;
+      font-size: 13px;
+      letter-spacing: 1px;
+      padding: 10px 28px;
+      transition: background 0.2s;
+    }
+    .picker-btn:hover { background: rgba(201, 169, 110, 0.22); }
+
     /* ── Indicador de carga ──────────────────────────── */
     #loader {
       position: fixed;
@@ -173,8 +212,16 @@
 
 <canvas id="canvas"></canvas>
 
-<!-- Imagen cargada por el navegador (funciona en file://) — Three.js la consume como textura -->
-<img id="texImg" src="assets/mapas/BolaMundo.jpg" style="display:none" alt="">
+<!-- Panel para seleccionar imagen cuando se abre desde file:// -->
+<div id="filePicker" class="hidden">
+  <div class="picker-title">🔮 Bola del Mundo</div>
+  <div class="picker-desc">
+    Chrome bloquea el acceso a texturas locales desde <code>file://</code>.<br>
+    Selecciona <strong>BolaMundo.jpg</strong> manualmente para continuar.
+  </div>
+  <label class="picker-btn" for="texInput">Seleccionar BolaMundo.jpg</label>
+  <input type="file" id="texInput" accept="image/*" style="display:none">
+</div>
 
 <div id="loader">
   <div class="loader-ring"></div>
@@ -193,7 +240,7 @@
   <button class="ctrl-btn" id="btnWireframe">⬡&nbsp; Wireframe</button>
 </div>
 
-<!-- Script NORMAL (no módulo): controla el loader independientemente del módulo -->
+<!-- Script NORMAL (no módulo): controla el loader y el file picker independientemente del módulo -->
 <script>
   function hideLoader() {
     const el = document.getElementById('loader');
@@ -211,6 +258,9 @@
 
   // Timeout de emergencia: si en 10 s no carga nada, oculta el loader
   setTimeout(hideLoader, 10000);
+
+  // En file:// Chrome bloquea texturas WebGL → mostramos el selector de archivo
+  window.isFileProtocol = (location.protocol === 'file:');
 </script>
 
 <script type="importmap">
@@ -316,33 +366,61 @@
   const sphere = new THREE.Mesh(sphereGeo, sphereMaterial);
   scene.add(sphere);
 
-  // Aplica la textura a partir del <img> del HTML (cargado por el navegador, funciona en file://)
-  function applyTexture(imgEl) {
-    const texture = new THREE.Texture(imgEl);
-    texture.needsUpdate = true;
-    // Corrección de inversión horizontal
-    texture.wrapS = THREE.RepeatWrapping;
-    texture.repeat.x = -1;
-    texture.offset.x = 1;
-    texture.colorSpace = THREE.SRGBColorSpace;
-    sphereMaterial = buildMaterial(texture);
-    sphere.material = sphereMaterial;
-    window.hideLoader();
-  }
-
-  const texImg = document.getElementById('texImg');
-
-  if (texImg.complete && texImg.naturalWidth > 0) {
-    // Ya cargó antes de que llegara el JS (caché o fichero rápido)
-    applyTexture(texImg);
-  } else {
-    texImg.onload  = () => applyTexture(texImg);
-    texImg.onerror = () => {
-      console.warn('No se pudo cargar BolaMundo.jpg — usando color de sustitución.');
-      sphereMaterial = buildMaterial(null);
+  // Construye y aplica la textura desde un data URL (sin restricciones CORS)
+  function applyTextureFromSrc(src) {
+    const img = new Image();
+    img.onload = () => {
+      const texture = new THREE.Texture(img);
+      texture.needsUpdate = true;
+      texture.wrapS = THREE.RepeatWrapping;
+      texture.repeat.x = -1;
+      texture.offset.x = 1;
+      texture.colorSpace = THREE.SRGBColorSpace;
+      sphereMaterial = buildMaterial(texture);
       sphere.material = sphereMaterial;
+      // Ocultar el file picker si estaba visible
+      const fp = document.getElementById('filePicker');
+      if (fp) fp.classList.add('hidden');
       window.hideLoader();
     };
+    img.src = src;
+  }
+
+  if (window.isFileProtocol) {
+    // ── file:// : Chrome bloquea texturas WebGL locales ──
+    // Mostramos el selector; FileReader genera un data URL que sí funciona
+    window.hideLoader();
+    const filePicker = document.getElementById('filePicker');
+    filePicker.classList.remove('hidden');
+
+    document.getElementById('texInput').addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => applyTextureFromSrc(ev.target.result);
+      reader.readAsDataURL(file);
+    });
+  } else {
+    // ── HTTP : carga directa sin restricciones ──
+    const texLoader = new THREE.TextureLoader();
+    texLoader.load(
+      'assets/mapas/BolaMundo.jpg',
+      (texture) => {
+        texture.wrapS = THREE.RepeatWrapping;
+        texture.repeat.x = -1;
+        texture.offset.x = 1;
+        texture.colorSpace = THREE.SRGBColorSpace;
+        sphereMaterial = buildMaterial(texture);
+        sphere.material = sphereMaterial;
+        window.hideLoader();
+      },
+      undefined,
+      () => {
+        sphereMaterial = buildMaterial(null);
+        sphere.material = sphereMaterial;
+        window.hideLoader();
+      }
+    );
   }
 
   // ── Halo atmosférico ───────────────────────────────────
