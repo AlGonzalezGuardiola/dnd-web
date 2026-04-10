@@ -447,6 +447,8 @@ function setView(viewName) {
     if (bolaMundoEl) bolaMundoEl.style.display = 'none';
     const mundo3DEl = document.getElementById('mundo3DSection');
     if (mundo3DEl) mundo3DEl.style.display = 'none';
+    const m3dToggle = document.getElementById('m3dModeToggle');
+    if (m3dToggle) m3dToggle.style.display = 'none';
     const tvModeEl = document.getElementById('tvModeSection');
     if (tvModeEl) tvModeEl.style.display = 'none';
     const combatMapsEl = document.getElementById('combatMapsView');
@@ -589,6 +591,8 @@ function setView(viewName) {
             if (hud) hud.style.display = 'flex';
             if (diceWidget) diceWidget.style.display = 'none';
             setBreadcrumb('📜 Narrativa › Mundo 3D');
+            const m3dToggle = document.getElementById('m3dModeToggle');
+            if (m3dToggle) m3dToggle.style.display = 'inline-block';
             if (typeof window.initMundo3D === 'function') window.initMundo3D();
             break;
         case 'tvMode':

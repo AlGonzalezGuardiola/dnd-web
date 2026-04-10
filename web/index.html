@@ -55,6 +55,10 @@
         <div id="breadcrumbs" class="breadcrumbs" aria-live="polite">Mundo</div>
 
         <div class="hud-right-stack">
+            <button id="m3dModeToggle" onclick="window.toggleMundo3DMode && window.toggleMundo3DMode()"
+                style="display:none;background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.2);color:#fff;padding:5px 12px;border-radius:16px;font-size:12px;letter-spacing:1px;cursor:pointer;">
+                🌙 Noche
+            </button>
             <button id="roleIndicator" class="role-indicator master" onclick="showRoleSelectionOverlay()" title="Cambiar rol">🎲 Master</button>
             <!-- World-map controls: injected here, hidden by default -->
             <div id="wmHudControls" style="display:none;" class="wm-hud-controls">
@@ -884,10 +888,6 @@
     <!-- Mundo 3D -->
     <section id="mundo3DSection" class="character-section" style="display:none;padding:0;overflow:hidden;position:relative;" aria-label="Mundo 3D">
         <canvas id="m3dCanvas" style="width:100%;height:100%;display:block;"></canvas>
-        <button id="m3dModeToggle" onclick="window.toggleMundo3DMode && window.toggleMundo3DMode()"
-            style="position:absolute;bottom:14px;right:14px;background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.25);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;letter-spacing:1px;cursor:pointer;">
-            🌙 Noche
-        </button>
         <div style="position:absolute;bottom:18px;left:50%;transform:translateX(-50%);font-size:11px;letter-spacing:1px;color:rgba(200,190,220,0.35);pointer-events:none;white-space:nowrap;">
             Arrastra para rotar &nbsp;·&nbsp; Rueda para hacer zoom
         </div>
