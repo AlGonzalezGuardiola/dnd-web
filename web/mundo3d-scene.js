@@ -256,6 +256,14 @@
           controls.maxDistance = maxDim * scale * 8.0;
           controls.target.set(0, 0, 0);
           controls.update();
+        } else {
+          // Escena de detalle (POI): cámara cenital (~80° desde el suelo), distancia media
+          var detailDist = maxDim * scale * 2.0;
+          camera.position.set(0, detailDist * 0.95, detailDist * 0.18);
+          controls.minDistance = maxDim * scale * 0.8;
+          controls.maxDistance = maxDim * scale * 6.0;
+          controls.target.set(0, 0, 0);
+          controls.update();
         }
 
         // Re-renderizar marcadores ahora que el modelo está listo
@@ -771,12 +779,8 @@
     if (fadeEl) { fadeEl.style.opacity = '1'; fadeEl.style.pointerEvents = 'auto'; }
 
     setTimeout(function () {
+      // La cámara la posiciona _loadGlb una vez conoce el tamaño del modelo
       _loadScene(sceneId, sceneType, modelUrl, imageUrl, false);
-
-      // Restaurar cámara para el nuevo nivel
-      camera.position.copy(defaultCamPos);
-      controls.target.set(0, 0, 0);
-      controls.update();
 
       setTimeout(function () {
         if (fadeEl) { fadeEl.style.opacity = '0'; fadeEl.style.pointerEvents = 'none'; }
