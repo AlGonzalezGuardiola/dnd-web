@@ -259,7 +259,7 @@
         } else {
           // Escena de detalle (POI): cámara cenital (~80° desde el suelo), distancia media
           var detailDist = maxDim * scale * 2.0;
-          camera.position.set(0, detailDist * 0.95, detailDist * 0.18);
+          camera.position.set(0, detailDist * 0.34, detailDist * 0.94);
           controls.minDistance = maxDim * scale * 0.8;
           controls.maxDistance = maxDim * scale * 6.0;
           controls.target.set(0, 0, 0);
