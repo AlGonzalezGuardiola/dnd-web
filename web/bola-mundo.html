@@ -1,273 +1,109 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>🔮 Bola del Mundo</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌐 Mundo Gumi</title>
   <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      background: #080810;
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      color: #e0d9c8;
       overflow: hidden;
-      height: 100dvh;
-      width: 100dvw;
+      background: #06021a;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      color: #e8dff0;
     }
 
-    /* Canvas fijo, ocupa toda la pantalla */
-    #canvas {
+    canvas {
       display: block;
       position: fixed;
       inset: 0;
     }
 
-    /* ── Título superior ─────────────────────────────── */
-    #title {
-      position: fixed;
-      top: 24px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 20px;
-      font-weight: 300;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      color: rgba(201, 169, 110, 0.85);
-      pointer-events: none;
-      z-index: 10;
-      white-space: nowrap;
-    }
-
-    /* ── Instrucciones ───────────────────────────────── */
-    #hint {
-      position: fixed;
-      top: 58px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 11px;
-      letter-spacing: 1px;
-      color: rgba(224, 217, 200, 0.35);
-      pointer-events: none;
-      z-index: 10;
-      white-space: nowrap;
-    }
-
-    /* ── Panel de controles ──────────────────────────── */
-    #controls {
-      position: fixed;
-      bottom: 28px;
-      left: 50%;
-      transform: translateX(-50%);
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      padding: 12px 22px;
-      background: rgba(8, 8, 20, 0.72);
-      backdrop-filter: blur(14px);
-      -webkit-backdrop-filter: blur(14px);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 14px;
-      z-index: 10;
-    }
-
-    .ctrl-btn {
-      background: rgba(255, 255, 255, 0.06);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 8px;
-      color: #e0d9c8;
-      cursor: pointer;
-      font-size: 12px;
-      padding: 6px 14px;
-      transition: background 0.18s, border-color 0.18s;
-      white-space: nowrap;
-      user-select: none;
-    }
-    .ctrl-btn:hover {
-      background: rgba(255, 255, 255, 0.13);
-      border-color: rgba(201, 169, 110, 0.4);
-    }
-    .ctrl-btn:active {
-      background: rgba(201, 169, 110, 0.15);
-    }
-
-    .ctrl-label {
-      font-size: 11px;
-      color: rgba(224, 217, 200, 0.45);
-      white-space: nowrap;
-      letter-spacing: 0.5px;
-    }
-
-    /* Slider personalizado */
-    input[type="range"] {
-      -webkit-appearance: none;
-      appearance: none;
-      width: 90px;
-      height: 3px;
-      background: rgba(255, 255, 255, 0.12);
-      border-radius: 2px;
-      outline: none;
-      cursor: pointer;
-    }
-    input[type="range"]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 13px;
-      height: 13px;
-      border-radius: 50%;
-      background: #c9a96e;
-      cursor: pointer;
-      transition: transform 0.15s;
-    }
-    input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
-    input[type="range"]::-moz-range-thumb {
-      width: 13px;
-      height: 13px;
-      border: none;
-      border-radius: 50%;
-      background: #c9a96e;
-      cursor: pointer;
-    }
-
-    /* Separador vertical */
-    .ctrl-sep {
-      width: 1px;
-      height: 22px;
-      background: rgba(255, 255, 255, 0.08);
-      flex-shrink: 0;
-    }
-
-    /* ── Selector de archivo (solo en file://) ──────── */
-    #filePicker {
+    /* ── Selector de imagen (solo se muestra en file://) ── */
+    #picker {
+      display: none;                   /* oculto por defecto; JS lo muestra si file:// */
       position: fixed;
       inset: 0;
-      display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      gap: 18px;
-      background: #080810;
-      z-index: 25;
+      gap: 20px;
+      background: rgba(6, 2, 26, 0.95);
+      z-index: 30;
     }
-    #filePicker.hidden { display: none; }
+    #picker.show { display: flex; }
 
-    .picker-title {
-      font-size: 16px;
-      font-weight: 300;
-      letter-spacing: 2px;
-      color: rgba(201, 169, 110, 0.9);
-    }
-    .picker-desc {
-      font-size: 12px;
-      color: rgba(224, 217, 200, 0.45);
-      text-align: center;
-      line-height: 1.7;
-    }
-    .picker-btn {
-      background: rgba(201, 169, 110, 0.12);
-      border: 1px solid rgba(201, 169, 110, 0.4);
+    .p-icon  { font-size: 48px; }
+    .p-title { font-size: 18px; font-weight: 300; letter-spacing: 3px; color: #c4a8f5; }
+    .p-desc  { font-size: 12px; color: rgba(200,190,220,0.55); text-align: center; line-height: 1.8; }
+    .p-desc strong { color: #c4a8f5; }
+
+    .p-btn {
+      background: rgba(196, 168, 245, 0.1);
+      border: 1px solid rgba(196, 168, 245, 0.35);
       border-radius: 10px;
-      color: #c9a96e;
+      color: #c4a8f5;
       cursor: pointer;
       font-size: 13px;
       letter-spacing: 1px;
       padding: 10px 28px;
       transition: background 0.2s;
     }
-    .picker-btn:hover { background: rgba(201, 169, 110, 0.22); }
+    .p-btn:hover { background: rgba(196, 168, 245, 0.2); }
 
-    /* ── Indicador de carga ──────────────────────────── */
-    #loader {
+    /* ── Texto de instrucciones ── */
+    #hint {
       position: fixed;
-      inset: 0;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 14px;
-      background: #080810;
-      z-index: 20;
-      transition: opacity 0.6s ease;
-    }
-    #loader.hidden { opacity: 0; pointer-events: none; }
-
-    .loader-ring {
-      width: 40px;
-      height: 40px;
-      border: 2px solid rgba(201, 169, 110, 0.2);
-      border-top-color: #c9a96e;
-      border-radius: 50%;
-      animation: spin 0.9s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    .loader-text {
-      font-size: 12px;
-      letter-spacing: 2px;
-      color: rgba(201, 169, 110, 0.6);
-      text-transform: uppercase;
+      bottom: 22px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      letter-spacing: 1.2px;
+      color: rgba(200, 190, 220, 0.35);
+      pointer-events: none;
+      z-index: 10;
+      white-space: nowrap;
     }
   </style>
 </head>
 <body>
 
-<canvas id="canvas"></canvas>
+<canvas id="c"></canvas>
 
-<!-- Panel para seleccionar imagen cuando se abre desde file:// -->
-<div id="filePicker" class="hidden">
-  <div class="picker-title">🔮 Bola del Mundo</div>
-  <div class="picker-desc">
-    Chrome bloquea el acceso a texturas locales desde <code>file://</code>.<br>
-    Selecciona <strong>BolaMundo.jpg</strong> manualmente para continuar.
+<!-- Panel selector de archivo: visible solo en file:// -->
+<div id="picker">
+  <div class="p-icon">🌐</div>
+  <div class="p-title">MUNDO GUMI</div>
+  <div class="p-desc">
+    Abre desde <strong>file://</strong> — Chrome bloquea texturas locales en WebGL.<br>
+    Selecciona <strong>image.jpg</strong> para cargar la textura del mundo.
   </div>
-  <label class="picker-btn" for="texInput">Seleccionar BolaMundo.jpg</label>
-  <input type="file" id="texInput" accept="image/*" style="display:none">
+  <label class="p-btn" for="finput">Seleccionar image.jpg</label>
+  <input type="file" id="finput" accept="image/*" style="display:none">
 </div>
 
-<div id="loader">
-  <div class="loader-ring"></div>
-  <div class="loader-text" id="loaderText">Cargando Three.js…</div>
-</div>
+<div id="hint">Arrastra para rotar &nbsp;·&nbsp; Rueda para hacer zoom</div>
 
-<div id="title">🔮 Bola del Mundo</div>
-<div id="hint">Arrastra para rotar &nbsp;·&nbsp; Rueda para zoom</div>
-
-<div id="controls">
-  <button class="ctrl-btn" id="btnPlayPause">⏸&nbsp; Pausar</button>
-  <div class="ctrl-sep"></div>
-  <span class="ctrl-label">Velocidad</span>
-  <input type="range" id="sliderSpeed" min="0" max="100" value="25" />
-  <div class="ctrl-sep"></div>
-  <button class="ctrl-btn" id="btnWireframe">⬡&nbsp; Wireframe</button>
-</div>
-
-<!-- Script NORMAL (no módulo): controla el loader y el file picker independientemente del módulo -->
+<!-- Script clásico (no módulo): garantías de visibilidad del picker aunque el módulo falle -->
 <script>
-  function hideLoader() {
-    const el = document.getElementById('loader');
-    if (!el) return;
-    el.classList.add('hidden');
-    setTimeout(() => el.remove(), 700);
+  window._isFile = (location.protocol === 'file:');
+
+  if (window._isFile) {
+    document.getElementById('picker').classList.add('show');
   }
-  window.hideLoader = hideLoader;
 
-  // Captura errores globales y los muestra en el loader
-  window.addEventListener('error', (e) => {
-    const t = document.getElementById('loaderText');
-    if (t) t.textContent = 'Error: ' + e.message;
-  });
-
-  // Timeout de emergencia: si en 10 s no carga nada, oculta el loader
-  setTimeout(hideLoader, 10000);
-
-  // En file:// Chrome bloquea texturas WebGL → mostramos el selector de archivo
-  window.isFileProtocol = (location.protocol === 'file:');
+  window.addEventListener('unhandledrejection', e =>
+    console.error('Module error:', e.reason)
+  );
 </script>
 
+<!-- Import map: resuelve "three" y "three/addons/" para OrbitControls -->
 <script type="importmap">
 {
   "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+    "three":          "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/":  "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
   }
 }
 </script>
@@ -276,209 +112,193 @@
   import * as THREE from 'three';
   import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-  // ── Escena ─────────────────────────────────────────────
-  const scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x080810);
-
-  // ── Cámara ─────────────────────────────────────────────
-  const camera = new THREE.PerspectiveCamera(42, innerWidth / innerHeight, 0.1, 100);
-  camera.position.set(0, 0, 3.2);
-
-  // ── Renderer ───────────────────────────────────────────
-  const canvas = document.getElementById('canvas');
+  // ── Renderer ────────────────────────────────────────────
+  const canvas   = document.getElementById('c');
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.setSize(innerWidth, innerHeight);
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMapping         = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.1;
 
-  // ── OrbitControls ──────────────────────────────────────
+  // ── Escena y cámara ─────────────────────────────────────
+  const scene  = new THREE.Scene();
+  scene.background = new THREE.Color(0x06021a);
+  scene.fog        = new THREE.FogExp2(0x06021a, 0.025);
+
+  const camera = new THREE.PerspectiveCamera(48, innerWidth / innerHeight, 0.1, 100);
+  camera.position.set(0, 1.2, 5.5);
+
+  // ── OrbitControls ───────────────────────────────────────
   const controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-  controls.dampingFactor = 0.04;
-  controls.minDistance = 1.6;
-  controls.maxDistance = 8;
-  controls.enablePan = false;
-  controls.rotateSpeed = 0.6;
-  controls.zoomSpeed = 0.8;
+  controls.enableDamping  = true;
+  controls.dampingFactor  = 0.05;
+  controls.minDistance    = 2.5;
+  controls.maxDistance    = 14;
+  controls.enablePan      = false;
+  controls.target.set(0, 0, 0);
 
-  // ── Luces ──────────────────────────────────────────────
+  // ── Luces ───────────────────────────────────────────────
+  // Ambiente cálido general
+  scene.add(new THREE.AmbientLight(0xffeedd, 0.55));
 
-  // Ambiente muy suave (rellena sombras totales)
-  scene.add(new THREE.AmbientLight(0xffffff, 0.25));
+  // Luz principal (estilo sol)
+  const sun = new THREE.DirectionalLight(0xffffff, 1.8);
+  sun.position.set(4, 6, 3);
+  scene.add(sun);
 
-  // Luz principal — simula el sol
-  const sunLight = new THREE.DirectionalLight(0xfff5e0, 2.0);
-  sunLight.position.set(5, 3, 4);
-  scene.add(sunLight);
+  // Relleno turquesa — da el tono fantasía de KH
+  const fillA = new THREE.PointLight(0x33ddcc, 1.1, 18);
+  fillA.position.set(-5, 2, -3);
+  scene.add(fillA);
 
-  // Luz de relleno fría (lado oscuro del globo)
-  const fillLight = new THREE.DirectionalLight(0x334477, 0.5);
-  fillLight.position.set(-4, -2, -3);
-  scene.add(fillLight);
+  // Relleno dorado desde abajo
+  const fillB = new THREE.PointLight(0xffaa33, 0.6, 12);
+  fillB.position.set(1, -4, 2);
+  scene.add(fillB);
 
-  // Luz de borde cálida (da sensación de profundidad)
-  const rimLight = new THREE.PointLight(0xc9a96e, 0.6, 12);
-  rimLight.position.set(-3, 4, -3);
-  scene.add(rimLight);
-
-  // ── Partículas de fondo (estrellas) ────────────────────
-  const starCount = 1800;
-  const starPositions = new Float32Array(starCount * 3);
-  for (let i = 0; i < starCount * 3; i++) {
-    starPositions[i] = (Math.random() - 0.5) * 60;
-  }
+  // ── Estrellas ───────────────────────────────────────────
+  const STARS   = 2400;
+  const starBuf = new Float32Array(STARS * 3);
+  for (let i = 0; i < STARS * 3; i++) starBuf[i] = (Math.random() - 0.5) * 90;
   const starGeo = new THREE.BufferGeometry();
-  starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
-  const starMat = new THREE.PointsMaterial({
-    color: 0xffffff,
-    size: 0.05,
-    sizeAttenuation: true,
-    transparent: true,
-    opacity: 0.55,
+  starGeo.setAttribute('position', new THREE.BufferAttribute(starBuf, 3));
+  scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({
+    color: 0xffffff, size: 0.07, sizeAttenuation: true,
+    transparent: true, opacity: 0.85,
+  })));
+
+  // ── Gradiente toon (3 bandas: sombra / medio / luz) ─────
+  // Crea la rampa de color para MeshToonMaterial sin importar imagen extra
+  const rampData = new Uint8Array([80, 160, 255]);
+  const rampTex  = new THREE.DataTexture(rampData, 3, 1, THREE.RedFormat);
+  rampTex.minFilter = rampTex.magFilter = THREE.NearestFilter;
+  rampTex.needsUpdate = true;
+
+  // ── MUNDO PRINCIPAL ─────────────────────────────────────
+  // SphereGeometry con pocos segmentos + flatShading = look low-poly cartoon
+  const worldGeo = new THREE.SphereGeometry(1, 12, 8);
+
+  // Material de espera hasta que llegue la textura
+  let worldMat = new THREE.MeshToonMaterial({
+    color:        0x6644cc,
+    gradientMap:  rampTex,
+    flatShading:  true,
   });
-  scene.add(new THREE.Points(starGeo, starMat));
 
-  // ── Esfera principal ───────────────────────────────────
-  // 256 segmentos: más vértices = desplazamiento más detallado
-  const sphereGeo = new THREE.SphereGeometry(1, 256, 256);
+  // Pivote: el mundo y sus anillos flotan juntos
+  const worldPivot = new THREE.Group();
+  scene.add(worldPivot);
 
-  // Máxima anisotropía disponible en la GPU (mejora calidad en ángulos oblicuos)
-  const maxAnisotropy = renderer.capabilities.getMaxAnisotropy();
+  const world = new THREE.Mesh(worldGeo, worldMat);
+  worldPivot.add(world);
 
-  // Configura una textura con la máxima calidad posible
-  function setupTexture(tex, isColor) {
-    tex.wrapS          = THREE.RepeatWrapping;
-    tex.repeat.x       = -1;
-    tex.offset.x       = 1;
-    tex.minFilter      = THREE.LinearMipmapLinearFilter;
-    tex.magFilter      = THREE.LinearFilter;
-    tex.anisotropy     = maxAnisotropy;
-    tex.generateMipmaps = true;
-    if (isColor) tex.colorSpace = THREE.SRGBColorSpace;
-    tex.needsUpdate    = true;
-    return tex;
-  }
+  // Halo atmosférico suave alrededor del mundo
+  const atmosMesh = new THREE.Mesh(
+    new THREE.SphereGeometry(1.06, 32, 32),
+    new THREE.MeshStandardMaterial({
+      color: 0x8855ff, transparent: true, opacity: 0.06,
+      side: THREE.FrontSide, depthWrite: false,
+    })
+  );
+  worldPivot.add(atmosMesh);
 
-  // Construye el material con color + bump + displacement desde la misma imagen
-  function buildMaterial(colorTex) {
-    if (!colorTex) {
-      return new THREE.MeshStandardMaterial({ color: 0x3366aa, roughness: 0.8 });
-    }
-    // Reutilizamos la misma textura para bump y displacement
-    // (Three.js admite el mismo objeto en varios slots)
-    const dispTex = colorTex.clone();
-    dispTex.needsUpdate = true;
+  // ── ANILLOS orbitales ────────────────────────────────────
+  // Anillo ecuatorial turquesa (tubo cuadrado: radiusSegments = 3)
+  const ring1 = new THREE.Mesh(
+    new THREE.TorusGeometry(1.52, 0.028, 3, 48),
+    new THREE.MeshToonMaterial({
+      color: 0x33ddcc, gradientMap: rampTex,
+      emissive: 0x33ddcc, emissiveIntensity: 0.5,
+    })
+  );
+  ring1.rotation.x = Math.PI / 2;
+  worldPivot.add(ring1);
 
-    return new THREE.MeshStandardMaterial({
-      map:              colorTex,
-      // Bump: truco de iluminación que da sensación de relieve sin mover vértices
-      bumpMap:          dispTex,
-      bumpScale:        0.025,
-      // Displacement: desplaza vértices reales — crea montañas geométricas visibles
-      displacementMap:  dispTex,
-      displacementScale: 0.10,   // ±10% del radio = montañas claramente visibles
-      displacementBias: -0.05,   // centra el desplazamiento en el radio base
-      roughness:        0.80,
-      metalness:        0.03,
-    });
-  }
+  // Anillo orbital inclinado dorado
+  const ring2 = new THREE.Mesh(
+    new THREE.TorusGeometry(1.88, 0.018, 3, 36),
+    new THREE.MeshToonMaterial({
+      color: 0xffbb22, gradientMap: rampTex,
+      emissive: 0xffbb22, emissiveIntensity: 0.4,
+    })
+  );
+  ring2.rotation.x = Math.PI / 2.5;
+  ring2.rotation.z = Math.PI / 5;
+  worldPivot.add(ring2);
 
-  // Material de espera mientras carga
-  let sphereMaterial = new THREE.MeshStandardMaterial({ color: 0x1a2a4a, roughness: 0.8 });
-  const sphere = new THREE.Mesh(sphereGeo, sphereMaterial);
-  scene.add(sphere);
+  // ── ROCAS FLOTANTES ──────────────────────────────────────
+  // Cada roca: IcosahedronGeometry detail=0 (20 caras triangulares puras)
+  const rockDefs = [
+    { pos: [ 2.3,  0.5,  0.2], r: 0.18, color: 0xffaa44 },
+    { pos: [-2.1, -0.3,  0.6], r: 0.14, color: 0xaa55ff },
+    { pos: [ 0.5,  2.0, -1.1], r: 0.12, color: 0x44ddbb },
+    { pos: [-0.7,  0.8,  2.1], r: 0.16, color: 0xff6677 },
+    { pos: [ 1.9, -1.4, -0.7], r: 0.11, color: 0xffee44 },
+  ];
 
-  // Aplica la textura desde un data URL o src directo
-  function applyTextureFromSrc(src) {
-    const img = new Image();
+  const rocks = rockDefs.map(({ pos, r, color }, i) => {
+    const mesh = new THREE.Mesh(
+      new THREE.IcosahedronGeometry(r, 0),
+      new THREE.MeshToonMaterial({ color, gradientMap: rampTex, flatShading: true })
+    );
+    mesh.position.set(...pos);
+    // Orientación inicial aleatoria pero determinista
+    mesh.rotation.set(i * 0.9, i * 1.4, i * 0.6);
+    scene.add(mesh);
+    return mesh;
+  });
+
+  // ── CARGA DE TEXTURA ─────────────────────────────────────
+  // Aplica una textura cargada desde un src (data URL o ruta HTTP)
+  function applyTexture(src) {
+    const img  = new Image();
     img.onload = () => {
-      const colorTex = setupTexture(new THREE.Texture(img), true);
-      sphereMaterial  = buildMaterial(colorTex);
-      sphere.material = sphereMaterial;
-      const fp = document.getElementById('filePicker');
-      if (fp) fp.classList.add('hidden');
-      window.hideLoader();
+      const tex = new THREE.Texture(img);
+      tex.colorSpace      = THREE.SRGBColorSpace;
+      tex.minFilter       = THREE.LinearMipmapLinearFilter;
+      tex.magFilter       = THREE.LinearFilter;
+      tex.anisotropy      = renderer.capabilities.getMaxAnisotropy();
+      tex.generateMipmaps = true;
+      tex.needsUpdate     = true;
+
+      worldMat = new THREE.MeshToonMaterial({
+        map:         tex,
+        gradientMap: rampTex,
+        flatShading: true,
+      });
+      world.material = worldMat;
+
+      // Ocultar el picker
+      document.getElementById('picker').classList.remove('show');
     };
     img.src = src;
   }
 
-  if (window.isFileProtocol) {
-    // ── file:// : Chrome bloquea texturas WebGL locales ──
-    // FileReader genera un data URL que sí puede usarse en WebGL
-    window.hideLoader();
-    document.getElementById('filePicker').classList.remove('hidden');
-
-    document.getElementById('texInput').addEventListener('change', (e) => {
+  if (window._isFile) {
+    // file:// — el picker ya es visible; FileReader produce un data URL libre de CORS
+    document.getElementById('finput').addEventListener('change', e => {
       const file = e.target.files[0];
       if (!file) return;
       const reader = new FileReader();
-      reader.onload = (ev) => applyTextureFromSrc(ev.target.result);
+      reader.onload = ev => applyTexture(ev.target.result);
       reader.readAsDataURL(file);
     });
   } else {
-    // ── HTTP : TextureLoader estándar ──
+    // HTTP — carga directa con TextureLoader
     new THREE.TextureLoader().load(
-      'assets/mapas/BolaMundo.jpg',
-      (tex) => {
-        sphereMaterial  = buildMaterial(setupTexture(tex, true));
-        sphere.material = sphereMaterial;
-        window.hideLoader();
-      },
-      undefined,
-      () => {
-        sphereMaterial  = buildMaterial(null);
-        sphere.material = sphereMaterial;
-        window.hideLoader();
+      'image.jpg',
+      tex => {
+        tex.colorSpace  = THREE.SRGBColorSpace;
+        tex.anisotropy  = renderer.capabilities.getMaxAnisotropy();
+        worldMat = new THREE.MeshToonMaterial({
+          map: tex, gradientMap: rampTex, flatShading: true,
+        });
+        world.material = worldMat;
       }
     );
   }
 
-  // ── Halo atmosférico ───────────────────────────────────
-  // Esfera ligeramente mayor, semitransparente, azulada
-  const atmosMesh = new THREE.Mesh(
-    new THREE.SphereGeometry(1.018, 64, 64),
-    new THREE.MeshStandardMaterial({
-      color: 0x4488cc,
-      transparent: true,
-      opacity: 0.045,
-      side: THREE.FrontSide,
-      depthWrite: false,
-    })
-  );
-  scene.add(atmosMesh);
-
-  // ── Estado de la UI ────────────────────────────────────
-  let autoRotate  = true;
-  let rotSpeed    = speedFromSlider(25);  // rad / frame
-  let wireframe   = false;
-
-  // Convierte el valor del slider (0–100) a rad/frame
-  function speedFromSlider(val) {
-    return (val / 100) * 0.012;
-  }
-
-  // Botón Play / Pause
-  document.getElementById('btnPlayPause').addEventListener('click', () => {
-    autoRotate = !autoRotate;
-    document.getElementById('btnPlayPause').textContent =
-      autoRotate ? '⏸\u00A0 Pausar' : '▶\u00A0 Rotar';
-  });
-
-  // Slider de velocidad
-  document.getElementById('sliderSpeed').addEventListener('input', (e) => {
-    rotSpeed = speedFromSlider(Number(e.target.value));
-  });
-
-  // Botón Wireframe
-  document.getElementById('btnWireframe').addEventListener('click', () => {
-    wireframe = !wireframe;
-    if (sphereMaterial) sphereMaterial.wireframe = wireframe;
-    document.getElementById('btnWireframe').textContent =
-      wireframe ? '◉\u00A0 Sólido' : '⬡\u00A0 Wireframe';
-  });
-
-  // ── Resize ─────────────────────────────────────────────
+  // ── RESIZE ───────────────────────────────────────────────
   window.addEventListener('resize', () => {
     camera.aspect = innerWidth / innerHeight;
     camera.updateProjectionMatrix();
@@ -486,16 +306,30 @@
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   });
 
-  // ── Loop de animación ──────────────────────────────────
+  // ── ANIMACIÓN ────────────────────────────────────────────
+  const clock = new THREE.Clock();
+
   function animate() {
     requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
 
-    if (autoRotate) {
-      sphere.rotation.y  += rotSpeed;
-      atmosMesh.rotation.y += rotSpeed * 0.8; // halo rota un poco más lento
-    }
+    // Mundo: rotación lenta en Y + flotación senoidal en Y
+    world.rotation.y     = t * 0.18;
+    worldPivot.position.y = Math.sin(t * 0.45) * 0.14;
 
-    controls.update(); // requerido por el damping
+    // Anillos contra-rotan levemente para dar vida
+    ring1.rotation.z =  t * 0.05;
+    ring2.rotation.y =  t * 0.04;
+
+    // Rocas: giran y flotan con fase distinta cada una
+    rocks.forEach((rock, i) => {
+      rock.rotation.x += 0.006;
+      rock.rotation.y += 0.009;
+      // Flotación independiente de la del mundo
+      rock.position.y  = rockDefs[i].pos[1] + Math.sin(t * 0.55 + i * 1.1) * 0.12;
+    });
+
+    controls.update();
     renderer.render(scene, camera);
   }
 
