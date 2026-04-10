@@ -43,6 +43,7 @@
   var ambientLight, sunLight, hemiLight, fillA, fillB, stars;
   var defaultCamPos = new THREE.Vector3(0, 1.5, 6);
   var modelRadius   = 1.25;
+  var groundY       = -1.25;   // Y mínimo del modelo en espacio mundial (actualizado al cargar)
   var currentMode   = 'dia';
   var initialized   = false;
 
@@ -217,8 +218,21 @@
         currentGlbModel = model;
 
         modelRadius = maxDim * scale * 0.52;
+
+        // El suelo es el Y mínimo del modelo tras centrarlo (≈ -size.y/2 * scale)
+        groundY = (box.min.y - center.y) * scale;
+
+        // Limitar cámara: no puede orbitar por debajo del suelo del modelo.
+        // maxPolarAngle = ángulo desde el polo norte (0=arriba, π=abajo).
+        // Usamos el ángulo en que la cámara llegaría a groundY desde la posición por defecto.
+        var defaultDist = maxDim * scale * 2.5;
+        var cosMax      = (groundY - controls.target.y) / defaultDist;
+        // Clampear entre π/4 y π*0.88 para no restringir demasiado ni demasiado poco
+        cosMax = Math.max(-0.9, Math.min(0, cosMax));
+        controls.maxPolarAngle = Math.acos(cosMax);
+
         if (isRoot) {
-          defaultCamPos.set(0, size.y * scale * 0.5, maxDim * scale * 2.5);
+          defaultCamPos.set(0, size.y * scale * 0.5, defaultDist);
           camera.position.copy(defaultCamPos);
           controls.minDistance = maxDim * scale * 1.0;
           controls.maxDistance = maxDim * scale * 8.0;
@@ -439,7 +453,14 @@
       var intersects = raycaster.intersectObjects(modelPivot.children, true);
       if (!intersects.length) return;
 
-      var point      = intersects[0].point;
+      var point = intersects[0].point;
+
+      // Rechazar si el punto está por debajo del suelo del modelo
+      if (point.y < groundY + 0.05) {
+        showNotification('No puedes añadir puntos de interés bajo el suelo', 2000);
+        return;
+      }
+
       var invRotY    = new THREE.Matrix4().makeRotationY(-modelPivot.rotation.y);
       var localPoint = point.clone().applyMatrix4(invRotY);
       var r          = localPoint.length();
@@ -773,6 +794,11 @@
       camera.position.lerp(zoomLerp.targetPos, 0.06);
       controls.target.lerp(zoomLerp.targetAt,  0.06);
       camera.lookAt(controls.target);
+    }
+
+    // Clamp: la cámara nunca puede bajar del suelo del modelo
+    if (camera.position.y < groundY) {
+      camera.position.y = groundY;
     }
 
     _updateMarkers3D();
