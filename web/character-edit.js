@@ -65,7 +65,10 @@ function renderCharacterSheet(charId) {
         ${['Zero'].includes(charId) ? `
         <button class="char-biblioteca-btn" onclick="openBibliotecaPanel('${charId}','${data.nombre.replace(/'/g,"\\'")}')">
             📚 Biblioteca
-        </button>` : ''}` : ''}
+        </button>` : ''}
+        <button class="char-model3d-btn" onclick="openModel3DPanel('${charId}','${data.nombre.replace(/'/g,"\\'")}')">
+            🎲 Modelo 3D
+        </button>` : ''}
     `;
     statsContainer.innerHTML += portraitHTML;
 
@@ -362,12 +365,6 @@ function setupCharacterSheetListeners() {
             const content = document.getElementById(targetId);
             if (content) content.classList.add('active');
 
-            // Visor 3D: activar al entrar, limpiar al salir
-            if (targetTab === 'model3d') {
-                if (typeof activateModel3DTab === 'function') activateModel3DTab(currentCharacterId);
-            } else {
-                if (typeof cleanupM3DViewer === 'function') cleanupM3DViewer();
-            }
         });
     });
 

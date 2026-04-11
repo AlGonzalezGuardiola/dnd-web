@@ -31,7 +31,7 @@
     <link rel="stylesheet" href="css/variables.css?v=20260326b">
     <link rel="stylesheet" href="css/base.css?v=20260326b">
     <link rel="stylesheet" href="css/map.css?v=20260403a">
-    <link rel="stylesheet" href="css/character-sheet.css?v=20260411a">
+    <link rel="stylesheet" href="css/character-sheet.css?v=20260411b">
     <link rel="stylesheet" href="css/combat.css?v=20260406a">
     <link rel="stylesheet" href="css/encounters.css?v=20260326b">
     <link rel="stylesheet" href="css/npc-generator.css?v=20260326b">
@@ -529,7 +529,6 @@
                     <button class="tab-btn active" data-tab="features">📖 Narrativa</button>
                     <button class="tab-btn" data-tab="spells">✨ Conjuros</button>
                     <button class="tab-btn" data-tab="notes">📝 Notas</button>
-                    <button class="tab-btn tab-btn-model3d" data-tab="model3d">🎲 Modelo 3D</button>
                 </div>
 
                 <div class="sheet-body">
@@ -546,9 +545,6 @@
                     <div id="tabNotes" class="tab-content">
                         <!-- Session notes -->
                     </div>
-                    <div id="tabModel3d" class="tab-content">
-                        <!-- Visor GLB 3D -->
-                    </div>
                 </div>
             </div>
         </div>
@@ -556,6 +552,23 @@
 
 
 
+
+    <!-- Modelo 3D Full Page (todos los jugadores) -->
+    <div id="model3dSection" class="m3d-page" style="display:none">
+        <div class="m3d-page-hdr">
+            <button class="m3d-back-btn" onclick="navigateBack()">← Volver</button>
+            <div class="m3d-page-hdr-center">
+                <span class="m3d-page-icon">🎲</span>
+                <div>
+                    <div class="m3d-page-subtitle">Modelo 3D</div>
+                    <div class="m3d-page-title" id="model3dPageTitle">Personaje</div>
+                </div>
+            </div>
+        </div>
+        <div class="m3d-page-body" id="model3dPageBody">
+            <!-- Renderizado por JS -->
+        </div>
+    </div>
 
     <!-- Forge Full Page (solo Asthor) -->
     <div id="forjaSection" class="forja-page" style="display:none">
@@ -1200,7 +1213,7 @@
     <script src="character-forge.js?v=20260409a"></script>
     <script src="character-kitchen.js?v=20260409a"></script>
     <script src="character-biblioteca.js?v=20260409b"></script>
-    <script src="character-model3d.js?v=20260411a"></script>
+    <script src="character-model3d.js?v=20260411b"></script>
     <script src="combat-setup.js?v=20260330a"></script>
     <script src="combat-manager.js?v=20260406a"></script>
     <script src="reactions.js?v=20260326c"></script>

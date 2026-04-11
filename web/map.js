@@ -227,6 +227,7 @@ function navigateBack() {
         }
         return;
     }
+    if (view === 'model3d') { if (typeof cleanupM3DViewer === 'function') cleanupM3DViewer(); setView('characters'); return; }
     if (view === 'forja') { setView('characters'); return; }
     if (view === 'cocina') { setView('characters'); return; }
     if (view === 'biblioteca') { setView('characters'); return; }

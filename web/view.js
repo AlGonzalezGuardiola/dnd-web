@@ -460,6 +460,8 @@ function setView(viewName) {
     if (tvModeEl) tvModeEl.style.display = 'none';
     const combatMapsEl = document.getElementById('combatMapsView');
     if (combatMapsEl) combatMapsEl.style.display = 'none';
+    const model3dEl = document.getElementById('model3dSection');
+    if (model3dEl) model3dEl.style.display = 'none';
     const forjaEl = document.getElementById('forjaSection');
     if (forjaEl) forjaEl.style.display = 'none';
     const cocinaEl = document.getElementById('cocinaSection');
@@ -623,6 +625,12 @@ function setView(viewName) {
             if (hud) hud.style.display = 'flex';
             if (diceWidget) diceWidget.style.display = 'none';
             setBreadcrumb('🗺️ Mapas de Combate');
+            break;
+        case 'model3d':
+            document.getElementById('model3dSection').style.display = 'flex';
+            if (editorToolbar) editorToolbar.style.display = 'none';
+            if (hud) hud.style.display = 'none';
+            if (diceWidget) diceWidget.style.display = 'none';
             break;
         case 'forja':
             document.getElementById('forjaSection').style.display = 'flex';
