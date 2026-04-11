@@ -1,7 +1,7 @@
 // ============================================
 // Character Model 3D — visor GLB por personaje
-// Patrón: página completa (igual que Forja/Cocina).
-// Persiste en IndexedDB. Depende de THREE, OrbitControls, GLTFLoader.
+// Persistencia en servidor (/api/char-models).
+// Depende de THREE, OrbitControls, GLTFLoader.
 // ============================================
 
 var _m3dCharId   = null;
@@ -9,50 +9,31 @@ var _m3dCharName = null;
 var _m3dRenderer = null;
 var _m3dAnimFrame = null;
 
-// ── IndexedDB helpers ────────────────────────────────────────────────────────
+// ── API helpers ──────────────────────────────────────────────────────────────
 
-var _m3dDB = null;
-
-function _openM3DDB() {
-    if (_m3dDB) return Promise.resolve(_m3dDB);
-    return new Promise(function (resolve, reject) {
-        var req = indexedDB.open('dnd_char_models', 1);
-        req.onupgradeneeded = function (e) { e.target.result.createObjectStore('models'); };
-        req.onsuccess = function (e) { _m3dDB = e.target.result; resolve(_m3dDB); };
-        req.onerror   = function (e) { reject(e); };
-    });
+function _m3dApiBase() {
+    return (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+        ? 'http://localhost:3001'
+        : window.location.origin;
 }
 
-function _saveM3DModel(charId, arrayBuffer) {
-    return _openM3DDB().then(function (db) {
-        return new Promise(function (resolve, reject) {
-            var tx = db.transaction('models', 'readwrite');
-            tx.objectStore('models').put(arrayBuffer, charId);
-            tx.oncomplete = resolve;
-            tx.onerror    = reject;
-        });
-    });
+function _m3dGetModel(charId) {
+    return fetch(_m3dApiBase() + '/api/char-models/' + charId)
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .catch(function ()  { return null; });
 }
 
-function _loadM3DModel(charId) {
-    return _openM3DDB().then(function (db) {
-        return new Promise(function (resolve, reject) {
-            var req = db.transaction('models').objectStore('models').get(charId);
-            req.onsuccess = function (e) { resolve(e.target.result || null); };
-            req.onerror   = reject;
-        });
-    });
+function _m3dSaveModel(charId, fileDataUri) {
+    return fetch(_m3dApiBase() + '/api/char-models', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ charId: charId, fileData: fileDataUri })
+    }).then(function (r) { return r.json(); });
 }
 
-function _deleteM3DModel(charId) {
-    return _openM3DDB().then(function (db) {
-        return new Promise(function (resolve, reject) {
-            var tx = db.transaction('models', 'readwrite');
-            tx.objectStore('models').delete(charId);
-            tx.oncomplete = resolve;
-            tx.onerror    = reject;
-        });
-    });
+function _m3dDeleteModel(charId) {
+    return fetch(_m3dApiBase() + '/api/char-models/' + charId, { method: 'DELETE' })
+        .then(function (r) { return r.json(); });
 }
 
 // ── Abrir página ─────────────────────────────────────────────────────────────
@@ -68,35 +49,30 @@ function openModel3DPanel(charId, charName) {
     _renderModel3DPage(charId);
 }
 
-// ── Renderizar contenido de la página ────────────────────────────────────────
+// ── Renderizar contenido ─────────────────────────────────────────────────────
 
 function _renderModel3DPage(charId) {
     var body = document.getElementById('model3dPageBody');
     if (!body) return;
+    body.innerHTML = '<div class="m3d-loading">Buscando modelo…</div>';
 
-    // Mostrar estado de carga
-    body.innerHTML = '<div class="m3d-loading">Cargando…</div>';
-
-    _loadM3DModel(charId).then(function (buf) {
-        if (buf) {
-            _renderViewer(charId, buf);
+    _m3dGetModel(charId).then(function (data) {
+        if (data && data.url) {
+            _renderViewer(charId, data.url);
         } else {
             _renderUploadPrompt(charId);
         }
-    }).catch(function () {
-        _renderUploadPrompt(charId);
     });
 }
 
 function _renderUploadPrompt(charId) {
     var body = document.getElementById('model3dPageBody');
     if (!body) return;
-
     body.innerHTML =
         '<div class="m3d-empty-state">' +
             '<div class="m3d-empty-icon">🎲</div>' +
             '<div class="m3d-empty-title">Sin modelo 3D</div>' +
-            '<div class="m3d-empty-hint">Sube un archivo .glb para ver a este personaje en 3D</div>' +
+            '<div class="m3d-empty-hint">Sube un archivo .glb para ver a este personaje en 3D desde cualquier dispositivo</div>' +
             '<label class="m3d-upload-btn">' +
                 '📂 Cargar modelo GLB' +
                 '<input type="file" accept=".glb" style="display:none" onchange="onM3DFileUpload(\'' + charId + '\',this)">' +
@@ -104,14 +80,13 @@ function _renderUploadPrompt(charId) {
         '</div>';
 }
 
-function _renderViewer(charId, arrayBuffer) {
+function _renderViewer(charId, glbUrl) {
     var body = document.getElementById('model3dPageBody');
     if (!body) return;
-
     body.innerHTML =
         '<div class="m3d-viewer-wrap">' +
             '<canvas id="m3dCanvas"></canvas>' +
-            '<div class="m3d-controls-hint">Arrastrar para rotar · Scroll para zoom</div>' +
+            '<div class="m3d-controls-hint">Arrastrar · Scroll para zoom</div>' +
             '<div class="m3d-viewer-actions">' +
                 '<label class="m3d-replace-btn" title="Cambiar modelo">' +
                     '📂 Cambiar' +
@@ -121,35 +96,44 @@ function _renderViewer(charId, arrayBuffer) {
             '</div>' +
         '</div>';
 
-    // Inicializar visor en el siguiente frame (el canvas necesita estar en el DOM)
     requestAnimationFrame(function () {
-        _startM3DViewer(charId, arrayBuffer);
+        _startM3DViewer(glbUrl);
     });
 }
 
-// ── Subida de archivo ─────────────────────────────────────────────────────────
+// ── Subida ────────────────────────────────────────────────────────────────────
 
 function onM3DFileUpload(charId, input) {
     var file = input.files && input.files[0];
     if (!file) return;
 
     var body = document.getElementById('model3dPageBody');
-    if (body) body.innerHTML = '<div class="m3d-loading">Procesando modelo…</div>';
+    if (body) body.innerHTML = '<div class="m3d-loading">Subiendo modelo… (puede tardar unos segundos)</div>';
 
     var reader = new FileReader();
     reader.onload = function (e) {
-        var buf = e.target.result;
-        _saveM3DModel(charId, buf).then(function () {
-            showNotification('✅ Modelo 3D guardado', 2000);
-            _renderViewer(charId, buf);
-        });
+        var dataUri = e.target.result;          // data:application/octet-stream;base64,...
+        _m3dSaveModel(charId, dataUri)
+            .then(function (res) {
+                if (res.url) {
+                    showNotification('✅ Modelo 3D guardado', 2000);
+                    _renderViewer(charId, res.url);
+                } else {
+                    showNotification('❌ ' + (res.error || 'Error al guardar'), 3000);
+                    _renderUploadPrompt(charId);
+                }
+            })
+            .catch(function () {
+                showNotification('❌ Error de conexión', 3000);
+                _renderUploadPrompt(charId);
+            });
     };
-    reader.readAsArrayBuffer(file);
+    reader.readAsDataURL(file);
 }
 
 function deleteM3DModel(charId) {
     _stopM3DViewer();
-    _deleteM3DModel(charId).then(function () {
+    _m3dDeleteModel(charId).then(function () {
         showNotification('🗑️ Modelo eliminado', 1500);
         _renderUploadPrompt(charId);
     });
@@ -168,7 +152,7 @@ function _stopM3DViewer() {
 
 // ── Visor Three.js ────────────────────────────────────────────────────────────
 
-function _startM3DViewer(charId, arrayBuffer) {
+function _startM3DViewer(glbUrl) {
     if (typeof THREE === 'undefined') {
         showNotification('⚠️ Three.js no disponible', 2000);
         return;
@@ -180,59 +164,58 @@ function _startM3DViewer(charId, arrayBuffer) {
     var wrap   = canvas && canvas.parentElement;
     if (!canvas || !wrap) return;
 
-    // Dimensiones
     var W = wrap.clientWidth  || window.innerWidth;
-    var H = wrap.clientHeight || Math.round(W * 0.75);
+    var H = wrap.clientHeight || window.innerHeight;
     canvas.width  = W;
     canvas.height = H;
 
-    // Renderer
+    // ── Renderer ─────────────────────────────────────────────
     var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
     renderer.setSize(W, H);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.outputEncoding      = THREE.sRGBEncoding;
-    renderer.toneMapping         = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.3;
-    renderer.shadowMap.enabled   = true;
+    renderer.outputEncoding = THREE.sRGBEncoding;   // igual que mundo3d — sin tone mapping
+    renderer.shadowMap.enabled = false;
     _m3dRenderer = renderer;
 
-    // Escena
+    // ── Escena ────────────────────────────────────────────��───
     var scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0a0d14);
 
-    // Luces
-    scene.add(new THREE.AmbientLight(0xffeedd, 0.8));
-    var sun = new THREE.DirectionalLight(0xfff5cc, 2.0);
-    sun.position.set(5, 10, 7);
-    sun.castShadow = true;
-    scene.add(sun);
-    var fill = new THREE.DirectionalLight(0x4488ff, 0.6);
-    fill.position.set(-6, 2, -5);
-    scene.add(fill);
-    var rim = new THREE.DirectionalLight(0xaa66ff, 0.3);
-    rim.position.set(0, -3, -8);
-    scene.add(rim);
+    // ── Luces (misma receta que mundo3d-scene.js) ─────────────
+    var ambient = new THREE.AmbientLight(0xffffff, 1.2);
+    scene.add(ambient);
 
-    // Cámara
+    var sun = new THREE.DirectionalLight(0xffffff, 2.0);
+    sun.position.set(6, 10, 5);
+    scene.add(sun);
+
+    var hemi = new THREE.HemisphereLight(0xddeeff, 0x222244, 0.8);
+    scene.add(hemi);
+
+    var fill = new THREE.DirectionalLight(0xffffff, 0.6);
+    fill.position.set(-5, 3, -5);
+    scene.add(fill);
+
+    // ── Cámara ─────────────────────────────────────────────���──
     var camera = new THREE.PerspectiveCamera(45, W / H, 0.001, 2000);
     camera.position.set(0, 1.5, 5);
 
-    // Controles
+    // ── Controles ─────────────────────────────────────────────
     var controls = new THREE.OrbitControls(camera, canvas);
     controls.enableDamping   = true;
     controls.dampingFactor   = 0.07;
     controls.autoRotate      = true;
     controls.autoRotateSpeed = 1.5;
     controls.enablePan       = false;
-    controls.minDistance     = 0.1;
+    controls.minDistance     = 0.05;
     controls.maxDistance     = 500;
 
-    // Cargar GLB
+    // ── Cargar GLB desde URL ──────────────────────────────────
     var loader = new THREE.GLTFLoader();
-    loader.parse(arrayBuffer, '', function (gltf) {
+    loader.load(glbUrl, function (gltf) {
         var model = gltf.scene;
 
-        // Centrar y escalar
+        // Centrar y escalar para que quepa en pantalla
         var box    = new THREE.Box3().setFromObject(model);
         var center = box.getCenter(new THREE.Vector3());
         var size   = box.getSize(new THREE.Vector3());
@@ -242,36 +225,36 @@ function _startM3DViewer(charId, arrayBuffer) {
         model.position.sub(center.multiplyScalar(scale));
         scene.add(model);
 
-        // Ajustar cámara
+        // Ajustar cámara al modelo escalado
         var fitBox    = new THREE.Box3().setFromObject(model);
         var fitCenter = fitBox.getCenter(new THREE.Vector3());
         var fitSize   = fitBox.getSize(new THREE.Vector3());
         var fitDist   = Math.max(fitSize.x, fitSize.y, fitSize.z) * 1.9;
-        camera.position.set(fitCenter.x, fitCenter.y + fitSize.y * 0.1, fitCenter.z + fitDist);
+        camera.position.set(
+            fitCenter.x,
+            fitCenter.y + fitSize.y * 0.1,
+            fitCenter.z + fitDist
+        );
         controls.target.copy(fitCenter);
         controls.update();
-
-        // Quitar indicador de carga si existe
-        var hint = document.querySelector('.m3d-load-hint');
-        if (hint) hint.remove();
-    }, function (err) {
-        console.error('[Model3D] Error al parsear GLB:', err);
+    }, undefined, function (err) {
+        console.error('[Model3D] Error cargando GLB:', err);
         showNotification('❌ Error al cargar el modelo', 2500);
     });
 
-    // Responsive
+    // ── Responsive ────────────────────────────────────────────
     var resizeObs = new ResizeObserver(function () {
         if (!_m3dRenderer) return;
         var nW = wrap.clientWidth;
         var nH = wrap.clientHeight;
-        if (nW < 1 || nH < 1) return;
+        if (nW < 10 || nH < 10) return;
         renderer.setSize(nW, nH);
         camera.aspect = nW / nH;
         camera.updateProjectionMatrix();
     });
     resizeObs.observe(wrap);
 
-    // Loop
+    // ── Loop ──────────────────────────────────────────────────
     function animate() {
         if (_m3dRenderer !== renderer) return;
         _m3dAnimFrame = requestAnimationFrame(animate);
