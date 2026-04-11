@@ -1303,7 +1303,7 @@ window.characterData = {
 
     "YinBarkka": {
         "id": "YinBarkka",
-        "tipo": "jugador",
+        "tipo": "aliado",
         "nombre": "Yin Barkka",
         "raza": "—",
         "clase": "Pícaro",
