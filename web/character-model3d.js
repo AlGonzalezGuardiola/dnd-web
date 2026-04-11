@@ -1,38 +1,45 @@
 // ============================================
 // Character Model 3D — visor GLB por personaje
-// Persistencia en servidor (/api/char-models).
-// Depende de THREE, OrbitControls, GLTFLoader.
+// Subida binaria directa (misma lógica que mundo3d-scene.js)
+// Persistencia en servidor (/api/char-models)
 // ============================================
 
-var _m3dCharId   = null;
-var _m3dCharName = null;
-var _m3dRenderer = null;
+var _m3dCharId    = null;
+var _m3dCharName  = null;
+var _m3dRenderer  = null;
 var _m3dAnimFrame = null;
 
-// ── API helpers ──────────────────────────────────────────────────────────────
+// ── API helpers (igual que API_BASE en globals.js) ───────────────────────────
 
-function _m3dApiBase() {
-    return (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
-        ? 'http://localhost:3001'
-        : window.location.origin;
+function _m3dSaveModel(charId, file) {
+    var uploadUrl = API_BASE + '/api/char-models/upload'
+        + '?charId='    + encodeURIComponent(charId)
+        + '&filename='  + encodeURIComponent(file.name);
+
+    return fetch(uploadUrl, {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/octet-stream' },
+        body:    file,
+    }).then(function (r) {
+        if (!r.ok) {
+            return r.text().then(function (txt) {
+                var msg = txt;
+                try { msg = JSON.parse(txt).error || txt; } catch (e) {}
+                throw new Error(msg);
+            });
+        }
+        return r.json();
+    });
 }
 
 function _m3dGetModel(charId) {
-    return fetch(_m3dApiBase() + '/api/char-models/' + charId)
+    return fetch(API_BASE + '/api/char-models/' + encodeURIComponent(charId))
         .then(function (r) { return r.ok ? r.json() : null; })
         .catch(function ()  { return null; });
 }
 
-function _m3dSaveModel(charId, fileDataUri) {
-    return fetch(_m3dApiBase() + '/api/char-models', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ charId: charId, fileData: fileDataUri })
-    }).then(function (r) { return r.json(); });
-}
-
 function _m3dDeleteModel(charId) {
-    return fetch(_m3dApiBase() + '/api/char-models/' + charId, { method: 'DELETE' })
+    return fetch(API_BASE + '/api/char-models/' + encodeURIComponent(charId), { method: 'DELETE' })
         .then(function (r) { return r.json(); });
 }
 
@@ -101,34 +108,24 @@ function _renderViewer(charId, glbUrl) {
     });
 }
 
-// ── Subida ────────────────────────────────────────────────────────────────────
+// ── Subida (binario directo, igual que mundo3d-scene.js) ─────────────────────
 
 function onM3DFileUpload(charId, input) {
     var file = input.files && input.files[0];
     if (!file) return;
 
     var body = document.getElementById('model3dPageBody');
-    if (body) body.innerHTML = '<div class="m3d-loading">Subiendo modelo… (puede tardar unos segundos)</div>';
+    if (body) body.innerHTML = '<div class="m3d-loading">Subiendo modelo…</div>';
 
-    var reader = new FileReader();
-    reader.onload = function (e) {
-        var dataUri = e.target.result;          // data:application/octet-stream;base64,...
-        _m3dSaveModel(charId, dataUri)
-            .then(function (res) {
-                if (res.url) {
-                    showNotification('✅ Modelo 3D guardado', 2000);
-                    _renderViewer(charId, res.url);
-                } else {
-                    showNotification('❌ ' + (res.error || 'Error al guardar'), 3000);
-                    _renderUploadPrompt(charId);
-                }
-            })
-            .catch(function () {
-                showNotification('❌ Error de conexión', 3000);
-                _renderUploadPrompt(charId);
-            });
-    };
-    reader.readAsDataURL(file);
+    _m3dSaveModel(charId, file)
+        .then(function (data) {
+            showNotification('✅ Modelo 3D guardado', 2000);
+            _renderViewer(charId, data.url);
+        })
+        .catch(function (err) {
+            showNotification('❌ Error: ' + err.message, 4000);
+            _renderUploadPrompt(charId);
+        });
 }
 
 function deleteM3DModel(charId) {
@@ -150,7 +147,7 @@ function _stopM3DViewer() {
     if (_m3dRenderer)  { _m3dRenderer.dispose(); _m3dRenderer = null; }
 }
 
-// ── Visor Three.js ────────────────────────────────────────────────────────────
+// ── Visor Three.js (misma receta de luces que mundo3d-scene.js) ───────────────
 
 function _startM3DViewer(glbUrl) {
     if (typeof THREE === 'undefined') {
@@ -169,73 +166,73 @@ function _startM3DViewer(glbUrl) {
     canvas.width  = W;
     canvas.height = H;
 
-    // ── Renderer ─────────────────────────────────────────────
+    // ── Renderer (igual que mundo3d-scene.js) ─────────────────
     var renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true });
-    renderer.setSize(W, H);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.outputEncoding = THREE.sRGBEncoding;   // igual que mundo3d — sin tone mapping
+    renderer.setSize(W, H);
+    renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.shadowMap.enabled = false;
     _m3dRenderer = renderer;
 
-    // ── Escena ────────────────────────────────────────────��───
+    // ── Escena ────────────────────────────────────────────────
     var scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0a0d14);
 
-    // ── Luces (misma receta que mundo3d-scene.js) ─────────────
-    var ambient = new THREE.AmbientLight(0xffffff, 1.2);
-    scene.add(ambient);
+    // ── Luces (igual que mundo3d-scene.js modo noche) ─────────
+    var ambientLight = new THREE.AmbientLight(0xffeedd, 0.6);
+    scene.add(ambientLight);
 
-    var sun = new THREE.DirectionalLight(0xffffff, 2.0);
-    sun.position.set(6, 10, 5);
-    scene.add(sun);
+    var sunLight = new THREE.DirectionalLight(0xffffff, 1.8);
+    sunLight.position.set(6, 10, 5);
+    scene.add(sunLight);
 
-    var hemi = new THREE.HemisphereLight(0xddeeff, 0x222244, 0.8);
-    scene.add(hemi);
+    var fillA = new THREE.PointLight(0x33ddcc, 1.2, 40);
+    fillA.position.set(-8, 3, -5);
+    scene.add(fillA);
 
-    var fill = new THREE.DirectionalLight(0xffffff, 0.6);
-    fill.position.set(-5, 3, -5);
-    scene.add(fill);
+    var fillB = new THREE.PointLight(0xffaa33, 0.6, 20);
+    fillB.position.set(2, -6, 3);
+    scene.add(fillB);
 
-    // ── Cámara ─────────────────────────────────────────────���──
-    var camera = new THREE.PerspectiveCamera(45, W / H, 0.001, 2000);
-    camera.position.set(0, 1.5, 5);
+    // ── Cámara ────────────────────────────────────────────────
+    var camera = new THREE.PerspectiveCamera(48, W / H, 0.001, 2000);
+    camera.position.set(0, 1.5, 6);
 
     // ── Controles ─────────────────────────────────────────────
     var controls = new THREE.OrbitControls(camera, canvas);
     controls.enableDamping   = true;
-    controls.dampingFactor   = 0.07;
+    controls.dampingFactor   = 0.06;
     controls.autoRotate      = true;
-    controls.autoRotateSpeed = 1.5;
+    controls.autoRotateSpeed = 1.2;
     controls.enablePan       = false;
     controls.minDistance     = 0.05;
     controls.maxDistance     = 500;
 
-    // ── Cargar GLB desde URL ──────────────────────────────────
+    // ── Cargar GLB ────────────────────────────────────────────
     var loader = new THREE.GLTFLoader();
-    loader.load(glbUrl, function (gltf) {
-        var model = gltf.scene;
-
-        // Centrar y escalar para que quepa en pantalla
+    loader.load(API_BASE + '/' + glbUrl, function (gltf) {
+        // Mismo proceso de escalado que mundo3d-scene.js _applyGltf
+        var model  = gltf.scene;
         var box    = new THREE.Box3().setFromObject(model);
         var center = box.getCenter(new THREE.Vector3());
         var size   = box.getSize(new THREE.Vector3());
         var maxDim = Math.max(size.x, size.y, size.z);
-        var scale  = 3.0 / maxDim;
-        model.scale.setScalar(scale);
+        var scale  = 2.5 / maxDim;
+
         model.position.sub(center.multiplyScalar(scale));
+        model.scale.setScalar(scale);
         scene.add(model);
 
-        // Ajustar cámara al modelo escalado
-        var fitBox    = new THREE.Box3().setFromObject(model);
-        var fitCenter = fitBox.getCenter(new THREE.Vector3());
-        var fitSize   = fitBox.getSize(new THREE.Vector3());
-        var fitDist   = Math.max(fitSize.x, fitSize.y, fitSize.z) * 1.9;
-        camera.position.set(
-            fitCenter.x,
-            fitCenter.y + fitSize.y * 0.1,
-            fitCenter.z + fitDist
-        );
-        controls.target.copy(fitCenter);
+        // Ajustar cámara
+        var fitBox   = new THREE.Box3().setFromObject(model);
+        var fitCtr   = fitBox.getCenter(new THREE.Vector3());
+        var fitSize  = fitBox.getSize(new THREE.Vector3());
+        var dist     = maxDim * scale * 2.5;
+
+        camera.position.set(fitCtr.x, fitSize.y * scale * 0.3, dist);
+        controls.target.copy(fitCtr);
+        controls.minDistance = maxDim * scale * 1.0;
+        controls.maxDistance = maxDim * scale * 8.0;
         controls.update();
     }, undefined, function (err) {
         console.error('[Model3D] Error cargando GLB:', err);
@@ -243,7 +240,7 @@ function _startM3DViewer(glbUrl) {
     });
 
     // ── Responsive ────────────────────────────────────────────
-    var resizeObs = new ResizeObserver(function () {
+    new ResizeObserver(function () {
         if (!_m3dRenderer) return;
         var nW = wrap.clientWidth;
         var nH = wrap.clientHeight;
@@ -251,15 +248,13 @@ function _startM3DViewer(glbUrl) {
         renderer.setSize(nW, nH);
         camera.aspect = nW / nH;
         camera.updateProjectionMatrix();
-    });
-    resizeObs.observe(wrap);
+    }).observe(wrap);
 
     // ── Loop ──────────────────────────────────────────────────
-    function animate() {
+    (function animate() {
         if (_m3dRenderer !== renderer) return;
         _m3dAnimFrame = requestAnimationFrame(animate);
         controls.update();
         renderer.render(scene, camera);
-    }
-    animate();
+    })();
 }
