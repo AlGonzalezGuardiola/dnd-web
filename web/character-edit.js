@@ -344,7 +344,7 @@ function setupCharacterSheetListeners() {
     document.getElementById('closeSheetBtn').addEventListener('click', () => {
         document.getElementById('characterSheetContainer').style.display = 'none';
         isCharacterEditing = false;
-        // Combat mode no longer opens character sheets, so just go to characters view
+        if (typeof cleanupM3DViewer === 'function') cleanupM3DViewer();
     });
 
     // Tab Navigation
@@ -361,6 +361,13 @@ function setupCharacterSheetListeners() {
             document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
             const content = document.getElementById(targetId);
             if (content) content.classList.add('active');
+
+            // Visor 3D: activar al entrar, limpiar al salir
+            if (targetTab === 'model3d') {
+                if (typeof activateModel3DTab === 'function') activateModel3DTab(currentCharacterId);
+            } else {
+                if (typeof cleanupM3DViewer === 'function') cleanupM3DViewer();
+            }
         });
     });
 
