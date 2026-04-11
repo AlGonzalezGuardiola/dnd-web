@@ -208,9 +208,9 @@ function _startM3DViewer(glbUrl) {
     controls.minDistance     = 0.05;
     controls.maxDistance     = 500;
 
-    // ── Cargar GLB ────────────────────────────────────────────
+    // ── Cargar GLB (URL relativa, igual que mundo3d-scene.js) ──
     var loader = new THREE.GLTFLoader();
-    loader.load(API_BASE + '/' + glbUrl, function (gltf) {
+    loader.load(glbUrl, function (gltf) {
         // Mismo proceso de escalado que mundo3d-scene.js _applyGltf
         var model  = gltf.scene;
         var box    = new THREE.Box3().setFromObject(model);
