@@ -56,7 +56,7 @@ function _deleteM3DModel(charId) {
 // ── Tab render ────────────────────────────────────────────────────────────────
 
 function renderModel3DTab(charId) {
-    var tab = document.getElementById('tabModel3D');
+    var tab = document.getElementById('tabModel3d');
     if (!tab) return;
     tab.innerHTML =
         '<div class="m3d-tab">' +
